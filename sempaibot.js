@@ -234,7 +234,7 @@ function get_user(name) {
 }
 
 sempaibot.on("ready", function(){
-    sempaibot.joinServer("https://discord.gg/0jJ7kVQNcmLdY6aO", function(error, server) {
+    sempaibot.joinServer(config.server, function(error, server) {
 		servers.push(server);
     });
 });

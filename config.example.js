@@ -1,5 +1,6 @@
 //----- Config
 module.exports = {
 	user: "email",
-	pass: "password"
+	pass: "password",
+	server: "inviteurl"
 };
