@@ -17,12 +17,16 @@ var name = "sempai";
 var commands = [
     {
         command: /list my reminders/,
+        sample: "sempai list my reminders",
+        description: "lists your currently active reminders.",
         action: function(message){
             //todo
         }
     },
     {
         command: /remind (\w+) to (.*)? at (.*)/,
+        sample: "sempai remind (*name*) to (*reminder*) at (*time*)",
+        description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself)",
         action: function(message, name, reminder, time){
             if (time === undefined) 
             {
@@ -74,6 +78,8 @@ var commands = [
     },
     {
         command: /find anime (.*)/,
+        sample: "sempai find anime (*anime*)",
+        description: "Searches nyaa.eu for magnet links for the given anime.",
         action: function(message, name){
             if (name === undefined) {
                 sempaibot.reply(m, "Please specify what anime you want to look for.");
@@ -111,6 +117,8 @@ var commands = [
     
     {
         command: /who are you watching on osu/,
+        sample: "sempai who are you watching on osu?",
+        description: "Lists all the people I'm stalking on osu.",
         action: function(m){
             var message = "We are currently watching: ";
             for(var i = 0;i<osuusers.length;i++)
@@ -127,6 +135,8 @@ var commands = [
     
     {
         command: /watch (.*)? on osu/,
+        sample: "sempai watch (*user*) on osu",
+        description: "Adds another victim to my stalker list for osu.",
         action: function(m, name){
             if(name === undefined)
             {
@@ -139,6 +149,8 @@ var commands = [
     
     {
         command: /stop watching (.*)? on osu/,
+        sample: "sempai stop watching (*user*) on osu",
+        description: "Removes someone from my stalker list for osu.",
         action: function(m, user){
             var i = osuusers.indexOf(user);
             if(i === -1)
@@ -159,14 +171,34 @@ var commands = [
     
     {
         command: /check (.*)? on osu/,
+        sample: "sempai check (*user*) on osu",
+        description: "Forces me to check the given person on osu just in case I missed something.",
         action: function(m, user){
             osu_force_check(user);
+        }
+    },
+    
+    {
+        command: /help me/,
+        sample: "sempai help me",
+        description: "Sends this lovely help text to you!",
+        action: function(m){
+            var message = "This is the current list of commands:\r\n";
+            for(var i = 0;i<commands.length;i++)
+            {
+                message += "**" + commands[i].sample + "** - " + commands[i].description;
+                message += "\r\n";
+            }
+            
+            sempaibot.reply(m, message);
         }
     },
     
     //this one should be last since the regex always matches
     {
         command: /sempai.?(.*)/,
+        sample: "sempai (*user*)",
+        description: "Well, you should just try this command out instead of reading the description. (user is optional)",
         action: function(m, target){
             if(target === undefined)
                 return sempaibot.reply(m, "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo");
@@ -527,5 +559,6 @@ if(run_test)
         handle_message(fake_message("sempai find anime .hack"));
         handle_message(fake_message("sempai who are you watching on osu?"));
         handle_message(fake_message("sempai check calsmurf2904 on osu"));
+        handle_message(fake_message("sempai help me"));
     }, 100);
 }
