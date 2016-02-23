@@ -2,5 +2,6 @@
 module.exports = {
 	user: "email",
 	pass: "password",
-	server: "inviteurl"
+	server: "inviteurl",
+	osuapi: "osuapikey"
 };
