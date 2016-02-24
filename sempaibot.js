@@ -21,7 +21,7 @@ if (!String.prototype.format) {
 var sempaibot = new Discord.Client();
 var servers = [];
 var reminders = [];
-var run_test = true;
+var run_test = false;
 var config = {};
 if(!run_test)
     config = require("./config");
