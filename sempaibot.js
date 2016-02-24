@@ -2,8 +2,7 @@ var Discord = require("discord.js");
 var http = require("http");
 var cheerio = require("cheerio");
 var Datastore = require("nedb");
-var osudb; //Databases
-var datadb; //Data db
+var osudb, datadb, anidb; //Databases
 
 // First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
@@ -40,6 +39,7 @@ var responses_normal = {
     
     ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
     ANIME_DOWN: "<@{0}> Oops, looks like {1} is down.",
+    NO_ANIME_FOUND: "<@{0}> I couldn't find anything with the name \"{1}\"",
     
     OSU_FOLLOWING: "I'm currently following: {1}",
     OSU_UNDEFINED: "You could ofcourse actually tell me the user you want me to watch.",
@@ -62,7 +62,9 @@ var responses_normal = {
     WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{1}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
     
     UNKNOWN_COMMAND: "That command is unknown! If you are unsure what command to enter, please type \"sempai help me\".",
-    MULTIPLE_UNKNOWN_COMMAND: "That command is unknown! If you are unsure what command to enter, please type \"sempai help me\"."
+    MULTIPLE_UNKNOWN_COMMAND: "That command is unknown! If you are unsure what command to enter, please type \"sempai help me\".",
+    
+    ERROR: "<@{0}>, It seems my internal functions are not working correctly. Please ask my developers what could be the problem."
 };
 
 var responses_tsundere = {
@@ -125,6 +127,7 @@ var responses_tsundere = {
     
     ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
     ANIME_DOWN: "<@{0}> Oops, looks like {1} is down.",
+    NO_ANIME_FOUND: "<@{0}> Baka... I don't even own this anime collection...",
     
     OSU_FOLLOWING: [
         "These are the people I like! I mean, associate with. I-it's not as if I really like them, or anything. Don't get any weird ideas.\r\n{1}",
@@ -182,7 +185,9 @@ var responses_tsundere = {
     MULTIPLE_UNKNOWN_COMMAND: [
         "Sempai does not understand what you're trying to do! If you insist on wasting my time, why not ask for help? I'm not going to help you if you don't ask.",
         "You're still not making any sense to Sempai. Do you need me to spell it out for you? \"Sempai please help me\". That will do just fine. Don't forget the please."
-    ]
+    ],
+    
+    ERROR: "<@{0}>, I...I don't know what happened... Stop looking at me! It's not like I wanted to finish it for you anyways!"
 };
 
 var responses = {
@@ -278,36 +283,30 @@ var commands = [
         }
     },
     {
-        command: /find anime (.*)/,
-        sample: "sempai find anime (*anime*)",
-        description: "Searches nyaa.eu for magnet links for the given anime.",
+        command: /track anime (.*)/,
+        sample: "sempai track anime (*anime*)",
+        description: "Tracks an Anime for new releases",
+        action: function(m, anime) {
+            if (typeof anime === "undefined") {
+                sempaibot.sendMessage(message.channel, responses.get("ANIME_UNDEFINED").format(message.author.id));
+                return;
+            }
+            
+            track_anime(m, anime);
+        }
+    },
+    {
+        command: /get anime (.*)/,
+        sample: "sempai get anime (*anime*)",
+        description: "Searches our database for Magnet Links",
         action: function(message, anime){
             if (anime === undefined) {
                 sempaibot.sendMessage(message.channel, responses.get("ANIME_UNDEFINED").format(message.author.id));
                 return;
             }
-            
-            //todo: I have no idea what this code does. I think it allows you to send the results to someone else.
-            /*
-            var i;
-            if ((i = data.indexOf("-to")) !== -1) {
-                var to = data.substr(i + 4);
-                to = to.split(",");
-                var f = "for ";
-                if (to.length > 1) {
-                    for (var i = 0; i < to.length; i++) {
-                        if (i !== 0)
-                            f += ", ";
-                        f += "<@" + get_user(to[i]) + ">";
-                    }
-                } else {
-                    f = "<@" + get_user(to[0]) + ">";
-                }
-                sempaibot.sendMessage(m.channel, "<@" + m.author.id + ">, I'm looking up \"" + anime + "\" " + f);
-            }*/
 
             var to = undefined;
-            get_anime_info(anime, message.channel, message.author.id, to);
+            get_anime_info(message, anime);
         }
     },
     
@@ -572,53 +571,59 @@ function remind_message(reminder) {
 
 
 
-function get_anime_info(anime, channel, f, to) {
-    //Dummy function
-    search_nyaa(anime, channel, f, to);
-    search_anidex(anime, channel, f, to);
+function get_anime_info(m, anime) {
+    //Look into the DB to find any anime with this name
+    anidb.count({"anime": anime}, function(err, count) {
+        if (err !== null) {
+            sempaibot.sendMessage(m.channel, responses.get("ERROR").format(m.author.id));
+            return console.log(err);
+        }
+        
+        if (count <= 0) {
+            sempaibot.sendMessage(m.channel, responses.get("NO_ANIME_FOUND").format(m.author.id, anime));
+            return;
+        }
+        
+        //Good we found something, lets get the data
+        anidb.find({"anime": anime}, function(err, docs) {
+            if (err !== null) {
+                sempaibot.sendMessage(m.channel, responses.get("ERROR").format(m.author.id));
+                return console.log(err);
+            }
+
+            var anime = [];
+            for(var i = 0; i < docs.length; i++) {
+                var obj = { anime: docs[i].anime, episode: docs[i].episode, magnet: docs[i].magnet };
+                anime.push(obj);
+            }
+
+            anime.sort(sort_anime);
+            var title = '', message;
+            for (var i = 0; i < anime.length; i++) {
+                if (anime[i].anime !== title) {
+                    message += "\r\nAnime title: " + anime[i].anime;
+                    title = anime[i].title;
+                }
+
+                message += "\r\nEpisode " + anime[i].episode + ". Magnet link: " + anime[i].magnet;
+            }
+
+            sempaibot.sendMessage(m.channel, "<@" + m.author.id + "> I found you these Episodes:" + message);
+        });
+    });  
 }
 
-function search_nyaa(anime, channel, f, to) {
-    var options = {
-        host: 'www.nyaa.se',
-        port: 80,
-        path: "/?q=" + anime
-    };
-    http.get(options, function (res) {
-        var data = "";
-        res.on('data', function (chunk) {
-            data += chunk;
-        });
-        res.on('end', function () {
-            //console.log(data);
-            sempaibot.sendMessage(channel, "<@" + f + ">, We found some interesting results!");
-        });
-    }).on('error', function (e) {
-        console.log("Got error: " + e.message);
-        sempaibot.sendMessage(channel, responses.get("ANIME_DOWN").format(f, "Nyaa.se"));
-    });
+function track_anime(m, anime) {
+    sempaibot.sendMessage(m.channel, responses.get("ERROR").format(m.author.id));
 }
 
-function search_anidex(anime, channel, f, to) {
-    var options = {
-        host: 'www.anidex.moe',
-        port: 80,
-        path: "/?q=" + anime
-    };
-    http.get(options, function (res) {
-        var data = "";
-        res.on('data', function (chunk) {
-            data += chunk;
-        });
-        res.on('end', function () {
-            var $ = cheerio.load(data);
-            //console.log(data);
-            sempaibot.sendMessage(channel, "<@" + f + ">, We found some interesting results!");
-        });
-    }).on('error', function (e) {
-        console.log("Got error: " + e.message);
-        sempaibot.sendMessage(channel, responses.get("ANIME_DOWN").format(f, "anidex.moe"));
-    });
+function sort_anime(a,b) {
+  if (a.anime < b.anime)
+    return -1;
+  else if (a.anime > b.anime)
+    return 1;
+  else 
+    return 0;
 }
 
 function get_user(name) {
@@ -662,6 +667,8 @@ function load_data() {
             }
         }
     });
+    
+    anidb = new Datastore({filename: "database/ani.db", autoload: true});
 }
 
 /****************************************/
@@ -689,7 +696,8 @@ function osu_force_check(m, user) {
         method: "GET"
     };
     var endDate = new Date();
-    endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000);
+    endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 60 * 1000);
+    console.log(endDate);
     http.get(options, function (res) {
         var data = "";
         res.on('data', function (chunk) {
@@ -733,8 +741,10 @@ var osucheck = setInterval(function () {
             method: "GET"
         };
         var endDate = new Date();
-        endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000);
+        
+        endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 60 * 1000);
         http.get(options, function (res) {
+            res.user = user;
             var data = "";
             res.on('data', function (chunk) {
                 data += chunk;
@@ -754,7 +764,7 @@ var osucheck = setInterval(function () {
                     var date = new Date(bdate.valueOf() + -60 * 8 * 60000);
 
                     if (date > endDate) {
-                        sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("OSU_NEW_SCORE_NODATE").format(user, beatmap.beatmap_id, beatmap.pp, beatmap.rank));
+                        sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("OSU_NEW_SCORE_NODATE").format(res.user, beatmap.beatmap_id, beatmap.pp, beatmap.rank));
                     }
                 }
             });
