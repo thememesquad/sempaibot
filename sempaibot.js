@@ -431,7 +431,14 @@ function osu_force_check(user) {
             data += chunk;
         });
         res.on('end', function () {
-            var json = JSON.parse(data);
+            var json;
+            try {
+                    json = JSON.parse(data);
+            } catch(e) {
+                    console.log("An error occurred: " + e);
+                    console.log("Raw JSON data: " + data);
+                    return false;
+            }
             for (var j = 0; j < json.length; j++) {
                 var beatmap = json[j];
                 var bdate = new Date(beatmap.date);
@@ -468,7 +475,14 @@ var osucheck = setInterval(function () {
                 data += chunk;
             });
             res.on('end', function () {
-                var json = JSON.parse(data);
+                var json;
+                try {
+                        json = JSON.parse(data);
+                } catch(e) {
+                        console.log("An error occurred: " + e);
+                        console.log("Raw JSON data: " + data);
+                        return false;
+                }
                 for (var j = 0; j < json.length; j++) {
                     var beatmap = json[j];
                     var bdate = new Date(beatmap.date);
