@@ -77,18 +77,18 @@ var responses_tsundere = {
     NAME: [
         "I'm here! How can Sempai help you?",
         "I'm here! How can I help you?",
-        "I'm here! How can I help you @{0} ?",
+        "I'm here! How can I help you <@{0}> ?",
         "I'm here! How can Sempai help you today?",
-        "I'm here! How can Sempai help you today @{0} ?",
+        "I'm here! How can Sempai help you today <@{0}> ?",
         "Yes! I'm here! ...Don't get me wrong, it's not like I was waiting for you to say something this whole time or anything!",
         "Yes! I'm here! ...Don't get me wrong, it's not like I was waiting for you to say something this whole time or anything! Sempai just gets lonely sometimes. :(",
         "And? What do you want? ",
-        "And? What do you want @{0} ?",
-        "What do you want this time @{0} ?",
-        "Yes! I'm here @{0} . I-it's not like I was waiting for someone to talk to me!",
-        "Yes! I'm here @{0} . I-it's not like I was waiting for someone to finally talk to me!",
+        "And? What do you want <@{0}> ?",
+        "What do you want this time <@{0}> ?",
+        "Yes! I'm here <@{0}> . I-it's not like I was waiting for someone to talk to me!",
+        "Yes! I'm here <@{0}> . I-it's not like I was waiting for someone to finally talk to me!",
         "What do you want?",
-        "What do you want @{0} ? It's a privilege to even be able to talk to me! You should feel honored."
+        "What do you want <@{0}> ? It's a privilege to even be able to talk to me! You should feel honored."
     ],
     SWITCHED: [
         "Fine. B-but I'm not doing this for you. It's because I wanted to.",
@@ -103,7 +103,7 @@ var responses_tsundere = {
     ALREADY_IN_MODE: [
         "Are you dumb? I'm already in tsundere mode. If you don't recognize what mode I'm in why even switch? Hmpf!",
         "Tsundere on? Baka~. It's already on!",
-        "Tsundere on? Are you dumb, @{0} ? It's already on!"
+        "Tsundere on? Are you dumb, <@{0}> ? It's already on!"
     ],
     
     LIST_REMINDERS: "todo",
@@ -113,8 +113,8 @@ var responses_tsundere = {
     ],
     REMIND_ME: [
         "Sempai will help you remember! If I can be bothered.",
-        "Sempai will try to remind {0}!",
-        "Maybe I'll remind {0}. Just this one time!"
+        "Sempai will try to remind <@{0}>!",
+        "Maybe I'll remind <@{0}>. Just this one time!"
     ],
     REMIND_OTHER: [
         "Sempai will help {1} remember! If I can be bothered.",
@@ -229,7 +229,7 @@ var commands = [
         }
     },
     {
-        command: /remind (\w+) to (.*)? at (.{4,})/,
+        command: /remind (.*) to (.*) at (.{4,})/,
         sample: "sempai remind (*name*) to (*reminder*) at (*time*)",
         description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself)",
         action: function(message, name, reminder, time){
@@ -429,8 +429,8 @@ var commands = [
         command: /tsundere off/,
         hidden: true,
         action: function(m){
-            if(responses.currentMode)
-                return sempaibot.reply(m, responses.get("ALREADY_IN_MODE"));
+            if(!responses.currentMode)
+                return sempaibot.reply(m, responses.get("ALREADY_IN_MODE").format(m.author.id));
             
             responses.setMode(false);
             sempaibot.reply(m, responses.get("SWITCHED"));
@@ -443,7 +443,9 @@ var commands = [
         hidden: true,
         action: function(m, target){
             if(responses.currentMode)
+            {
                 return sempaibot.reply(m, responses.get("NAME").format(m.author.id));
+            }
             
             if(target === undefined)
                 return sempaibot.reply(m, responses.get("WRONG_HOLE"));
