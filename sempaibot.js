@@ -1,7 +1,6 @@
 var Discord = require("discord.js");
 var http = require("http");
 var cheerio = require("cheerio");
-var config = require("./config");
 var Datastore = require("nedb");
 var osudb; //Databases
 
@@ -9,152 +8,245 @@ var osudb; //Databases
 var sempaibot = new Discord.Client();
 var servers = [];
 var reminders = [];
+var run_test = false;
+var config = {};
+if(!run_test)
+    config = require("./config");
 
-sempaibot.on("message", function (m) {
-    if (m.content.indexOf(' ') !== -1) {
-        var command = m.content.substr(0, m.content.indexOf(' ')); // "72"
-        var data = m.content.substr(m.content.indexOf(' ') + 1); // "tocirah sneab"
-    } else {
-        var command = m.content;
-    }
-    if (command === "-sempai") {
-        if (typeof data === "undefined") {
-            sempaibot.reply(m, "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo");
-            return;
+var name = "sempai";
+var commands = [
+    {
+        command: /list my reminders/,
+        sample: "sempai list my reminders",
+        description: "lists your currently active reminders.",
+        action: function(message){
+            //todo
         }
-
-        var user = get_user(data);
-        if (user !== -1) {
-            sempaibot.reply(m, "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@" + user + ">~ONIICHAN VoHiYo KYAA~~~ VoHiYo")
-            return;
-        }
-    }
-
-    if (command === "-anime") {
-        if (typeof data === "undefined") {
-            sempaibot.reply(m, "Please specify what anime you want to look for.");
-            return;
-        }
-        var anime = data.split(" -")[0];
-        if (typeof anime === "undefined") {
-            sempaibot.reply(m, "Please specify what anime you want to look for.");
-            return;
-        }
-
-        var i;
-        if ((i = data.indexOf("-to")) !== -1) {
-            var to = data.substr(i + 4);
-            to = to.split(",");
-            var f = "for ";
-            if (to.length > 1) {
-                for (var i = 0; i < to.length; i++) {
-                    if (i !== 0)
-                        f += ", ";
-                    f += "<@" + get_user(to[i]) + ">";
-                }
-            } else {
-                f = "<@" + get_user(to[0]) + ">";
-            }
-            sempaibot.sendMessage(m.channel, "<@" + m.author.id + ">, I'm looking up \"" + anime + "\" " + f);
-        }
-
-        get_anime_info(anime, m.channel, m.author.id, to);
-    }
-
-    if (command === "-remindme") {
-        if (data.indexOf("-time") === -1) {
-            sempaibot.sendMessage(m.channel, "<@" + m.author.id + "> please send a valid Timestamp.");
-            return;
-        }
-
-        if (data.indexOf("-who") !== -1) {
-            if (data.indexOf("-who") < data.indexOf("-time")) {
-                sempaibot.sendMessage(m.channel, "<@" + m.author.id + "> please correctly format your command with -remindme -time -who");
+    },
+    {
+        command: /remind (\w+) to (.*)? at (.*)/,
+        sample: "sempai remind (*name*) to (*reminder*) at (*time*)",
+        description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself)",
+        action: function(message, name, reminder, time){
+            if (time === undefined) 
+            {
+                sempaibot.sendMessage(message.channel, "<@" + message.author.id + "> please send a valid Timestamp.");
                 return;
             }
-            var who = data.substr(data.indexOf("-who") + 5);
-        } else {
-            who = false;
-        }
 
-        var info = data.substr(0, data.indexOf("-time") - 1);
-
-        if (!who) {
-            var time = data.substr(data.indexOf("-time") + 6);
-        } else {
-            var time = data.substr(data.indexOf("-time") + 6, data.indexOf("-who") - 1 - (data.indexOf("-time") + 6));
-        }
-        var split1 = time.split(" ");
-        var currentDate = new Date();
-        if (split1.length == 1)
-        {
-            time = (currentDate.getMonth() + 1) + "-" + currentDate.getDate() + "-" + currentDate.getFullYear() + " " + time;
-        }
-
-        var parsedtime = new Date(time);
-
-        if (parsedtime < currentDate) {
-            sempaibot.sendMessage(m.channel, "<@" + m.author.id + "> I can't remind you of something in the past.");
-            return;
-        }
-
-        remind_me(m.author.id, m.channel, who, parsedtime, info);
-
-        if (who) {
-            var w = who.split(",");
-            var whos = "";
-            for (var i = 0; i < w.length; i++) {
-                if (i !== 0)
-                    whos += ", ";
-                whos += "<@" + get_user(w[i]) + ">";
+            if (name != "me") 
+            {
+                var who = name;
+            } else {
+                who = false;
             }
-        } else {
-            whos = "himself";
+
+            var info = reminder;
+
+            var split1 = time.split(" ");
+            var currentDate = new Date();
+            if (split1.length == 1)
+            {
+                time = (currentDate.getMonth() + 1) + "-" + currentDate.getDate() + "-" + currentDate.getFullYear() + " " + time;
+            }
+
+            var parsedtime = new Date(time);
+
+            if (parsedtime < currentDate) {
+                sempaibot.sendMessage(message.channel, "<@" + message.author.id + "> I can't remind you of something in the past.");
+                return;
+            }
+
+            remind_me(message.author.id, message.channel, who, parsedtime, info);
+
+            if (who) 
+            {
+                var w = who.split(",");
+                var whos = "";
+                for (var i = 0; i < w.length; i++) {
+                    if (i !== 0)
+                        whos += ", ";
+                    
+                    whos += "<@" + get_user(w[i]) + ">";
+                }
+            } else {
+                whos = "himself";
+            }
+
+            sempaibot.sendMessage(message.channel, "<@" + message.author.id + "> I will remind you \"" + info + "\" at \"" + time + "\" to " + whos + ".");
         }
+    },
+    {
+        command: /find anime (.*)/,
+        sample: "sempai find anime (*anime*)",
+        description: "Searches nyaa.eu for magnet links for the given anime.",
+        action: function(message, anime){
+            if (anime === undefined) {
+                sempaibot.reply(m, "Please specify what anime you want to look for.");
+                return;
+            }
+            
+            //todo: I have no idea what this code does. I think it allows you to send the results to someone else.
+            /*
+            var i;
+            if ((i = data.indexOf("-to")) !== -1) {
+                var to = data.substr(i + 4);
+                to = to.split(",");
+                var f = "for ";
+                if (to.length > 1) {
+                    for (var i = 0; i < to.length; i++) {
+                        if (i !== 0)
+                            f += ", ";
+                        f += "<@" + get_user(to[i]) + ">";
+                    }
+                } else {
+                    f = "<@" + get_user(to[0]) + ">";
+                }
+                sempaibot.sendMessage(m.channel, "<@" + m.author.id + ">, I'm looking up \"" + anime + "\" " + f);
+            }*/
 
-        sempaibot.sendMessage(m.channel, "<@" + m.author.id + "> I will remind you \"" + info + "\" at \"" + time + "\" to " + whos + ".");
-        return;
-    }
-
-    if (command === "-osufollowing") {
-        var message = "We're currently following: ";
-        for (var i = 0; i < osuusers.length; i++) {
-            if (i !== 0)
-                message += ", ";
-            message += osuusers[i];
+            var to = undefined;
+            get_anime_info(anime, message.channel, message.author.id, to);
         }
-
-        sempaibot.reply(m, message);
-    }
-
-    if (command === "-osuadd") {
-        var user = data;
-        check_osu_user(user, m);
-    }
-
-    if (command === "-osuremove") {
-        var user = data;
-        var i = osuusers.indexOf(user);
-        if (i === -1) {
-            sempaibot.reply(m, "Couldn't remove " + user + " because we aren't following him.");
-            return;
+    },
+    
+    {
+        command: /who are you following on osu/,
+        sample: "sempai who are you following on osu?",
+        description: "Lists all the people I'm stalking on osu.",
+        action: function(m){
+            var message = "We are currently following: ";
+            for(var i = 0;i<osuusers.length;i++)
+            {
+                if(i !== 0)
+                    message += ", ";
+                
+                message += osuusers[i];
+            }
+            
+            sempaibot.reply(m, message);
         }
+    },
+    
+    {
+        command: /follow (.*)? on osu/,
+        sample: "sempai follow (*user*) on osu",
+        description: "Adds another victim to my stalker list for osu.",
+        action: function(m, name){
+            if(name === undefined)
+            {
+                return sempaibot.reply(m, "You could ofcourse.....actually say the person that you want me to watch.");
+            }
+            
+            check_osu_user(name, m);
+        }
+    },
+    
+    {
+        command: /stop following (.*)? on osu/,
+        sample: "sempai stop following (*user*) on osu",
+        description: "Removes someone from my stalker list for osu.",
+        action: function(m, user){
+            var i = osuusers.indexOf(user);
+            if(i === -1)
+            {
+                return sempaibot.reply(m, "Couldn't stop watching " + user + " because we aren't even watching him!");
+            }
+            
+            osuusers.splice(i, 1);
 
-        osuusers.splice(i, 1);
+            osudb.remove({username: user}, {}, function (err, numrem) {
+                console.log("error: " + err);
+                console.log("numrem: " + numrem);
+            });
 
-        osudb.remove({username: user}, {}, function (err, numrem) {
-            console.log("error: " + err);
-            console.log("numrem: " + numrem);
+            sempaibot.reply(m, "Successfully stopped watching " + user);
+        }
+    },
+    
+    {
+        command: /check (.*)? on osu/,
+        sample: "sempai check (*user*) on osu",
+        description: "Forces me to check the given person on osu just in case I missed something.",
+        action: function(m, user){
+            osu_force_check(user);
+        }
+    },
+    
+    {
+        command: /help me/,
+        sample: "sempai help me",
+        description: "Sends this lovely help text to you!",
+        action: function(m){
+            var message = "This is the current list of commands:\r\n";
+            for(var i = 0;i<commands.length;i++)
+            {
+                message += "**" + commands[i].sample + "** - " + commands[i].description;
+                message += "\r\n";
+            }
+            
+            sempaibot.reply(m, message);
+        }
+    },
+    
+    //this one should be last since the regex always matches
+    {
+        command: /sempai.?(.*)/,
+        sample: "sempai (*user*)",
+        description: "Well, you should just try this command out instead of reading the description. (user is optional)",
+        action: function(m, target){
+            if(target === undefined)
+                return sempaibot.reply(m, "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo");
+            
+            var user = get_user(target);
+            if(user !== -1)
+                return sempaibot.reply(m, "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@" + user + ">~ONIICHAN VoHiYo KYAA~~~ VoHiYo");
+            
+            return sempaibot.reply(m, "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo");
+        }
+    }
+];
+
+function handle_message(m)
+{
+    var n = m.content.split(" ")[0];
+    if(n == name)
+    {
+        for(var i = 0;i<commands.length;i++)
+        {
+            var data = commands[i].command.exec(m.content);
+            if(data === null)
+                continue;
+            
+            data.splice(0, 1);
+            data = [m].concat(data);
+            
+            commands[i].action.apply(null, data);
+            break;
+        }
+    }
+}
+
+if(!run_test)
+{
+    sempaibot.on("message", function (m) {
+        handle_message(m);
+    });
+
+    sempaibot.on("ready", function () {
+        load_data();
+
+        sempaibot.joinServer(config.server, function (error, server) {
+            servers.push(server);
+            sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), "@everyone Hey guys I'm online!");
         });
+    });
 
-        sempaibot.reply(m, "Successfully removed " + user + " from the Osulist");
-    }
-
-    if (command === "-osuforcecheck") {
-        var user = data;
-        osu_force_check(user);
-    }
-});
+    sempaibot.login(config.user, config.pass, function (error, token) {
+        console.log(error
+                + "; token: " + token);
+    });
+}
 
 function remind_me(me, channel, who, when, what) {
     if (who) {
@@ -234,7 +326,7 @@ function search_nyaa(anime, channel, f, to) {
             data += chunk;
         });
         res.on('end', function () {
-            console.log(data);
+            //console.log(data);
             sempaibot.sendMessage(channel, "<@" + f + ">, We found some interesting results!");
         });
     }).on('error', function (e) {
@@ -256,7 +348,7 @@ function search_anidex(anime, channel, f, to) {
         });
         res.on('end', function () {
             var $ = cheerio.load(data);
-            console.log(data);
+            //console.log(data);
             sempaibot.sendMessage(channel, "<@" + f + ">, We found some interesting results!");
         });
     }).on('error', function (e) {
@@ -276,20 +368,6 @@ function get_user(name) {
 
     return -1;
 }
-
-sempaibot.on("ready", function () {
-    load_data();
-
-    sempaibot.joinServer(config.server, function (error, server) {
-        servers.push(server);
-        sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), "@everyone Hey guys I'm online!");
-    });
-});
-
-sempaibot.login(config.user, config.pass, function (error, token) {
-    console.log(error
-            + "; token: " + token);
-});
 
 function load_data() {
     osudb = new Datastore({filename: "database/osu.db", autoload: true});
@@ -438,4 +516,44 @@ function check_osu_user(user, m) {
         console.log("Got error: " + e.message);
         return false;
     });
+}
+
+if(run_test)
+{
+    sempaibot.reply = function(m, data){
+        console.log("reply", data);
+    }
+    
+    sempaibot.sendMessage = function(channel, data){
+        console.log("sendMessage", channel, data);
+    }
+    
+    sempaibot.channels = {
+        get: function(name, query){
+            return "osu";
+        }
+    }
+    
+    var fake_message = function(message){
+        console.log("message", message);
+        return {
+            channel: "test123",
+            author: {
+                id: "Calsmurf2904",
+            },
+            content: message
+        }
+    };
+    
+    load_data();
+    
+    setTimeout(function(){
+        handle_message(fake_message("test123"));
+        handle_message(fake_message("sempai"));
+        handle_message(fake_message("sempai remind me to test123 at 00:28"));
+        handle_message(fake_message("sempai find anime .hack"));
+        handle_message(fake_message("sempai who are you following on osu?"));
+        handle_message(fake_message("sempai check calsmurf2904 on osu"));
+        handle_message(fake_message("sempai help me"));
+    }, 100);
 }
