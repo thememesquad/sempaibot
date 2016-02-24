@@ -371,7 +371,7 @@ var commands = [
         description: "Forces me to check the given person on osu just in case I missed something.",
         action: function(m, user){
             sempaibot.sendMessage(m.channel, responses.get("OSU_CHECK").format(m.author.id, user));
-            osu_force_check(user);
+            osu_force_check(m, user);
         }
     },
     
@@ -670,9 +670,9 @@ function load_data() {
 
 var osuusers = [];
 
-function osu_force_check(user) {
+function osu_force_check(m, user) {
     if (osuusers.indexOf(user) === -1) {
-        sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("OSU_NOT_FOLLOWING").format(user));
+        sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("OSU_NOT_FOLLOWING").format(m.author.id, user));
         return;
     }
 
