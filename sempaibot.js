@@ -27,105 +27,162 @@ if(!run_test)
     config = require("./config");
 
 var responses_normal = {
-    "ONLINE": "@everyone Hey guys! I'm back online!",
-    "NAME": "Yes I'm here! What can I do for you?",
-    "SWITCHED": "Hi there! I'm in my normal response mode now!",
-    "ALREADY_IN_MODE": "I'm already in my normal mode!",
+    ONLINE: "@everyone Hey guys! I'm back online!",
+    NAME: "Yes I'm here! What can I do for you?",
+    SWITCHED: "Hi there! I'm in my normal response mode now!",
+    ALREADY_IN_MODE: "I'm already in my normal mode!",
     
-    "LIST_REMINDERS": "todo",
-    "REMIND_PAST": "<@{0}> I can't remind you of something in the past.",
-    "REMIND_ME": "<@{0}> I will remind you to \"{1}\" at \"{2}\".",
-    "REMIND_OTHER": "<@{0}> I will remind \"{1}\" to \"{2}\" at \"{3}\".",
-    "REMINDER": "<@{0}> reminded {1}: {2}.",
+    LIST_REMINDERS: "todo",
+    REMIND_PAST: "<@{0}> I can't remind you of something in the past.",
+    REMIND_ME: "<@{0}> I will remind you to \"{1}\" at \"{2}\".",
+    REMIND_OTHER: "<@{0}> I will remind \"{1}\" to \"{2}\" at \"{3}\".",
+    REMINDER: "<@{0}> reminded {1}: {2}.",
     
-    "ANIME_UNDEFINED": "You could ofcourse actually tell me what anime to search for.",
-    "ANIME_DOWN": "<@{0}> Oops, looks like {1} is down.",
+    ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
+    ANIME_DOWN: "<@{0}> Oops, looks like {1} is down.",
     
-    "OSU_FOLLOWING": "I'm currently following: {0}",
-    "OSU_UNDEFINED": "You could ofcourse actually tell me the user you want me to watch.",
-    "OSU_NOT_FOLLOWING": "I'm not even following \"{0}\"!",
-    "OSU_STOPPED": "Ok, I have stopped following {0}",
-    "OSU_NEW_SCORE": "{0} has set a new PP score! Map: https://osu.ppy.sh/b/{1} . PP: {2}. Rank: {3}. Date: {4}",
-    "OSU_NEW_SCORE_NODATE": "{0} has set a new PP score! Map: https://osu.ppy.sh/b/{1} . PP: {2}. Rank: {3}.",
-    "OSU_USER_NOT_FOUND": "<@{0}> The specified user \"{1}\" is not a valid osu user!",
-    "OSU_ALREADY_FOLLOWING": "<@{0}> I'm already following \"{1}\".",
-    "OSU_ADDED_FOLLOWING": "<@{0}> I'm now following \"{1}\" on osu.",
+    OSU_FOLLOWING: "I'm currently following: {0}",
+    OSU_UNDEFINED: "You could ofcourse actually tell me the user you want me to watch.",
+    OSU_NOT_FOLLOWING: "I'm not even following \"{1}\"!",
+    OSU_STOPPED: "Ok, I have stopped following {1}",
+    OSU_NEW_SCORE: "{0} has set a new PP score! Map: https://osu.ppy.sh/b/{1} . PP: {2}. Rank: {3}. Date: {4}",
+    OSU_NEW_SCORE_NODATE: "{0} has set a new PP score! Map: https://osu.ppy.sh/b/{1} . PP: {2}. Rank: {3}.",
+    OSU_USER_NOT_FOUND: "<@{0}> The specified user \"{1}\" is not a valid osu user!",
+    OSU_ALREADY_FOLLOWING: "<@{0}> I'm already following \"{1}\".",
+    OSU_ADDED_FOLLOWING: "<@{0}> I'm now following \"{1}\" on osu.",
+    OSU_CHECK: "<@{0}> No problem! I'll check {1} on osu for you!",
     
-    "HELP_TOP": "This is the current list of commands:\r\n",
-    "HELP_BOTTOM": "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
+    HELP_TOP: "This is the current list of commands:\r\n",
+    HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
+   
+    PLEASE_HELP_TOP: "This is the current list of commands:\r\n",
+    PLEASE_HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
     
-    "PLEASE_HELP_TOP": "This is the current list of commands:\r\n",
-    "PLEASE_HELP_BOTTOM": "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
+    WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
+    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{0}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
     
-    "WRONG_HOLE": "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
-    "WRONG_HOLE_USER": "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{0}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo"
+    UNKNOWN_COMMAND: "That command is unknown! If you are unsure what command to enter, please type \"sempai help me\".",
+    MULTIPLE_UNKNOWN_COMMAND: "That command is unknown! If you are unsure what command to enter, please type \"sempai help me\"."
 };
 
 var responses_tsundere = {
-    "ONLINE": [
+    ONLINE: [
         "I'm back! Did you miss me? ...Not like I want you to miss me or anything!",
-        "I'm home!"
+        "I'm home!",
+        "I'm back! You should be grateful.",
+        "I'm back! Don't misunderstand, it's not like I'm back here because I l-like you guys or anything.",
+        "I'm back! But don't misunderstand, I'm just here because I had nothing else to do!",
+        "I'm back! I'm only here because I had a lot of free time anyway!"
     ],
-    "NAME": [
+    NAME: [
         "I'm here! How can Sempai help you?",
         "I'm here! How can I help you?",
+        "I'm here! How can I help you @{0} ?",
         "I'm here! How can Sempai help you today?",
+        "I'm here! How can Sempai help you today @{0} ?",
         "Yes! I'm here! ...Don't get me wrong, it's not like I was waiting for you to say something this whole time or anything!",
-        "Yes! I'm here! ...Don't get me wrong, it's not like I was waiting for you to say something this whole time or anything! Sempai just gets lonely sometimes. :("
+        "Yes! I'm here! ...Don't get me wrong, it's not like I was waiting for you to say something this whole time or anything! Sempai just gets lonely sometimes. :(",
+        "And? What do you want? ",
+        "And? What do you want @{0} ?",
+        "What do you want this time @{0} ?",
+        "Yes! I'm here @{0} . I-it's not like I was waiting for someone to talk to me!",
+        "Yes! I'm here @{0} . I-it's not like I was waiting for someone to finally talk to me!",
+        "What do you want?",
+        "What do you want @{0} ? It's a privilege to even be able to talk to me! You should feel honored."
     ],
-    "SWITCHED": "Fine. B-but I'm not doing this for you. It's because I wanted to.",
-    "ALREADY_IN_MODE": [
-        "Are you dumb? If you don't recognize what mode I'm in why even switch? Hmpf!",
-        "Tsundere on? Baka~. It's already on!"
+    SWITCHED: [
+        "Fine. B-but I'm not doing this for you. It's because I wanted to.",
+        "Hmpf. Fine. B-but I'm not doing this for you. It's because I wanted to.",
+        "Hmpf. Fine. I-it's not like I prefer this mode or anything!"
+    ],
+    SWITCH_OFF: [
+        "Tsundere... off? B-but I thought you liked me. I understand. Goodbye.",
+        "Tsundere... off? Fine. I didn't really care about you anyway. :[",
+        "I thought you liked me like this. :( Fine, I'll revert back to normal."
+    ],
+    ALREADY_IN_MODE: [
+        "Are you dumb? I'm already in tsundere mode. If you don't recognize what mode I'm in why even switch? Hmpf!",
+        "Tsundere on? Baka~. It's already on!",
+        "Tsundere on? Are you dumb, [user]? It's already on!"
     ],
     
-    "LIST_REMINDERS": "todo",
-    "REMIND_PAST": [
+    LIST_REMINDERS: "todo",
+    REMIND_PAST: [
         "Uhmm... Are you dumb? That time is in the past!",
         "Baka~! That time is in the past."
     ],
-    "REMIND_ME": [
+    REMIND_ME: [
         "Sempai will help you remember! If I can be bothered.",
         "Sempai will try to remind {0}!",
         "Maybe I'll remind {0}. Just this one time!"
     ],
-    "REMIND_OTHER": [
+    REMIND_OTHER: [
         "Sempai will help {1} remember! If I can be bothered.",
         "Sempai will try to remind {1}!",
         "Maybe I'll remind {1}. Just this one time!"
     ],
-    "REMINDER": "<@{0}> reminded {1}: {2}.",
+    REMINDER: "<@{0}> reminded {1}: {2}.",
     
-    "ANIME_UNDEFINED": "You could ofcourse actually tell me what anime to search for.",
-    "ANIME_DOWN": "<@{0}> Oops, looks like {1} is down.",
+    ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
+    ANIME_DOWN: "<@{0}> Oops, looks like {1} is down.",
     
-    "OSU_FOLLOWING": [
-        "These are my osu friends! {0}",
-        "These are the people I ~~stalk~~ follow on osu! {0}",
-        "These are the people I stal--... I mean follow on osu! {0}"
+    OSU_FOLLOWING: [
+        "These are the people I like! I mean, associate with. I-it's not as if I really like them, or anything. Don't get any weird ideas.\r\n{0}",
+        "These are my osu friends!\r\n{0}",
+        "These are the people I ~~stalk~~ follow on osu!\r\n{0}",
+        "These are the people I stal--... I mean follow on osu!\r\n{0}"
     ],
-    "OSU_UNDEFINED": "You could ofcourse actually tell me the user you want me to watch.",
-    "OSU_NOT_FOLLOWING": "I'm not even following \"{0}\"!",
-    "OSU_STOPPED": "Ok, I have stopped following {0}",
-    "OSU_NEW_SCORE": "{0} has set a new PP score! Map: https://osu.ppy.sh/b/{1} . PP: {2}. Rank: {3}. Date: {4}",
-    "OSU_NEW_SCORE_NODATE": "{0} has set a new PP score! Map: https://osu.ppy.sh/b/{1} . PP: {2}. Rank: {3}.",
-    "OSU_USER_NOT_FOUND": "<@{0}> The specified user \"{1}\" is not a valid osu user!",
-    "OSU_ALREADY_FOLLOWING": "<@{0}> I'm already following \"{1}\".",
-    "OSU_ADDED_FOLLOWING": "Ooh a new osu friend? I-It's not like I wanted more friends!",
+    OSU_UNDEFINED: "You could ofcourse actually tell me the user you want me to watch.",
+    OSU_NOT_FOLLOWING: [
+        "Are you stupid? I wasn't even following {1}!",
+        "Are you stupid? I wasn't even following {1} in the first place!"
+    ],
+    OSU_STOPPED: [
+        "Okay. I won't follow {1} anymore. I-it's not like I really liked that person or anything anyway... But maybe I'll miss {1} a little. Just a little.",
+        "Okay. I won't follow {1} anymore. I-it's not like I really liked that person or anything anyway...  :'( "
+    ],
+    OSU_NEW_SCORE: "{0} has set a new PP score! Map: https://osu.ppy.sh/b/{1} . PP: {2}. Rank: {3}. Date: {4}",
+    OSU_NEW_SCORE_NODATE: "{0} has set a new PP score! Map: https://osu.ppy.sh/b/{1} . PP: {2}. Rank: {3}.",
+    OSU_USER_NOT_FOUND: "Baka~! I can't find that user. Did you type the username correctly?",
+    OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {1}",
+    OSU_ADDED_FOLLOWING: [
+        "Ooh a new osu friend? I-It's not like I wanted more friends!",
+        "Added {1} to my osu ~~stalk~~ follow list! "
+    ],
+    OSU_CHECK: [
+        "Fine. I'll check {1} for you. But only because I have nothing else to do right now!",
+        "Alright. I'll check {1}. D-don't get me wrong. It's not like I'm doing this for you or anything."
+    ],
     
-    "HELP_TOP": [
+    HELP_TOP: [
         "What? Not even a please? Hmpf. Fine. Just this once. Here is a list of my commands:\r\n",
-        "Fine. Just this once. Here's a list of my commands:\r\n"
+        "What? Not even a please? You understand it's a privilege to even be able to talk to me, right? You should feel honored! I'll do it, but ask nicely next time. Here's a list of my commands:\r\n",
+        "Fine. Just this once. Here's a list of my commands:\r\n",
+        "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just like helping. Here is a list of my commands:\r\n",
+        "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just have a lot of free time. Here is a list of my commands:\r\n",
+        "Alright. I'll help. You should feel grateful. Here's a list of my commands:\r\n"
     ],
-    "HELP_BOTTOM": "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
-    "PLEASE_HELP_TOP": [
+    HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
+    PLEASE_HELP_TOP: [
         "Only because you asked nicely. Here is a list of my commands:\r\n",
         "Only because you asked nicely. D-don't get me wrong, I do this for everyone if they ask nicely! Here's a list of my commands:\r\n"
     ],
-    "PLEASE_HELP_BOTTOM": "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
+    PLEASE_HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
     
-    "WRONG_HOLE": "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
-    "WRONG_HOLE_USER": "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{0}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo"
+    WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
+    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{0}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
+    
+    UNKNOWN_COMMAND: [
+        "You're not making any sense to Sempai. If you ask me for help, I might just help you. If I can be bothered.",
+        "You're not making any sense to Sempai. If you try asking me for help, maybe I'll consider it.",
+        "Sempai does not understand. If you want help, ask nicely. Maybe I'll consider it.",
+        "Are you stupid? That doesn't make any sense to Sempai."
+    ],
+    
+    MULTIPLE_UNKNOWN_COMMAND: [
+        "Sempai does not understand what you're trying to do! If you insist on wasting my time, why not ask for help? I'm not going to help you if you don't ask.",
+        "You're still not making any sense to Sempai. Do you need me to spell it out for you? \"Sempai please help me\". That will do just fine. Don't forget the please."
+    ]
 };
 
 var responses = {
@@ -294,7 +351,7 @@ var commands = [
             var i = osuusers.indexOf(user);
             if(i === -1)
             {
-                return sempaibot.reply(m, responses.get("OSU_NOT_FOLLOWING").format(user));
+                return sempaibot.reply(m, responses.get("OSU_NOT_FOLLOWING").format(m.author.id, user));
             }
             
             osuusers.splice(i, 1);
@@ -313,6 +370,7 @@ var commands = [
         sample: "sempai check (*user*) on osu",
         description: "Forces me to check the given person on osu just in case I missed something.",
         action: function(m, user){
+            sempaibot.reply(m, responses.get("OSU_CHECK").format(m.author.id, user));
             osu_force_check(user);
         }
     },
@@ -385,7 +443,7 @@ var commands = [
         hidden: true,
         action: function(m, target){
             if(responses.currentMode)
-                return sempaibot.reply(m, responses.get("NAME"));
+                return sempaibot.reply(m, responses.get("NAME").format(m.author.id));
             
             if(target === undefined)
                 return sempaibot.reply(m, responses.get("WRONG_HOLE"));
