@@ -28,12 +28,6 @@ var commands = [
         sample: "sempai remind (*name*) to (*reminder*) at (*time*)",
         description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself)",
         action: function(message, name, reminder, time){
-            if (time === undefined) 
-            {
-                sempaibot.sendMessage(message.channel, "<@" + message.author.id + "> please send a valid Timestamp.");
-                return;
-            }
-
             if (name != "me") 
             {
                 var who = name;
@@ -43,9 +37,8 @@ var commands = [
 
             var info = reminder;
 
-            var split1 = time.split(" ");
             var currentDate = new Date();
-            if (split1.length == 1)
+            if (time.split(" ").length == 1)
             {
                 time = (currentDate.getMonth() + 1) + "-" + currentDate.getDate() + "-" + currentDate.getFullYear() + " " + time;
             }
@@ -73,7 +66,10 @@ var commands = [
                 whos = "himself";
             }
 
-            sempaibot.sendMessage(message.channel, "<@" + message.author.id + "> I will remind you \"" + info + "\" at \"" + time + "\" to " + whos + ".");
+            if(!who)
+                sempaibot.sendMessage(message.channel, "<@" + message.author.id + "> I will remind you to \"" + info + "\" at \"" + time + "\".");
+            else
+                sempaibot.sendMessage(message.channel, "<@" + message.author.id + "> I will remind \"" + whos + "\" to \"" + info + "\" at \"" + time + "\".");
         }
     },
     {
@@ -538,27 +534,35 @@ function check_osu_user(user, m) {
 
 if(run_test)
 {
+    sempaibot = {};
     sempaibot.reply = function(m, data){
         console.log("reply", data);
-    }
+    };
     
     sempaibot.sendMessage = function(channel, data){
         console.log("sendMessage", channel, data);
-    }
+    };
     
     sempaibot.channels = {
         get: function(name, query){
             return "osu";
         }
-    }
+    };
+    
+    var fake_user = function(user){
+        return {
+            id: user,
+            username: user
+        }
+    };
+    
+    sempaibot.users = [fake_user("Calsmurf2904"), fake_user("SempaiSC2")];
     
     var fake_message = function(message){
         console.log("message", message);
         return {
             channel: "test123",
-            author: {
-                id: "Calsmurf2904",
-            },
+            author: fake_user("Calsmurf2904"),
             content: message
         }
     };
@@ -566,9 +570,11 @@ if(run_test)
     load_data();
     
     setTimeout(function(){
-        handle_message(fake_message("test123"));
+        handle_message(fake_message("sempai remind SempaiSC2 to test123 at 12:50"));
+        handle_message(fake_message("sempai remind me to test123 at 12:50"));
+        /*handle_message(fake_message("test123"));
         handle_message(fake_message("sempai"));
-        handle_message(fake_message("sempai remind me to test123 at 00:28"));
+        handle_message(fake_message("sempai remind me to test123 at 12:30"));
         handle_message(fake_message("sempai find anime nisekoi"));
         handle_message(fake_message("sempai who are you following on osu?"));
         handle_message(fake_message("sempai check calsmurf2904 on osu"));
@@ -577,6 +583,6 @@ if(run_test)
         handle_message(fake_message("-find anime nisekoi"));
         handle_message(fake_message("-who are you following on osu?"));
         handle_message(fake_message("-check calsmurf2904 on osu"));
-        handle_message(fake_message("-help me"));
+        handle_message(fake_message("-help me"));*/
     }, 100);
 }
