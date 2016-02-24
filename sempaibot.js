@@ -24,7 +24,7 @@ var commands = [
         }
     },
     {
-        command: /remind (\w+) to (.*)? at (.*)/,
+        command: /remind (\w+) to (.*)? at (.{4,})/,
         sample: "sempai remind (*name*) to (*reminder*) at (*time*)",
         description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself)",
         action: function(message, name, reminder, time){
