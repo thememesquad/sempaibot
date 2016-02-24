@@ -648,7 +648,6 @@ function load_data() {
 
         for (var i = 0; i < users.length; i++) {
             osuusers.push(users[i].username);
-            osu_force_check(users[i].username);
         }
     });
 
@@ -698,7 +697,34 @@ function osu_force_check(m, user) {
     var endDate = new Date();
     endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 60 * 1000);
     console.log(endDate);
-    http.get(options, function (res) {
+    http.get(options, function (user, res) {
+        var data = "";
+        res.on('data', function (chunk) {
+            data += chunk;
+        });
+        res.on('end', function () {
+            var json;
+            try {
+                json = JSON.parse(data);
+            } catch(e) {
+                console.log("error: " + e);
+                console.log("Raw JSON data: " + data);
+                return;
+            }
+            for (var j = 0; j < json.length; j++) {
+                var beatmap = json[j];
+                var bdate = new Date(beatmap.date);
+                var date = new Date(bdate.valueOf() + -60 * 8 * 60000);
+
+                if (date > endDate) {
+                    sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("OSU_NEW_SCORE_NODATE").format(user, beatmap.beatmap_id, beatmap.pp, beatmap.rank));
+                }
+            }
+        });
+    }.bind(null, user));
+    
+    /*function (res) {
+        console.log(res);
         var data = "";
         res.on('data', function (chunk) {
             data += chunk;
@@ -722,7 +748,7 @@ function osu_force_check(m, user) {
                 }
             }
         });
-    });
+    }*/
 }
 
 var osucheck = setInterval(function () {
@@ -743,7 +769,35 @@ var osucheck = setInterval(function () {
         var endDate = new Date();
         
         endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 60 * 1000);
-        http.get(options, function (res) {
+        http.get(options,function (user, res) {
+            var data = "";
+            res.on('data', function (chunk) {
+                data += chunk;
+            });
+            res.on('end', function () {
+                var json;
+                try {
+                    json = JSON.parse(data);
+                } catch(e) {
+                    console.log("error: " + e);
+                    console.log("Raw JSON data: " + data);
+                    return;
+                }
+                for (var j = 0; j < json.length; j++) {
+                    var beatmap = json[j];
+                    var bdate = new Date(beatmap.date);
+                    var date = new Date(bdate.valueOf() + -60 * 8 * 60000);
+
+                    if (date > endDate) {
+                        sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("OSU_NEW_SCORE_NODATE").format(user, beatmap.beatmap_id, beatmap.pp, beatmap.rank));
+                    }
+                }
+            });
+        }.bind(null, user)).on('error', function (e) {
+            console.log("Got error: " + e.message);
+            return false;
+        });
+        /* function (res) {
             res.user = user;
             var data = "";
             res.on('data', function (chunk) {
@@ -768,10 +822,7 @@ var osucheck = setInterval(function () {
                     }
                 }
             });
-        }).on('error', function (e) {
-            console.log("Got error: " + e.message);
-            return false;
-        });
+        }*/
     }
 
 }, 1000 * 60);
@@ -820,7 +871,7 @@ function check_osu_user(user, m) {
         return false;
     });
 }
-
+/*
 if(run_test)
 {
     sempaibot = {};
@@ -877,6 +928,6 @@ if(run_test)
         handle_message(fake_message("-find anime nisekoi"));
         handle_message(fake_message("-who are you following on osu?"));
         handle_message(fake_message("-check calsmurf2904 on osu"));
-        handle_message(fake_message("-help me"));*/
+        handle_message(fake_message("-help me"));
     }, 100);
-}
+}*/
