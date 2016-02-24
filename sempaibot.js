@@ -80,19 +80,14 @@ var commands = [
         command: /find anime (.*)/,
         sample: "sempai find anime (*anime*)",
         description: "Searches nyaa.eu for magnet links for the given anime.",
-        action: function(message, name){
-            if (name === undefined) {
+        action: function(message, anime){
+            if (anime === undefined) {
                 sempaibot.reply(m, "Please specify what anime you want to look for.");
                 return;
             }
             
-            //todo
-            /*var anime = data.split(" -")[0];
-            if (typeof anime === "undefined") {
-                sempaibot.reply(m, "Please specify what anime you want to look for.");
-                return;
-            }
-
+            //todo: I have no idea what this code does. I think it allows you to send the results to someone else.
+            /*
             var i;
             if ((i = data.indexOf("-to")) !== -1) {
                 var to = data.substr(i + 4);
@@ -107,20 +102,20 @@ var commands = [
                 } else {
                     f = "<@" + get_user(to[0]) + ">";
                 }
-                sempaibot.sendMessage(m.channel, "<@" + m.author.id + ">, I'm looking up \"" + name + "\" " + f);
+                sempaibot.sendMessage(m.channel, "<@" + m.author.id + ">, I'm looking up \"" + anime + "\" " + f);
             }*/
 
             var to = undefined;
-            get_anime_info(name, message.channel, message.author.id, to);
+            get_anime_info(anime, message.channel, message.author.id, to);
         }
     },
     
     {
-        command: /who are you watching on osu/,
-        sample: "sempai who are you watching on osu?",
+        command: /who are you following on osu/,
+        sample: "sempai who are you following on osu?",
         description: "Lists all the people I'm stalking on osu.",
         action: function(m){
-            var message = "We are currently watching: ";
+            var message = "We are currently following: ";
             for(var i = 0;i<osuusers.length;i++)
             {
                 if(i !== 0)
@@ -134,8 +129,8 @@ var commands = [
     },
     
     {
-        command: /watch (.*)? on osu/,
-        sample: "sempai watch (*user*) on osu",
+        command: /follow (.*)? on osu/,
+        sample: "sempai follow (*user*) on osu",
         description: "Adds another victim to my stalker list for osu.",
         action: function(m, name){
             if(name === undefined)
@@ -148,8 +143,8 @@ var commands = [
     },
     
     {
-        command: /stop watching (.*)? on osu/,
-        sample: "sempai stop watching (*user*) on osu",
+        command: /stop following (.*)? on osu/,
+        sample: "sempai stop following (*user*) on osu",
         description: "Removes someone from my stalker list for osu.",
         action: function(m, user){
             var i = osuusers.indexOf(user);
@@ -557,7 +552,7 @@ if(run_test)
         handle_message(fake_message("sempai"));
         handle_message(fake_message("sempai remind me to test123 at 00:28"));
         handle_message(fake_message("sempai find anime .hack"));
-        handle_message(fake_message("sempai who are you watching on osu?"));
+        handle_message(fake_message("sempai who are you following on osu?"));
         handle_message(fake_message("sempai check calsmurf2904 on osu"));
         handle_message(fake_message("sempai help me"));
     }, 100);
