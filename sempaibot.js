@@ -103,7 +103,7 @@ var responses_tsundere = {
     ALREADY_IN_MODE: [
         "Are you dumb? I'm already in tsundere mode. If you don't recognize what mode I'm in why even switch? Hmpf!",
         "Tsundere on? Baka~. It's already on!",
-        "Tsundere on? Are you dumb, [user]? It's already on!"
+        "Tsundere on? Are you dumb, @{0} ? It's already on!"
     ],
     
     LIST_REMINDERS: "todo",
@@ -418,7 +418,7 @@ var commands = [
         hidden: true,
         action: function(m){
             if(responses.currentMode)
-                return sempaibot.reply(m, responses.get("ALREADY_IN_MODE"));
+                return sempaibot.reply(m, responses.get("ALREADY_IN_MODE").format(m.author.id));
             
             responses.setMode(true);
             sempaibot.reply(m, responses.get("SWITCHED"));
@@ -641,6 +641,7 @@ function load_data() {
 
         for (var i = 0; i < users.length; i++) {
             osuusers.push(users[i].username);
+            osu_force_check(users[i].username);
         }
     });
 
