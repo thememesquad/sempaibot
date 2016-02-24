@@ -184,6 +184,8 @@ var commands = [
                 message += "**" + commands[i].sample + "** - " + commands[i].description;
                 message += "\r\n";
             }
+            message += "You could also just prefix the commands with - instead of sempai:\r\n";
+            message += "**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.\r\n";
             
             sempaibot.reply(m, message);
         }
@@ -209,8 +211,9 @@ var commands = [
 
 function handle_message(m)
 {
-    var n = m.content.split(" ")[0];
-    if(n == name || m.content.charAt(0) == "-")
+    var n = m.content.split(" ");
+    
+    if(n[0] == name || m.content.charAt(0) == "-")
     {
         for(var i = 0;i<commands.length;i++)
         {
@@ -228,8 +231,8 @@ function handle_message(m)
                 
                 if(n.length > 1)
                 {
-                    var name = m.content.substr(m.content.indexOf(" ") + 1);
-                    data.push(name);
+                    var targetName = m.content.substr(m.content.indexOf(" ") + 1);
+                    data.push(targetName);
                 }
             }else{
                 //dont allow null commands to run without the name-keyword
@@ -566,9 +569,14 @@ if(run_test)
         handle_message(fake_message("test123"));
         handle_message(fake_message("sempai"));
         handle_message(fake_message("sempai remind me to test123 at 00:28"));
-        handle_message(fake_message("sempai find anime .hack"));
+        handle_message(fake_message("sempai find anime nisekoi"));
         handle_message(fake_message("sempai who are you following on osu?"));
         handle_message(fake_message("sempai check calsmurf2904 on osu"));
         handle_message(fake_message("sempai help me"));
+        handle_message(fake_message("-remind me to test123 at 00:28"));
+        handle_message(fake_message("-find anime nisekoi"));
+        handle_message(fake_message("-who are you following on osu?"));
+        handle_message(fake_message("-check calsmurf2904 on osu"));
+        handle_message(fake_message("-help me"));
     }, 100);
 }
