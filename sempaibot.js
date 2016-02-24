@@ -41,7 +41,7 @@ var responses_normal = {
     ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
     ANIME_DOWN: "<@{0}> Oops, looks like {1} is down.",
     
-    OSU_FOLLOWING: "I'm currently following: {0}",
+    OSU_FOLLOWING: "I'm currently following: {1}",
     OSU_UNDEFINED: "You could ofcourse actually tell me the user you want me to watch.",
     OSU_NOT_FOLLOWING: "I'm not even following \"{1}\"!",
     OSU_STOPPED: "Ok, I have stopped following {1}",
@@ -59,7 +59,7 @@ var responses_normal = {
     PLEASE_HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
     
     WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
-    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{0}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
+    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{1}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
     
     UNKNOWN_COMMAND: "That command is unknown! If you are unsure what command to enter, please type \"sempai help me\".",
     MULTIPLE_UNKNOWN_COMMAND: "That command is unknown! If you are unsure what command to enter, please type \"sempai help me\"."
@@ -77,18 +77,18 @@ var responses_tsundere = {
     NAME: [
         "I'm here! How can Sempai help you?",
         "I'm here! How can I help you?",
-        "I'm here! How can I help you <@{0}> ?",
+        "I'm here! How can I help you <@{0}>?",
         "I'm here! How can Sempai help you today?",
-        "I'm here! How can Sempai help you today <@{0}> ?",
+        "I'm here! How can Sempai help you today <@{0}>?",
         "Yes! I'm here! ...Don't get me wrong, it's not like I was waiting for you to say something this whole time or anything!",
         "Yes! I'm here! ...Don't get me wrong, it's not like I was waiting for you to say something this whole time or anything! Sempai just gets lonely sometimes. :(",
         "And? What do you want? ",
-        "And? What do you want <@{0}> ?",
-        "What do you want this time <@{0}> ?",
+        "And? What do you want <@{0}>?",
+        "What do you want this time <@{0}>?",
         "Yes! I'm here <@{0}> . I-it's not like I was waiting for someone to talk to me!",
         "Yes! I'm here <@{0}> . I-it's not like I was waiting for someone to finally talk to me!",
         "What do you want?",
-        "What do you want <@{0}> ? It's a privilege to even be able to talk to me! You should feel honored."
+        "What do you want <@{0}>? It's a privilege to even be able to talk to me! You should feel honored."
     ],
     SWITCHED: [
         "Fine. B-but I'm not doing this for you. It's because I wanted to.",
@@ -127,10 +127,10 @@ var responses_tsundere = {
     ANIME_DOWN: "<@{0}> Oops, looks like {1} is down.",
     
     OSU_FOLLOWING: [
-        "These are the people I like! I mean, associate with. I-it's not as if I really like them, or anything. Don't get any weird ideas.\r\n{0}",
-        "These are my osu friends!\r\n{0}",
-        "These are the people I ~~stalk~~ follow on osu!\r\n{0}",
-        "These are the people I stal--... I mean follow on osu!\r\n{0}"
+        "These are the people I like! I mean, associate with. I-it's not as if I really like them, or anything. Don't get any weird ideas.\r\n{1}",
+        "These are my osu friends!\r\n{1}",
+        "These are the people I ~~stalk~~ follow on osu!\r\n{1}",
+        "These are the people I stal--... I mean follow on osu!\r\n{1}"
     ],
     OSU_UNDEFINED: "You could ofcourse actually tell me the user you want me to watch.",
     OSU_NOT_FOLLOWING: [
@@ -170,7 +170,7 @@ var responses_tsundere = {
     PLEASE_HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
     
     WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
-    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{0}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
+    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{1}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
     
     UNKNOWN_COMMAND: [
         "You're not making any sense to Sempai. If you ask me for help, I might just help you. If I can be bothered.",
@@ -283,7 +283,7 @@ var commands = [
         description: "Searches nyaa.eu for magnet links for the given anime.",
         action: function(message, anime){
             if (anime === undefined) {
-                sempaibot.reply(m, responses.get("ANIME_UNDEFINED"));
+                sempaibot.sendMessage(message.channel, responses.get("ANIME_UNDEFINED").format(message.author.id));
                 return;
             }
             
@@ -325,7 +325,7 @@ var commands = [
                 message += osuusers[i];
             }
             
-            sempaibot.reply(m, responses.get("OSU_FOLLOWING").format(message));
+            sempaibot.sendMessage(m.channel, responses.get("OSU_FOLLOWING").format(m.author.id, message));
         }
     },
     
@@ -336,7 +336,7 @@ var commands = [
         action: function(m, name){
             if(name === undefined)
             {
-                return sempaibot.reply(m, responses.get("OSU_UNDEFINED"));
+                return sempaibot.sendMessage(m.channel, responses.get("OSU_UNDEFINED").format(m.author.id));
             }
             
             check_osu_user(name, m);
@@ -351,7 +351,7 @@ var commands = [
             var i = osuusers.indexOf(user);
             if(i === -1)
             {
-                return sempaibot.reply(m, responses.get("OSU_NOT_FOLLOWING").format(m.author.id, user));
+                return sempaibot.sendMessage(m.channel, responses.get("OSU_NOT_FOLLOWING").format(m.author.id, user));
             }
             
             osuusers.splice(i, 1);
@@ -361,7 +361,7 @@ var commands = [
                 console.log("numrem: " + numrem);
             });
 
-            sempaibot.reply(m, responses.get("OSU_STOPPED").format(user));
+            sempaibot.sendMessage(m.channel, responses.get("OSU_STOPPED").format(m.author.id, user));
         }
     },
     
@@ -370,7 +370,7 @@ var commands = [
         sample: "sempai check (*user*) on osu",
         description: "Forces me to check the given person on osu just in case I missed something.",
         action: function(m, user){
-            sempaibot.reply(m, responses.get("OSU_CHECK").format(m.author.id, user));
+            sempaibot.sendMessage(m.channel, responses.get("OSU_CHECK").format(m.author.id, user));
             osu_force_check(user);
         }
     },
@@ -418,10 +418,10 @@ var commands = [
         hidden: true,
         action: function(m){
             if(responses.currentMode)
-                return sempaibot.reply(m, responses.get("ALREADY_IN_MODE").format(m.author.id));
+                return sempaibot.sendMessage(m, responses.get("ALREADY_IN_MODE").format(m.author.id));
             
             responses.setMode(true);
-            sempaibot.reply(m, responses.get("SWITCHED"));
+            sempaibot.sendMessage(m, responses.get("SWITCHED").format(m.author.id));
         }
     },
     
@@ -430,10 +430,10 @@ var commands = [
         hidden: true,
         action: function(m){
             if(!responses.currentMode)
-                return sempaibot.reply(m, responses.get("ALREADY_IN_MODE").format(m.author.id));
+                return sempaibot.sendMessage(m, responses.get("ALREADY_IN_MODE").format(m.author.id));
             
             responses.setMode(false);
-            sempaibot.reply(m, responses.get("SWITCHED"));
+            sempaibot.sendMessage(m, responses.get("SWITCHED").format(m.author.id));
         }
     },
     
@@ -444,17 +444,17 @@ var commands = [
         action: function(m, target){
             if(responses.currentMode)
             {
-                return sempaibot.reply(m, responses.get("NAME").format(m.author.id));
+                return sempaibot.sendMessage(m.channel, responses.get("NAME").format(m.author.id));
             }
             
             if(target === undefined)
-                return sempaibot.reply(m, responses.get("WRONG_HOLE"));
+                return sempaibot.sendMessage(m.channel, responses.get("WRONG_HOLE").format(m.author.id));
             
             var user = get_user(target);
             if(user !== -1)
-                return sempaibot.reply(m, responses.get("WRONG_HOLE_USER").format(user));
+                return sempaibot.sendMessage(m.channel, responses.get("WRONG_HOLE_USER").format(m.author.id, user));
             
-            return sempaibot.reply(m, responses.get("WRONG_HOLE"));
+            return sempaibot.sendMessage(m.channel, responses.get("WRONG_HOLE").format(m.author.id));
         }
     }
 ];
