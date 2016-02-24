@@ -189,9 +189,9 @@ var commands = [
         }
     },
     
-    //this one should be last since the regex always matches
+    //this one should be last
     {
-        command: /sempai.?(.*)/,
+        command: null,
         sample: "sempai (*user*)",
         description: "Well, you should just try this command out instead of reading the description. (user is optional)",
         action: function(m, target){
@@ -210,16 +210,31 @@ var commands = [
 function handle_message(m)
 {
     var n = m.content.split(" ")[0];
-    if(n == name)
+    if(n == name || m.content.charAt(0) == "-")
     {
         for(var i = 0;i<commands.length;i++)
         {
-            var data = commands[i].command.exec(m.content);
-            if(data === null)
+            var data = [];
+            if(commands[i].command !== null)
+            {
+                data = commands[i].command.exec(m.content);
+                if(data === null)
+                    continue;
+                
+                data.splice(0, 1);
+                data = [m].concat(data);
+            }else if(m.content.charAt(0) != "-"){
+                data = [m];
+                
+                if(n.length > 1)
+                {
+                    var name = m.content.substr(m.content.indexOf(" ") + 1);
+                    data.push(name);
+                }
+            }else{
+                //dont allow null commands to run without the name-keyword
                 continue;
-            
-            data.splice(0, 1);
-            data = [m].concat(data);
+            }
             
             commands[i].action.apply(null, data);
             break;
