@@ -8,7 +8,12 @@
   },
   "dependencies": {
     "cheerio": "^0.20.0",
+    "cloudscraper": "^1.2.1",
     "discord.js": "^6.0.0",
-    "nedb": "^1.8.0"
+    "ger": "0.0.98",
+    "lodash": "^4.5.1",
+    "nedb": "^1.8.0",
+    "parse-torrent": "^5.7.1",
+    "xml2js": "^0.4.16"
   }
 }

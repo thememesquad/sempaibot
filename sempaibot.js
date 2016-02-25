@@ -3,6 +3,7 @@ var http = require("http");
 var cheerio = require("cheerio");
 var Datastore = require("nedb");
 var osudb, datadb, anidb; //Databases
+var Anime = require("./anime.js").Anime;
 
 // First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
@@ -22,6 +23,7 @@ var servers = [];
 var reminders = [];
 var run_test = false;
 var config = {};
+var anime = new Anime();
 if(!run_test)
     config = require("./config");
 
@@ -37,6 +39,12 @@ var responses_normal = {
     REMIND_OTHER: "<@{0}> I will remind \"{1}\" to \"{2}\" at \"{3}\".",
     REMINDER: "<@{0}> reminded {1}: {2}.",
     
+    ANIME_SEARCH_NO_RESULTS: "No results found for '{1}'.",
+    ANIME_SEARCH_RESULTS: "Results for '{1}':\r\n{2}",
+    ANIME_NEW_DOWNLOAD: "New download for show '**{0}**':\r\n**{6}**:\r\nMagnet: **{5}**\r\n**Seeders: {1}, Leechers: {2}, Downloads: {3}, Quality: {8}**\r\n**Trusted: {4}**\r\n",
+    ANIME_INVALID_ID: "Can't track {1} because the id is invalid!",
+    ANIME_ALREADY_TRACKING: "I'm already tracking '**{1}**'!",
+    ANIME_NOW_TRACKING: "Started tracking '**{1}**'!",
     ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
     ANIME_DOWN: "<@{0}> Oops, looks like {1} is down.",
     NO_ANIME_FOUND: "<@{0}> I couldn't find anything with the name \"{1}\"",
@@ -125,6 +133,12 @@ var responses_tsundere = {
     ],
     REMINDER: "<@{0}> reminded {1}: {2}.",
     
+    ANIME_SEARCH_NO_RESULTS: "No results found for '{1}'.",
+    ANIME_SEARCH_RESULTS: "Results for '{1}':\r\n{2}",
+    ANIME_NEW_DOWNLOAD: "New download for show '**{0}**':\r\n**{6}**:\r\nMagnet: **{5}**\r\n**Seeders: {1}, Leechers: {2}, Downloads: {3}, Quality: {8}**\r\n**Trusted: {4}**\r\n",
+    ANIME_INVALID_ID: "Can't track {1} because the id is invalid!",
+    ANIME_ALREADY_TRACKING: "I'm already tracking '**{1}**'!",
+    ANIME_NOW_TRACKING: "Started tracking '**{1}**'!",
     ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
     ANIME_DOWN: "<@{0}> Oops, looks like {1} is down.",
     NO_ANIME_FOUND: "<@{0}> Baka... I don't even own this anime collection...",
@@ -223,6 +237,13 @@ var responses = {
     }
 };
 
+//ANIME_NEW_DOWNLOAD: "New download for show '{0}':\r\n{6}:\r\nMagnet: {5}\r\nSeeders: {1}, Leechers: {2}, Downloads: {3}, Quality: {8}\r\nTrusted: {4}\r\n"
+anime.on("newDownload", function(show, data){
+    //todo: something with subscribers for a specific show instead of broadcasting it to everyone
+    
+    sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("ANIME_NEW_DOWNLOAD").format(show, data.data.seeders, data.data.leechers, data.data.downloads, data.data.trusted, data.magnet, data.file, data.group, data.quality));
+});
+
 var name = "sempai";
 var commands = [
     {
@@ -284,32 +305,55 @@ var commands = [
     },
     {
         command: /track anime (.*)/,
-        sample: "sempai track anime (*anime*)",
+        sample: "sempai track anime (*id*)",
         description: "Tracks an Anime for new releases",
-        action: function(m, anime) {
-            if (typeof anime === "undefined") {
-                sempaibot.sendMessage(message.channel, responses.get("ANIME_UNDEFINED").format(message.author.id));
-                return;
+        action: function(m, id) {
+            id = parseInt(id) - 1;
+            
+            var result = anime.track(id);
+            if(result == -1)
+            {
+                sempaibot.sendMessage(m.channel, responses.get("ANIME_INVALID_ID").format(m.author.id, id));
+            }else if(result == 0)
+            {
+                var name = anime.getName(id);
+                sempaibot.sendMessage(m.channel, responses.get("ANIME_ALREADY_TRACKING").format(m.author.id, name));
+            }else if(result == 1)
+            {
+                var name = anime.getName(id);
+                sempaibot.sendMessage(m.channel, responses.get("ANIME_NOW_TRACKING").format(m.author.id, name));
             }
             
-            track_anime(m, anime);
+            anime.update();
         }
     },
     {
-        command: /get anime (.*)/,
-        sample: "sempai get anime (*anime*)",
-        description: "Searches our database for Magnet Links",
-        action: function(message, anime){
-            if (anime === undefined) {
-                sempaibot.sendMessage(message.channel, responses.get("ANIME_UNDEFINED").format(message.author.id));
-                return;
-            }
-
-            var to = undefined;
-            get_anime_info(message, anime);
+        command: /search anime/,
+        sample: "sempai search anime",
+        description: "Tries to retrieve magnet links for all tracked anime",
+        action: function(message){
+            
         }
     },
-    
+    {
+        command: /search for the anime (.*)/,
+        sample: "sempai search for the anime (*anime*)",
+        description: "Searches for the anime",
+        action: function(m, name){
+            anime.search(name, function(shows){
+                var data = "";
+                for(var i = 0;i<shows.length;i++)
+                {
+                    data += "{5}. **{0}**\r\n{1}\r\n**Airdate: {2}, Network: {3}, Status: {4}**\r\n\r\n".format(shows[i].titles[0], shows[i].description, shows[i].firstAired, shows[i].network, shows[i].status, i+1);
+                }
+                
+                if(shows.length == 0)
+                    sempaibot.sendMessage(m.channel, responses.get("ANIME_SEARCH_NO_RESULTS").format(m.author.id, name));
+                else
+                    sempaibot.sendMessage(m.channel, responses.get("ANIME_SEARCH_RESULTS").format(m.author.id, name, data));
+            });
+        }
+    },
     {
         command: /who are you following on osu/,
         sample: "sempai who are you following on osu?",
