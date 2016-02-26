@@ -41,10 +41,12 @@ var responses_normal = {
     
     ANIME_SEARCH_NO_RESULTS: "No results found for '{1}'.",
     ANIME_SEARCH_RESULTS: "Results for '{1}':\r\n{2}",
-    ANIME_NEW_DOWNLOAD: "New download for show '**{0}**':\r\n**{6}**:\r\nMagnet: **{5}**\r\n**Seeders: {1}, Leechers: {2}, Downloads: {3}, Quality: {8}**\r\n**Trusted: {4}**\r\n",
+    ANIME_NEW_DOWNLOAD: "New download for show '**{0}**':\r\n**{6}**:\r\n**Magnet**: {5}\r\n**Seeders**: {1}, **Leechers**: {2}, **Downloads**: {3}, **Quality**: {8}\r\n**Trusted**: {4}\r\n",
     ANIME_INVALID_ID: "Can't track {1} because the id is invalid!",
     ANIME_ALREADY_TRACKING: "I'm already tracking '**{1}**'!",
     ANIME_NOW_TRACKING: "Started tracking '**{1}**'!",
+    ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{1}",
+    ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{1}**':\r\n{2}",
     ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
     ANIME_DOWN: "<@{0}> Oops, looks like {1} is down.",
     NO_ANIME_FOUND: "<@{0}> I couldn't find anything with the name \"{1}\"",
@@ -135,10 +137,12 @@ var responses_tsundere = {
     
     ANIME_SEARCH_NO_RESULTS: "No results found for '{1}'.",
     ANIME_SEARCH_RESULTS: "Results for '{1}':\r\n{2}",
-    ANIME_NEW_DOWNLOAD: "New download for show '**{0}**':\r\n**{6}**:\r\nMagnet: **{5}**\r\n**Seeders: {1}, Leechers: {2}, Downloads: {3}, Quality: {8}**\r\n**Trusted: {4}**\r\n",
+    ANIME_NEW_DOWNLOAD: "New download for show '**{0}**':\r\n**{6}**:\r\n**Magnet**: {5}\r\n**Seeders**: {1}, **Leechers**: {2}, **Downloads**: {3}, **Quality**: {8}\r\n**Trusted**: {4}\r\n",
     ANIME_INVALID_ID: "Can't track {1} because the id is invalid!",
     ANIME_ALREADY_TRACKING: "I'm already tracking '**{1}**'!",
     ANIME_NOW_TRACKING: "Started tracking '**{1}**'!",
+    ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{1}",
+    ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{1}**':\r\n{2}",
     ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
     ANIME_DOWN: "<@{0}> Oops, looks like {1} is down.",
     NO_ANIME_FOUND: "<@{0}> Baka... I don't even own this anime collection...",
@@ -323,16 +327,70 @@ var commands = [
                 var name = anime.getName(id);
                 sempaibot.sendMessage(m.channel, responses.get("ANIME_NOW_TRACKING").format(m.author.id, name));
             }
-            
-            anime.update();
         }
     },
     {
-        command: /search anime/,
-        sample: "sempai search anime",
-        description: "Tries to retrieve magnet links for all tracked anime",
+        command: /list anime/,
+        sample: "sempai list anime",
+        description: "List all the anime currently being tracked",
         action: function(message){
+            var tracked = anime.getAllTracked();
+            var data = "";
+            for(var key in tracked)
+            {
+                data += key + ". " + tracked[key].titles[0] + "\r\n";
+            }
             
+            if(data.length == 0)
+                data = "You aren't tracking any anime at the moment!";
+            
+            sempaibot.sendMessage(message.channel, responses.get("ANIME_TRACKING_LIST").format(message.author.id, data));
+        }
+    },
+    {
+        command: /get downloads for anime (.*)/,
+        sample: "sempai get downloads for (*id*)",
+        description: "Lists downloads for the anime specified by id.",
+        action: function(message, id){
+            var data = "";
+            id = parseInt(id);
+            var tracked = anime.getAllTracked();
+            
+            if(tracked[id] === undefined)
+            {
+                return sempaibot.sendMessage(message.channel, responses.get("ANIME_INVALID_ID").format(message.author.id, id));
+            }
+            
+            var results = "";
+            if(tracked[id].episodes !== undefined)
+            {
+                for(var i = 0;i<tracked[id].episodes.length;i++)
+                {
+                    var episode = tracked[id].episodes[i];
+                    if(tracked[id].magnets[episode.absoluteEpisodeNumber] !== undefined)
+                    {
+                        var best = null;
+                        for(var key in tracked[id].magnets[episode.absoluteEpisodeNumber])
+                        {
+                            if(key === "lastSend")
+                                continue;
+                            
+                            if(best == null || tracked[id].magnets[episode.absoluteEpisodeNumber][key].qualityId > best.qualityId)
+                            {
+                                best = tracked[id].magnets[episode.absoluteEpisodeNumber][key];
+                            }
+                        }
+                        
+                        results += "**" + episode.absoluteEpisodeNumber + "**: " + best.quality + ". " + best.magnet + "\r\n";
+                    }else{
+                        results += "**" + episode.absoluteEpisodeNumber + "**: No download found.\r\n";
+                    }
+                }
+            }else{
+                results += "No episodes found!";
+            }
+            
+            sempaibot.sendMessage(message.channel, responses.get("ANIME_TRACKING_LIST_DETAIL").format(message.author.id, tracked[id].titles[0], results));
         }
     },
     {
