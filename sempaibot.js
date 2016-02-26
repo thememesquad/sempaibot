@@ -45,6 +45,7 @@ var responses_normal = {
     ANIME_INVALID_ID: "Can't track {1} because the id is invalid!",
     ANIME_ALREADY_TRACKING: "I'm already tracking '**{1}**'!",
     ANIME_NOW_TRACKING: "Started tracking '**{1}**'!",
+    ANIME_TRACKING_LIST_EMPTY: "I'm not tracking any anime at the moment.",
     ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{1}",
     ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{1}**':\r\n{2}",
     ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
@@ -141,6 +142,7 @@ var responses_tsundere = {
     ANIME_INVALID_ID: "Can't track {1} because the id is invalid!",
     ANIME_ALREADY_TRACKING: "I'm already tracking '**{1}**'!",
     ANIME_NOW_TRACKING: "Started tracking '**{1}**'!",
+    ANIME_TRACKING_LIST_EMPTY: "I'm not tracking any anime at the moment.",
     ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{1}",
     ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{1}**':\r\n{2}",
     ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
@@ -342,7 +344,7 @@ var commands = [
             }
             
             if(data.length == 0)
-                data = "You aren't tracking any anime at the moment!";
+                return sempaibot.sendMessage(message.channel, responses.get("ANIME_TRACKING_LIST_EMPTY").format(message.author.id));
             
             sempaibot.sendMessage(message.channel, responses.get("ANIME_TRACKING_LIST").format(message.author.id, data));
         }

@@ -225,6 +225,7 @@ Anime.prototype.track = function(id){
     this.tracking[this.lastResults[id].id].lastUpdated = -1;
     this.tracking[this.lastResults[id].id].magnets = {};
     this.tracking[this.lastResults[id].id].updateInProgress = false;
+    this.updateAnime(this.lastResults[id].id);
     
     return 1; //started tracking
 };
@@ -406,8 +407,6 @@ Anime.prototype.updateAnime = function(id){
 };
 
 Anime.prototype.update = function(){
-    console.log("Updating....");
-    
     var _this = this;
     
     for(var key in this.tracking)
@@ -420,7 +419,7 @@ Anime.prototype.update = function(){
             if(err)
                 return console.log("Can't retrieve nyaa rss feed: ", err);
             
-            console.log("Parsing '" + result.rss.channel[0].item.length + "' items from Nyaa.eu.");
+            console.log("Processing '" + result.rss.channel[0].item.length + "' items from Nyaa.eu.");
             
             var results = result.rss.channel[0].item;
             for(var i = 0;i<results.length;i++)
@@ -435,6 +434,10 @@ Anime.prototype.update = function(){
             }
         });
     });
+};
+
+Anime.prototype.setAllTracked = function(data){
+    this.tracking = data;
 };
 
 Anime.prototype.getAllTracked = function(){
