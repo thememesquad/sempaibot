@@ -6,7 +6,7 @@ var osudb, datadb, anidb; //Databases
 var Anime = require("./anime.js").Anime;
 var ping = require ("net-ping");
 var dns = require("dns");
-const PING_THRESHOLD = 40;
+const PING_THRESHOLD = 100;
 
 // First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
