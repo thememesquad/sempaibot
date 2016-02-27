@@ -87,18 +87,18 @@ var responses_tsundere = {
     NAME: [
         "I'm here! How can Sempai help you?",
         "I'm here! How can I help you?",
-        "I'm here! How can I help you <@{0}>?",
+        "I'm here! How can I help you <@{author}>?",
         "I'm here! How can Sempai help you today?",
-        "I'm here! How can Sempai help you today <@{0}>?",
+        "I'm here! How can Sempai help you today <@{author}>?",
         "Yes! I'm here! ...Don't get me wrong, it's not like I was waiting for you to say something this whole time or anything!",
         "Yes! I'm here! ...Don't get me wrong, it's not like I was waiting for you to say something this whole time or anything! Sempai just gets lonely sometimes. :(",
         "And? What do you want? ",
-        "And? What do you want <@{0}>?",
-        "What do you want this time <@{0}>?",
-        "Yes! I'm here <@{0}> . I-it's not like I was waiting for someone to talk to me!",
-        "Yes! I'm here <@{0}> . I-it's not like I was waiting for someone to finally talk to me!",
+        "And? What do you want <@{author}>?",
+        "What do you want this time <@{author}>?",
+        "Yes! I'm here <@{author}> . I-it's not like I was waiting for someone to talk to me!",
+        "Yes! I'm here <@{author}> . I-it's not like I was waiting for someone to finally talk to me!",
         "What do you want?",
-        "What do you want <@{0}>? It's a privilege to even be able to talk to me! You should feel honored."
+        "What do you want <@{author}>? It's a privilege to even be able to talk to me! You should feel honored."
     ],
     SWITCHED: [
         "Fine. B-but I'm not doing this for you. It's because I wanted to.",
@@ -113,7 +113,7 @@ var responses_tsundere = {
     ALREADY_IN_MODE: [
         "Are you dumb? I'm already in tsundere mode. If you don't recognize what mode I'm in why even switch? Hmpf!",
         "Tsundere on? Baka~. It's already on!",
-        "Tsundere on? Are you dumb, <@{0}> ? It's already on!"
+        "Tsundere on? Are you dumb, <@{author}>? It's already on!"
     ],
     
     LIST_REMINDERS: "todo",
@@ -123,56 +123,53 @@ var responses_tsundere = {
     ],
     REMIND_ME: [
         "Sempai will help you remember! If I can be bothered.",
-        "Sempai will try to remind <@{0}>!",
-        "Maybe I'll remind <@{0}>. Just this one time!"
+        "Sempai will try to remind <@{author}>!",
+        "Maybe I'll remind <@{author}>. Just this one time!"
     ],
     REMIND_OTHER: [
-        "Sempai will help {1} remember! If I can be bothered.",
-        "Sempai will try to remind {1}!",
-        "Maybe I'll remind {1}. Just this one time!"
+        "Sempai will help {people} remember! If I can be bothered.",
+        "Sempai will try to remind {people}!",
+        "Maybe I'll remind {people}. Just this one time!"
     ],
-    REMINDER: "<@{0}> reminded {1}: {2}.",
-    REGION_CHANGED: "Switched from region '{0}' to '{1}'.",
+    REMINDER: "<@{author}> reminded {people}: {message}.",
+    REGION_CHANGED: "Switched from region '{old_region}' to '{new_region}'.",
     
-    ANIME_SEARCH_NO_RESULTS: "No results found for '{1}'.",
-    ANIME_SEARCH_RESULTS: "Results for '{1}':\r\n{2}",
-    ANIME_NEW_DOWNLOAD: "New download for show '**{0}**':\r\n**{6}**:\r\n**Magnet**: {5}\r\n**Seeders**: {1}, **Leechers**: {2}, **Downloads**: {3}, **Quality**: {8}\r\n**Trusted**: {4}\r\n",
-    ANIME_INVALID_ID: "Can't track {1} because the id is invalid!",
-    ANIME_ALREADY_TRACKING: "I'm already tracking '**{1}**'!",
-    ANIME_NOW_TRACKING: "Started tracking '**{1}**'!",
+    ANIME_SEARCH_NO_RESULTS: "No results found for '{anime}'.",
+    ANIME_SEARCH_RESULTS: "Results for '{anime}':\r\n{results}",
+    ANIME_NEW_DOWNLOAD: "New download for show '**{show}**':\r\n**{file}**:\r\n**Magnet**: {magnet}\r\n**Seeders**: {seeders}, **Leechers**: {leechers}, **Downloads**: {downloads}, **Quality**: {quality}\r\n**Trusted**: {is_trusted}\r\n",
+    ANIME_INVALID_ID: "Can't track {id} because the id is invalid!",
+    ANIME_ALREADY_TRACKING: "I'm already tracking '**{anime}**'!",
+    ANIME_NOW_TRACKING: "Started tracking '**{anime}**'!",
     ANIME_TRACKING_LIST_EMPTY: "I'm not tracking any anime at the moment.",
-    ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{1}",
-    ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{1}**':\r\n{2}",
-    ANIME_UNDEFINED: "You could ofcourse actually tell me what anime to search for.",
-    ANIME_DOWN: "<@{0}> Oops, looks like {1} is down.",
-    NO_ANIME_FOUND: "<@{0}> Baka... I don't even own this anime collection...",
+    ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{results}",
+    ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{anime}**':\r\n{results}",
     
     OSU_FOLLOWING: [
-        "These are the people I like! I mean, associate with. I-it's not as if I really like them, or anything. Don't get any weird ideas.\r\n{1}",
-        "These are my osu friends!\r\n{1}",
-        "These are the people I ~~stalk~~ follow on osu!\r\n{1}",
-        "These are the people I stal--... I mean follow on osu!\r\n{1}"
+        "These are the people I like! I mean, associate with. I-it's not as if I really like them, or anything. Don't get any weird ideas.\r\n{results}",
+        "These are my osu friends!\r\n{results}",
+        "These are the people I ~~stalk~~ follow on osu!\r\n{results}",
+        "These are the people I stal--... I mean follow on osu!\r\n{results}"
     ],
     OSU_UNDEFINED: "You could ofcourse actually tell me the user you want me to watch.",
     OSU_NOT_FOLLOWING: [
-        "Are you stupid? I wasn't even following {1}!",
-        "Are you stupid? I wasn't even following {1} in the first place!"
+        "Are you stupid? I wasn't even following {user}!",
+        "Are you stupid? I wasn't even following {user} in the first place!"
     ],
     OSU_STOPPED: [
-        "Okay. I won't follow {1} anymore. I-it's not like I really liked that person or anything anyway... But maybe I'll miss {1} a little. Just a little.",
-        "Okay. I won't follow {1} anymore. I-it's not like I really liked that person or anything anyway...  :'( "
+        "Okay. I won't follow {user} anymore. I-it's not like I really liked that person or anything anyway... But maybe I'll miss {user} a little. Just a little.",
+        "Okay. I won't follow {user} anymore. I-it's not like I really liked that person or anything anyway...  :'( "
     ],
-    OSU_NEW_SCORE: "{0} has set a new PP score! Map: https://osu.ppy.sh/b/{1} . PP: {2}. Rank: {3}. Date: {4}",
-    OSU_NEW_SCORE_NODATE: "{0} has set a new PP score! Map: https://osu.ppy.sh/b/{1} . PP: {2}. Rank: {3}.",
+    OSU_NEW_SCORE: "{user} has set a new PP score! Map: https://osu.ppy.sh/b/{beatmap_id} . PP: {pp}. Rank: {rank}. Date: {date}",
+    OSU_NEW_SCORE_NODATE: "{user} has set a new PP score! Map: https://osu.ppy.sh/b/{beatmap_id} . PP: {pp}. Rank: {rank}.",
     OSU_USER_NOT_FOUND: "Baka~! I can't find that user. Did you type the username correctly?",
-    OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {1}",
+    OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {user}",
     OSU_ADDED_FOLLOWING: [
         "Ooh a new osu friend? I-It's not like I wanted more friends!",
-        "Added {1} to my osu ~~stalk~~ follow list! "
+        "Added {user} to my osu ~~stalk~~ follow list! "
     ],
     OSU_CHECK: [
-        "Fine. I'll check {1} for you. But only because I have nothing else to do right now!",
-        "Alright. I'll check {1}. D-don't get me wrong. It's not like I'm doing this for you or anything."
+        "Fine. I'll check {user} for you. But only because I have nothing else to do right now!",
+        "Alright. I'll check {user}. D-don't get me wrong. It's not like I'm doing this for you or anything."
     ],
     
     HELP_TOP: [
@@ -191,7 +188,7 @@ var responses_tsundere = {
     PLEASE_HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
     
     WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
-    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{1}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
+    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{user}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
     
     UNKNOWN_COMMAND: [
         "You're not making any sense to Sempai. If you ask me for help, I might just help you. If I can be bothered.",
@@ -205,7 +202,7 @@ var responses_tsundere = {
         "You're still not making any sense to Sempai. Do you need me to spell it out for you? \"Sempai please help me\". That will do just fine. Don't forget the please."
     ],
     
-    ERROR: "<@{0}>, I...I don't know what happened... Stop looking at me! It's not like I wanted to finish it for you anyways!"
+    ERROR: "<@{author}>, I...I don't know what happened... Stop looking at me! It's not like I wanted to finish it for you anyways!"
 };
 
 var responses = {
