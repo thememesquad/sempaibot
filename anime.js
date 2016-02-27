@@ -170,31 +170,36 @@ Anime.prototype.search = function(anime, callback){
             });
             
             res.on('end', function () {
-                var parsed = JSON.parse(data);
-                var shows = [];
-                for(var i = 0;i<parsed.length;i++)
-                {
-                    var titles = [parsed[i].title];
-                    if(_this.alternateNames[parsed[i].tvdbId] !== undefined)
+                try{
+                    var parsed = JSON.parse(data);
+                    var shows = [];
+                    for(var i = 0;i<parsed.length;i++)
                     {
-                        titles = titles.concat(_this.alternateNames[parsed[i].tvdbId]);
+                        var titles = [parsed[i].title];
+                        if(_this.alternateNames[parsed[i].tvdbId] !== undefined)
+                        {
+                            titles = titles.concat(_this.alternateNames[parsed[i].tvdbId]);
+                        }
+                        
+                        parsed[i].titles = titles;
+                        parsed[i].id = parsed[i].tvdbId;
+                        
+                        shows.push({
+                            titles: titles,
+                            description: parsed[i].overview,
+                            firstAired: parsed[i].firstAired,
+                            network: parsed[i].network,
+                            status: parsed[i].status,
+                            id: parsed[i].tvdbId
+                        });
                     }
                     
-                    parsed[i].titles = titles;
-                    parsed[i].id = parsed[i].tvdbId;
-                    
-                    shows.push({
-                        titles: titles,
-                        description: parsed[i].overview,
-                        firstAired: parsed[i].firstAired,
-                        network: parsed[i].network,
-                        status: parsed[i].status,
-                        id: parsed[i].tvdbId
-                    });
+                    _this.lastResults = parsed;
+                    callback(shows);
+                }catch(err){
+                    console.log("Error searching: " + err);
+                    callback(null, err);
                 }
-                
-                _this.lastResults = parsed;
-                callback(shows);
             });
         });
     };
@@ -418,8 +423,6 @@ Anime.prototype.update = function(){
         parseString(body, function(err, result){
             if(err)
                 return console.log("Can't retrieve nyaa rss feed: ", err);
-            
-            console.log("Processing '" + result.rss.channel[0].item.length + "' items from Nyaa.eu.");
             
             var results = result.rss.channel[0].item;
             for(var i = 0;i<results.length;i++)
