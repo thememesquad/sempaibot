@@ -6,7 +6,7 @@ var osudb, datadb, anidb; //Databases
 var Anime = require("./anime.js").Anime;
 var ping = require ("net-ping");
 var dns = require("dns");
-const PING_THRESHOLD = 40;
+const PING_THRESHOLD = 100;
 
 // First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
@@ -35,6 +35,7 @@ var responses_normal = {
     NAME: "Yes I'm here! What can I do for you?",
     SWITCHED: "Hi there! I'm in my normal response mode now!",
     ALREADY_IN_MODE: "I'm already in my normal mode!",
+    REGION_CHANGED: "Switched from region '{0}' to '{1}'.",
     
     LIST_REMINDERS: "todo",
     REMIND_PAST: "<@{0}> I can't remind you of something in the past.",
@@ -138,6 +139,7 @@ var responses_tsundere = {
         "Maybe I'll remind {1}. Just this one time!"
     ],
     REMINDER: "<@{0}> reminded {1}: {2}.",
+    REGION_CHANGED: "Switched from region '{0}' to '{1}'.",
     
     ANIME_SEARCH_NO_RESULTS: "No results found for '{1}'.",
     ANIME_SEARCH_RESULTS: "Results for '{1}':\r\n{2}",
@@ -611,9 +613,12 @@ if(!run_test)
                 var session = ping.createSession ();
                 var pending = 0;
                 var pings = {};
+                var names = {};
                 
                 for(var i = 0;i<res.length;i++)
                 {
+                    names[res[i].id] = res[i].name;
+                    
                     pending++;
                     dns.resolve(res[i].sample_hostname, function(res, err, addresses){
                         session.pingHost(addresses[0], function(err, target, sent, rcvd){
@@ -643,7 +648,12 @@ if(!run_test)
                                     if(sempaibot.servers[0].region == best)
                                         return;
                                     
-                                    console.log("todo: switch from region '" + sempaibot.servers[0].region + "' to '" + best + "'.");
+                                    var old = sempaibot.servers[0].region;
+                                    sempaibot.internal.apiRequest("patch", "https://discordapp.com/api/guilds/" + sempaibot.servers[0].id, true, {name: sempaibot.servers[0].name, region: best}).then(function(res){
+                                        sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("REGION_CHANGED").format(names[old], names[best]));
+                                    }).catch(function(res){
+                                        console.log("Failed to switch region to '" + best + "'. Error: ", res.response.error);
+                                    });
                                 }
                             }
                         });
