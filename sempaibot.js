@@ -4,6 +4,9 @@ var cheerio = require("cheerio");
 var Datastore = require("nedb");
 var osudb, datadb, anidb; //Databases
 var Anime = require("./anime.js").Anime;
+var ping = require ("net-ping");
+var dns = require("dns");
+const PING_THRESHOLD = 40;
 
 // First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
@@ -243,7 +246,10 @@ var responses = {
     }
 };
 
-//ANIME_NEW_DOWNLOAD: "New download for show '{0}':\r\n{6}:\r\nMagnet: {5}\r\nSeeders: {1}, Leechers: {2}, Downloads: {3}, Quality: {8}\r\nTrusted: {4}\r\n"
+sempaibot.getServers = function(){
+    return this.internal.apiRequest("get", "https://discordapp.com/api/voice/regions", true);
+};
+
 anime.on("newDownload", function(show, data){
     //todo: something with subscribers for a specific show instead of broadcasting it to everyone
     
@@ -600,6 +606,54 @@ function handle_message(m)
 
 if(!run_test)
 {
+    var serverSwitcher = function(){
+        sempaibot.getServers().then(function(res){
+                var session = ping.createSession ();
+                var pending = 0;
+                var pings = {};
+                
+                for(var i = 0;i<res.length;i++)
+                {
+                    pending++;
+                    dns.resolve(res[i].sample_hostname, function(res, err, addresses){
+                        session.pingHost(addresses[0], function(err, target, sent, rcvd){
+                            pending--;
+                        
+                            var ms = rcvd - sent;
+                            if(err)
+                            {
+                                pings[res.id] = 99999;
+                            }else{
+                                pings[res.id] = ms;
+                            }
+                            
+                            if(pending == 0)
+                            {
+                                if(pings[sempaibot.servers[0].region] >= PING_THRESHOLD)
+                                {
+                                    var best = null;
+                                    for(var key in pings)
+                                    {
+                                        if(best == null || pings[key] < pings[best])
+                                        {
+                                            best = key;
+                                        }
+                                    }
+                                    
+                                    if(sempaibot.servers[0].region == best)
+                                        return;
+                                    
+                                    console.log("todo: switch from region '" + sempaibot.servers[0].region + "' to '" + best + "'.");
+                                }
+                            }
+                        });
+                    }.bind(null, res[i]));
+                }
+        }).catch(function(err){
+            console.log(err);
+        });
+    };
+    
     sempaibot.on("message", function (m) {
         handle_message(m);
     });
@@ -610,6 +664,8 @@ if(!run_test)
         sempaibot.joinServer(config.server, function (error, server) {
             servers.push(server);
             sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("ONLINE"));
+            
+            setInterval(serverSwitcher, 10000);
         });
     });
 
