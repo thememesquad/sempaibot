@@ -11,7 +11,7 @@ const PING_THRESHOLD = 100;
 // First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
     String.prototype.format = function(args) {
-        return this.replace(/{(.*?)}/g, function(match, key) { 
+        return this.replace(/{(.*?)}/g, function(match, key) {
             return typeof args[key] != 'undefined' ? args[key] : match;
         });
     };
@@ -32,13 +32,13 @@ var responses_normal = {
     SWITCHED: "Hi there! I'm in my normal response mode now!",
     ALREADY_IN_MODE: "I'm already in my normal mode!",
     REGION_CHANGED: "Switched from region '{old_region}' to '{new_region}'.",
-    
+
     LIST_REMINDERS: "todo",
     REMIND_PAST: "<@{author}> I can't remind you of something in the past.",
     REMIND_ME: "<@{author}> I will remind you to \"{message}\" at \"{time}\".",
     REMIND_OTHER: "<@{author}> I will remind \"{people}\" to \"{message}\" at \"{time}\".",
     REMINDER: "<@{author}> reminded {people}: {message}.",
-    
+
     ANIME_SEARCH_NO_RESULTS: "No results found for '{anime}'.",
     ANIME_SEARCH_RESULTS: "Results for '{anime}':\r\n{results}",
     ANIME_NEW_DOWNLOAD: "New download for show '**{show}**':\r\n**{file}**:\r\n**Magnet**: {magnet}\r\n**Seeders**: {seeders}, **Leechers**: {leechers}, **Downloads**: {downloads}, **Quality**: {quality}\r\n**Trusted**: {is_trusted}\r\n",
@@ -48,7 +48,7 @@ var responses_normal = {
     ANIME_TRACKING_LIST_EMPTY: "I'm not tracking any anime at the moment.",
     ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{results}",
     ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{anime}**':\r\n{results}",
-    
+
     OSU_FOLLOWING: "I'm currently following: {results}",
     OSU_UNDEFINED: "You could ofcourse actually tell me the user you want me to watch.",
     OSU_NOT_FOLLOWING: "I'm not even following \"{user}\"!",
@@ -59,19 +59,19 @@ var responses_normal = {
     OSU_ALREADY_FOLLOWING: "<@{author}> I'm already following \"{user}\".",
     OSU_ADDED_FOLLOWING: "<@{author}> I'm now following \"{user}\" on osu.",
     OSU_CHECK: "<@{author}> No problem! I'll check {user} on osu for you!",
-    
+
     HELP_TOP: "This is the current list of commands:\r\n",
     HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
-   
+
     PLEASE_HELP_TOP: "This is the current list of commands:\r\n",
     PLEASE_HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
-    
+
     WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
     WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{user}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
-    
+
     UNKNOWN_COMMAND: "That command is unknown! If you are unsure what command to enter, please type \"sempai help me\".",
     MULTIPLE_UNKNOWN_COMMAND: "That command is unknown! If you are unsure what command to enter, please type \"sempai help me\".",
-    
+
     ERROR: "<@{author}>, It seems my internal functions are not working correctly. Please ask my developers what could be the problem."
 };
 
@@ -115,7 +115,7 @@ var responses_tsundere = {
         "Tsundere on? Baka~. It's already on!",
         "Tsundere on? Are you dumb, <@{author}>? It's already on!"
     ],
-    
+
     LIST_REMINDERS: "todo",
     REMIND_PAST: [
         "Uhmm... Are you dumb? That time is in the past!",
@@ -133,7 +133,7 @@ var responses_tsundere = {
     ],
     REMINDER: "<@{author}> reminded {people}: {message}.",
     REGION_CHANGED: "Switched from region '{old_region}' to '{new_region}'.",
-    
+
     ANIME_SEARCH_NO_RESULTS: "No results found for '{anime}'.",
     ANIME_SEARCH_RESULTS: "Results for '{anime}':\r\n{results}",
     ANIME_NEW_DOWNLOAD: "New download for show '**{show}**':\r\n**{file}**:\r\n**Magnet**: {magnet}\r\n**Seeders**: {seeders}, **Leechers**: {leechers}, **Downloads**: {downloads}, **Quality**: {quality}\r\n**Trusted**: {is_trusted}\r\n",
@@ -143,7 +143,7 @@ var responses_tsundere = {
     ANIME_TRACKING_LIST_EMPTY: "I'm not tracking any anime at the moment.",
     ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{results}",
     ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{anime}**':\r\n{results}",
-    
+
     OSU_FOLLOWING: [
         "These are the people I like! I mean, associate with. I-it's not as if I really like them, or anything. Don't get any weird ideas.\r\n{results}",
         "These are my osu friends!\r\n{results}",
@@ -171,7 +171,7 @@ var responses_tsundere = {
         "Fine. I'll check {user} for you. But only because I have nothing else to do right now!",
         "Alright. I'll check {user}. D-don't get me wrong. It's not like I'm doing this for you or anything."
     ],
-    
+
     HELP_TOP: [
         "What? Not even a please? Hmpf. Fine. Just this once. Here is a list of my commands:\r\n",
         "What? Not even a please? You understand it's a privilege to even be able to talk to me, right? You should feel honored! I'll do it, but ask nicely next time. Here's a list of my commands:\r\n",
@@ -186,39 +186,39 @@ var responses_tsundere = {
         "Only because you asked nicely. D-don't get me wrong, I do this for everyone if they ask nicely! Here's a list of my commands:\r\n"
     ],
     PLEASE_HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
-    
+
     WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
     WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{user}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
-    
+
     UNKNOWN_COMMAND: [
         "You're not making any sense to Sempai. If you ask me for help, I might just help you. If I can be bothered.",
         "You're not making any sense to Sempai. If you try asking me for help, maybe I'll consider it.",
         "Sempai does not understand. If you want help, ask nicely. Maybe I'll consider it.",
         "Are you stupid? That doesn't make any sense to Sempai."
     ],
-    
+
     MULTIPLE_UNKNOWN_COMMAND: [
         "Sempai does not understand what you're trying to do! If you insist on wasting my time, why not ask for help? I'm not going to help you if you don't ask.",
         "You're still not making any sense to Sempai. Do you need me to spell it out for you? \"Sempai please help me\". That will do just fine. Don't forget the please."
     ],
-    
+
     ERROR: "<@{author}>, I...I don't know what happened... Stop looking at me! It's not like I wanted to finish it for you anyways!"
 };
 
 var responses = {
     current: responses_normal,
     currentMode: false,
-    
+
     get: function(name){
         if(Array.isArray(responses.current[name]))
         {
             var idx = Math.floor(Math.random() * responses.current[name].length);
             return responses.current[name][idx];
         }
-        
+
         return responses.current[name];
     },
-    
+
     setMode: function(mode)
     {
         responses.currentMode = mode;
@@ -228,7 +228,7 @@ var responses = {
         }else{
             responses.current = responses_normal;
         }
-        
+
         datadb.update({name: "mode"}, {value: responses.currentMode}, {}, function(err, numUpdated){
             if(numUpdated == 0)
             {
@@ -244,7 +244,7 @@ sempaibot.getServers = function(){
 
 anime.on("newDownload", function(show, data){
     //todo: something with subscribers for a specific show instead of broadcasting it to everyone
-    
+
     sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("ANIME_NEW_DOWNLOAD").format({
         show: show,
         seeders: data.data.seeders,
@@ -273,7 +273,7 @@ var commands = [
         sample: "sempai remind (*name*) to (*reminder*) at (*time*)",
         description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself)",
         action: function(message, name, reminder, time){
-            if (name != "me") 
+            if (name != "me")
             {
                 var who = name;
             } else {
@@ -297,14 +297,14 @@ var commands = [
 
             remind_me(message.author.id, message.channel, who, parsedtime, info);
 
-            if (who) 
+            if (who)
             {
                 var w = who.split(",");
                 var whos = "";
                 for (var i = 0; i < w.length; i++) {
                     if (i !== 0)
                         whos += ", ";
-                    
+
                     whos += "<@" + get_user(w[i]) + ">";
                 }
             } else {
@@ -323,7 +323,7 @@ var commands = [
         description: "Tracks an Anime for new releases",
         action: function(m, id) {
             id = parseInt(id) - 1;
-            
+
             var result = anime.track(id);
             if(result == -1)
             {
@@ -350,10 +350,10 @@ var commands = [
             {
                 data += key + ". " + tracked[key].titles[0] + "\r\n";
             }
-            
+
             if(data.length == 0)
                 return sempaibot.sendMessage(message.channel, responses.get("ANIME_TRACKING_LIST_EMPTY").format({author: message.author.id}));
-            
+
             sempaibot.sendMessage(message.channel, responses.get("ANIME_TRACKING_LIST").format({author: message.author.id, results: data}));
         }
     },
@@ -365,31 +365,37 @@ var commands = [
             var data = "";
             id = parseInt(id);
             var tracked = anime.getAllTracked();
-            
+
             if(tracked[id] === undefined)
             {
                 return sempaibot.sendMessage(message.channel, responses.get("ANIME_INVALID_ID").format({author: message.author.id, id: id}));
             }
-            
+
             var results = [""];
             if(tracked[id].episodes !== undefined)
             {
-                /*tracked[id].episodes.sort(function(a, b){
+                tracked[id].episodes.sort(function(a, b){
                     if(a.absoluteEpisodeNumber !== undefined && b.absoluteEpisodeNumber === undefined)
                         return -1;
-                    
-                    if(a.absoluteEpisodeNumber )
-                });*/
-                
+
+                    if(a.absoluteEpisodeNumber === undefined && b.absoluteEpisodeNumber !== undefined)
+                        return 1;
+
+                    if(a.absoluteEpisodeNumber === undefined && b.absoluteEpisodeNumber === undefined)
+                        return 0;
+
+                    return a.absoluteEpisodeNumber - b.absoluteEpisodeNumber;
+                });
+
                 for(var i = 0;i<tracked[id].episodes.length;i++)
                 {
                     var episode = tracked[id].episodes[i];
                     var add = "";
-                    
+
                     //we just skip the episodes without absolute episode number for now, later on we should probably parse thexem and map the tvdb season & episode number to absolute episode number.
                     if(episode.absoluteEpisodeNumber === undefined)
                         continue;
-                    
+
                     if(tracked[id].magnets[episode.absoluteEpisodeNumber] !== undefined)
                     {
                         var best = null;
@@ -397,18 +403,18 @@ var commands = [
                         {
                             if(key === "lastSend")
                                 continue;
-                            
+
                             if(best == null || tracked[id].magnets[episode.absoluteEpisodeNumber][key].qualityId > best.qualityId)
                             {
                                 best = tracked[id].magnets[episode.absoluteEpisodeNumber][key];
                             }
                         }
-                        
+
                         add = "**" + episode.absoluteEpisodeNumber + "**: " + best.quality + ". " + best.magnet + "\r\n";
                     }else{
                         add = "**" + episode.absoluteEpisodeNumber + "**: No download found.\r\n";
                     }
-                    
+
                     if(results[results.length - 1].length + add.length >= 1600)
                     {
                         results.push(add);
@@ -419,16 +425,16 @@ var commands = [
             }else{
                 results[0] = "No episodes found!";
             }
-            
+
             var send = function(i){
                 if(i == results.length)
                     return;
-                
-                sempaibot.sendMessage(m.channel, results[i], {}, function(err, message){
+
+                sempaibot.sendMessage(message.channel, results[i], {}, function(err, message){
                     send(i + 1);
                 });
             };
-            
+
             sempaibot.sendMessage(message.channel, responses.get("ANIME_TRACKING_LIST_DETAIL").format({author: message.author.id, anime: tracked[id].titles[0], results: results[0]}), {}, function(err, message){
                 send(1);
             });
@@ -445,7 +451,7 @@ var commands = [
                     //todo: handle error
                     return;
                 }
-                
+
                 var data = [""];
                 for(var i = 0;i<shows.length;i++)
                 {
@@ -457,7 +463,7 @@ var commands = [
                         data[data.length - 1] = data[data.length - 1] + add;
                     }
                 }
-                
+
                 if(shows.length == 0)
                     sempaibot.sendMessage(m.channel, responses.get("ANIME_SEARCH_NO_RESULTS").format({author: m.author.id, anime: name}));
                 else
@@ -465,12 +471,12 @@ var commands = [
                     var send = function(i){
                         if(i == data.length)
                             return;
-                        
+
                         sempaibot.sendMessage(m.channel, data[i], {}, function(err, message){
                             send(i + 1);
                         });
                     };
-                    
+
                     sempaibot.sendMessage(m.channel, responses.get("ANIME_SEARCH_RESULTS").format({author: m.author.id, anime: name, results: data[0]}), {}, function(err, message){
                         send(1);
                     });
@@ -488,14 +494,14 @@ var commands = [
             {
                 if(i !== 0)
                     message += ", ";
-                
+
                 message += osuusers[i];
             }
-            
+
             sempaibot.sendMessage(m.channel, responses.get("OSU_FOLLOWING").format({author: m.author.id, results: message}));
         }
     },
-    
+
     {
         command: /follow (.*)? on osu/,
         sample: "sempai follow (*user*) on osu",
@@ -505,11 +511,11 @@ var commands = [
             {
                 return sempaibot.sendMessage(m.channel, responses.get("OSU_UNDEFINED").format({author: m.author.id}));
             }
-            
+
             check_osu_user(name, m);
         }
     },
-    
+
     {
         command: /stop following (.*)? on osu/,
         sample: "sempai stop following (*user*) on osu",
@@ -520,7 +526,7 @@ var commands = [
             {
                 return sempaibot.sendMessage(m.channel, responses.get("OSU_NOT_FOLLOWING").format({author: m.author.id, user: user}));
             }
-            
+
             osuusers.splice(i, 1);
 
             osudb.remove({username: user}, {}, function (err, numrem) {
@@ -531,7 +537,7 @@ var commands = [
             sempaibot.sendMessage(m.channel, responses.get("OSU_STOPPED").format({author: m.author.id, user: user}));
         }
     },
-    
+
     {
         command: /check (.*)? on osu/,
         sample: "sempai check (*user*) on osu",
@@ -541,7 +547,7 @@ var commands = [
             osu_force_check(m, user);
         }
     },
-    
+
     {
         command: /please help me/,
         hidden: true,
@@ -551,16 +557,16 @@ var commands = [
             {
                 if(commands[i].hidden !== undefined)
                     continue;
-                
+
                 message += "**" + commands[i].sample + "** - " + commands[i].description;
                 message += "\r\n";
             }
             message += responses.get("PLEASE_HELP_BOTTOM").format({author: m.author.id});
-            
+
             sempaibot.reply(m, message);
         }
     },
-    
+
     {
         command: /help me/,
         hidden: true,
@@ -570,40 +576,40 @@ var commands = [
             {
                 if(commands[i].hidden !== undefined)
                     continue;
-                
+
                 message += "**" + commands[i].sample + "** - " + commands[i].description;
                 message += "\r\n";
             }
             message += responses.get("HELP_BOTTOM").format({author: m.author.id});
-            
+
             sempaibot.reply(m, message);
         }
     },
-    
+
     {
         command: /tsundere on/,
         hidden: true,
         action: function(m){
             if(responses.currentMode)
                 return sempaibot.sendMessage(m, responses.get("ALREADY_IN_MODE").format({author: m.author.id}));
-            
+
             responses.setMode(true);
             sempaibot.sendMessage(m, responses.get("SWITCHED").format({author: m.author.id}));
         }
     },
-    
+
     {
         command: /tsundere off/,
         hidden: true,
         action: function(m){
             if(!responses.currentMode)
                 return sempaibot.sendMessage(m, responses.get("ALREADY_IN_MODE").format({author: m.author.id}));
-            
+
             responses.setMode(false);
             sempaibot.sendMessage(m, responses.get("SWITCHED").format({author: m.author.id}));
         }
     },
-    
+
     //this one should be last
     {
         command: null,
@@ -613,14 +619,14 @@ var commands = [
             {
                 return sempaibot.sendMessage(m.channel, responses.get("NAME").format({author: m.author.id}));
             }
-            
+
             if(target === undefined)
                 return sempaibot.sendMessage(m.channel, responses.get("WRONG_HOLE").format({author: m.author.id}));
-            
+
             var user = get_user(target);
             if(user !== -1)
                 return sempaibot.sendMessage(m.channel, responses.get("WRONG_HOLE_USER").format({author: m.author.id, user: user}));
-            
+
             return sempaibot.sendMessage(m.channel, responses.get("WRONG_HOLE").format({author: m.author.id}));
         }
     }
@@ -629,7 +635,7 @@ var commands = [
 function handle_message(m)
 {
     var n = m.content.split(" ");
-    
+
     if(n[0] == name || m.content.charAt(0) == "-")
     {
         for(var i = 0;i<commands.length;i++)
@@ -640,12 +646,12 @@ function handle_message(m)
                 data = commands[i].command.exec(m.content);
                 if(data === null)
                     continue;
-                
+
                 data.splice(0, 1);
                 data = [m].concat(data);
             }else if(m.content.charAt(0) != "-"){
                 data = [m];
-                
+
                 if(n.length > 1)
                 {
                     var targetName = m.content.substr(m.content.indexOf(" ") + 1);
@@ -655,7 +661,7 @@ function handle_message(m)
                 //dont allow null commands to run without the name-keyword
                 continue;
             }
-            
+
             commands[i].action.apply(null, data);
             break;
         }
@@ -670,16 +676,16 @@ if(!run_test)
                 var pending = 0;
                 var pings = {};
                 var names = {};
-                
+
                 for(var i = 0;i<res.length;i++)
                 {
                     names[res[i].id] = res[i].name;
-                    
+
                     pending++;
                     dns.resolve(res[i].sample_hostname, function(res, err, addresses){
                         session.pingHost(addresses[0], function(err, target, sent, rcvd){
                             pending--;
-                        
+
                             var ms = rcvd - sent;
                             if(err)
                             {
@@ -687,7 +693,7 @@ if(!run_test)
                             }else{
                                 pings[res.id] = ms;
                             }
-                            
+
                             if(pending == 0)
                             {
                                 if(pings[sempaibot.servers[0].region] >= PING_THRESHOLD)
@@ -700,10 +706,10 @@ if(!run_test)
                                             best = key;
                                         }
                                     }
-                                    
+
                                     if(sempaibot.servers[0].region == best)
                                         return;
-                                    
+
                                     var old = sempaibot.servers[0].region;
                                     sempaibot.internal.apiRequest("patch", "https://discordapp.com/api/guilds/" + sempaibot.servers[0].id, true, {name: sempaibot.servers[0].name, region: best}).then(function(res){
                                         sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("REGION_CHANGED").format({old_region: names[old], new_region: names[best]}));
@@ -719,7 +725,7 @@ if(!run_test)
             console.log(err);
         });
     };
-    
+
     sempaibot.on("message", function (m) {
         handle_message(m);
     });
@@ -730,7 +736,7 @@ if(!run_test)
         sempaibot.joinServer(config.server, function (error, server) {
             servers.push(server);
             sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("ONLINE"));
-            
+
             setInterval(serverSwitcher, 10000);
         });
     });
@@ -824,7 +830,7 @@ function load_data() {
     datadb.find({}, function(err, docs){
         if (err !== null)
             return console.log(err);
-        
+
         for(var i = 0;i<docs.length;i++)
         {
             if(docs[i].name == "mode")
@@ -835,7 +841,7 @@ function load_data() {
             }
         }
     });
-    
+
     anidb = new Datastore({filename: "database/ani.db", autoload: true});
 }
 
@@ -909,7 +915,7 @@ var osucheck = setInterval(function () {
             method: "GET"
         };
         var endDate = new Date();
-        
+
         endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 60 * 1000);
         http.get(options,function (user, res) {
             var data = "";
