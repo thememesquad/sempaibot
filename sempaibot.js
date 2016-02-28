@@ -54,7 +54,7 @@ var responses_normal = {
     OSU_NOT_FOLLOWING: "I'm not even following \"{user}\"!",
     OSU_STOPPED: "Ok, I have stopped following {user}",
     OSU_NEW_SCORE: "{user} has set a new PP score! Map: https://osu.ppy.sh/b/{beatmap_id} . PP: {pp}. Rank: {rank}. Date: {date}",
-    OSU_NEW_SCORE_NODATE: "{user} has set a new PP score! Map: https://osu.ppy.sh/b/{beatmap_id} . PP: {pp}. Rank: {rank}.",
+    OSU_NEW_SCORE_NODATE: "**{user}** has set a new PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** | {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}**. Map link: https://osu.ppy.sh/b/{beatmap_id}",
     OSU_USER_NOT_FOUND: "<@{author}> The specified user \"{user}\" is not a valid osu user!",
     OSU_ALREADY_FOLLOWING: "<@{author}> I'm already following \"{user}\".",
     OSU_ADDED_FOLLOWING: "<@{author}> I'm now following \"{user}\" on osu.",
@@ -158,7 +158,7 @@ var responses_tsundere = {
     ],
 
     OSU_NEW_SCORE: "{user} has set a new PP score! Map: https://osu.ppy.sh/b/{beatmap_id} . PP: {pp}. Rank: {rank}. Date: {date}",
-    OSU_NEW_SCORE_NODATE: "{user} has set a new PP score! {map_artist} - {map_title} [{map_diff_name}] {mods} | {additional} | {acc}% | {pp}pp | Rank: {rank}. Map link: https://osu.ppy.sh/b/{beatmap_id}",
+    OSU_NEW_SCORE_NODATE: "**{user}** has set a new PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** | {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}**. Map link: https://osu.ppy.sh/b/{beatmap_id}",
     OSU_USER_NOT_FOUND: "Baka~! I can't find that user. Did you type the username correctly?",
     OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {user}",
     OSU_ADDED_FOLLOWING: [
@@ -870,7 +870,7 @@ function osu_force_check(m, user) {
         method: "GET"
     };
     var endDate = new Date();
-    endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 60 * 1000);
+    endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 100 * 60 * 1000);
     http.get(options, function (user, res) {
         var data = "";
         res.on('data', function (chunk) {
@@ -895,6 +895,7 @@ function osu_force_check(m, user) {
                 beatmap.countmiss = parseInt(beatmap.countmiss);
                 beatmap.enabled_mods = parseInt(beatmap.enabled_mods);
                 beatmap.perfect = parseInt(beatmap.perfect);
+                beatmap.pp = Math.round(parseFloat(beatmap.pp));
 
                 var totalPointOfHits = beatmap.count50*50 + beatmap.count100*100 + beatmap.count300 * 300;
                 var totalNumberOfHits = beatmap.countmiss + beatmap.count50 + beatmap.count100 + beatmap.count300;
@@ -917,7 +918,7 @@ function osu_force_check(m, user) {
                 var date = new Date(bdate.valueOf() + -60 * 8 * 60000);
 
                 if (date > endDate) {
-                  http.get("http://osu.ppy.sh/api/get_beatmaps?k=" + config.osuapi + "&b=" + beatmap.beatmap_id, function(res){
+                  http.get("http://osu.ppy.sh/api/get_beatmaps?k=" + config.osuapi + "&b=" + beatmap.beatmap_id, function(beatmap, res){
                     var data = "";
                     res.on('data', function (chunk) {
                         data += chunk;
@@ -927,16 +928,16 @@ function osu_force_check(m, user) {
 
                         beatmap.additional = "";
                         if(beatmap.countmiss == 0 && beatmap.perfect == 0)
-                            beatmap.additional = "Sliderbreak " + beatmap.maxcombo + "/" + beatmap_info.max_combo;
+                            beatmap.additional = "**" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** Sliderbreak";
                         else if (beatmap.perfect == 0)
-                            beatmap.additional = beatmap.maxcombo + "/" + beatmap_info.max_combo + " " + beatmap.countmiss + "x Miss";
+                            beatmap.additional = "**" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
                         else if(beatmap.perfect == 1)
-                          beatmap.additional = "FC";
+                          beatmap.additional = "**FC**";
 
                       sempaibot.sendMessage(sempaibot.channels.get("name", "osu"), responses.get("OSU_NEW_SCORE_NODATE").format({user: user, beatmap_id: beatmap.beatmap_id, pp: beatmap.pp,
-                          rank: beatmap.rank, acc: beatmap.acc, mods: beatmap.mods, map_artist: beatmap_info.artist, map_title: beatmap_info.title, map_diff_name: beatmap_info.version}));
+                          rank: beatmap.rank, acc: beatmap.acc, mods: beatmap.mods, map_artist: beatmap_info.artist, map_title: beatmap_info.title, map_diff_name: beatmap_info.version, additional: beatmap.additional}));
                     });
-                  });
+                }.bind(null, beatmap));
                 }
             }
         });
