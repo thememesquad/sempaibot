@@ -135,7 +135,7 @@ var responses_tsundere = {
 
     ANIME_SEARCH_NO_RESULTS: "No results found for '{anime}'.",
     ANIME_SEARCH_RESULTS: "Results for '{anime}':\r\n{results}",
-    ANIME_NEW_DOWNLOAD: "New download for show '**{show}**':\r\n**{file}**:\r\n**Magnet**: {magnet}\r\n**Seeders**: {seeders}, **Leechers**: {leechers}, **Downloads**: {downloads}, **Quality**: {quality}\r\n**Trusted**: {is_trusted}\r\n",
+    ANIME_NEW_DOWNLOAD: "New download for show '**{show}**':\r\n**{file}**:\r\n**Magnet**: {magnet}\r\n**Seeders**: {seeders}, **Leechers**: {leechers}, **Downloads**: {downloads}, **Quality**: {quality}\r\n",
     ANIME_INVALID_ID: "Can't track {id} because the id is invalid!",
     ANIME_ALREADY_TRACKING: "I'm already tracking '**{anime}**'!",
     ANIME_NOW_TRACKING: "Started tracking '**{anime}**'!",

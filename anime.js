@@ -357,12 +357,16 @@ Anime.prototype.match = function(title, description, date, link){
                     if(_this.tracking[key].magnets[ep][magnetLink] !== undefined)
                         return; //already have this one
                     
+                    var data = parseDescription(description);
+                    if(!data.trusted)
+                        return;
+                    
                     _this.tracking[key].magnets[ep][magnetLink] = {
                         file: title,
                         group: group,
                         quality: parseQuality(quality),
                         qualityId: qualityId(parseQuality(quality)),
-                        data: parseDescription(description),
+                        data: data,
                         date: date,
                         magnet: magnetLink
                     };
