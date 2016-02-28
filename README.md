@@ -6,6 +6,13 @@ This Bot uses the following Modules:
 - discord.js
 - http
 - cheerio
+- cloudscraper
+- ger
+- lodash
+- nedb
+- net-ping
+- parse-torrent
+- xml2js
 
 # How to use
 Rename config.example.js to config.js and edit it with your Discord Account user information.
