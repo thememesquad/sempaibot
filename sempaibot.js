@@ -870,7 +870,7 @@ function osu_force_check(m, user) {
         method: "GET"
     };
     var endDate = new Date();
-    endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 100 * 60 * 1000);
+    endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 1 * 60 * 1000);
     http.get(options, function (user, res) {
         var data = "";
         res.on('data', function (chunk) {
