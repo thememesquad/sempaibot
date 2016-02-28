@@ -242,6 +242,16 @@ Anime.prototype.track = function(id, name){
     return 1; //started tracking
 };
 
+Anime.prototype.stopTracking = function(id){
+    if(this.tracking[id] === undefined)
+        return 0; //not tracking
+    
+    delete this.tracking[id];
+    this.changed = true;
+    
+    return 1;
+};
+
 function parseQuality(quality)
 {
     if(quality.toLowerCase().indexOf("720p") != -1)
@@ -374,7 +384,10 @@ Anime.prototype.updateAlternateNames = function(callback){
     
     var delta = Date.now() - this.lastAlternateUpdate;
     if(this.lastAlternateUpdate != -1 && delta <= (5 * 60 * 60 * 1000))
+    {
+        callback();
         return;
+    }
     
     this.alternateUpdateInProgress = true;
     http.get("http://thexem.de/map/allNames?origin=tvdb", function(res){
@@ -416,6 +429,9 @@ Anime.prototype.updateAnime = function(id){
         
         res.on('end', function () {
             data = JSON.parse(data);
+            if(_this.tracking[id] === undefined)
+                return;
+            
             _this.tracking[id] = lodash.merge(_this.tracking[id], data);
             _this.tracking[id].lastUpdated = Date.now();
             _this.tracking[id].updateInProgress = false;

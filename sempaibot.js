@@ -48,7 +48,9 @@ var responses_normal = {
     ANIME_TRACKING_LIST_EMPTY: "I'm not tracking any anime at the moment.",
     ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{results}",
     ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{anime}**':\r\n{results}",
-
+    ANIME_NOT_TRACKING: "I'm not even tracking {name}!",
+    ANIME_STOPPED_TRACKING: "Ok, I'll stop tracking {name}",
+    
     OSU_FOLLOWING: "I'm currently following: {results}",
     OSU_UNDEFINED: "You could ofcourse actually tell me the user you want me to watch.",
     OSU_NOT_FOLLOWING: "I'm not even following \"{user}\"!",
@@ -140,6 +142,8 @@ var responses_tsundere = {
     ANIME_TRACKING_LIST_EMPTY: "I'm not tracking any anime at the moment.",
     ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{results}",
     ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{anime}**':\r\n{results}",
+    ANIME_NOT_TRACKING: "I'm not even tracking {name}!",
+    ANIME_STOPPED_TRACKING: "Ok, I'll stop tracking {name}",
 
     OSU_FOLLOWING: [
         "These are the people I like! I mean, associate with. I-it's not as if I really like them, or anything. Don't get any weird ideas.\r\n{results}",
@@ -349,6 +353,29 @@ var commands = [
             {
                 var name = anime.getName(id);
                 sempaibot.sendMessage(m.channel, responses.get("ANIME_NOW_TRACKING").format({author: m.author.id, anime: name}));
+            }
+        }
+    },
+    {
+        command: /stop tracking anime (.*)/,
+        sample: "sempai stop tracking anime (*name*)",
+        description: "Stops tracking the anime for new releases",
+        action: function(m, name){
+            var data = "";
+            var tracked = anime.getAllTracked();
+            var id = anime.mapNameToId(name);
+            
+            if(tracked[id] === undefined)
+            {
+                return sempaibot.sendMessage(m.channel, responses.get("ANIME_NOT_TRACKING").format({author: m.author.id, name: name}));
+            }
+            
+            var res = anime.stopTracking(id);
+            if(!res)
+            {
+                sempaibot.sendMessage(m.channel, responses.get("ANIME_NOT_TRACKING").format({author: m.author.id, name: name}));
+            }else{
+                sempaibot.sendMessage(m.channel, responses.get("ANIME_STOPPED_TRACKING").format({author: m.author.id, name: name}));
             }
         }
     },
