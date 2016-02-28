@@ -372,12 +372,18 @@ var commands = [
             var results = [""];
             if(tracked[id].episodes !== undefined)
             {
-                /*tracked[id].episodes.sort(function(a, b){
+                tracked[id].episodes.sort(function(a, b){
                     if(a.absoluteEpisodeNumber !== undefined && b.absoluteEpisodeNumber === undefined)
                         return -1;
 
-                    if(a.absoluteEpisodeNumber )
-                });*/
+                    if(a.absoluteEpisodeNumber === undefined && b.absoluteEpisodeNumber !== undefined)
+                        return 1;
+
+                    if(a.absoluteEpisodeNumber === undefined && b.absoluteEpisodeNumber === undefined)
+                        return 0;
+
+                    return a.absoluteEpisodeNumber - b.absoluteEpisodeNumber;
+                });
 
                 for(var i = 0;i<tracked[id].episodes.length;i++)
                 {
@@ -422,7 +428,7 @@ var commands = [
                 if(i == results.length)
                     return;
 
-                sempaibot.sendMessage(m.channel, results[i], {}, function(err, message){
+                sempaibot.sendMessage(message.channel, results[i], {}, function(err, message){
                     send(i + 1);
                 });
             };
