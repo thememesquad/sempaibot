@@ -15,7 +15,7 @@ var magnetLink = function(url, callback){
     cloudscraper.request({method: "GET", url: url, encoding: null}, function(error, response, body){
         try{
             var torrent = parseTorrent(body);
-            callback(null, 'magnet:?xt=urn:btih:' + torrent.infoHash);
+            callback(null, 'magnet://?xt=urn:btih:' + torrent.infoHash);
         }catch(e)
         {
             callback(e);
@@ -384,6 +384,12 @@ Anime.prototype.updateAlternateNames = function(callback){
     
     var delta = Date.now() - this.lastAlternateUpdate;
     if(this.lastAlternateUpdate != -1 && delta <= (5 * 60 * 60 * 1000))
+    {
+        callback();
+        return;
+    }
+    
+    if(this.alternateUpdateInProgress)
     {
         callback();
         return;
