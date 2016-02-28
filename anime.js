@@ -153,6 +153,7 @@ function Anime()
     this.lastAlternateUpdate = -1;
     this.lastResults = [];
     this.tracking = {};
+    this.changed = false;
     
     setInterval(function(){
         this.update();
@@ -219,7 +220,7 @@ Anime.prototype.getName = function(id){
     return this.lastResults[id].titles[0];
 };
 
-Anime.prototype.track = function(id){
+Anime.prototype.track = function(id, name){
     if(id < 0 || id >= this.lastResults.length)
         return -1; //invalid id
     
@@ -230,7 +231,9 @@ Anime.prototype.track = function(id){
     this.tracking[this.lastResults[id].id].lastUpdated = -1;
     this.tracking[this.lastResults[id].id].magnets = {};
     this.tracking[this.lastResults[id].id].updateInProgress = false;
+    this.tracking[this.lastResults[id].id]._internalName = name;
     this.updateAnime(this.lastResults[id].id);
+    this.changed = true;
     
     return 1; //started tracking
 };
@@ -350,6 +353,7 @@ Anime.prototype.match = function(title, description, date, link){
                         magnet: magnetLink
                     };
                     
+                    _this.changed = true;
                     _this.onNewMagnetLink(key, ep, magnetLink);
                 });
                 
@@ -407,6 +411,8 @@ Anime.prototype.updateAnime = function(id){
             _this.tracking[id] = lodash.merge(_this.tracking[id], data);
             _this.tracking[id].lastUpdated = Date.now();
             _this.tracking[id].updateInProgress = false;
+            
+            _this.changed = true;
         });
     });
 };
@@ -435,6 +441,12 @@ Anime.prototype.update = function(){
                 
                 _this.match(title, description, date, link);
             }
+            
+            if(_this.changed)
+            {
+                _this.emit("changed");
+                _this.changed = false;
+            }
         });
     });
 };
@@ -445,6 +457,16 @@ Anime.prototype.setAllTracked = function(data){
 
 Anime.prototype.getAllTracked = function(){
     return this.tracking;
+};
+
+Anime.prototype.mapNameToId = function(name){
+    for(var key in this.tracking)
+    {
+        if(this.tracking[key]._internalName == name)
+            return key;
+    }
+    
+    return null;
 };
 
 util.inherits(Anime, EventEmitter);

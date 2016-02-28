@@ -2,7 +2,7 @@ var Discord = require("discord.js");
 var http = require("http");
 var cheerio = require("cheerio");
 var Datastore = require("nedb");
-var osudb, datadb, anidb; //Databases
+var osudb, datadb; //Databases
 var Anime = require("./anime.js").Anime;
 var ping = require ("net-ping");
 var dns = require("dns");
@@ -256,6 +256,21 @@ anime.on("newDownload", function(show, data){
     }));
 });
 
+anime.on("changed", function(){
+    datadb.update({name: "anime_tracked"}, {value: anime.getAllTracked()}, {}, function(err, numUpdated){
+        if(err)
+            return console.log("Update error: " + err);
+                
+        if(numUpdated == 0)
+        {
+            datadb.insert({name: "anime_tracked", value: anime.getAllTracked()}, function(err, doc){
+                if(err)
+                    console.log("Insert error: " + err);
+            });
+        }
+    });
+});
+
 var name = "sempai";
 var commands = [
     {
@@ -316,13 +331,13 @@ var commands = [
         }
     },
     {
-        command: /track anime (.*)/,
-        sample: "sempai track anime (*id*)",
+        command: /track anime (.*) as (.*)/,
+        sample: "sempai track anime (*id*) as (*name*)",
         description: "Tracks an Anime for new releases",
-        action: function(m, id) {
+        action: function(m, id, trackName) {
             id = parseInt(id) - 1;
 
-            var result = anime.track(id);
+            var result = anime.track(id, trackName);
             if(result == -1)
             {
                 sempaibot.sendMessage(m.channel, responses.get("ANIME_INVALID_ID").format({author: m.author.id, id: id}));
@@ -346,7 +361,7 @@ var commands = [
             var data = "";
             for(var key in tracked)
             {
-                data += key + ". " + tracked[key].titles[0] + "\r\n";
+                data += "**" + tracked[key]._internalName + "**: " + tracked[key].titles[0] + "\r\n";
             }
 
             if(data.length == 0)
@@ -357,16 +372,16 @@ var commands = [
     },
     {
         command: /get downloads for the anime (.*)/,
-        sample: "sempai get downloads for the anime (*id*)",
-        description: "Lists downloads for the anime specified by id.",
-        action: function(message, id){
+        sample: "sempai get downloads for the anime (*name*)",
+        description: "Lists downloads for the anime specified by name.",
+        action: function(message, name){
             var data = "";
-            id = parseInt(id);
             var tracked = anime.getAllTracked();
-
+            var id = anime.mapNameToId(name);
+            
             if(tracked[id] === undefined)
             {
-                return sempaibot.sendMessage(message.channel, responses.get("ANIME_INVALID_ID").format({author: message.author.id, id: id}));
+                return sempaibot.sendMessage(message.channel, responses.get("ANIME_INVALID_ID").format({author: message.author.id, id: name}));
             }
 
             var results = [""];
@@ -410,7 +425,13 @@ var commands = [
 
                         add = "**" + episode.absoluteEpisodeNumber + "**: " + best.quality + ". " + best.magnet + "\r\n";
                     }else{
-                        add = "**" + episode.absoluteEpisodeNumber + "**: No download found.\r\n";
+                        var date = new Date(episode.airDateUtc);
+                        var aired = date.getTime() <= (new Date()).getTime();
+                        
+                        if(!aired)
+                            add = "**" + episode.absoluteEpisodeNumber + "**: Not yet aired.\r\n";
+                        else
+                            add = "**" + episode.absoluteEpisodeNumber + "**: No download found.\r\n";
                     }
 
                     if(results[results.length - 1].length + add.length >= 1600)
@@ -429,12 +450,16 @@ var commands = [
                     return;
 
                 sempaibot.sendMessage(message.channel, results[i], {}, function(err, message){
-                    send(i + 1);
+                    setTimeout(function(){
+                        send(i + 1);
+                    }, 40);
                 });
             };
 
             sempaibot.sendMessage(message.channel, responses.get("ANIME_TRACKING_LIST_DETAIL").format({author: message.author.id, anime: tracked[id].titles[0], results: results[0]}), {}, function(err, message){
-                send(1);
+                setTimeout(function(){
+                    send(1);
+                }, 40);
             });
         }
     },
@@ -471,12 +496,16 @@ var commands = [
                             return;
 
                         sempaibot.sendMessage(m.channel, data[i], {}, function(err, message){
-                            send(i + 1);
+                            setTimeout(function(){
+                                send(i + 1);
+                            }, 40);
                         });
                     };
 
                     sempaibot.sendMessage(m.channel, responses.get("ANIME_SEARCH_RESULTS").format({author: m.author.id, anime: name, results: data[0]}), {}, function(err, message){
-                        send(1);
+                        setTimeout(function(){
+                            send(1);
+                        }, 40);
                     });
                 }
             });
@@ -835,12 +864,13 @@ function load_data() {
             {
                 if(docs[i].value != responses.currentMode)
                     responses.setMode(docs[i].value);
+            }else if(docs[i].name == "anime_tracked")
+            {
+                anime.setAllTracked(docs[i].value);
             }else{
             }
         }
     });
-
-    anidb = new Datastore({filename: "database/ani.db", autoload: true});
 }
 
 /****************************************/
