@@ -202,6 +202,10 @@ Anime.prototype.search = function(anime, callback){
                     callback(null, err);
                 }
             });
+            
+            res.on('error', function(exception){
+                console.log("PANIC, Can't search for the anime '" + anime + "' because: '" + exception + "'.");
+            });
         });
     };
     
@@ -386,6 +390,10 @@ Anime.prototype.updateAlternateNames = function(callback){
             
             callback();
         });
+        
+        res.on('error', function(exception){
+            console.log("PANIC, Can't update alternative names because: '" + exception + "'.");
+        });
     });
 };
 
@@ -413,6 +421,10 @@ Anime.prototype.updateAnime = function(id){
             _this.tracking[id].updateInProgress = false;
             
             _this.changed = true;
+        });
+        
+        res.on('error', function(exception){
+            console.log("PANIC, Can't update anime '" + _this.tracking[id]._internalName + "' because: '" + exception + "'.");
         });
     });
 };
