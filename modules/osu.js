@@ -18,7 +18,7 @@ function OsuModule(Bot)
 OsuModule.prototype.osu_force_check = function(m, user) {
     if (this.osuusers.indexOf(user) === -1) {
         if(m !== null) 
-            this.Bot.discord.sendMessage(Bot.discord.channels.get("name", "osu"), responses.get("OSU_NOT_FOLLOWING").format({author: m.author.id, user: user}));
+            this.Bot.discord.sendMessage(this.Bot.discord.channels.get("name", "osu"), responses.get("OSU_NOT_FOLLOWING").format({author: m.author.id, user: user}));
 
         return;
     }
