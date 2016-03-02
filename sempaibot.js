@@ -39,12 +39,29 @@ function handle_message(m)
             var data = [];
             if(Bot.commands[i].command !== null)
             {
-                data = Bot.commands[i].command.exec(m.content);
-                if(data === null)
-                    continue;
+                if(Array.isArray(Bot.commands[i].command))
+                {
+                    for(var j = 0;j<Bot.commands.length;j++)
+                    {
+                        data = Bot.commands[j].command.exec(m.content);
+                        if(data === null)
+                            continue;
+                        
+                        data.splice(0, 1);
+                        data = [m].concat(data);
+                        break;
+                    }
+                    
+                    if(data === null)
+                        continue;
+                }else{
+                    data = Bot.commands[i].command.exec(m.content);
+                    if(data === null)
+                        continue;
 
-                data.splice(0, 1);
-                data = [m].concat(data);
+                    data.splice(0, 1);
+                    data = [m].concat(data);
+                }
             }else if(m.content.charAt(0) != "-"){
                 data = [m];
 

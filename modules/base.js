@@ -30,8 +30,12 @@ module.exports = {
                         
                         message += "**" + commands[i].module + "**:\r\n";
                     }
+
+                    if(commands[i].descriptionTsundere !== undefined && responses.currentMode)
+                        message += "**" + commands[i].sample + "** - " + commands[i].descriptionTsundere;
+                    else
+                        message += "**" + commands[i].sample + "** - " + commands[i].description;
                     
-                    message += "**" + commands[i].sample + "** - " + commands[i].description;
                     message += "\r\n";
                 }
                 message += "\r\n";
@@ -69,7 +73,11 @@ module.exports = {
                         lastMod = commands[i].module;
                     }
 
-                    message += "**" + commands[i].sample + "** - " + commands[i].description;
+                    if(commands[i].descriptionTsundere !== undefined && responses.currentMode)
+                        message += "**" + commands[i].sample + "** - " + commands[i].descriptionTsundere;
+                    else
+                        message += "**" + commands[i].sample + "** - " + commands[i].description;
+                    
                     message += "\r\n";
                 }
                 message += "\r\n";
