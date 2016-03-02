@@ -79,7 +79,7 @@ module.exports = {
         
         Bot.addCommand({
             command: /remind (.*) to (.*) at (.{4,})/,
-            sample: "sempai remind (*name*) to (*reminder*) at (*time*)",
+            sample: "sempai remind __*name*__  to __*reminder*__  at __*time*__",
             description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself)",
             action: function(message, name, reminder, time){
                 if (name != "me")

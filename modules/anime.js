@@ -552,7 +552,7 @@ module.exports = {
         
         Bot.addCommand({
             command: /track anime (.*) as (.*)/,
-            sample: "sempai track anime (*id*) as (*name*)",
+            sample: "sempai track anime __*id*__  as __*name*__",
             description: "Tracks an Anime for new releases",
             action: function(m, id, trackName) {
                 id = parseInt(id) - 1;
@@ -575,7 +575,7 @@ module.exports = {
         
         Bot.addCommand({
             command: /stop tracking anime (.*)/,
-            sample: "sempai stop tracking anime (*name*)",
+            sample: "sempai stop tracking anime __*name*__",
             description: "Stops tracking the anime for new releases",
             action: function(m, name){
                 var data = "";
@@ -618,7 +618,7 @@ module.exports = {
         
         Bot.addCommand({
             command: /get downloads for the anime (.*)/,
-            sample: "sempai get downloads for the anime (*name*)",
+            sample: "sempai get downloads for the anime __*name*__",
             description: "Lists downloads for the anime specified by name.",
             action: function(message, name){
                 var data = "";
@@ -712,7 +712,7 @@ module.exports = {
         
         Bot.addCommand({
             command: /search for the anime (.*)/,
-            sample: "sempai search for the anime (*anime*)",
+            sample: "sempai search for the anime __*anime*__",
             description: "Searches for the anime",
             action: function(m, name){
                 anime.search(name, function(shows, err){

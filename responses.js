@@ -32,7 +32,7 @@ var responses_normal = {
     OSU_USER_NOT_FOUND: [
         "The specified user \"{user}\" is not a valid osu user!",
         "I can't find user \"{user}\". Did you type it correctly?",
-    ]
+    ],
     OSU_ALREADY_FOLLOWING: "I'm already following \"{user}\".",
     OSU_ADDED_FOLLOWING: "I'm now following \"{user}\" on osu!",
     OSU_CHECK: "No problem! I'll check {user} on osu for you!",
@@ -154,7 +154,7 @@ var responses_tsundere = {
         "Fine. Just this once. Here's a list of my commands:\r\n",
         "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just like helping. Here is a list of my commands:\r\n",
         "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just have a lot of free time. Here is a list of my commands:\r\n",
-        "Alright. I'll help. You should feel grateful. Here's a list of my commands:\r\n"
+        "Alright. I'll help. You should feel grateful. Here's a list of my commands:\r\n",
         "Not even a please? Sempai has feelings too, you know! I mean, I may be a bot... but bots can have feelings too! You seem to be clueless, so I'll help you this one time. But try asking nicely next time.",
     ],
     HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
@@ -181,8 +181,10 @@ var responses_tsundere = {
         "You're still not making any sense to Sempai. Do you need me to spell it out for you? \"Sempai please help me\". That will do just fine. Don't forget the please."
     ],
 
-    ERROR: [ "I...I don't know what happened... Stop looking at me! I-it's not like I'm doing this on purpose or anything. Sempai is just really confused right now! :[",
-            "Sempai is confused! Sempai hit herself in confusion. Ow!",
+    ERROR: [
+        "I...I don't know what happened... Stop looking at me! I-it's not like I'm doing this on purpose or anything. Sempai is just really confused right now! :[",
+        "Sempai is confused! Sempai hit herself in confusion. Ow!"
+    ]
 };
 
 var responses = {

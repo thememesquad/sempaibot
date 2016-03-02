@@ -168,7 +168,7 @@ module.exports = {
         Bot.addCommand({
             command: [
                 /who are you following on osu/,
-                /show who you are following on osu/
+                /show who you are following on osu/,
                 /show the (?: osu)?(?: follow|following|stalking) list/
             ],
             sample: "sempai who are you following on osu?",
@@ -189,11 +189,11 @@ module.exports = {
 
         Bot.addCommand({
             command: [
-                /follow (.*)?(?: on )?(osu)?/
-                /stalk (.*)?(?: on )?(osu)?/
+                /follow (.*)?(?: on )?(osu)?/,
+                /stalk (.*)?(?: on )?(osu)?/,
                 /add (.*)? to (?: follow| follow list| stalking list| following list| the follow list| the stalking list| the following list| the list| list)?(?: on )?(osu)?/
             ],
-            sample: "sempai follow **user** on osu",
+            sample: "sempai follow __*user*__  on osu",
             description: "Adds the person to my following list for osu.",
             action: function(m, name){
                 if(name === undefined)
@@ -207,12 +207,12 @@ module.exports = {
 
         Bot.addCommand({
             command: [
-                /stop following (\w*)?(?: on )?(osu)?/
-                /stop stalking (\w*)?(?: on )?(osu)?/
+                /stop following (\w*)?(?: on )?(osu)?/,
+                /stop stalking (\w*)?(?: on )?(osu)?/,
                 /remove (\w*)? from (?: follow| the follow list| the following list| the stalking list| follow list| following list| stalking list| the list| list)?(?: on )?(osu)?/
             ],
-            sample: "sempai stop following **user**",
-            description: "Removes the person from my followng list for osu.",
+            sample: "sempai stop following __*user*__",
+            description: "Removes the person from my following list for osu.",
             action: function(m, user){
                 var i = osu.osuusers.indexOf(user);
                 if(i === -1)
@@ -223,8 +223,8 @@ module.exports = {
                 osu.osuusers.splice(i, 1);
 
                 db.osu.remove({type: "user", username: user}, {}, function (err, numrem) {
-                    console.log("error: " + err);
-                    console.log("numrem: " + numrem);
+                    if(err)
+                        console.log("Error removing '" + user + "' from osu db: " + err);
                 });
 
                 Bot.discord.sendMessage(m.channel, responses.get("OSU_STOPPED").format({author: m.author.id, user: user}));
@@ -233,7 +233,7 @@ module.exports = {
 
         Bot.addCommand({
             command: /check (\w*)?(?: on )?(osu)?/,
-            sample: "sempai check **user**",
+            sample: "sempai check __*user*__",
             description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
             action: function(m, user){
                 Bot.discord.sendMessage(m.channel, responses.get("OSU_CHECK").format({author: m.author.id, user: user}));
