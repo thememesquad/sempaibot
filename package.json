@@ -7,6 +7,7 @@
     "url": "https://github.com/RukiaXi/sempaibot.git"
   },
   "dependencies": {
+    "auto-loader": "^0.2.0",
     "cheerio": "^0.20.0",
     "cloudscraper": "^1.2.1",
     "discord.js": "^6.0.0",
@@ -14,6 +15,7 @@
     "lodash": "^4.5.1",
     "nedb": "^1.8.0",
     "net-ping": "^1.1.12",
+    "object-hash": "^1.1.2",
     "parse-torrent": "^5.7.1",
     "xml2js": "^0.4.16"
   }
