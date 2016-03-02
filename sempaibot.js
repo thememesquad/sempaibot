@@ -1,15 +1,9 @@
 var Discord = require("discord.js");
-var http = require("http");
-var cheerio = require("cheerio");
-var ping = require ("net-ping");
-var dns = require("dns");
 var responses = require("./responses.js");
 var modules = require('auto-loader').load(__dirname + "/modules");
 var db = require("./db.js");
 var process = require("process");
-var util = require("./util.js");
 var config = require("./config");
-const PING_THRESHOLD = 100;
 
 // First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
@@ -69,62 +63,6 @@ function handle_message(m)
         }
     }
 }
-
-var serverSwitcher = function(){
-    Bot.discord.getServers().then(function(res){
-            var session = ping.createSession ();
-            var pending = 0;
-            var pings = {};
-            var names = {};
-
-            for(var i = 0;i<res.length;i++)
-            {
-                names[res[i].id] = res[i].name;
-
-                pending++;
-                dns.resolve(res[i].sample_hostname, function(res, err, addresses){
-                    session.pingHost(addresses[0], function(err, target, sent, rcvd){
-                        pending--;
-
-                        var ms = rcvd - sent;
-                        if(err)
-                        {
-                            pings[res.id] = 99999;
-                        }else{
-                            pings[res.id] = ms;
-                        }
-
-                        if(pending == 0)
-                        {
-                            if(pings[Bot.discord.servers[0].region] >= PING_THRESHOLD)
-                            {
-                                var best = null;
-                                for(var key in pings)
-                                {
-                                    if(best == null || pings[key] < pings[best])
-                                    {
-                                        best = key;
-                                    }
-                                }
-
-                                if(Bot.discord.servers[0].region == best)
-                                    return;
-
-                                var old = Bot.discord.servers[0].region;
-                                Bot.discord.internal.apiRequest("patch", "https://discordapp.com/api/guilds/" + Bot.discord.servers[0].id, true, {name: Bot.discord.servers[0].name, region: best}).then(function(res){
-                                    Bot.discord.sendMessage(Bot.discord.channels.get("name", "osu"), responses.get("REGION_CHANGED").format({old_region: names[old], new_region: names[best]}));
-                                }).catch(function(res){
-                                    console.log("Failed to switch region to '" + best + "'. Error: ", res.response.error);
-                                });
-                            }
-                        }
-                    });
-                }.bind(null, res[i]));
-            }
-    }).catch(function(err){
-        console.log(err);
-    });
-};
 
 Bot.discord.on("message", function (m) {
     handle_message(m);
@@ -197,8 +135,6 @@ Bot.discord.on("ready", function () {
         
         Bot.discord.joinServer(config.server, function (error, server) {
             Bot.discord.sendMessage(Bot.discord.channels.get("name", "osu"), responses.get("ONLINE"));
-
-            setInterval(serverSwitcher, 10000);
         });
     });
 });
