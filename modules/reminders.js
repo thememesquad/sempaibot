@@ -2,6 +2,7 @@ var responses = require("../responses.js");
 var reminders = [];
 
 module.exports = {
+    moduleName: "Reminders",
     load: function(Bot){
         function remind_me(me, channel, who, when, what) {
             if (who) 
@@ -67,7 +68,7 @@ module.exports = {
             reminders.splice(index, 1);
         }
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /list my reminders/,
             sample: "sempai list my reminders",
             description: "lists your currently active reminders.",
@@ -76,7 +77,7 @@ module.exports = {
             }
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /remind (.*) to (.*) at (.{4,})/,
             sample: "sempai remind (*name*) to (*reminder*) at (*time*)",
             description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself)",

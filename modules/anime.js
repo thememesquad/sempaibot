@@ -466,9 +466,12 @@ Anime.prototype.update = function(){
     }
     
     cloudscraper.get("https://www.nyaa.eu/?page=rss&cats=1_37&filter=1", function(error, response, body){
+        if(error)
+            return console.log("Failed to retrieve nyaa rss feed: ", error);
+        
         parseString(body, function(err, result){
             if(err)
-                return console.log("Can't retrieve nyaa rss feed: ", err);
+                return console.log("Failed to parse nyaa rss feed: ", err);
             
             var results = result.rss.channel[0].item;
             for(var i = 0;i<results.length;i++)
@@ -512,6 +515,7 @@ Anime.prototype.mapNameToId = function(name){
 util.inherits(Anime, EventEmitter);
 
 module.exports = {
+    moduleName: "Anime",
     load: function(Bot){
         var anime = new Anime();
         
@@ -546,7 +550,7 @@ module.exports = {
             });
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /track anime (.*) as (.*)/,
             sample: "sempai track anime (*id*) as (*name*)",
             description: "Tracks an Anime for new releases",
@@ -569,7 +573,7 @@ module.exports = {
             }
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /stop tracking anime (.*)/,
             sample: "sempai stop tracking anime (*name*)",
             description: "Stops tracking the anime for new releases",
@@ -593,7 +597,7 @@ module.exports = {
             }
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /list anime/,
             sample: "sempai list anime",
             description: "List all the anime currently being tracked",
@@ -612,7 +616,7 @@ module.exports = {
             }
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /get downloads for the anime (.*)/,
             sample: "sempai get downloads for the anime (*name*)",
             description: "Lists downloads for the anime specified by name.",
@@ -706,7 +710,7 @@ module.exports = {
             }
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /search for the anime (.*)/,
             sample: "sempai search for the anime (*anime*)",
             description: "Searches for the anime",

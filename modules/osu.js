@@ -126,6 +126,7 @@ OsuModule.prototype.check_osu_user = function(user, m) {
         path: p,
         method: "GET"
     };
+    
     http.get(options, function (res) {
         var data = "";
         res.on('data', function (chunk) {
@@ -145,7 +146,7 @@ OsuModule.prototype.check_osu_user = function(user, m) {
             }
 
             _this.osuusers.push(user);
-            db.osu.insert([{username: user}], function (err, docs) {
+            db.osu.insert({type: "user", username: user}, function (err, docs) {
                 if (err !== null)
                     console.log(err);
             });
@@ -159,10 +160,11 @@ OsuModule.prototype.check_osu_user = function(user, m) {
 }
 
 module.exports = {
+    moduleName: "osu!",
     load: function(Bot){
         var osu = new OsuModule(Bot);
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /who are you following on osu/,
             sample: "sempai who are you following on osu?",
             description: "Lists all the people I'm stalking on osu.",
@@ -180,7 +182,7 @@ module.exports = {
             }
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /follow (.*)? on osu/,
             sample: "sempai follow (*user*) on osu",
             description: "Adds another victim to my stalker list for osu.",
@@ -194,7 +196,7 @@ module.exports = {
             }
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /stop following (.*)? on osu/,
             sample: "sempai stop following (*user*) on osu",
             description: "Removes someone from my stalker list for osu.",
@@ -207,7 +209,7 @@ module.exports = {
 
                 osu.osuusers.splice(i, 1);
 
-                db.osu.remove({username: user}, {}, function (err, numrem) {
+                db.osu.remove({type: "user", username: user}, {}, function (err, numrem) {
                     console.log("error: " + err);
                     console.log("numrem: " + numrem);
                 });
@@ -216,7 +218,7 @@ module.exports = {
             }
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /check (.*)? on osu/,
             sample: "sempai check (*user*) on osu",
             description: "Forces me to check the given person on osu just in case I missed something.",
@@ -226,7 +228,7 @@ module.exports = {
             }
         });
         
-        db.osu.find({}, function (err, docs) {
+        db.osu.find({type: "user"}, function (err, docs) {
             if (err !== null)
                 return console.log(err);
 

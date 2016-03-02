@@ -1,47 +1,85 @@
 var db = require("../db.js");
 var responses = require("../responses.js");
+var lodash = require("lodash");
 
 module.exports = {
+    moduleName: "General",
     load: function(Bot){
-        Bot.commands.push({
+        Bot.addCommand({
             command: /please help me/,
             hidden: true,
             action: function(m){
                 var message = responses.get("PLEASE_HELP_TOP").format({author: m.author.id});
-                for(var i = 0;i<Bot.commands.length;i++)
+                var commands = lodash.clone(Bot.commands);
+                commands.sort(function(a, b){
+                    if(a.module < b.module) return -1;
+                    if(a.module > b.module) return 1;
+                    
+                    return 0;
+                });
+                
+                for(var i = 0;i<commands.length;i++)
                 {
-                    if(Bot.commands[i].hidden !== undefined)
+                    if(commands[i].hidden !== undefined)
                         continue;
 
-                    message += "**" + Bot.commands[i].sample + "** - " + Bot.commands[i].description;
+                    if(i == 0 || commands[i].module != commands[i-1].module)
+                    {
+                        if(i != 0)
+                            message += "\r\n";
+                        
+                        message += "**" + commands[i].module + "**:\r\n";
+                    }
+                    
+                    message += "**" + commands[i].sample + "** - " + commands[i].description;
                     message += "\r\n";
                 }
+                message += "\r\n";
                 message += responses.get("PLEASE_HELP_BOTTOM").format({author: m.author.id});
 
                 Bot.discord.reply(m, message);
             }
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /help me/,
             hidden: true,
             action: function(m){
                 var message = responses.get("HELP_TOP").format({author: m.author.id});
-                for(var i = 0;i<Bot.commands.length;i++)
+                var commands = lodash.clone(Bot.commands);
+                commands.sort(function(a, b){
+                    if(a.module < b.module) return -1;
+                    if(a.module > b.module) return 1;
+                    
+                    return 0;
+                });
+                
+                var lastMod = "";
+                for(var i = 0;i<commands.length;i++)
                 {
-                    if(Bot.commands[i].hidden !== undefined)
+                    if(commands[i].hidden !== undefined)
                         continue;
 
-                    message += "**" + Bot.commands[i].sample + "** - " + Bot.commands[i].description;
+                    if(commands[i].module != lastMod)
+                    {
+                        if(i != 0)
+                            message += "\r\n";
+                        
+                        message += "**" + commands[i].module + "**:\r\n";
+                        lastMod = commands[i].module;
+                    }
+
+                    message += "**" + commands[i].sample + "** - " + commands[i].description;
                     message += "\r\n";
                 }
+                message += "\r\n";
                 message += responses.get("HELP_BOTTOM").format({author: m.author.id});
 
                 Bot.discord.reply(m, message);
             }
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /tsundere on/,
             hidden: true,
             action: function(m){
@@ -53,7 +91,7 @@ module.exports = {
             }
         });
         
-        Bot.commands.push({
+        Bot.addCommand({
             command: /tsundere off/,
             hidden: true,
             action: function(m){

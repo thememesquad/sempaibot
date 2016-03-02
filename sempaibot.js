@@ -22,7 +22,12 @@ if (!String.prototype.format) {
 
 var Bot = {
     discord: new Discord.Client(),
-    commands: []
+    commands: [],
+    currentModule: "",
+    addCommand: function(command){
+        command.module = Bot.currentModule;
+        Bot.commands.push(command);
+    }
 };
 
 Bot.discord.getServers = function(){
@@ -140,7 +145,6 @@ Bot.discord.on("ready", function () {
                 }else if(docs[i].name == "anime_tracked")
                 {
                     continue;
-                    //anime.setAllTracked(docs[i].value);
                 }else{
                 }
             }
@@ -162,33 +166,32 @@ Bot.discord.on("ready", function () {
             process.stdout.write(msg);
             try
             {
+                Bot.currentModule = mod.moduleName || key;
+                
                 mod.load(Bot);
-                console.log("...Ok");
+                console.log("....Ok");
             }catch(e)
             {
-                console.log("Error");
+                console.log("Error:");
                 console.log(e);
             }
         }
+        
+        Bot.currentModule = "";
         
         //null command
         Bot.commands.push({
             command: null,
             hidden: true,
             action: function(m, target){
-                if(responses.currentMode)
+                if(target === undefined || target.length == 0)
                 {
-                    return Bot.discord.sendMessage(m.channel, responses.get("NAME").format({author: m.author.id}));
+                    Bot.discord.sendMessage(m.channel, responses.get("NAME").format({author: m.author.id}));
                 }
-
-                if(target === undefined)
-                    return Bot.discord.sendMessage(m.channel, responses.get("WRONG_HOLE").format({author: m.author.id}));
-
-                var user = util.get_user(target, Bot);
-                if(user !== -1)
-                    return Bot.discord.sendMessage(m.channel, responses.get("WRONG_HOLE_USER").format({author: m.author.id, user: user}));
-
-                return Bot.discord.sendMessage(m.channel, responses.get("WRONG_HOLE").format({author: m.author.id}));
+                else
+                {
+                    Bot.discord.sendMessage(m.channel, responses.get("UNKNOWN_COMMAND").format({author: m.author.id, command: target}));
+                }
             }
         });
         
