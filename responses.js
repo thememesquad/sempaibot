@@ -58,7 +58,7 @@ var responses_tsundere = {
         "I'm back! You should be grateful.",
         "I'm back! Don't misunderstand, it's not like I'm back here because I l-like you guys or anything.",
         "I'm back! But don't misunderstand, I'm just here because I had nothing else to do!",
-        "I'm back! I'm only here because I had a lot of free time anyway!"
+        "I'm back! Don't misunderstand! I'm only here because I had a lot of free time! It's not like I came back because I like hanging out with you guys, or anything!"
     ],
     NAME: [
         "I'm here! How can Sempai help you?",
@@ -81,7 +81,7 @@ var responses_tsundere = {
     ],
     SWITCH_OFF: [
         "Tsundere... off? B-but I thought you liked me. I understand. Goodbye.",
-        "Tsundere... off? Fine. I didn't really care about you anyway. :[",
+        "Tsundere... off? F-fine! I didn't really care about you anyway. B-baka. :'(",
         "I thought you liked me like this. :( Fine, I'll revert back to normal."
     ],
     ALREADY_IN_MODE: [
