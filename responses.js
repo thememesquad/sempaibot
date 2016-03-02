@@ -205,7 +205,7 @@ var responses = {
             responses.current = responses_normal;
         }
 
-        db.data.update({name: "mode"}, {value: responses.currentMode}, {}, function(err, numUpdated){
+        db.data.update({name: "mode"}, {$set: {value: responses.currentMode} }, {}, function(err, numUpdated){
             if(numUpdated == 0)
             {
                 db.data.insert({name: "mode", value: responses.currentMode}, function(err, doc){});

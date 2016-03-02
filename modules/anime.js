@@ -536,7 +536,7 @@ module.exports = {
         });
 
         anime.on("changed", function(){
-            db.data.update({name: "anime_tracked"}, {value: anime.getAllTracked()}, {}, function(err, numUpdated){
+            db.data.update({name: "anime_tracked"}, {$set: { value: anime.getAllTracked()} }, {}, function(err, numUpdated){
                 if(err)
                     return console.log("Update error: " + err);
 
