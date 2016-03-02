@@ -49,6 +49,8 @@ function handle_message(m)
                         
                         data.splice(0, 1);
                         data = [m].concat(data);
+                        m.index = j;
+                        
                         break;
                     }
                     
@@ -61,6 +63,7 @@ function handle_message(m)
 
                     data.splice(0, 1);
                     data = [m].concat(data);
+                    m.index = 0;
                 }
             }else if(m.content.charAt(0) != "-"){
                 data = [m];
