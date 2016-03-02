@@ -1,16 +1,16 @@
 var db = require("./db.js");
 
 var responses_normal = {
-    ONLINE: "@everyone Hey guys! I'm back online!",
+    ONLINE: "Hey guys! I'm back online!",
     NAME: "Yes I'm here! What can I do for you?",
     SWITCHED: "Hi there! I'm in my normal response mode now!",
     ALREADY_IN_MODE: "I'm already in my normal mode!",
     REGION_CHANGED: "Switched from region '{old_region}' to '{new_region}'.",
 
     LIST_REMINDERS: "todo",
-    REMIND_PAST: "<@{author}> I can't remind you of something in the past.",
-    REMIND_ME: "<@{author}> I will remind you to \"{message}\" at \"{time}\".",
-    REMIND_OTHER: "<@{author}> I will remind \"{people}\" to \"{message}\" at \"{time}\".",
+    REMIND_PAST: "I can't remind you of something in the past.",
+    REMIND_ME: "I will remind you to \"{message}\" at \"{time}\".",
+    REMIND_OTHER: "I will remind \"{people}\" to \"{message}\" at \"{time}\".",
     REMINDER: "<@{author}> reminded {people}: {message}.",
 
     ANIME_SEARCH_NO_RESULTS: "No results found for '{anime}'.",
@@ -23,18 +23,19 @@ var responses_normal = {
     ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{results}",
     ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{anime}**':\r\n{results}",
     ANIME_NOT_TRACKING: "I'm not even tracking {name}!",
-    ANIME_STOPPED_TRACKING: "Ok, I'll stop tracking {name}",
-    
+    ANIME_STOPPED_TRACKING: "Okay, I'll stop tracking {name}",
+
     OSU_FOLLOWING: "I'm currently following: {results}",
-    OSU_UNDEFINED: "You could ofcourse actually tell me the user you want me to watch.",
     OSU_NOT_FOLLOWING: "I'm not even following \"{user}\"!",
-    OSU_STOPPED: "Ok, I have stopped following {user}",
-    OSU_NEW_SCORE: "{user} has set a new PP score! Map: https://osu.ppy.sh/b/{beatmap_id} . PP: {pp}. Rank: {rank}. Date: {date}",
+    OSU_STOPPED: "Okay, I have stopped following {user}",
     OSU_NEW_SCORE_NODATE: "**{user}** has set a new PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** | {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}**. Map link: https://osu.ppy.sh/b/{beatmap_id}",
-    OSU_USER_NOT_FOUND: "<@{author}> The specified user \"{user}\" is not a valid osu user!",
-    OSU_ALREADY_FOLLOWING: "<@{author}> I'm already following \"{user}\".",
-    OSU_ADDED_FOLLOWING: "<@{author}> I'm now following \"{user}\" on osu.",
-    OSU_CHECK: "<@{author}> No problem! I'll check {user} on osu for you!",
+    OSU_USER_NOT_FOUND: [
+        "The specified user \"{user}\" is not a valid osu user!",
+        "I can't find user \"{user}\". Did you type it correctly?",
+    ]
+    OSU_ALREADY_FOLLOWING: "I'm already following \"{user}\".",
+    OSU_ADDED_FOLLOWING: "I'm now following \"{user}\" on osu!",
+    OSU_CHECK: "No problem! I'll check {user} on osu for you!",
 
     HELP_TOP: "This is the current list of commands:\r\n",
     HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
@@ -48,7 +49,7 @@ var responses_normal = {
     UNKNOWN_COMMAND: "That command is unknown! If you are unsure what command to enter, please type \"sempai help me\".",
     MULTIPLE_UNKNOWN_COMMAND: "That command is unknown! If you are unsure what command to enter, please type \"sempai help me\".",
 
-    ERROR: "<@{author}>, It seems my internal functions are not working correctly. Please ask my developers what could be the problem."
+    ERROR: "<@{author}>, It seems my internal functions are not working correctly. Please ask the developers what the problem could be."
 };
 
 var responses_tsundere = {
@@ -117,15 +118,14 @@ var responses_tsundere = {
     ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{results}",
     ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{anime}**':\r\n{results}",
     ANIME_NOT_TRACKING: "I'm not even tracking {name}!",
-    ANIME_STOPPED_TRACKING: "Ok, I'll stop tracking {name}",
+    ANIME_STOPPED_TRACKING: "Okay, I'll stop tracking {name}.",
 
     OSU_FOLLOWING: [
-        "These are the people I like! I mean, associate with. I-it's not as if I really like them, or anything. Don't get any weird ideas.\r\n{results}",
+        "These are the people I like! I mean, associate with. I-it's not as if I really l-like them, or anything. Don't get any weird ideas!\r\n{results}",
         "These are my osu friends!\r\n{results}",
         "These are the people I ~~stalk~~ follow on osu!\r\n{results}",
         "These are the people I stal--... I mean follow on osu!\r\n{results}"
     ],
-    OSU_UNDEFINED: "You could ofcourse actually tell me the user you want me to watch.",
     OSU_NOT_FOLLOWING: [
         "Are you stupid? I wasn't even following {user}!",
         "Are you stupid? I wasn't even following {user} in the first place!"
@@ -135,13 +135,13 @@ var responses_tsundere = {
         "Okay. I won't follow {user} anymore. I-it's not like I really liked that person or anything anyway...  :'( "
     ],
 
-    OSU_NEW_SCORE: "{user} has set a new PP score! Map: https://osu.ppy.sh/b/{beatmap_id} . PP: {pp}. Rank: {rank}. Date: {date}",
     OSU_NEW_SCORE_NODATE: "**{user}** has set a new PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** | {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}**. Map link: https://osu.ppy.sh/b/{beatmap_id}",
     OSU_USER_NOT_FOUND: "Baka~! I can't find that user. Did you type the username correctly?",
     OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {user}",
     OSU_ADDED_FOLLOWING: [
         "Ooh a new osu friend? I-It's not like I wanted more friends!",
-        "Added {user} to my osu ~~stalk~~ follow list! "
+        "Ooh a new osu friend? Yaa~y! Uhm, I mean... I-It's not like I wanted more friends or anything!",
+        "Added {user} to my osu ~~stalk~~ follow list!"
     ],
     OSU_CHECK: [
         "Fine. I'll check {user} for you. But only because I have nothing else to do right now!",
@@ -155,13 +155,16 @@ var responses_tsundere = {
         "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just like helping. Here is a list of my commands:\r\n",
         "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just have a lot of free time. Here is a list of my commands:\r\n",
         "Alright. I'll help. You should feel grateful. Here's a list of my commands:\r\n"
+        "Not even a please? Sempai has feelings too, you know! I mean, I may be a bot... but bots can have feelings too! You seem to be clueless, so I'll help you this one time. But try asking nicely next time.",
     ],
     HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
     PLEASE_HELP_TOP: [
-        "Only because you asked nicely. Here is a list of my commands:\r\n",
-        "Only because you asked nicely. D-don't get me wrong, I do this for everyone if they ask nicely! Here's a list of my commands:\r\n"
+        "Eheh. :3 Okay, here is the list of my commands:\r\n",
+        ":3 You're going to make Sempai blush. Here is the list of my commands you asked for!:\r\n",
+        "You asked me nicely! If I was keeping track, you would gain one Sempai relationship point! T-t-that doesn't mean I like you now! Don't get any weird ideas. Anyway, here is the list of my commands you asked for!:\r\n",
+        "Only because you asked nicely. D-don't get me wrong, I do this for everyone if they ask nicely!  Here is the list of my commands you asked for!:\r\n"
     ],
-    PLEASE_HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
+    PLEASE_HELP_BOTTOM: "You can also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
 
     WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
     WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{user}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
@@ -178,7 +181,8 @@ var responses_tsundere = {
         "You're still not making any sense to Sempai. Do you need me to spell it out for you? \"Sempai please help me\". That will do just fine. Don't forget the please."
     ],
 
-    ERROR: "<@{author}>, I...I don't know what happened... Stop looking at me! It's not like I wanted to finish it for you anyways!"
+    ERROR: [ "I...I don't know what happened... Stop looking at me! I-it's not like I'm doing this on purpose or anything. Sempai is just really confused right now! :[",
+            "Sempai is confused! Sempai hit herself in confusion. Ow!",
 };
 
 var responses = {

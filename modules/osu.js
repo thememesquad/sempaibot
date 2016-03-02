@@ -17,7 +17,7 @@ function OsuModule(Bot)
 
 OsuModule.prototype.osu_force_check = function(m, user) {
     if (this.osuusers.indexOf(user) === -1) {
-        if(m !== null) 
+        if(m !== null)
             this.Bot.discord.sendMessage(this.Bot.discord.channels.get("name", "osu"), responses.get("OSU_NOT_FOLLOWING").format({author: m.author.id, user: user}));
 
         return;
@@ -94,12 +94,12 @@ OsuModule.prototype.osu_force_check = function(m, user) {
                         var beatmap_info = JSON.parse(data)[0];
 
                         beatmap.additional = "";
-                        if(beatmap.countmiss == 0 && beatmap.perfect == 0)
+                        /*if(beatmap.countmiss == 0 && beatmap.perfect == 0)
                             beatmap.additional = "**" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** Sliderbreak";
-                        else if (beatmap.perfect == 0)
+                        else */if (beatmap.perfect == 0)
                             beatmap.additional = "**" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
-                        else if(beatmap.perfect == 1)
-                          beatmap.additional = "**FC**";
+                        /*else if(beatmap.perfect == 1)
+                          beatmap.additional = "**FC**";*/
 
                       _this.Bot.discord.sendMessage(_this.Bot.discord.channels.get("name", "osu"), responses.get("OSU_NEW_SCORE_NODATE").format({user: user, beatmap_id: beatmap.beatmap_id, pp: beatmap.pp,
                           rank: beatmap.rank, acc: beatmap.acc, mods: beatmap.mods, map_artist: beatmap_info.artist, map_title: beatmap_info.title, map_diff_name: beatmap_info.version, additional: beatmap.additional}));
@@ -126,7 +126,7 @@ OsuModule.prototype.check_osu_user = function(user, m) {
         path: p,
         method: "GET"
     };
-    
+
     http.get(options, function (res) {
         var data = "";
         res.on('data', function (chunk) {
@@ -163,11 +163,16 @@ module.exports = {
     moduleName: "osu!",
     load: function(Bot){
         var osu = new OsuModule(Bot);
-        
+
+
         Bot.addCommand({
-            command: /who are you following on osu/,
+            command: [
+                /who are you following on osu/,
+                /show who you are following on osu/
+                /show the (?: osu)?(?: follow|following|stalking) list/
+            ],
             sample: "sempai who are you following on osu?",
-            description: "Lists all the people I'm stalking on osu.",
+            description: "Lists all the people I'm following on osu.",
             action: function(m){
                 var message = "";
                 for(var i = 0;i<osu.osuusers.length;i++)
@@ -181,11 +186,15 @@ module.exports = {
                 Bot.discord.sendMessage(m.channel, responses.get("OSU_FOLLOWING").format({author: m.author.id, results: message}));
             }
         });
-        
+
         Bot.addCommand({
-            command: /follow (.*)? on osu/,
-            sample: "sempai follow (*user*) on osu",
-            description: "Adds another victim to my stalker list for osu.",
+            command: [
+                /follow (.*)?(?: on )?(osu)?/
+                /stalk (.*)?(?: on )?(osu)?/
+                /add (.*)? to (?: follow| follow list| stalking list| following list| the follow list| the stalking list| the following list| the list| list)?(?: on )?(osu)?/
+            ],
+            sample: "sempai follow **user** on osu",
+            description: "Adds the person to my following list for osu.",
             action: function(m, name){
                 if(name === undefined)
                 {
@@ -195,11 +204,15 @@ module.exports = {
                 osu.check_osu_user(name, m);
             }
         });
-        
+
         Bot.addCommand({
-            command: /stop following (.*)? on osu/,
-            sample: "sempai stop following (*user*) on osu",
-            description: "Removes someone from my stalker list for osu.",
+            command: [
+                /stop following (\w*)?(?: on )?(osu)?/
+                /stop stalking (\w*)?(?: on )?(osu)?/
+                /remove (\w*)? from (?: follow| the follow list| the following list| the stalking list| follow list| following list| stalking list| the list| list)?(?: on )?(osu)?/
+            ],
+            sample: "sempai stop following **user**",
+            description: "Removes the person from my followng list for osu.",
             action: function(m, user){
                 var i = osu.osuusers.indexOf(user);
                 if(i === -1)
@@ -217,17 +230,17 @@ module.exports = {
                 Bot.discord.sendMessage(m.channel, responses.get("OSU_STOPPED").format({author: m.author.id, user: user}));
             }
         });
-        
+
         Bot.addCommand({
-            command: /check (.*)? on osu/,
-            sample: "sempai check (*user*) on osu",
-            description: "Forces me to check the given person on osu just in case I missed something.",
+            command: /check (\w*)?(?: on )?(osu)?/,
+            sample: "sempai check **user**",
+            description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
             action: function(m, user){
                 Bot.discord.sendMessage(m.channel, responses.get("OSU_CHECK").format({author: m.author.id, user: user}));
                 osu.osu_force_check(m, user);
             }
         });
-        
+
         db.osu.find({type: "user"}, function (err, docs) {
             if (err !== null)
                 return console.log(err);
