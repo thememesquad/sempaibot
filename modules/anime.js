@@ -551,6 +551,7 @@ module.exports = {
         });
         
         Bot.addCommand({
+            name: "ANIME_TRACK",
             command: /track anime (.*) as (.*)/,
             sample: "sempai track anime __*id*__  as __*name*__",
             description: "Tracks an Anime for new releases",
@@ -574,6 +575,7 @@ module.exports = {
         });
         
         Bot.addCommand({
+            name: "ANIME_STOP_TRACK",
             command: /stop tracking anime (.*)/,
             sample: "sempai stop tracking anime __*name*__",
             description: "Stops tracking the anime for new releases",
@@ -598,6 +600,7 @@ module.exports = {
         });
         
         Bot.addCommand({
+            name: "ANIME_LIST",
             command: /list anime/,
             sample: "sempai list anime",
             description: "List all the anime currently being tracked",
@@ -617,6 +620,7 @@ module.exports = {
         });
         
         Bot.addCommand({
+            name: "ANIME_GET_DOWNLOADS",
             command: /get downloads for the anime (.*)/,
             sample: "sempai get downloads for the anime __*name*__",
             description: "Lists downloads for the anime specified by name.",
@@ -711,6 +715,7 @@ module.exports = {
         });
         
         Bot.addCommand({
+            name: "ANIME_SEARCH",
             command: /search for the anime (.*)/,
             sample: "sempai search for the anime __*anime*__",
             description: "Searches for the anime",

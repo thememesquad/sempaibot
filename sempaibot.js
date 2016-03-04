@@ -24,8 +24,16 @@ var Bot = {
     }
 };
 
+Bot.discord.on("debug", function(msg){
+    console.log("[Debug] " + msg);
+});
+
 Bot.discord.getServers = function(){
     return this.internal.apiRequest("get", "https://discordapp.com/api/voice/regions", true);
+};
+
+Bot.discord.changeUsername = function(name){
+    return this.internal.apiRequest("patch", "https://discordapp.com/api/users/@me", true, {username: name});
 };
 
 function handle_message(m)
@@ -41,9 +49,9 @@ function handle_message(m)
             {
                 if(Array.isArray(Bot.commands[i].command))
                 {
-                    for(var j = 0;j<Bot.commands.length;j++)
+                    for(var j = 0;j<Bot.commands[i].command.length;j++)
                     {
-                        data = Bot.commands[j].command.exec(m.content);
+                        data = Bot.commands[i].command[j].exec(m.content);
                         if(data === null)
                             continue;
                         
@@ -65,15 +73,19 @@ function handle_message(m)
                     data = [m].concat(data);
                     m.index = 0;
                 }
-            }else if(m.content.charAt(0) != "-"){
+            }
+            else if(n.length > 1)
+            {
+                var targetName = m.content.substr(m.content.indexOf(" ") + 1);
+                Bot.discord.sendMessage(m.channel, responses.get("UNKNOWN_COMMAND").format({author: m.author.id, command: targetName}));
+                break;
+            }
+            else if(m.content.charAt(0) != "-")
+            {
                 data = [m];
-
-                if(n.length > 1)
-                {
-                    var targetName = m.content.substr(m.content.indexOf(" ") + 1);
-                    data.push(targetName);
-                }
-            }else{
+            }
+            else
+            {
                 //dont allow null commands to run without the name-keyword
                 continue;
             }
@@ -141,16 +153,13 @@ Bot.discord.on("ready", function () {
         Bot.commands.push({
             command: null,
             hidden: true,
-            action: function(m, target){
-                if(target === undefined || target.length == 0)
-                {
-                    Bot.discord.sendMessage(m.channel, responses.get("NAME").format({author: m.author.id}));
-                }
-                else
-                {
-                    Bot.discord.sendMessage(m.channel, responses.get("UNKNOWN_COMMAND").format({author: m.author.id, command: target}));
-                }
+            action: function(m){
+                Bot.discord.sendMessage(m.channel, responses.get("NAME").format({author: m.author.id}));
             }
+        });
+        
+        Bot.discord.changeUsername("Sempai").then(function(res){
+            console.log(res);
         });
         
         Bot.discord.joinServer(config.server, function (error, server) {

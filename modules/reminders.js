@@ -1,5 +1,6 @@
 var responses = require("../responses.js");
 var reminders = [];
+var util = require("../util.js");
 
 module.exports = {
     moduleName: "Reminders",
@@ -69,6 +70,7 @@ module.exports = {
         }
         
         Bot.addCommand({
+            name: "REMINDER_LIST",
             command: /list my reminders/,
             sample: "sempai list my reminders",
             description: "lists your currently active reminders.",
@@ -78,6 +80,7 @@ module.exports = {
         });
         
         Bot.addCommand({
+            name: "REMINDER_REMIND",
             command: /remind (.*) to (.*) at (.{4,})/,
             sample: "sempai remind __*name*__  to __*reminder*__  at __*time*__",
             description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself)",

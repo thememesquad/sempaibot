@@ -166,6 +166,7 @@ module.exports = {
 
 
         Bot.addCommand({
+            name: "OSU_FOLLOWING",
             command: [
                 /who are you following on osu/,
                 /show who you are following on osu/,
@@ -188,6 +189,7 @@ module.exports = {
         });
 
         Bot.addCommand({
+            name: "OSU_FOLLOW",
             command: [
                 /follow (.*)?(?: on )?(osu)?/,
                 /stalk (.*)?(?: on )?(osu)?/,
@@ -206,6 +208,7 @@ module.exports = {
         });
 
         Bot.addCommand({
+            name: "OSU_STOP_FOLLOW",
             command: [
                 /stop following (\w*)?(?: on )?(osu)?/,
                 /stop stalking (\w*)?(?: on )?(osu)?/,
@@ -232,6 +235,7 @@ module.exports = {
         });
 
         Bot.addCommand({
+            name: "OSU_CHECK",
             command: /check (\w*)?(?: on )?(osu)?/,
             sample: "sempai check __*user*__",
             description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
