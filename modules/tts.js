@@ -38,7 +38,7 @@ var bijbel = [
 
 var profanity = [
     {nl: "Krijg de tering {name}"},
-    {nl: "Houd je bek, je bent elluf"},
+    {nl: "{name} houd je bek, je bent elluf"},
     {nl: "Max, je moeder is een dorstige hoer"},
     {nl: "Kevin, je moeder is een fiets"},
     {nl: "Kevin, je fiets heeft een zaadvragend zadel"},
@@ -46,15 +46,21 @@ var profanity = [
     {nl: "camiel automobiel"},
     {nl: "camiel debiel"},
     {nl: "daniel bananiël"},
+    {nl: "Daniel, je kan beter gewoon je mond houden"},
+    {nl: "Hey daan, hoe gaat het met ielowna?"},
     {nl: "ok kevin, hier heb je een ballon, en nou niet meer zeuren"},
     {nl: "ik neuk jullie allemaal de moeder"},
-    {nl: "Calvinius Baartus Rektus"},
+    {nl: "{name} je bent een neger"},
+    {nl: "poefies wif butter en pouwdersukker"},
     {nl: "Dolfje Weerwolfje"},
     {nl: "Nee, dit is patrick en niet de krokante krab"},
     {nl: "Smegmatron!"},
     {nl: "goeree overflakkee"},
-    {nl: "ABC sem je bent een beetje gay"},
-    {nl: "Lekkele witte lijst"}
+    {nl: "ABC {name} je bent een beetje gay"},
+    {nl: "Lekkele witte lijst"},
+    {nl: "biggus dickus"},
+    {"en-US": "pannekoekers"},
+    {"en-US": "easy peezy lemon squeezy"}
 ];
 
 var random_profanity = function(user){
@@ -194,7 +200,7 @@ var play = function(Bot, arr, m, lang){
                 }
                 
                 var url = tts(arr[i], language);
-                connection.playFile(url, {}, function(err, intent){
+                connection.playFile(url, {volume: 0.5}, function(err, intent){
                     intent.on("end", function(){
                         if(i == arr.length - 1 && queue.length == 0)
                         {
