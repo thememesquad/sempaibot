@@ -175,26 +175,27 @@ var getVoiceChannel = function(client, m){
 var isPlaying = false;
 var queue = [];
 var play = function(Bot, arr, m, lang){
+    var channel = getVoiceChannel(Bot.discord, m);
+    if(channel == null)
+    {
+        //console.log("channel = null", m.author);
+        return; //todo: error message
+    }
+    
     var language = lang || "nl";
     if(isPlaying)
     {
         queue.push({
             msg: arr,
             m: m,
-            language: language
+            language: language,
+            channel: channel
         });
         
         return;
     }
     
     isPlaying = true;
-    var channel = getVoiceChannel(Bot.discord, m);
-    if(channel == null)
-    {
-        console.log("channel = null", m.author);
-        return; //todo: error message
-    }
-    
     Bot.discord.joinVoiceChannel(channel, function(err, connection){
         if(err)
             return console.log("Error joining voice channel: " + err);
@@ -266,6 +267,7 @@ module.exports = {
         Bot.addCommand({
             command: /bijbel/i,
             hidden: true,
+            stealth: true,
             action: function(m){
                 play(Bot, bijbel, m);
             }
@@ -274,6 +276,7 @@ module.exports = {
         Bot.addCommand({
             command: /fuck you ?(.*)?/i,
             hidden: true,
+            stealth: true,
             action: function(m, target){
                 var n = target || m.author.name;
                 n = map_name(n);
@@ -294,6 +297,7 @@ module.exports = {
         Bot.addCommand({
             command: /interrupt tts/i,
             hidden: true,
+            stealth: true,
             action: function(m, target){
                 isPlaying = false;
             }

@@ -24,20 +24,11 @@ var Bot = {
     }
 };
 
-Bot.discord.on("debug", function(msg){
-    console.log("[Debug] " + msg);
-});
-
 Bot.discord.getServers = function(){
     return this.internal.apiRequest("get", "https://discordapp.com/api/voice/regions", true);
 };
 
-Bot.discord.changeUsername = function(name){
-    return this.internal.apiRequest("patch", "https://discordapp.com/api/users/@me", true, {username: name});
-};
-
-function handle_message(m)
-{
+Bot.discord.on("message", function (m){
     var n = m.content.split(" ");
 
     if(n[0].toLowerCase() == "sempai" || m.content.charAt(0) == "-")
@@ -91,13 +82,16 @@ function handle_message(m)
             }
 
             Bot.commands[i].action.apply(null, data);
+            
+            if(Bot.commands[i].stealth !== undefined)
+            {
+                var url = "https://discordapp.com/api/channels/" + m.channel.id + "/messages/" + m.id;
+                Bot.discord.internal.apiRequest("delete", url, true).then(function(res){});
+            }
+            
             break;
         }
     }
-}
-
-Bot.discord.on("message", function (m) {
-    handle_message(m);
 });
 
 Bot.discord.on("ready", function () {
@@ -156,10 +150,6 @@ Bot.discord.on("ready", function () {
             action: function(m){
                 Bot.discord.sendMessage(m.channel, responses.get("NAME").format({author: m.author.id}));
             }
-        });
-        
-        Bot.discord.changeUsername("Sempai").then(function(res){
-            console.log(res);
         });
         
         Bot.discord.joinServer(config.server, function (error, server) {
