@@ -1,6 +1,7 @@
 var request = require("request");
 var fs = require('fs');
 var https = require("https");
+var Discord = require("discord.js");
 
 var bijbel = [
     "In den beginne schiep God den hemel en de aarde.",
@@ -36,6 +37,18 @@ var bijbel = [
     "En God zag al wat Hij gemaakt had, en ziet, het was zeer goed. Toen was het avond geweest, en het was morgen geweest, de zesde dag."
 ];
 
+var mapping = {
+    "chezus": "Kevin",
+    "camieleon": "Camiel",
+    "vieze versa": "Daniel",
+    "ophion": "Dolf",
+    "thylix": "Mark",
+    "pazazu": "Robby",
+    "sempaisc2": "Sem",
+    "guusjuhdegekstuh": "Guus",
+    "epikfaal": "Huub"
+};
+
 var profanity = [
     {nl: "Krijg de tering {name}"},
     {nl: "{name} houd je bek, je bent elluf"},
@@ -62,6 +75,13 @@ var profanity = [
     {"en-US": "pannekoekers"},
     {"en-US": "easy peezy lemon squeezy"}
 ];
+
+var map_name = function(name){
+    if(mapping[name.toLowerCase()] !== undefined)
+        return mapping[name.toLowerCase()];
+    
+    return name;
+};
 
 var random_profanity = function(user){
     var rnd = Math.floor(Math.random() * profanity.length);
@@ -137,8 +157,19 @@ var tts = function(query, language){
     return url;
 };
 
-var getVoiceChannel = function(client, author){
-    return author.voiceChannel;
+var getVoiceChannel = function(client, m){
+    for (var channel of m.channel.server.channels)
+    {
+        if (channel instanceof Discord.VoiceChannel)
+        {
+            if(channel.members.has("id", m.author.id))
+            {
+                return channel;
+            }
+        }
+    }
+    
+    return m.author.voiceChannel;
 };
 
 var isPlaying = false;
@@ -157,7 +188,7 @@ var play = function(Bot, arr, m, lang){
     }
     
     isPlaying = true;
-    var channel = getVoiceChannel(Bot.discord, m.author);
+    var channel = getVoiceChannel(Bot.discord, m);
     if(channel == null)
     {
         console.log("channel = null", m.author);
@@ -245,6 +276,8 @@ module.exports = {
             hidden: true,
             action: function(m, target){
                 var n = target || m.author.name;
+                n = map_name(n);
+                
                 var profanity = random_profanity();
                 for(var key in profanity)
                 {
