@@ -127,6 +127,7 @@ OsuModule.prototype.check_osu_user = function(user, m) {
         method: "GET"
     };
 
+    console.log(options);
     http.get(options, function (res) {
         var data = "";
         res.on('data', function (chunk) {
@@ -191,9 +192,9 @@ module.exports = {
         Bot.addCommand({
             name: "OSU_FOLLOW",
             command: [
-                /follow (.*)?(?: on )?(osu)?/,
-                /stalk (.*)?(?: on )?(osu)?/,
-                /add (.*)? to (?: follow| follow list| stalking list| following list| the follow list| the stalking list| the following list| the list| list)?(?: on )?(osu)?/
+                /follow (\w*)?(?: on )?(osu)?/,
+                /stalk (\w*)?(?: on )?(osu)?/,
+                /add (\w*)? to (?: follow| follow list| stalking list| following list| the follow list| the stalking list| the following list| the list| list)?(?: on )?(osu)?/
             ],
             sample: "sempai follow __*user*__  on osu",
             description: "Adds the person to my following list for osu.",

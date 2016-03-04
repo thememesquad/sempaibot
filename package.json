@@ -10,7 +10,7 @@
     "auto-loader": "^0.2.0",
     "cheerio": "^0.20.0",
     "cloudscraper": "^1.2.1",
-    "discord.js": "^6.0.0",
+    "discord.js": "https://github.com/hydrabolt/discord.js.git#indev",
     "ger": "0.0.98",
     "lodash": "^4.5.1",
     "nedb": "^1.8.0",
