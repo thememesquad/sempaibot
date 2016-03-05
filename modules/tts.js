@@ -59,7 +59,11 @@ var profanity = [
     {nl: "Ik ben blij dat discord geen webcam support heeft. Als ik elke dag naar het gezicht van {name} zou moeten kijken dan zou ik diep ongelukkig zijn."},
     {nl: "{name} je bent een pasta."},
     {nl: "Wisten jullie dat iets meer dan 20 jaar geleden de lelijkste jongen op aarde is geboren? Zijn naam? {name}."},
-    {nl: "{author} is weer eens mensen aan het uitschelden. Zeker weer niks beters te doen. Godverdomme."}
+    {nl: "{author} is weer eens mensen aan het uitschelden. Zeker weer niks beters te doen. Godverdomme."},
+    {nl: "{name} is een schapen neuker."},
+    {nl: "{name} is een gigantische faal haas."},
+    {nl: "{name} is echt een balletje."},
+    {nl: "{name} is volgens mij in het echt een flamingo."}
 ];
 
 var map_name = function(name){
@@ -69,9 +73,9 @@ var map_name = function(name){
     return name;
 };
 
-var random_profanity = function(user){
-    var rnd = Math.floor(Math.random() * profanity.length);
-    return profanity[rnd];
+var randomArrayIndex = function(array, user){
+    var rnd = Math.floor(Math.random() * array.length);
+    return array[rnd];
 };
 
 var tts = function(query, language){
@@ -263,20 +267,20 @@ module.exports = {
 
         Bot.addCommand({
             name: "TTS_INSULT",
-            command: /insult ?(.*)?/i,
+            command: /insult ?(\w*)?/i,
             sample: "sempai insult __*user*__",
             description: "Uses TTS to insult someone (user is optional, when user is not specified the author of the message is used)",
             action: function(m, target){
                 var n = target || m.author.name;
                 n = map_name(n);
 
-                var profanity = random_profanity();
-                for(var key in profanity)
+                var temp = randomArrayIndex(profanity);
+                for(var key in temp)
                 {
-                    if(Array.isArray(profanity[key]))
-                        play(Bot, profanity[key], m, key);
+                    if(Array.isArray(temp[key]))
+                        play(Bot, temp[key], m, key);
                     else
-                        play(Bot, [profanity[key].format({name: n, author: map_name(m.author.name)})], m, key);
+                        play(Bot, [temp[key].format({name: n, author: map_name(m.author.name)})], m, key);
 
                     break;
                 }
@@ -289,6 +293,18 @@ module.exports = {
             hidden: true,
             action: function(m){
                 var name = map_name(m.author.name);
+                var fuckYouArray = [
+                    {"en-US": "No, fuck you {name}"},
+                    {"en-US": "Fuck you too, {name}"},
+                ];
+
+                var temp = randomArrayIndex(fuckYouArray);
+                for(var key in temp)
+                {
+                    play(Bot, [temp[key].format({name: name})], m, key);
+                    break;
+                }
+
                 //todo: play(Bot, "No, fuck you {name}".format({name: name}));
             }
         });
