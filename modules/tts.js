@@ -270,7 +270,7 @@ module.exports = {
                     if(Array.isArray(profanity[key]))
                         play(Bot, profanity[key], m, key);
                     else
-                        play(Bot, [profanity[key].format({name: n})], m, key);
+                        play(Bot, [profanity[key].format({name: n, author: map_name(m.author.name)})], m, key);
                     
                     break;
                 }
