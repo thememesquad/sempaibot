@@ -278,6 +278,16 @@ module.exports = {
         });
         
         Bot.addCommand({
+            name: "TTS_FUCKYOU",
+            command: /fuck you/i,
+            hidden: true,
+            action: function(m){
+                var name = map_name(m.author.name);
+                //todo: play(Bot, "No, fuck you {name}".format({name: name}));
+            }
+        });
+        
+        Bot.addCommand({
             name: "TTS_INTERRUPT",
             command: /interrupt tts/i,
             sample: "sempai interrupt tts",
