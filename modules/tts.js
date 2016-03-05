@@ -53,12 +53,12 @@ var profanity = [
     {nl: "Krijg toch de tering {name}"},
     {nl: "{name} je moet je bek houden, je bent elluf"},
     {nl: "{name}, je kan beter gewoon je mond houden"},
-    {nl: "Ik ben helemaal klaar met jou, {author}. Als je nu godverdomme niet ophoudt met mensen uitschelden dan neuk ik je de moeder."}
-    {nl: "{name} je bent een smerige, vieze, vieze neger"}
-    {nl: "Je bent een vieze sloerie {name}"}
-    {nl: "Ik ben blij dat discord geen webcam support heeft. Als ik elke dag naar het gezicht van {name} zou moeten kijken dan zou ik diep ongelukkig zijn."}
-    {nl: "{name} je bent een pasta."}
-    {nl: "Wisten jullie dat iets meer dan 20 jaar geleden de lelijkste jongen op aarde is geboren? Zijn naam? {name}."}
+    {nl: "Ik ben helemaal klaar met jou, {author}. Als je nu godverdomme niet ophoudt met mensen uitschelden dan neuk ik je de moeder."},
+    {nl: "{name} je bent een smerige, vieze, vieze neger"},
+    {nl: "Je bent een vieze sloerie {name}"},
+    {nl: "Ik ben blij dat discord geen webcam support heeft. Als ik elke dag naar het gezicht van {name} zou moeten kijken dan zou ik diep ongelukkig zijn."},
+    {nl: "{name} je bent een pasta."},
+    {nl: "Wisten jullie dat iets meer dan 20 jaar geleden de lelijkste jongen op aarde is geboren? Zijn naam? {name}."},
     {nl: "{author} is weer eens mensen aan het uitschelden. Zeker weer niks beters te doen. Godverdomme."}
 ];
 
