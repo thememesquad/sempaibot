@@ -170,8 +170,10 @@ module.exports = {
             name: "OSU_FOLLOWING",
             command: [
                 /who are you following on osu/,
+				/who do you follow on osu/,
+				
                 /show who you are following on osu/,
-                /show the (?: osu)?(?: follow|following|stalking) list/
+                /show (?: the)? (?: osu)?(?: follow|following|stalking) list/
             ],
             sample: "sempai who are you following on osu?",
             description: "Lists all the people I'm following on osu.",

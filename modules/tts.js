@@ -13,7 +13,7 @@ var bijbel = [
     "En God maakte dat uitspansel, en maakte scheiding tussen de wateren, die onder het uitspansel zijn, en tussen de wateren, die boven het uitspansel zijn. En het was alzo.",
     "En God noemde het uitspansel hemel. Toen was het avond geweest, en het was morgen geweest, de tweede dag.",
     "En God zeide: Dat de wateren van onder den hemel in een plaats vergaderd worden, en dat het droge gezien worde! En het was alzo.",
-    "En God noemde het droge aarde, en de vergadering der wateren noemde Hij zeeën; en God zag, dat het goed was.",
+    "En God noemde het droge aarde, en de vergadering der wateren noemde Hij zeeï¿½n; en God zag, dat het goed was.",
     "En God zeide: Dat de aarde uitschiete grasscheutjes, kruid zaadzaaiende, vruchtbaar geboomte, dragende vrucht naar zijn aard, welks zaad daarin zij op de aarde! En het was alzo.",
     "En de aarde bracht voort grasscheutjes, kruid zaadzaaiende naar zijn aard, en vruchtdragend geboomte, welks zaad daarin was, naar zijn aard. En God zag, dat het goed was.",
     "Toen was het avond geweest, en het was morgen geweest, de derde dag.",
@@ -25,7 +25,7 @@ var bijbel = [
     "Toen was het avond geweest, en het was morgen geweest, de vierde dag.",
     "En God zeide: Dat de wateren overvloediglijk voortbrengen een gewemel van levende zielen; en het gevogelte vliege boven de aarde, in het uitspansel des hemels!",
     "En God schiep de grote walvissen, en alle levende wremelende ziel, welke de wateren overvloediglijk voortbrachten, naar haar aard; en alle gevleugeld gevogelte naar zijn aard. En God zag, dat het goed was.",
-    "En God zegende ze, zeggende: Zijt vruchtbaar, en vermenigvuldigt, en vervult de wateren in de zeeën; en het gevogelte vermenigvuldige op de aarde!",
+    "En God zegende ze, zeggende: Zijt vruchtbaar, en vermenigvuldigt, en vervult de wateren in de zeeï¿½n; en het gevogelte vermenigvuldige op de aarde!",
     "Toen was het avond geweest, en het was morgen geweest, de vijfde dag.",
     "En God zeide: De aarde brenge levende zielen voort, naar haar aard, vee, en kruipend, en wild gedierte der aarde, naar zijn aard! En het was alzo.",
     "En God maakte het wild gedierte der aarde naar zijn aard, en het vee naar zijn aard, en al het kruipend gedierte des aardbodems naar zijn aard. En God zag, dat het goed was.",
@@ -50,16 +50,22 @@ var mapping = {
 };
 
 var profanity = [
-    {nl: "Krijg de tering {name}"},
+    {nl: "Krijg toch de tering {name}"},
     {nl: "{name} je moet je bek houden, je bent elluf"},
     {nl: "{name}, je kan beter gewoon je mond houden"},
-    {nl: "{name} je bent een neger"}
+    {nl: "Ik ben helemaal klaar met jou, {author}. Als je nu godverdomme niet ophoudt met mensen uitschelden dan neuk ik je de moeder."}
+    {nl: "{name} je bent een smerige, vieze, vieze neger"}
+    {nl: "Je bent een vieze sloerie {name}"}
+    {nl: "Ik ben blij dat discord geen webcam support heeft. Als ik elke dag naar het gezicht van {name} zou moeten kijken dan zou ik diep ongelukkig zijn."}
+    {nl: "{name} je bent een pasta."}
+    {nl: "Wisten jullie dat iets meer dan 20 jaar geleden de lelijkste jongen op aarde is geboren? Zijn naam? {name}."}
+    {nl: "{author} is weer eens mensen aan het uitschelden. Zeker weer niks beters te doen. Godverdomme."}
 ];
 
 var map_name = function(name){
     if(mapping[name.toLowerCase()] !== undefined)
         return mapping[name.toLowerCase()];
-    
+
     return name;
 };
 
@@ -75,7 +81,7 @@ var tts = function(query, language){
             return a
         }
     };
-    
+
     var of = "=";
     var dM = function(a, b) {
         for (var c = 0; c < b.length - 2; c += 3) {
@@ -133,7 +139,7 @@ var tts = function(query, language){
 
     var token = fM(query);
     var url = "https://translate.google.com/translate_tts?ie=UTF-8&q="  + encodeURI(query) + "&tl=" + lang + "&tk=" + token + "&client=t";
-    
+
     return url;
 };
 
@@ -148,7 +154,7 @@ var getVoiceChannel = function(client, m){
             }
         }
     }
-    
+
     return m.author.voiceChannel;
 };
 
@@ -161,7 +167,7 @@ var play = function(Bot, arr, m, lang){
         //console.log("channel = null", m.author);
         return; //todo: error message
     }
-    
+
     var language = lang || "nl";
     if(isPlaying)
     {
@@ -171,46 +177,46 @@ var play = function(Bot, arr, m, lang){
             language: language,
             channel: channel
         });
-        
+
         return;
     }
-    
+
     isPlaying = true;
     Bot.discord.joinVoiceChannel(channel, function(err, connection){
         if(err)
             return console.log("Error joining voice channel: " + err);
-        
+
         try{
             var send = function(i){
                 if(!isPlaying)
                 {
                     queue = [];
-                    
+
                     Bot.discord.leaveVoiceChannel();
                     return;
                 }
-                
+
                 if(i >= arr.length)
                 {
                     if(queue.length == 0)
                     {
                         Bot.discord.leaveVoiceChannel();
                         isPlaying = false;
-                        
+
                         return;
                     }
                     else
                     {
                         var item = queue[0];
                         queue.splice(0, 1);
-                        
+
                         language = item.language;
                         arr = item.msg;
                         m = item.m;
                         return send(0);
                     }
                 }
-                
+
                 var url = tts(arr[i], language);
                 connection.playFile(url, {volume: 0.5}, function(err, intent){
                     intent.on("end", function(){
@@ -218,7 +224,7 @@ var play = function(Bot, arr, m, lang){
                         {
                             send(i + 1);
                         }
-                        
+
                         setTimeout(function(){
                             send(i + 1);
                         }, 250);
@@ -233,7 +239,7 @@ var play = function(Bot, arr, m, lang){
                     console.log(err);
                 });
             };
-            
+
             send(0);
         }catch(err)
         {
@@ -254,7 +260,7 @@ module.exports = {
                 play(Bot, bijbel, m);
             }
         });
-        
+
         Bot.addCommand({
             name: "TTS_INSULT",
             command: /insult ?(.*)?/i,
@@ -263,20 +269,20 @@ module.exports = {
             action: function(m, target){
                 var n = target || m.author.name;
                 n = map_name(n);
-                
+
                 var profanity = random_profanity();
                 for(var key in profanity)
                 {
                     if(Array.isArray(profanity[key]))
                         play(Bot, profanity[key], m, key);
                     else
-                        play(Bot, [profanity[key].format({name: n, author: map_name(m.author.name)})], m, key);
-                    
+                        play(Bot, [profanity[key].format({name: n})], m, key);
+
                     break;
                 }
             }
         });
-        
+
         Bot.addCommand({
             name: "TTS_FUCKYOU",
             command: /fuck you/i,
@@ -286,7 +292,7 @@ module.exports = {
                 //todo: play(Bot, "No, fuck you {name}".format({name: name}));
             }
         });
-        
+
         Bot.addCommand({
             name: "TTS_INTERRUPT",
             command: /interrupt tts/i,
