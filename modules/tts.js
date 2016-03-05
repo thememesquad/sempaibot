@@ -51,29 +51,9 @@ var mapping = {
 
 var profanity = [
     {nl: "Krijg de tering {name}"},
-    {nl: "{name} houd je bek, je bent elluf"},
-    {nl: "Max, je moeder is een dorstige hoer"},
-    {nl: "Kevin, je moeder is een fiets"},
-    {nl: "Kevin, je fiets heeft een zaadvragend zadel"},
-    {nl: "blubber blubber dikkertjes in rubber"},
-    {nl: "camiel automobiel"},
-    {nl: "camiel debiel"},
-    {nl: "daniel bananiël"},
-    {nl: "Daniel, je kan beter gewoon je mond houden"},
-    {nl: "Hey daan, hoe gaat het met ielowna?"},
-    {nl: "ok kevin, hier heb je een ballon, en nou niet meer zeuren"},
-    {nl: "ik neuk jullie allemaal de moeder"},
-    {nl: "{name} je bent een neger"},
-    {nl: "poefies wif butter en pouwdersukker"},
-    {nl: "Dolfje Weerwolfje"},
-    {nl: "Nee, dit is patrick en niet de krokante krab"},
-    {nl: "Smegmatron!"},
-    {nl: "goeree overflakkee"},
-    {nl: "ABC {name} je bent een beetje gay"},
-    {nl: "Lekkele witte lijst"},
-    {nl: "biggus dickus"},
-    {"en-US": "pannekoekers"},
-    {"en-US": "easy peezy lemon squeezy"}
+    {nl: "{name} je moet je bek houden, je bent elluf"},
+    {nl: "{name}, je kan beter gewoon je mond houden"},
+    {nl: "{name} je bent een neger"}
 ];
 
 var map_name = function(name){
@@ -263,20 +243,23 @@ var play = function(Bot, arr, m, lang){
 };
 
 module.exports = {
+    moduleName: "Text-To-Speech",
     load: function(Bot){
         Bot.addCommand({
+            name: "TTS_BIJBEL",
             command: /bijbel/i,
-            hidden: true,
-            stealth: true,
+            sample: "sempai read me the bijbel",
+            description: "Uses TTS to read Genesis 1 of the Old Testament in Dutch",
             action: function(m){
                 play(Bot, bijbel, m);
             }
         });
         
         Bot.addCommand({
-            command: /fuck you ?(.*)?/i,
-            hidden: true,
-            stealth: true,
+            name: "TTS_INSULT",
+            command: /insult ?(.*)?/i,
+            sample: "sempai insult __*user*__",
+            description: "Uses TTS to insult someone (user is optional, when user is not specified the author of the message is used)",
             action: function(m, target){
                 var n = target || m.author.name;
                 n = map_name(n);
@@ -295,9 +278,10 @@ module.exports = {
         });
         
         Bot.addCommand({
+            name: "TTS_INTERRUPT",
             command: /interrupt tts/i,
-            hidden: true,
-            stealth: true,
+            sample: "sempai interrupt tts",
+            description: "Interrupts the TTS queue",
             action: function(m, target){
                 isPlaying = false;
             }
