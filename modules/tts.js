@@ -2,6 +2,7 @@ var request = require("request");
 var fs = require('fs');
 var https = require("https");
 var Discord = require("discord.js");
+var request = require("request");
 
 var bijbel = [
     "In den beginne schiep God den hemel en de aarde.",
@@ -221,7 +222,7 @@ var play = function(Bot, arr, m, lang){
                 }
 
                 var url = tts(arr[i], language);
-                connection.playFile(url, {volume: 0.5}, function(err, intent){
+                connection.playRawStream(request(url), {volume: 0.5}, function(err, intent){
                     intent.on("end", function(){
                         if(i == arr.length - 1 && queue.length == 0)
                         {
