@@ -3,6 +3,8 @@ var fs = require('fs');
 var https = require("https");
 var Discord = require("discord.js");
 var request = require("request");
+var Alea = require('alea');
+var prng = new Alea();
 
 var bijbel = [
     "In den beginne schiep God den hemel en de aarde.",
@@ -75,7 +77,7 @@ var map_name = function(name){
 };
 
 var randomArrayIndex = function(array, user){
-    var rnd = Math.floor(Math.random() * array.length);
+    var rnd = Math.floor(prng() * array.length);
     return array[rnd];
 };
 
