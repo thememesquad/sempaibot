@@ -161,6 +161,9 @@ var getVoiceChannel = function(client, m){
 var isPlaying = false;
 var queue = [];
 var play = function(Bot, arr, m, lang){
+    if(!Array.isArray(arr))
+        arr = [arr];
+    
     var channel = getVoiceChannel(Bot.discord, m);
     if(channel == null)
     {
