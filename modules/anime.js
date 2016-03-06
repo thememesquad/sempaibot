@@ -2,16 +2,12 @@ var http = require("http");
 var https = require("https");
 var parseString = require('xml2js').parseString;
 var cloudscraper = require('cloudscraper');
-var g = require('ger');
-var esm = new g.MemESM();
-var ger = new g.GER(esm);
 var lodash = require("lodash");
 var parseTorrent = require('parse-torrent');
 var db = require("../db.js");
 var responses = require("../responses.js");
 const util = require('util');
 const EventEmitter = require('events');
-ger.initialize_namespace("anime");
 
 var magnetLink = function(url, callback){
     cloudscraper.request({method: "GET", url: url, encoding: null}, function(error, response, body){
@@ -23,125 +19,6 @@ var magnetLink = function(url, callback){
             callback(e);
         }
     });
-};
-
-function Recommend()
-{
-    this.users = [];
-    this.anime = {};
-}
-
-Recommend.prototype.addUser = function(user){
-    this.users.push(user);
-};
-
-Recommend.prototype.removeUser = function(user){
-    this.users.splice(this.users.indexOf(user));
-};
-
-Recommend.prototype.save = function(){
-    //todo
-};
-
-Recommend.prototype.load = function(data){
-    //todo
-};
-
-Recommend.prototype.update = function(callback){
-    var _this = this;
-    
-    this.anime = {};
-    var update = function(id){
-        if(id >= _this.users.length)
-            return (callback !== undefined) ? callback() : null;
-        
-        var options = {
-            host: 'myanimelist.net',
-            port: 80,
-            path: "/malappinfo.php?status=all&type=anime&u=" + _this.users[id]
-        };
-        
-        http.get(options, function(res){
-            var data = "";
-            res.on('data', function (chunk) {
-                data += chunk;
-            });
-            
-            res.on('end', function () {
-                parseString(data, function(err, result){
-                    for(var i = 0;i<result.myanimelist.anime.length;i++)
-                    {
-                        var anime = result.myanimelist.anime[i];
-                        if(anime.my_score[0] == 0 || anime.series_type[0] != 1)
-                            continue;
-                        
-                        if(_this.anime[anime.series_animedb_id[0]] === undefined)
-                        {
-                            _this.anime[anime.series_animedb_id[0]] = {
-                                name: anime.series_title[0],
-                                scores: {}
-                            };
-                        }
-                        
-                        var date = new Date(parseInt(anime.my_last_updated[0]) * 1000);
-                        date.setFullYear(date.getFullYear() + 3);
-                        
-                        if(parseInt(anime.my_score[0]) >= 7)
-                        {
-                            ger.events([{
-                                namespace: "anime",
-                                person: id,
-                                action: anime.my_score[0],
-                                thing: parseInt(anime.series_animedb_id[0]),
-                                expires_at: date.toString()
-                            }]);
-                        }
-                        
-                        _this.anime[anime.series_animedb_id[0]].scores[id] = anime.my_score[0];
-                    }
-                    
-                    update(id + 1);
-                });
-            });
-        });
-    };
-    
-    if(this.users.length == 0)
-        return (callback !== undefined) ? callback() : null;
-    
-    update(0);
-};
-
-Recommend.prototype.recommend = function(user){
-    var id = this.users.indexOf(user);
-    if(id == -1)
-        return;
-    
-    ger.recommendations_for_person("anime", id, {
-        actions: {
-            "1": -6,
-            "2": -5,
-            "3": -4,
-            "4": -3,
-            "5": -2,
-            "6": -1,
-            "7": 1,
-            "8": 2,
-            "9": 3,
-            "10": 4
-        }
-    }).then(function(recommendations){
-        console.log(user + ":");
-        for(var i = 0;i<recommendations.recommendations.length;i++)
-        {
-            var recommendation = recommendations.recommendations[i];
-            
-            if(this.anime[recommendation.thing].scores[id] === undefined)
-                console.log(this.anime[recommendation.thing].name);
-        }
-        console.log("confidence: " + recommendations.confidence);
-        console.log("");
-    }.bind(this));
 };
 
 function Anime()
@@ -673,7 +550,18 @@ module.exports = {
                                 }
                             }
 
-                            add = "**" + episode.absoluteEpisodeNumber + "**: " + best.quality + ". " + best.magnet + "\r\n";
+                            if(best == null)
+                            {
+                                var date = new Date(episode.airDateUtc);
+                                var aired = date.getTime() <= (new Date()).getTime();
+                                
+                                if(!aired)
+                                    add = "**" + episode.absoluteEpisodeNumber + "**: Not yet aired.\r\n";
+                                else
+                                    add = "**" + episode.absoluteEpisodeNumber + "**: No download found.\r\n";
+                            }else{
+                                add = "**" + episode.absoluteEpisodeNumber + "**: " + best.quality + ". " + best.magnet + "\r\n";
+                            }
                         }else{
                             var date = new Date(episode.airDateUtc);
                             var aired = date.getTime() <= (new Date()).getTime();

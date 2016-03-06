@@ -18,6 +18,7 @@
     "net-ping": "^1.1.12",
     "object-hash": "^1.1.2",
     "parse-torrent": "^5.7.1",
+    "q": "^1.4.1",
     "request": "^2.69.0",
     "xml2js": "^0.4.16"
   }
