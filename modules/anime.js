@@ -13,7 +13,7 @@ var magnetLink = function(url, callback){
     cloudscraper.request({method: "GET", url: url, encoding: null}, function(error, response, body){
         try{
             var torrent = parseTorrent(body);
-            callback(null, 'magnet://?xt=urn:btih:' + torrent.infoHash);
+            callback(null, 'magnet:?xt=urn:btih:' + torrent.infoHash);
         }catch(e)
         {
             callback(e);
