@@ -227,7 +227,7 @@ var play = function(Bot, arr, m, lang){
                     }
                 }
 
-                var url = tts(encodeURIComponent(arr[i]), language);
+                var url = tts(arr[i], language);
                 connection.playRawStream(request(url), {volume: 0.5}, function(err, intent){
                     intent.on("end", function(){
                         if(i == arr.length - 1 && queue.length == 0)
