@@ -40,6 +40,38 @@ var bijbel = [
     "En God zag al wat Hij gemaakt had, en ziet, het was zeer goed. Toen was het avond geweest, en het was morgen geweest, de zesde dag."
 ];
 
+var schopfung = [
+	"Am Anfang schuf Gott Himmel und Erde.",
+	"Und die Erde war wüst und leer, und es war finster auf der Tiefe; und der Geist Gottes schwebte auf dem Wasser.",
+	"Und Gott sprach: Es werde Licht! Und es ward Licht.",
+	"Und Gott sah, dass das Licht gut war. Da schied Gott das Licht von der Finsternis 5und nannte das Licht Tag und die Finsternis Nacht. Da ward aus Abend und Morgen der erste Tag.",
+	"Und Gott sprach: Es werde eine Feste zwischen den Wassern, die da scheide zwischen den Wassern.",
+	"Da machte Gott die Feste und schied das Wasser unter der Feste von dem Wasser über der Feste. Und es geschah so.",
+	"Und Gott nannte die Feste Himmel. Da ward aus Abend und Morgen der zweite Tag.",
+	"Und Gott sprach: Es sammle sich das Wasser unter dem Himmel an besondere Orte, dass man das Trockene sehe. Und es geschah so.",
+	"Und Gott nannte das Trockene Erde, und die Sammlung der Wasser nannte er Meer. Und Gott sah, dass es gut war.",
+	"Und Gott sprach: Es lasse die Erde aufgehen Gras und Kraut, das Samen bringe, und fruchtbare Bäume auf Erden, die ein jeder nach seiner Art Früchte tragen, in denen ihr Same ist. Und es geschah so.",
+	"Und die Erde ließ aufgehen Gras und Kraut, das Samen bringt, ein jedes nach seiner Art, und Bäume, die da Früchte tragen, in denen ihr Same ist, ein jeder nach seiner Art. Und Gott sah, dass es gut war.",
+	"Da ward aus Abend und Morgen der dritte Tag.",
+	"Und Gott sprach: Es werden Lichter an der Feste des Himmels, die da scheiden Tag und Nacht und geben Zeichen, Zeiten, Tage und Jahre 15und seien Lichter an der Feste des Himmels, dass sie scheinen auf die Erde. Und es geschah so.",
+	"Und Gott machte zwei große Lichter: ein großes Licht, das den Tag regiere, und ein kleines Licht, das die Nacht regiere, dazu auch die Sterne.",
+	"Und Gott setzte sie an die Feste des Himmels, dass sie schienen auf die Erde",
+	"und den Tag und die Nacht regierten und schieden Licht und Finsternis. Und Gott sah, dass es gut war.",
+	"Da ward aus Abend und Morgen der vierte Tag.",
+	"Und Gott sprach: Es wimmle das Wasser von lebendigem Getier, und Vögel sollen fliegen auf Erden unter der Feste des Himmels.",
+	"Und Gott schuf große Walfische und alles Getier, das da lebt und webt, davon das Wasser wimmelt, ein jedes nach seiner Art, und alle gefiederten Vögel, einen jeden nach seiner Art. Und Gott sah, dass es gut war.",
+	"Und Gott segnete sie und sprach: Seid fruchtbar und mehret euch und erfüllet das Wasser im Meer, und die Vögel sollen sich mehren auf Erden.",
+	"Da ward aus Abend und Morgen der fünfte Tag.",
+	"Und Gott sprach: Die Erde bringe hervor lebendiges Getier, ein jedes nach seiner Art: Vieh, Gewürm und Tiere des Feldes, ein jedes nach seiner Art. Und es geschah so.",
+	"Und Gott machte die Tiere des Feldes, ein jedes nach seiner Art, und das Vieh nach seiner Art und alles Gewürm des Erdbodens nach seiner Art. Und Gott sah, dass es gut war.",
+	"Und Gott sprach: Lasset uns Menschen machen, ein Bild, das uns gleich sei, die da herrschen über die Fische im Meer und über die Vögel unter dem Himmel und über das Vieh und über alle Tiere des Feldes und über alles Gewürm, das auf Erden kriecht.",
+	"Und Gott schuf den Menschen zu seinem Bilde, zum Bilde Gottes schuf er ihn; und schuf sie als Mann und Frau.",
+	"Und Gott segnete sie und sprach zu ihnen: Seid fruchtbar und mehret euch und füllet die Erde und machet sie euch untertan und herrschet über die Fische im Meer und über die Vögel unter dem Himmel und über das Vieh und über alles Getier, das auf Erden kriecht.",
+	"Und Gott sprach: Sehet da, ich habe euch gegeben alle Pflanzen, die Samen bringen, auf der ganzen Erde, und alle Bäume mit Früchten, die Samen bringen, zu eurer Speise.",
+	"Aber allen Tieren auf Erden und allen Vögeln unter dem Himmel und allem Gewürm, das auf Erden lebt, habe ich alles grüne Kraut zur Nahrung gegeben. Und es geschah so.",
+	"Und Gott sah an alles, was er gemacht hatte, und siehe, es war sehr gut. Da ward aus Abend und Morgen der sechste Tag."
+];
+
 var mapping = {
     "chezus": "Kevin",
     "camieleon": "Camiel",
@@ -270,6 +302,16 @@ module.exports = {
                 play(Bot, bijbel, m);
             }
         });
+		
+		Bot.addCommand({
+ 			name: "TTS_SCHOPFUNG",
+ 			command: /schopfung/i,
+ 			sample: "sempai read me the schopfung",
+ 			description: "Uses TTS to read Schopfung of the Old Testament in German",
+ 			action: function(m) {
+ 				play(Bot, schopfung, m, "de");
+ 			}
+ 		});
 
         Bot.addCommand({
             name: "TTS_INSULT",
