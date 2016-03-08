@@ -273,7 +273,7 @@ module.exports = {
 
         Bot.addCommand({
             name: "TTS_INSULT",
-            command: /insult ?(\w*)?/i,
+            command: /insult ?(\S*)?/i,
             sample: "sempai insult __*user*__",
             description: "Uses TTS to insult someone (user is optional, when user is not specified the author of the message is used)",
             action: function(m, target){
