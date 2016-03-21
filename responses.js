@@ -28,7 +28,7 @@ var responses_normal = {
     OSU_FOLLOWING: "I'm currently following: {results}",
     OSU_NOT_FOLLOWING: "I'm not even following \"{user}\"!",
     OSU_STOPPED: "Okay, I have stopped following {user}",
-    OSU_NEW_SCORE_NODATE: "**{user}** has set a new PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** | {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}**. Map link: https://osu.ppy.sh/b/{beatmap_id}",
+    OSU_NEW_SCORE_NODATE: "**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** ({delta_pp}pp) | **Rank: {rank}** | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
     OSU_USER_NOT_FOUND: [
         "The specified user \"{user}\" is not a valid osu user!",
         "I can't find user \"{user}\". Did you type it correctly?",
@@ -135,7 +135,7 @@ var responses_tsundere = {
         "Okay. I won't follow {user} anymore. I-it's not like I really liked that person or anything anyway...  :'( "
     ],
 
-    OSU_NEW_SCORE_NODATE: "**{user}** has set a new PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** | {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}**. Map link: https://osu.ppy.sh/b/{beatmap_id}",
+    OSU_NEW_SCORE_NODATE: "**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** ({delta_pp}pp) | **Rank: {rank}** | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
     OSU_USER_NOT_FOUND: "Baka~! I can't find that user. Did you type the username correctly?",
     OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {user}",
     OSU_ADDED_FOLLOWING: [

@@ -2,6 +2,7 @@ var db = require("../db.js");
 var responses = require("../responses.js");
 var config = require("../config");
 var http = require("http");
+var request = require("request");
 
 function OsuModule(Bot)
 {
@@ -10,13 +11,31 @@ function OsuModule(Bot)
     this.osucheck = setInterval(function () {
         for (var i = 0; i < this.osuusers.length; i++) {
             var user = this.osuusers[i];
-            this.osu_force_check(null, user);
+            this.osu_force_check(null, user.username);
         }
     }.bind(this), 1000 * 60);
 }
 
+function get_user_data(user, callback)
+{
+    request.get("http://osu.ppy.sh/api/get_user?k=" + config.osuapi + "&u=" + user, function(error, response, body){
+        var user_data = JSON.parse(body)[0];
+        callback(user_data);
+    });
+};
+
 OsuModule.prototype.osu_force_check = function(m, user) {
-    if (this.osuusers.indexOf(user) === -1) {
+    var user_profile = null;
+    for(var i = 0;i<this.osuusers.length;i++)
+    {
+        if(this.osuusers[i].username == user)
+        {
+            user_profile = this.osuusers[i];
+            break;
+        }
+    }
+
+    if (user_profile == null) {
         if(m !== null)
             this.Bot.discord.sendMessage(this.Bot.discord.channels.get("name", "osu"), responses.get("OSU_NOT_FOLLOWING").format({author: m.author.id, user: user}));
 
@@ -38,23 +57,32 @@ OsuModule.prototype.osu_force_check = function(m, user) {
     };
     var endDate = new Date();
     endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 1 * 60 * 1000);
-    http.get(options, function (user, res) {
+    http.get(options, function (user, res)
+	{
         var data = "";
-        res.on('data', function (chunk) {
+        res.on('data', function (chunk)
+		{
             data += chunk;
         });
-        res.on('end', function () {
+        res.on('end', function ()
+		{
             var json;
-            try {
+            try
+			{
                 json = JSON.parse(data);
-            } catch(e) {
+            }
+			catch(e)
+			{
                 console.log("error: " + e);
                 console.log("Raw JSON data: " + data);
                 return;
             }
 
             var modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
-            for (var j = 0; j < json.length; j++) {
+
+            var  topRank;
+            for (var j = 0; j < json.length; j++)
+			{
                 var beatmap = json[j];
                 beatmap.count50 = parseInt(beatmap.count50);
                 beatmap.count100 = parseInt(beatmap.count100);
@@ -84,27 +112,61 @@ OsuModule.prototype.osu_force_check = function(m, user) {
                 var bdate = new Date(beatmap.date);
                 var date = new Date(bdate.valueOf() + -60 * 8 * 60000);
 
-                if (date > endDate) {
-                  http.get("http://osu.ppy.sh/api/get_beatmaps?k=" + config.osuapi + "&b=" + beatmap.beatmap_id, function(beatmap, res){
-                    var data = "";
-                    res.on('data', function (chunk) {
-                        data += chunk;
-                    });
-                    res.on('end', function () {
-                        var beatmap_info = JSON.parse(data)[0];
+                if (date > endDate)
+				{
+                    topRank = j+1;
+					http.get("http://osu.ppy.sh/api/get_beatmaps?k=" + config.osuapi + "&b=" + beatmap.beatmap_id, function(beatmap, res)
+					{
+						var data = "";
+						res.on('data', function (chunk)
+						{
+							data += chunk;
+						});
 
-                        beatmap.additional = "";
-                        /*if(beatmap.countmiss == 0 && beatmap.perfect == 0)
-                            beatmap.additional = "**" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** Sliderbreak";
-                        else */if (beatmap.perfect == 0)
-                            beatmap.additional = "**" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
-                        /*else if(beatmap.perfect == 1)
-                          beatmap.additional = "**FC**";*/
+						res.on('end', function ()
+						{
+                            var beatmap_info = JSON.parse(data)[0];
+                            get_user_data(user, function(user_data){
+                                db.osu.update({type: "user", username: user}, {$set: {pp: parseFloat(user_data.pp_raw), rank: parseInt(user_data.pp_rank)}}, {}, function (err, docs) {
+                                    if (err !== null)
+                                        console.log(err);
+                                });
 
-                      _this.Bot.discord.sendMessage(_this.Bot.discord.channels.get("name", "osu"), responses.get("OSU_NEW_SCORE_NODATE").format({user: user, beatmap_id: beatmap.beatmap_id, pp: beatmap.pp,
-                          rank: beatmap.rank, acc: beatmap.acc, mods: beatmap.mods, map_artist: beatmap_info.artist, map_title: beatmap_info.title, map_diff_name: beatmap_info.version, additional: beatmap.additional}));
-                    });
-                }.bind(null, beatmap));
+                                var deltapp = user_data.pp_raw - user_profile.pp;
+                                var oldRank = user_profile.rank;
+                                var deltaRank = user_data.pp_rank - user_profile.rank;
+
+                                if(deltapp > 0)
+                                    deltapp = "+" + deltapp.toFixed(2);
+                                else if(deltapp < 0)
+                                    deltapp = deltapp.toFixed(2);
+                                else
+                                    deltapp = "no gain";
+
+                                if(deltaRank == 0)
+                                    deltaRank = "no gain";
+                                else if(deltaRank > 0)
+                                    deltaRank += " lost";
+                                else if(deltaRank < 0)
+                                    deltaRank = Math.abs(deltaRank) + " gained";
+
+                                var newRank = user_profile.rank = parseInt(user_data.pp_rank);
+                                user_profile.pp = parseFloat(user_data.pp_raw);
+
+                                beatmap.additional = "";
+    							/*if(beatmap.countmiss == 0 && beatmap.perfect == 0)
+    								beatmap.additional = "**" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** Sliderbreak";
+    							else */if (beatmap.perfect == 0)
+    								beatmap.additional = "| **" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
+    							/*else if(beatmap.perfect == 1)
+    								beatmap.additional = "**FC**";*/
+
+    							_this.Bot.discord.sendMessage(_this.Bot.discord.channels.get("name", "osu"), responses.get("OSU_NEW_SCORE_NODATE").format({user: user, beatmap_id: beatmap.beatmap_id, pp: beatmap.pp,
+    								rank: beatmap.rank, acc: beatmap.acc, mods: beatmap.mods, map_artist: beatmap_info.artist, map_title: beatmap_info.title, map_diff_name: beatmap_info.version, additional: beatmap.additional,
+                                    top_rank: topRank, delta_pp: deltapp, old_rank: oldRank, new_rank: newRank, delta_rank: deltaRank}));
+                            });
+						});
+					}.bind(null, beatmap));
                 }
             }
         });
@@ -127,7 +189,6 @@ OsuModule.prototype.check_osu_user = function(user, m) {
         method: "GET"
     };
 
-    console.log(options);
     http.get(options, function (res) {
         var data = "";
         res.on('data', function (chunk) {
@@ -141,13 +202,24 @@ OsuModule.prototype.check_osu_user = function(user, m) {
                 return;
             }
 
-            if (_this.osuusers.indexOf(user) !== -1) {
+            var found = false;
+            for(var i = 0;i<_this.osuusers.length;i++)
+            {
+                if(_this.osuusers[i].username == user)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found)
+            {
                 _this.Bot.discord.sendMessage(m.channel, responses.get("OSU_ALREADY_FOLLOWING").format({author: m.author.id, user: user}));
                 return;
             }
 
-            _this.osuusers.push(user);
-            db.osu.insert({type: "user", username: user}, function (err, docs) {
+            _this.osuusers.push({username: user, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank)});
+            db.osu.insert({type: "user", username: user, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank)}, function (err, docs) {
                 if (err !== null)
                     console.log(err);
             });
@@ -171,7 +243,7 @@ module.exports = {
             command: [
                 /who are you following on osu/,
 				/who do you follow on osu/,
-				
+
                 /show who you are following on osu/,
                 /show (?: the)? (?: osu)?(?: follow|following|stalking) list/
             ],
@@ -184,7 +256,7 @@ module.exports = {
                     if(i !== 0)
                         message += ", ";
 
-                    message += osu.osuusers[i];
+                    message += osu.osuusers[i].username;
                 }
 
                 Bot.discord.sendMessage(m.channel, responses.get("OSU_FOLLOWING").format({author: m.author.id, results: message}));
@@ -220,7 +292,16 @@ module.exports = {
             sample: "sempai stop following __*user*__",
             description: "Removes the person from my following list for osu.",
             action: function(m, user){
-                var i = osu.osuusers.indexOf(user);
+                var i = -1;
+                for(var j = 0;j<osu.osuusers.length;j++)
+                {
+                    if(osu.osuusers[j].username == user)
+                    {
+                        i = j;
+                        break;
+                    }
+                }
+
                 if(i === -1)
                 {
                     return Bot.discord.sendMessage(m.channel, responses.get("OSU_NOT_FOLLOWING").format({author: m.author.id, user: user}));
@@ -253,8 +334,16 @@ module.exports = {
                 return console.log(err);
 
             for (var i = 0; i < docs.length; i++) {
-                osu.osuusers.push(docs[i].username);
+                osu.osuusers.push({username: docs[i].username, pp: docs[i].pp, rank: docs[i].rank});
             }
         });
     }
 };
+
+if(require.main === module)
+{
+    request.get("http://osu.ppy.sh/api/get_user?k=" + config.osuapi + "&u=chezus", function(error, response, body){
+        var user_data = JSON.parse(body)[0];
+        console.log(user_data);
+    });
+}
