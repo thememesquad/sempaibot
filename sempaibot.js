@@ -24,6 +24,8 @@ var Bot = {
     }
 };
 
+
+
 Bot.discord.getServers = function(){
     return this.internal.apiRequest("get", "https://discordapp.com/api/voice/regions", true);
 };
@@ -151,6 +153,8 @@ Bot.discord.on("ready", function () {
                 Bot.discord.sendMessage(m.channel, responses.get("NAME").format({author: m.author.id}));
             }
         });
+        
+        
         
         Bot.discord.joinServer(config.server, function (error, server) {
             Bot.discord.sendMessage(Bot.discord.channels.get("name", "osu"), responses.get("ONLINE"));

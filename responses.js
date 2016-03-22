@@ -36,6 +36,11 @@ var responses_normal = {
     OSU_ALREADY_FOLLOWING: "I'm already following \"{user}\".",
     OSU_ADDED_FOLLOWING: "I'm now following \"{user}\" on osu!",
     OSU_CHECK: "No problem! I'll check {user} on osu for you!",
+    
+    JOIN_INVALID_INVITE: "I can't find a server with the Invite: \"{invite}\"",
+    JOIN_ALREADY: "I am already part of \"{invite}\"",
+    JOIN_FAILED: "I was not able to join the server \"{invite}\"",
+    JOIN_SUCCESS: "I just joined \"{invite}\"! Thanks for allowing me to join",
 
     HELP_TOP: "This is the current list of commands:\r\n",
     HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
@@ -147,6 +152,11 @@ var responses_tsundere = {
         "Fine. I'll check {user} for you. But only because I have nothing else to do right now!",
         "Alright. I'll check {user}. D-don't get me wrong. It's not like I'm doing this for you or anything."
     ],
+    
+    JOIN_INVALID_INVITE: "I... It's not like I wanted to join \"{invite}\"",
+    JOIN_ALREADY: "Baka... I'm already stalking \"{invite}\"...",
+    JOIN_FAILED: "It seems like \"{invite}\" doesn't like me... It's not like I wanted to be liked!",
+    JOIN_SUCCESS: "New friends at \"{invite}\"? Yay!",
 
     HELP_TOP: [
         "What? Not even a please? Hmpf. Fine. Just this once. Here is a list of my commands:\r\n",

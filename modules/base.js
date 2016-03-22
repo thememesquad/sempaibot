@@ -5,6 +5,59 @@ var lodash = require("lodash");
 module.exports = {
     moduleName: "General",
     load: function(Bot){
+        var games = [
+            "Boku no Pico",
+            "Petting Zoo Simulator",
+            "Hello Kitty Online",
+            "Counter-Strike: Global Offensive"
+        ];
+        var game = games[Math.floor((Math.random() * games.length))];
+            
+        Bot.discord.setStatus("Online", game);
+        var interval = setInterval(function() {
+            var game = games[Math.floor((Math.random() * games.length))];
+            
+            Bot.discord.setStatus("Online", game);
+        }, 50000);
+        
+        Bot.addCommand({
+            name: "JOIN_SERVER",
+            command: /join server (.*)/,
+            sample: "sempai join server __*invite*__",
+            description: "Allow sempai to join a new server",
+            action: function(m, invite) {
+                Bot.discord.getInvite(invite, function(error, inv) {
+                    if (error !== null) {
+                        Bot.discord.reply(m, response.get("JOIN_INVALID_INVITE").format({author: m.author.id, invite: inv.server.name}));
+                        return;
+                    }
+
+                    var servers = Bot.discord.servers;
+                    var success = true;
+                    for(var i = 0; i < servers.length; i++) {
+                        if (servers[i].name === inv.server.name) {
+                            success = false;
+                            break;
+                        }
+                    }
+
+                    if (!success) {
+                        Bot.discord.reply(m, response.get("JOIN_ALREADY").format({author: m.author.id, invite: inv.server.name}));
+                        return;
+                    }
+
+                    Bot.discord.joinServer(invite, function(error, server) {
+                        if (error !== null) {
+                            Bot.discord.reply(m, response.get("JOIN_FAILED").format({author: m.author.id, invite: inv.server.name}));
+                            return;
+                        }
+
+                        Bot.discord.reply(m, response.get("JOIN_SUCCESS").format({author: m.author.id, invite: server.name}));
+                    });
+                });
+            }
+        });
+        
         Bot.addCommand({
             command: /please help me/,
             hidden: true,
@@ -44,6 +97,8 @@ module.exports = {
                 Bot.discord.reply(m, message);
             }
         });
+        
+        
         
         Bot.addCommand({
             command: /help me/,
