@@ -152,6 +152,11 @@ var responses_tsundere = {
         "Fine. I'll check {user} for you. But only because I have nothing else to do right now!",
         "Alright. I'll check {user}. D-don't get me wrong. It's not like I'm doing this for you or anything."
     ],
+    
+    JOIN_INVALID_INVITE: "I... It's not like I wanted to join \"{invite}\"",
+    JOIN_ALREADY: "Baka... I'm already stalking \"{invite}\"...",
+    JOIN_FAILED: "It seems like \"{invite}\" doesn't like me... It's not like I wanted to be liked!",
+    JOIN_SUCCESS: "New friends at \"{invite}\"? Yay!",
 
     HELP_TOP: [
         "What? Not even a please? Hmpf. Fine. Just this once. Here is a list of my commands:\r\n",
