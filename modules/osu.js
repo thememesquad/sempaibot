@@ -137,9 +137,9 @@ OsuModule.prototype.osu_force_check = function(m, user) {
                                 var deltaRank = user_data.pp_rank - user_profile.rank;
 
                                 if(deltapp > 0)
-                                    deltapp = "+" + deltapp.toFixed(2);
+                                    deltapp = "+" + deltapp.toFixed(2) + "pp";
                                 else if(deltapp < 0)
-                                    deltapp = deltapp.toFixed(2);
+                                    deltapp = deltapp.toFixed(2) + "pp";
                                 else
                                     deltapp = "no gain";
 
