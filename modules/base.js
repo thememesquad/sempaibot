@@ -8,9 +8,12 @@ module.exports = {
         var games = [
             "Boku no Pico",
             "Petting Zoo Simulator",
-            "Hello Kitty Online"
+            "Hello Kitty Online",
+            "Counter-Strike: Global Offensive"
         ];
-        
+        var game = games[Math.floor((Math.random() * games.length))];
+            
+        Bot.discord.setStatus("Online", game);
         var interval = setInterval(function() {
             var game = games[Math.floor((Math.random() * games.length))];
             
