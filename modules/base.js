@@ -5,6 +5,18 @@ var lodash = require("lodash");
 module.exports = {
     moduleName: "General",
     load: function(Bot){
+        var games = [
+            "Boku no Pico",
+            "Petting Zoo Simulator",
+            "Hello Kitty Online"
+        ];
+        
+        var interval = setInterval(function() {
+            var game = games[Math.floor((Math.random() * games.length))];
+            
+            Bot.discord.setStatus("Online", game);
+        }, 50000);
+        
         Bot.addCommand({
             name: "JOIN_SERVER",
             command: /join server (.*)/,
