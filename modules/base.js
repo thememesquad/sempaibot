@@ -13,7 +13,7 @@ module.exports = {
             action: function(m, invite) {
                 Bot.discord.getInvite(invite, function(error, inv) {
                     if (error !== null) {
-                        Bot.discord.sendMessage(m.channel, response.get("JOIN_INVALID_INVITE").format({author: m.author.id, invite: inv.server.name}));
+                        Bot.discord.reply(m, response.get("JOIN_INVALID_INVITE").format({author: m.author.id, invite: inv.server.name}));
                         return;
                     }
 
@@ -27,17 +27,17 @@ module.exports = {
                     }
 
                     if (!success) {
-                        Bot.discord.sendMessage(m.channel, response.get("JOIN_ALREADY").format({author: m.author.id, invite: inv.server.name}));
+                        Bot.discord.reply(m, response.get("JOIN_ALREADY").format({author: m.author.id, invite: inv.server.name}));
                         return;
                     }
 
                     Bot.discord.joinServer(invite, function(error, server) {
                         if (error !== null) {
-                            Bot.discord.sendMessage(m.channel, response.get("JOIN_FAILED").format({author: m.author.id, invite: inv.server.name}));
+                            Bot.discord.reply(m, response.get("JOIN_FAILED").format({author: m.author.id, invite: inv.server.name}));
                             return;
                         }
 
-                        Bot.discord.sendMessage(m.channel, response.get("JOIN_SUCCESS").format({author: m.author.id, invite: server.name}));
+                        Bot.discord.reply(m, response.get("JOIN_SUCCESS").format({author: m.author.id, invite: server.name}));
                     });
                 });
             }
