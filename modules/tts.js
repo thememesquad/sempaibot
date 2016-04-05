@@ -262,8 +262,8 @@ var play = function(Bot, arr, m, lang){
                 var url = tts(arr[i], language);
                 console.log(url);
                 connection.playRawStream(request(url), {volume: 0.5}, function(err, intent){
+                    console.log(err);
                     intent.on("end", function(){
-                        console.log("done");
                         if(i == arr.length - 1 && queue.length == 0)
                         {
                             send(i + 1);
@@ -281,8 +281,6 @@ var play = function(Bot, arr, m, lang){
                     intent.on("error", function(e){
                         console.log(e);
                     });
-                }).catch(function(err){
-                    console.log(err);
                 });
             };
 
