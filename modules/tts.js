@@ -287,7 +287,7 @@ var play = function(Bot, arr, m, lang){
             send(0);
         }catch(err)
         {
-            console.log(err);
+            console.log("An error occurred: " + err);
         }
     });
 };
