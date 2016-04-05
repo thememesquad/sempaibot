@@ -262,7 +262,9 @@ var play = function(Bot, arr, m, lang){
                 var url = tts(arr[i], language);
                 console.log(url);
                 connection.playRawStream(request(url, function(err, resp, body) {
-                    if (err) console.log(err);
+                    console.log(err);
+                    console.log(resp);
+                    console.log(body);
                 }), {volume: 0.5}, function(err, intent){
                     console.log(err);
                     intent.on("end", function(){
