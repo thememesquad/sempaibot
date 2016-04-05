@@ -114,7 +114,7 @@ var randomArrayIndex = function(array, user){
 };
 
 var tts = function(query, language){
-    var lang = language || "en";
+    var lang = language || "en-gb";
     var cM = function(a) {
         return function() {
             return a
@@ -177,7 +177,7 @@ var tts = function(query, language){
     };
 
     var token = fM(query);
-    var url = "https://translate.google.com/translate_tts?ie=UTF-8&q="  + encodeURI(query) + "&tl=" + lang + "&tk=" + token + "&client=t";
+    var url = "https://api.voicerss.org/?key=367817739bb64bafa549d3127ca566c7&src=" + encodeURI(query) + "&hl=nl-nl&f=24khz_16bit_stereo";
 
     return url;
 };
@@ -261,13 +261,10 @@ var play = function(Bot, arr, m, lang){
 
                 var url = tts(arr[i], language);
                 console.log(url);
-                connection.playRawStream(request(url, function(err, resp, body) {
-                    console.log(err);
-                    console.log(resp);
-                    console.log(body);
-                }), {volume: 0.5}, function(err, intent){
-                    console.log(err);
-                    intent.on("end", function(){
+                connection.playRawStream(request(url), {volume: 0.5}, function(err, intent){
+                    console.log("head error:" + err);
+                    intent.on("end", function() {
+                        console.log("Finished");
                         if(i == arr.length - 1 && queue.length == 0)
                         {
                             send(i + 1);
@@ -278,16 +275,15 @@ var play = function(Bot, arr, m, lang){
                         }, 250);
                     });
 
-                    intent.on("time", function(t){
-                        console.log(t);
+                    intent.on("time", function(t) {
+                        console.log("time: " + t);
                     });
 
                     intent.on("error", function(e){
-                        console.log(e);
+                        console.log("error:" + e);
                     });
                 });
             };
-
             send(0);
         }catch(err)
         {
@@ -348,8 +344,8 @@ module.exports = {
             action: function(m){
                 var name = map_name(m.author.name);
                 var fuckYouArray = [
-                    {"en-US": "No, fuck you {name}"},
-                    {"en-US": "Fuck you too, {name}"},
+                    {"en-gb": "No, fuck you {name}"},
+                    {"en-gb": "Fuck you too, {name}"},
                 ];
 
                 var temp = randomArrayIndex(fuckYouArray);
