@@ -262,7 +262,7 @@ var play = function(Bot, arr, m, lang){
 
                 var url = tts(arr[i], language);
                 tts.translate(language, arr[i], function(result) {
-                    console.log(result); 
+                    console.log("Result: " + result); 
                     if(result.success) { //check for success 
                             //var response = { 'audio' : result.data };
                             connection.playRawStream(result.data, {volume: 0.5}, function(err, intent){
