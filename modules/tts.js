@@ -3,6 +3,7 @@ var fs = require('fs');
 var https = require("https");
 var Discord = require("discord.js");
 var request = require("request");
+ var ttsapi = require('node-google-text-to-speech');
 var Alea = require('alea');
 var prng = new Alea();
 
@@ -260,9 +261,36 @@ var play = function(Bot, arr, m, lang){
                 }
 
                 var url = tts(arr[i], language);
-                var data = request(url);
-                console.log(data);
-                connection.playRawStream(data, {volume: 0.5}, function(err, intent){
+                tts.translate(language, arr[i], function(result) {
+                    console.log(result); 
+                    if(result.success) { //check for success 
+                            //var response = { 'audio' : result.data };
+                            connection.playRawStream(result.data, {volume: 0.5}, function(err, intent){
+                                intent.on("end", function(){
+                                    console.log("done");
+                                    if(i == arr.length - 1 && queue.length == 0)
+                                    {
+                                        send(i + 1);
+                                    }
+
+                                    setTimeout(function(){
+                                        send(i + 1);
+                                    }, 250);
+                                });
+
+                                intent.on("time", function(t){
+                                    console.log(t);
+                                });
+
+                                intent.on("error", function(e){
+                                    console.log(e);
+                                });
+                            }).catch(function(err){
+                                console.log(err);
+                            });
+                    }
+                });
+                /*connection.playRawStream(data, {volume: 0.5}, function(err, intent){
                     intent.on("end", function(){
                         console.log("done");
                         if(i == arr.length - 1 && queue.length == 0)
@@ -284,7 +312,7 @@ var play = function(Bot, arr, m, lang){
                     });
                 }).catch(function(err){
                     console.log(err);
-                });
+                });*/
             };
 
             send(0);
