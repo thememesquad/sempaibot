@@ -20,7 +20,6 @@
     "parse-torrent": "^5.7.1",
     "q": "^1.4.1",
     "request": "^2.69.0",
-    "xml2js": "^0.4.16",
-    "node-google-text-to-speech": "^0.1.0"
+    "xml2js": "^0.4.16"
   }
 }
