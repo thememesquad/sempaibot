@@ -10,23 +10,7 @@ function chunk(str, n) {
     var len;
 
     for(i = 0, len = str.length; i < len; i += n) {
-        var tmp = str.substr(i, n);
-        if (tmp.substr(0,1) === " ") {
-            i = i - 9;
-            continue;
-        }
-        console.log("String: " + tmp);
-        var ind = tmp.indexOf(" ");
-        if (ind !== -1) {
-            console.log("Space found at location: " + ind);
-            tmp = tmp.substr(0, ind);
-            console.log("New string: " + tmp);
-            console.log("prev i: " + i);
-            i = i - (n - ind);
-            console.log("final i: " + i);
-        }
-        ret.push(tmp);
-        //ret.push(str.substr(i, n));
+        ret.push(str.substr(i, n));
     }
 
     return ret;
@@ -77,7 +61,7 @@ module.exports = {
                 if (namesize > 7) {
                     var tmpname = name.split(" ");
                     for(var i = 0; i < tmpname.length; i++) {
-                        tmpname[i] = chunk(tmpname[i]).join("\n");
+                        tmpname[i] = chunk(tmpname[i], 7).join("\n");
                     }
                     
                     name = tmpname.join("\n");
