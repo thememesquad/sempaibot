@@ -11,6 +11,7 @@ function chunk(str, n) {
 
     for(i = 0, len = str.length; i < len; i += n) {
         var tmp = str.substr(i, n);
+        console.log("String: " + tmp);
         var ind = tmp.indexOf(" ");
         if (ind !== -1) {
             console.log("Space found at location: " + ind);
