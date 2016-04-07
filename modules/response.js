@@ -67,6 +67,7 @@ module.exports = {
                             tmpname[i] = tmp;
                             tmpname.splice(i + 1, 1);
                         }
+                        i += 1;
                     }
                     /*for(var i = 0; i < tmpname.length; i++) {
                         while(tmpname[i].length < 7) {
