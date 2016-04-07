@@ -39,12 +39,17 @@ module.exports = {
                     console.log("Image is null");
                     return;
                 }
+                var fontsize = 24;
                 var txtColor = img.colorAllocate(0, 0, 0);
                 var fontPath = appRoot + '/assets/wildwordsbold.ttf';
                 var namesize = m.author.username;
                 namesize = namesize.length;
-                var position = (namesize * 24) / 2;
-                img.stringFT(txtColor, fontPath, 24, 0, 105 - position, 425, m.author.username);
+                while(namesize > 130) {
+                    fontsize -= 1;
+                    namesize = (namesize * fontsize) / 2;
+                }
+                var position = (namesize * fontsize) / 2;
+                img.stringFT(txtColor, fontPath, fontsize, 0, 105 - position, 425, m.author.username);
                 img.saveFile(appRoot + '/saved/love.png', function(err) {
                     if (err) {
                       console.log("Something went wrong saving file");
