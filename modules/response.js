@@ -82,14 +82,14 @@ module.exports = {
                 }
                 var vertpos;
                 if (tmpname.length !== 1)
-                    vertpos = ((tmpname.length - 1) * fontsize) / 2;
+                    vertpos = ((tmpname.length - 1) * (fontsize + 5)) / 2;
                 else {
                     vertpos = 0;
                 }
                 
                 for(var i = 0; i < tmpname.length; i++) {
-                    var pos = (tmpname[i].length * fontsize) / 2;
-                    img.stringFT(txtColor, fontPath, fontsize, 0, 105 - pos, (402 - vertpos) + (fontsize * i), tmpname[i]);
+                    var pos = (tmpname[i].length * (fontsize + 5)) / 2;
+                    img.stringFT(txtColor, fontPath, fontsize, 0, 105 - pos, (402 - vertpos) + ((fontsize + 5) * i), tmpname[i]);
                 }
                 
                 img.saveFile(appRoot + '/saved/love.png', function(err) {
