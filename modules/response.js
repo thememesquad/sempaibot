@@ -11,7 +11,7 @@ module.exports = {
         description: "Scold sempai",
         action: function(message){
             //todo
-            Bot.discord.reply(m, response.get("SEMPAI_FUCKYOU").format({author: m.author.id}));
+            Bot.discord.reply(message, response.get("SEMPAI_FUCKYOU").format({author: message.author.id}));
         }
       });
     }
