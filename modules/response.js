@@ -57,7 +57,7 @@ module.exports = {
                 var name = m.author.username;
                 namesize = name.length;
                 var maxpos = Math.min(namesize, 7);
-                var position = (maxpos * fontsize) / 2;
+                var position = parseInt((maxpos * fontsize) / 2);
                 if (namesize > 7) {
                     name = chunk(name, 6).join("\n");
                 }
