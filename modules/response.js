@@ -2,6 +2,7 @@ var responses = require("../responses.js");
 var util = require("../util.js");
 var gd = require('node-gd');
 var fs = require('fs');
+var appRoot = require('app-root-path');
 
 module.exports = {
     moduleName: "Response",
@@ -23,13 +24,13 @@ module.exports = {
           description: "Show sempai some love",
           action: function(m) {
               console.log(__dirname);
-              console.log(__dirname + '/../assets/chitoge_love.png');
-              if (!fs.existsSync('../assets/chitoge_love.png')) {
+              console.log(appRoot + '/assets/chitoge_love.png');
+              if (!fs.existsSync(appRoot + '/assets/chitoge_love.png')) {
               // Do something
               console.log("Nope");
               return;
               }
-              gd.openFile('/../assets/chitoge_love.png', function(err, img) {
+              gd.openFile(appRoot + '/assets/chitoge_love.png', function(err, img) {
                 if (err) {
                   console.log("Something went wrong opening file");
                   return;
@@ -39,15 +40,15 @@ module.exports = {
                     return;
                 }
                 var txtColor = img.colorAllocate(255, 255, 255);
-                var fontPath = __dirname + '/../assets/wildwordsbold.ttf';
+                var fontPath = appRoot + '/assets/wildwordsbold.ttf';
                 img.stringFT(txtColor, fontPath, 24, 0, 35, 400, m.author.username);
-                img.saveFile(__dirname + '/../saved/' + m.author.username + ".png", function(err) {
+                img.saveFile(appRoot + '/saved/' + m.author.username + ".png", function(err) {
                     if (err) {
                       console.log("Something went wrong saving file");
                   return;
                     }
                     
-                    Bot.discord.sendFile(m.channel, __dirname + "/../saved/" + m.author.username + ".png", "love.png", function(err, message) {
+                    Bot.discord.sendFile(m.channel, appRoot +  "/saved/" + m.author.username + ".png", "love.png", function(err, message) {
                         if (err) {
                             console.log("Something went wrong sending file");
                             return;
