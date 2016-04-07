@@ -21,7 +21,7 @@ function chunk(str, n) {
             tmp = tmp.substr(0, ind);
             console.log("New string: " + tmp);
             console.log("prev i: " + i);
-            i = i - (n - ind);
+            i = i - (n - (ind - 1));
             console.log("final i: " + i);
         }
         ret.push(tmp);
