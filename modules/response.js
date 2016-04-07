@@ -41,7 +41,10 @@ module.exports = {
                 }
                 var txtColor = img.colorAllocate(0, 0, 0);
                 var fontPath = appRoot + '/assets/wildwordsbold.ttf';
-                img.stringFT(txtColor, fontPath, 24, 0, 30, 425, m.author.username);
+                var namesize = m.author.username;
+                namesize = namesize.length;
+                var position = (namesize * 15) / 2;
+                img.stringFT(txtColor, fontPath, 24, 0, 105 - position, 425, m.author.username);
                 img.saveFile(appRoot + '/saved/love.png', function(err) {
                     if (err) {
                       console.log("Something went wrong saving file");
