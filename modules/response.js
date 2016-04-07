@@ -11,6 +11,9 @@ function chunk(str, n) {
 
     for(i = 0, len = str.length; i < len; i += n) {
         var tmp = str.substr(i, n);
+        if (tmp.substr(0,1) === " ") {
+            tmp = tmp.substr(1);
+        }
         console.log("String: " + tmp);
         var ind = tmp.indexOf(" ");
         if (ind !== -1) {
