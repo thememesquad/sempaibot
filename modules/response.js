@@ -51,15 +51,15 @@ module.exports = {
                     console.log("Image is null");
                     return;
                 }
-                var fontsize = 23;
+                var fontsize = 18;
                 var txtColor = img.colorAllocate(0, 0, 0);
                 var fontPath = appRoot + '/assets/wildwordsbold.ttf';
                 var name = m.author.username;
                 namesize = name.length;
-                var maxpos = Math.min(namesize, 7);
+                var maxpos = Math.min(namesize, 10);
                 var position = parseInt((maxpos * fontsize) / 2);
                 if (namesize > 7) {
-                    name = chunk(name, 6).join("\n");
+                    name = chunk(name, 10).join("\n");
                 }
                 
                 img.stringFT(txtColor, fontPath, fontsize, 0, 105 - position, 395, name);
