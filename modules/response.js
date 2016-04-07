@@ -24,13 +24,13 @@ module.exports = {
           description: "Show sempai some love",
           action: function(m) {
               console.log(__dirname);
-              console.log(appRoot + '/assets/chitoge_love.png');
-              if (!fs.existsSync(appRoot + '/assets/chitoge_love.png')) {
+              console.log(appRoot + '/assets/chitoge-love.png');
+              if (!fs.existsSync(appRoot + '/assets/chitoge-love.png')) {
               // Do something
               console.log("Nope");
               return;
               }
-              gd.openFile(appRoot + '/assets/chitoge_love.png', function(err, img) {
+              gd.openFile(appRoot + '/assets/chitoge-love.png', function(err, img) {
                 if (err) {
                   console.log("Something went wrong opening file");
                   return;
