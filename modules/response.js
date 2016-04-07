@@ -62,7 +62,7 @@ module.exports = {
                     name = chunk(name, 10).join("\n");
                 }
                 
-                img.stringFT(txtColor, fontPath, fontsize, 0, 105 - position, 375, name);
+                img.stringFT(txtColor, fontPath, fontsize, 0, 105 - position, 355, name);
                 img.saveFile(appRoot + '/saved/love.png', function(err) {
                     if (err) {
                       console.log("Something went wrong saving file");
