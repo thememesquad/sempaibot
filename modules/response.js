@@ -44,11 +44,12 @@ module.exports = {
                 var fontPath = appRoot + '/assets/wildwordsbold.ttf';
                 var namesize = m.author.username;
                 namesize = namesize.length;
-                while(namesize * fontsize > 160) {
-                    fontsize -= 1;
-                    namesize = (namesize * fontsize) / 2;
-                }
                 var position = (namesize * fontsize) / 2;
+                while(position > 70) {
+                    fontsize -= 1;
+                    position = (namesize * fontsize) / 2;
+                }
+                
                 img.stringFT(txtColor, fontPath, fontsize, 0, 100 - position, 425, m.author.username);
                 img.saveFile(appRoot + '/saved/love.png', function(err) {
                     if (err) {
