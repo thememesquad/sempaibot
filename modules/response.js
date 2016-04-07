@@ -56,7 +56,8 @@ module.exports = {
                 var fontPath = appRoot + '/assets/wildwordsbold.ttf';
                 var name = m.author.username;
                 namesize = name.length;
-                var position = (namesize * fontsize) / 2;
+                var maxpos = Math.min(namesize, 7);
+                var position = (maxpos * fontsize) / 2;
                 if (position > 65) {
                     name = chunk(name, 6).join("\n");
                 }
