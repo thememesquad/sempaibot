@@ -88,7 +88,7 @@ module.exports = {
                 }
                 
                 for(var i = 0; i < tmpname.length; i++) {
-                    var pos = parseInt((tmpname[i].length * (fontsize + 5)) / 2);
+                    var pos = parseInt((tmpname[i].length * (fontsize)) / 2);
                     img.stringFT(txtColor, fontPath, fontsize, 0, 105 - pos, parseInt((402 - vertpos) + ((fontsize + 5) * i)), tmpname[i]);
                 }
                 
