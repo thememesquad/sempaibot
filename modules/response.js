@@ -13,10 +13,15 @@ function chunk(str, n) {
         var tmp = str.substr(i, n);
         var ind = tmp.indexOf(" ");
         if (ind !== -1) {
+            console.log("Space found!");
             tmp = str.substr(i, ind - i);
+            console.log("New string: " + tmp);
+            console.log("prev i: " + i);
             i = i - (n - ind);
+            console.log("final i: " + i);
         }
         ret.push(tmp);
+        //ret.push(str.substr(i, n));
     }
 
     return ret;
