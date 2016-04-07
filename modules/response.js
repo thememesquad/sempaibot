@@ -62,8 +62,11 @@ module.exports = {
                 if (namesize > 7) {
                     for(var i = 0; i < tmpname.length; i++) {
                         while(tmpname[i].length < 7) {
-                            tmpname[i] = tmpname[i] + " " + tmpname[i+1];
-                            tmpname.splice(i+1, 1);
+                            var tmp = tmpname[i] + " " + tmpname[i+1];
+                            if (tmp.length < 7) {
+                                tmpname[i] = tmpname[i] + " " + tmpname[i+1];
+                                tmpname.splice(i+1, 1);
+                            }
                         }
                         tmpname[i] = chunk(tmpname[i], 7).join("\n");
                     }
