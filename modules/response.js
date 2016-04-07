@@ -22,8 +22,8 @@ module.exports = {
           description: "Show sempai some love",
           action: function(m) {
               console.log(__dirname);
-              console.log(__dirname + '/assets/chitoge_love.png');
-              gd.openFile(__dirname + '/assets/chitoge_love.png', function(err, img) {
+              console.log(__dirname + '/../assets/chitoge_love.png');
+              gd.openFile(__dirname + '/../assets/chitoge_love.png', function(err, img) {
                 if (err) {
                   console.log("Something went wrong opening file");
                   return;
@@ -33,15 +33,15 @@ module.exports = {
                     return;
                 }
                 var txtColor = img.colorAllocate(255, 255, 255);
-                var fontPath = __dirname + '/assets/wildwordsbold.ttf';
+                var fontPath = __dirname + '/../assets/wildwordsbold.ttf';
                 img.stringFT(txtColor, fontPath, 24, 0, 35, 400, m.author.username);
-                img.saveFile(__dirname + '/saved/' + m.author.username + ".png", function(err) {
+                img.saveFile(__dirname + '/../saved/' + m.author.username + ".png", function(err) {
                     if (err) {
                       console.log("Something went wrong saving file");
                   return;
                     }
                     
-                    Bot.discord.sendFile(m.channel, __dirname + "/saved/" + m.author.username + ".png", "love.png", function(err, message) {
+                    Bot.discord.sendFile(m.channel, __dirname + "/../saved/" + m.author.username + ".png", "love.png", function(err, message) {
                         if (err) {
                             console.log("Something went wrong sending file");
                             return;
