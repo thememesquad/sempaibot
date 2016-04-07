@@ -49,7 +49,7 @@ module.exports = {
                     namesize = (namesize * fontsize) / 2;
                 }
                 var position = (namesize * fontsize) / 2;
-                img.stringFT(txtColor, fontPath, fontsize, 0, 95 - position, 425, m.author.username);
+                img.stringFT(txtColor, fontPath, fontsize, 0, 100 - position, 425, m.author.username);
                 img.saveFile(appRoot + '/saved/love.png', function(err) {
                     if (err) {
                       console.log("Something went wrong saving file");
