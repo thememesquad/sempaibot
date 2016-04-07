@@ -58,7 +58,7 @@ module.exports = {
                 namesize = name.length;
                 var maxpos = Math.min(namesize, 7);
                 var position = (maxpos * fontsize) / 2;
-                if (position > 65) {
+                if (namesize > 7) {
                     name = chunk(name, 6).join("\n");
                 }
                 
