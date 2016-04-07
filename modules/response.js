@@ -14,7 +14,7 @@ function chunk(str, n) {
         var ind = tmp.indexOf(" ");
         if (ind !== -1) {
             console.log("Space found!");
-            tmp = str.substr(i, ind - i);
+            tmp = str.substr(i, ind);
             console.log("New string: " + tmp);
             console.log("prev i: " + i);
             i = i - (n - ind);
