@@ -4,6 +4,18 @@ var gd = require('node-gd');
 var fs = require('fs');
 var appRoot = require('app-root-path');
 
+function chunk(str, n) {
+    var ret = [];
+    var i;
+    var len;
+
+    for(i = 0, len = str.length; i < len; i += n) {
+       ret.push(str.substr(i, n));
+    }
+
+    return ret;
+};
+
 module.exports = {
     moduleName: "Response",
     load: function(Bot) {
@@ -42,15 +54,14 @@ module.exports = {
                 var fontsize = 24;
                 var txtColor = img.colorAllocate(0, 0, 0);
                 var fontPath = appRoot + '/assets/wildwordsbold.ttf';
-                var namesize = m.author.username;
-                namesize = namesize.length;
+                var name = m.author.username;
+                namesize = name.length;
                 var position = (namesize * fontsize) / 2;
-                while(position > 70) {
-                    fontsize -= 1;
-                    position = (namesize * fontsize) / 2;
+                if (position > 65) {
+                    chunk(name, 6).join("\n");
                 }
                 
-                img.stringFT(txtColor, fontPath, fontsize, 0, 100 - position, 425, m.author.username);
+                img.stringFT(txtColor, fontPath, fontsize, 0, 100 - position, 425, name);
                 img.saveFile(appRoot + '/saved/love.png', function(err) {
                     if (err) {
                       console.log("Something went wrong saving file");
