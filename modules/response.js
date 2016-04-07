@@ -24,7 +24,7 @@ module.exports = {
           action: function(m) {
               console.log(__dirname);
               console.log(__dirname + '/../assets/chitoge_love.png');
-              if (!fs.existsSync('/../assets/chitoge_love.png')) {
+              if (!fs.existsSync('../assets/chitoge_love.png')) {
               // Do something
               console.log("Nope");
               return;
