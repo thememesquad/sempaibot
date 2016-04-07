@@ -39,16 +39,16 @@ module.exports = {
                     console.log("Image is null");
                     return;
                 }
-                var txtColor = img.colorAllocate(255, 255, 255);
+                var txtColor = img.colorAllocate(0, 0, 0);
                 var fontPath = appRoot + '/assets/wildwordsbold.ttf';
-                img.stringFT(txtColor, fontPath, 24, 0, 35, 400, m.author.username);
-                img.saveFile(appRoot + '/saved/' + m.author.username + ".png", function(err) {
+                img.stringFT(txtColor, fontPath, 24, 0, 35, 420, m.author.username);
+                img.saveFile(appRoot + '/saved/love.png', function(err) {
                     if (err) {
                       console.log("Something went wrong saving file");
                   return;
                     }
                     
-                    Bot.discord.sendFile(m.channel, appRoot +  "/saved/" + m.author.username + ".png", "love.png", function(err, message) {
+                    Bot.discord.sendFile(m.channel, appRoot +  "/saved/love.png", "love.png", function(err, message) {
                         if (err) {
                             console.log("Something went wrong sending file");
                             return;
