@@ -1,6 +1,7 @@
 var responses = require("../responses.js");
 var util = require("../util.js");
 var gd = require('node-gd');
+var fs = require('fs');
 
 module.exports = {
     moduleName: "Response",
@@ -23,6 +24,11 @@ module.exports = {
           action: function(m) {
               console.log(__dirname);
               console.log(__dirname + '/../assets/chitoge_love.png');
+              if (!fs.existsSync(__dirname + '/../assets/chitoge_love.png')) {
+              // Do something
+              console.log("Nope");
+              return;
+              }
               gd.openFile(__dirname + '/../assets/chitoge_love.png', function(err, img) {
                 if (err) {
                   console.log("Something went wrong opening file");
