@@ -24,12 +24,12 @@ module.exports = {
           action: function(m) {
               console.log(__dirname);
               console.log(__dirname + '/../assets/chitoge_love.png');
-              if (!fs.existsSync(__dirname + '/../assets/chitoge_love.png')) {
+              if (!fs.existsSync('/../assets/chitoge_love.png')) {
               // Do something
               console.log("Nope");
               return;
               }
-              gd.openFile(__dirname + '/../assets/chitoge_love.png', function(err, img) {
+              gd.openFile('/../assets/chitoge_love.png', function(err, img) {
                 if (err) {
                   console.log("Something went wrong opening file");
                   return;
