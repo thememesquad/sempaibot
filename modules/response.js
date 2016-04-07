@@ -56,10 +56,10 @@ module.exports = {
                 var fontPath = appRoot + '/assets/wildwordsbold.ttf';
                 var name = m.author.username;
                 namesize = name.length;
-                var maxpos = Math.min(namesize, 10);
+                var maxpos = Math.min(namesize, 7);
                 var position = parseInt((maxpos * fontsize) / 2);
                 if (namesize > 7) {
-                    name = chunk(name, 10).join("\n");
+                    name = chunk(name, 7).join("\n");
                 }
                 
                 img.stringFT(txtColor, fontPath, fontsize, 0, 105 - position, 355, name);
