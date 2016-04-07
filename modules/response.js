@@ -58,14 +58,18 @@ module.exports = {
                 namesize = name.length;
                 var maxpos = Math.min(namesize, 7);
                 var position = parseInt((maxpos * fontsize) / 2);
+                var tmpname = name.split(" ");
                 if (namesize > 7) {
-                    var tmpname = name.split(" ");
                     for(var i = 0; i < tmpname.length; i++) {
+                        while(tmpname[i].length < 7) {
+                            tmpname[i] = tmpname[i] + " " + tmpname[i+1];
+                            tmpname.splice(i+1, 1);
+                        }
                         tmpname[i] = chunk(tmpname[i], 7).join("\n");
                     }
-                    
                     name = tmpname.join("\n");
                 }
+                
                 
                 img.stringFT(txtColor, fontPath, fontsize, 0, 105 - position, 355, name);
                 img.saveFile(appRoot + '/saved/love.png', function(err) {
