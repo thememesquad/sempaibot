@@ -44,7 +44,7 @@ module.exports = {
                 var fontPath = appRoot + '/assets/wildwordsbold.ttf';
                 var namesize = m.author.username;
                 namesize = namesize.length;
-                while(namesize > 130) {
+                while(namesize * fontsize > 130) {
                     fontsize -= 1;
                     namesize = (namesize * fontsize) / 2;
                 }
