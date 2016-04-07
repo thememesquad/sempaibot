@@ -21,10 +21,16 @@ module.exports = {
           sample: "sempai i love you",
           description: "Show sempai some love",
           action: function(m) {
+              console.log(__dirname);
+              console.log(__dirname + '/assets/chitoge_love.png');
               gd.openFile(__dirname + '/assets/chitoge_love.png', function(err, img) {
                 if (err) {
                   console.log("Something went wrong opening file");
                   return;
+                }
+                if (typeof img === "null") {
+                    console.log("Image is null");
+                    return;
                 }
                 var txtColor = img.colorAllocate(255, 255, 255);
                 var fontPath = __dirname + '/assets/wildwordsbold.ttf';
