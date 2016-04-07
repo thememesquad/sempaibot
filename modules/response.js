@@ -75,7 +75,12 @@ module.exports = {
                 var maxpos = Math.min(namesize, 7);
                 var position = parseInt((maxpos * fontsize) / 2);
                 if (namesize > 7) {
-                    name = chunk(name, 7).join("\n");
+                    var tmpname = name.split(" ");
+                    for(var i = 0; i < tmpname.length; i++) {
+                        tmpname[i] = chunk(tmpname[i]).join("\n");
+                    }
+                    
+                    name = tmpname.join("\n");
                 }
                 
                 img.stringFT(txtColor, fontPath, fontsize, 0, 105 - position, 355, name);
