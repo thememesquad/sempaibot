@@ -12,7 +12,8 @@ function chunk(str, n) {
     for(i = 0, len = str.length; i < len; i += n) {
         var tmp = str.substr(i, n);
         if (tmp.substr(0,1) === " ") {
-            tmp = tmp.substr(1);
+            i = i - 9;
+            continue;
         }
         console.log("String: " + tmp);
         var ind = tmp.indexOf(" ");
@@ -21,7 +22,7 @@ function chunk(str, n) {
             tmp = tmp.substr(0, ind);
             console.log("New string: " + tmp);
             console.log("prev i: " + i);
-            i = i - (n - (ind - 1));
+            i = i - (n - ind);
             console.log("final i: " + i);
         }
         ret.push(tmp);
