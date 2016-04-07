@@ -21,21 +21,21 @@ module.exports = {
           sample: "sempai i love you",
           description: "Show sempai some love",
           action: function(m) {
-              gd.openFile('/assets/chitoge_love.png', function(err, img) {
+              gd.openFile(__dirname + '/assets/chitoge_love.png', function(err, img) {
                 if (err) {
                   console.log("Something went wrong opening file");
                   return;
                 }
                 var txtColor = img.colorAllocate(255, 255, 255);
-                var fontPath = '/assets/wildwordsbold.ttf';
+                var fontPath = __dirname + '/assets/wildwordsbold.ttf';
                 img.stringFT(txtColor, fontPath, 24, 0, 35, 400, m.author.username);
-                img.saveFile('/saved/' + m.author.username + ".png", function(err) {
+                img.saveFile(__dirname + '/saved/' + m.author.username + ".png", function(err) {
                     if (err) {
                       console.log("Something went wrong saving file");
                   return;
                     }
                     
-                    Bot.discord.sendFile(m.channel, "/saved/" + m.author.username + ".png", "love.png", function(err, message) {
+                    Bot.discord.sendFile(m.channel, __dirname + "/saved/" + m.author.username + ".png", "love.png", function(err, message) {
                         if (err) {
                             console.log("Something went wrong sending file");
                             return;
