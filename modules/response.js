@@ -10,7 +10,13 @@ function chunk(str, n) {
     var len;
 
     for(i = 0, len = str.length; i < len; i += n) {
-       ret.push(str.substr(i, n));
+        var tmp = str.substr(i, n);
+        var ind = tmp.indexOf(" ");
+        if (ind !== -1) {
+            tmp = str.substr(i, ind - i);
+            i = i - (n - ind);
+        }
+        ret.push(tmp);
     }
 
     return ret;
