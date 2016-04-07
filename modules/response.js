@@ -89,7 +89,7 @@ module.exports = {
                 
                 for(var i = 0; i < tmpname.length; i++) {
                     var pos = (tmpname[i].length * fontsize) / 2;
-                    img.stringFT(txtColor, fontPath, fontsize, 0, 105 - pos, (402 - vertpos) + (fontsize * i), name);
+                    img.stringFT(txtColor, fontPath, fontsize, 0, 105 - pos, (402 - vertpos) + (fontsize * i), tmpname[i]);
                 }
                 
                 img.saveFile(appRoot + '/saved/love.png', function(err) {
