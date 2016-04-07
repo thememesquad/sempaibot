@@ -58,7 +58,7 @@ module.exports = {
                 namesize = name.length;
                 var position = (namesize * fontsize) / 2;
                 if (position > 65) {
-                    chunk(name, 6).join("\n");
+                    name = chunk(name, 6).join("\n");
                 }
                 
                 img.stringFT(txtColor, fontPath, fontsize, 0, 100 - position, 425, name);
