@@ -1,3 +1,6 @@
+var process = require("process");
+process.env.TZ = "Europe/Amsterdam";
+
 var Discord = require("discord.js");
 var responses = require("./responses.js");
 var modules = require('auto-loader').load(__dirname + "/modules");
