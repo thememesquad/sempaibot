@@ -7,6 +7,9 @@ var http = require("http");
 var request = require("request");
 var Q = require("q");
 
+var USER_UPDATE_INTERVAL = 3600000;
+var BEST_UPDATE_INTERVAL = 60000;
+
 class OsuModule
 {
     constructor(bot)
@@ -19,7 +22,7 @@ class OsuModule
                 var user = this.users[i];
                 this.force_check(user.username, false);
             }
-        }.bind(this), 1000 * 60);
+        }.bind(this), BEST_UPDATE_INTERVAL);
     }
 
     api_call(method, params, first)
@@ -57,9 +60,9 @@ class OsuModule
         return defer.promise;
     }
 
-    get_user(user)
+    get_user(username)
     {
-        return this.api_call("get_user", {u: user});
+        return this.api_call("get_user", {u: username});
     }
 
     get_beatmaps(id)
@@ -67,7 +70,7 @@ class OsuModule
         return this.api_call("get_beatmaps", {b: id});
     }
 
-    get_user_best(user, start, limit)
+    get_user_best(username, start, limit)
     {
         return this.api_call("get_user_best", {u: username, m: start, limit: limit}, false);
     }
@@ -129,17 +132,13 @@ class OsuModule
                 var bdate = new Date(beatmap.date);
                 var date = new Date(bdate.valueOf() + -60 * 8 * 60000);
 
-                if (date > endDate)
+                //if (date > endDate)
+                if(j == 0)
                 {
                     topRank = j + 1;
 
                     this.get_beatmaps(beatmap.beatmap_id).then(function(username, beatmap_info){
-                        this.get_user(username).then(function(user_data){
-                            db.osu.update({type: "user", username: username}, {$set: {pp: parseFloat(user_data.pp_raw), rank: parseInt(user_data.pp_rank)}}, {}, function (err, docs) {
-                                if (err !== null)
-                                    console.log(err);
-                            });
-
+                        this.update_user(username).then(function(user_data){
                             var deltapp = user_data.pp_raw - profile.pp;
                             var oldRank = profile.rank;
                             var deltaRank = user_data.pp_rank - profile.rank;
@@ -178,7 +177,7 @@ class OsuModule
     check_user(username, message)
     {
         if(username === undefined)
-            return false;
+            return;
 
         this.get_user(username).then(function(username, message, json){
             if(json === undefined || json.username === undefined)
@@ -204,14 +203,51 @@ class OsuModule
                 return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING").format({author: message.author.id, user: username}));
             }
 
-            this.users.push({username: username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank)});
-            db.osu.insert({type: "user", username: username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank)}, function (err, docs) {
+            var time = (new Date).getTime();
+            this.users.push({username: username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank), last_updated: time});
+            db.osu.insert({type: "user", username: username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank), last_updated: time}, function (err, docs) {
                 if (err !== null)
                     console.log(err);
             });
 
             return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: username}));
         }.bind(this, username, message));
+    }
+
+    update_user(username)
+    {
+        var profile = null;
+        for(var i in this.users)
+        {
+            if(this.users[i].username == username)
+            {
+                profile = this.users[i];
+                break;
+            }
+        }
+
+        if(profile.update_in_progress !== null)
+            return profile.update_in_progress;
+
+        var defer = Q.defer();
+        profile.update_in_progress = defer;
+
+        this.get_user(username).then(function(profile, data){
+            profile.last_updated = (new Date).getTime();
+
+            db.osu.update({type: "user", username: data.username}, {$set: {pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}}, {}, function (err, docs) {
+                if (err !== null)
+                    console.log(err);
+            });
+
+            profile.update_in_progress.resolve(data);
+            profile.update_in_progress = null;
+        }.bind(profile)).catch(function(err){
+            profile.update_in_progress.reject(err);
+            profile.update_in_progress = null;
+        });
+
+        return defer;
     }
 }
 
@@ -315,8 +351,23 @@ module.exports = {
             if (err !== null)
                 return console.log(err);
 
-            for (var i = 0; i < docs.length; i++) {
-                osu.users.push({username: docs[i].username, pp: docs[i].pp, rank: docs[i].rank});
+            for (var i = 0; i < docs.length; i++)
+            {
+                var user = {
+                    username: docs[i].username,
+                    pp: docs[i].pp,
+                    rank: docs[i].rank,
+                    last_updated: docs[i].last_updated,
+                    update_in_progress: null
+                };
+
+                osu.users.push(user);
+
+                var time = (new Date).getTime();
+                if(user.last_updated === undefined || time - user.last_updated >= USER_UPDATE_INTERVAL)
+                {
+                    osu.update_user(user.username);
+                }
             }
         });
     }
