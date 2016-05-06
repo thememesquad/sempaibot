@@ -1,4 +1,3 @@
-var db = require("../db.js");
 var responses = require("../responses.js");
 var lodash = require("lodash");
 
@@ -12,14 +11,14 @@ module.exports = {
             "Counter-Strike: Global Offensive"
         ];
         var game = games[Math.floor((Math.random() * games.length))];
-            
+
         Bot.discord.setStatus("Online", game);
         var interval = setInterval(function() {
             var game = games[Math.floor((Math.random() * games.length))];
-            
+
             Bot.discord.setStatus("Online", game);
         }, 50000);
-        
+
         Bot.addCommand({
             name: "JOIN_SERVER",
             command: /join server (.*)/,
@@ -57,7 +56,7 @@ module.exports = {
                 });
             }
         });
-        
+
         Bot.addCommand({
             command: /please help me/,
             hidden: true,
@@ -67,10 +66,10 @@ module.exports = {
                 commands.sort(function(a, b){
                     if(a.module < b.module) return -1;
                     if(a.module > b.module) return 1;
-                    
+
                     return 0;
                 });
-                
+
                 for(var i = 0;i<commands.length;i++)
                 {
                     if(commands[i].hidden !== undefined)
@@ -80,7 +79,7 @@ module.exports = {
                     {
                         if(i != 0)
                             message += "\r\n";
-                        
+
                         message += "**" + commands[i].module + "**:\r\n";
                     }
 
@@ -88,7 +87,7 @@ module.exports = {
                         message += "**" + commands[i].sample + "** - " + commands[i].descriptionTsundere;
                     else
                         message += "**" + commands[i].sample + "** - " + commands[i].description;
-                    
+
                     message += "\r\n";
                 }
                 message += "\r\n";
@@ -97,9 +96,9 @@ module.exports = {
                 Bot.discord.reply(m, message);
             }
         });
-        
-        
-        
+
+
+
         Bot.addCommand({
             command: /help me/,
             hidden: true,
@@ -109,10 +108,10 @@ module.exports = {
                 commands.sort(function(a, b){
                     if(a.module < b.module) return -1;
                     if(a.module > b.module) return 1;
-                    
+
                     return 0;
                 });
-                
+
                 var lastMod = "";
                 for(var i = 0;i<commands.length;i++)
                 {
@@ -123,7 +122,7 @@ module.exports = {
                     {
                         if(i != 0)
                             message += "\r\n";
-                        
+
                         message += "**" + commands[i].module + "**:\r\n";
                         lastMod = commands[i].module;
                     }
@@ -132,7 +131,7 @@ module.exports = {
                         message += "**" + commands[i].sample + "** - " + commands[i].descriptionTsundere;
                     else
                         message += "**" + commands[i].sample + "** - " + commands[i].description;
-                    
+
                     message += "\r\n";
                 }
                 message += "\r\n";
@@ -141,7 +140,7 @@ module.exports = {
                 Bot.discord.reply(m, message);
             }
         });
-        
+
         Bot.addCommand({
             command: /tsundere on/,
             hidden: true,
@@ -153,7 +152,7 @@ module.exports = {
                 Bot.discord.sendMessage(m, responses.get("SWITCHED").format({author: m.author.id}));
             }
         });
-        
+
         Bot.addCommand({
             command: /tsundere off/,
             hidden: true,

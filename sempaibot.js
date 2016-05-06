@@ -105,22 +105,17 @@ Bot.discord.on("message", function (m){
 
 Bot.discord.on("ready", function () {
     db.load(function(){
-        db.data.find({}, function(err, docs){
-            if (err !== null)
-                return console.log(err);
-
+        db.ConfigKeyValue.find({}, {}).then(function(docs){
             for(var i = 0;i<docs.length;i++)
             {
-                if(docs[i].name == "mode")
+                if(docs[i].key == "mode")
                 {
-                    if(docs[i].value != responses.currentMode)
+                    if(docs[i].value.value != responses.currentMode)
                         responses.setMode(docs[i].value);
-                }else if(docs[i].name == "anime_tracked")
-                {
-                    continue;
-                }else{
                 }
             }
+        }).catch(function(err){
+            console.log(err);
         });
 
         for(var key in modules)
@@ -143,7 +138,8 @@ Bot.discord.on("ready", function () {
 
                 mod.load(Bot);
                 console.log("....Ok");
-            }catch(e)
+            }
+            catch(e)
             {
                 console.log("Error:");
                 console.log(e);
@@ -156,15 +152,13 @@ Bot.discord.on("ready", function () {
         Bot.commands.push({
             command: null,
             hidden: true,
-            action: function(m){
-                Bot.discord.sendMessage(m.channel, responses.get("NAME").format({author: m.author.id}));
+            action: function(message){
+                Bot.respond(message, responses.get("NAME").format({author: m.author.id}));
             }
         });
 
-
-
         Bot.discord.joinServer(config.server, function (error, server) {
-            Bot.discord.sendMessage(Bot.discord.channels.get("name", "osu"), responses.get("ONLINE"));
+            Bot.message("osu", responses.get("ONLINE"));
         });
     });
 });

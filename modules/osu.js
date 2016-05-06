@@ -205,10 +205,9 @@ class OsuModule
 
             var time = (new Date).getTime();
             this.users.push({username: username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank), last_updated: time});
-            db.osu.insert({type: "user", username: username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank), last_updated: time}, function (err, docs) {
-                if (err !== null)
-                    console.log(err);
-            });
+
+            var dbuser = db.OsuUser.create({type: "user", username: username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank), last_updated: time});
+            dbuser.save();
 
             return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: username}));
         }.bind(this, username, message));
@@ -235,13 +234,13 @@ class OsuModule
         this.get_user(username).then(function(profile, data){
             profile.last_updated = (new Date).getTime();
 
-            db.osu.update({type: "user", username: data.username}, {$set: {pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}}, {}, function (err, docs) {
-                if (err !== null)
-                    console.log(err);
+            db.OsuUser.findOneAndUpdate({username: data.username}, {pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
+                profile.update_in_progress.resolve(data);
+                profile.update_in_progress = null;
+            }).catch(function(err){
+                profile.update_in_progress.reject(err);
+                profile.update_in_progress = null;
             });
-
-            profile.update_in_progress.resolve(data);
-            profile.update_in_progress = null;
         }.bind(profile)).catch(function(err){
             profile.update_in_progress.reject(err);
             profile.update_in_progress = null;
@@ -327,9 +326,9 @@ module.exports = {
 
                 osu.users.splice(i, 1);
 
-                db.osu.remove({type: "user", username: user}, {}, function (err, numrem) {
-                    if(err)
-                        console.log("Error removing '" + user + "' from osu db: " + err);
+                db.OsuUser.deleteOne({username: user}, {}, function(numrem) {
+                }).catch(function(err){
+                    console.log("Error removing '" + user + "' from osu db: " + err);
                 });
 
                 Bot.respond(m, responses.get("OSU_STOPPED").format({author: m.author.id, user: user}));
@@ -347,10 +346,7 @@ module.exports = {
             }
         });
 
-        db.osu.find({type: "user"}, function (err, docs) {
-            if (err !== null)
-                return console.log(err);
-
+        db.OsuUser.find({}).then(function (docs) {
             for (var i = 0; i < docs.length; i++)
             {
                 var user = {
@@ -369,6 +365,8 @@ module.exports = {
                     osu.update_user(user.username);
                 }
             }
+        }).catch(function(err){
+            console.log(err);
         });
     }
 };
