@@ -14,15 +14,34 @@ class OsuModule
 {
     constructor(bot)
     {
+        this.last_checked = -1;
         this.modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
         this.users = [];
         this.bot = bot;
-        this.check = setInterval(function () {
-            for (var i = 0; i < this.users.length; i++) {
-                var user = this.users[i];
-                this.force_check(user.username, false);
+        this.check = setInterval(function(){
+            var time = (new Date).getTime();
+
+            if(time - this.last_checked >= BEST_UPDATE_INTERVAL)
+            {
+                for (var i = 0; i < this.users.length; i++)
+                {
+                    var user = this.users[i];
+                    this.force_check(user.username, false);
+                }
+
+                this.last_checked = time;
+            }else{
+                //don't update users when the beatmaps are being updated since there is a chance that the beatmap update code will also trigger a user update.
+
+                for(var i in this.users)
+                {
+                    if(time - this.users[i].last_updated >= USER_UPDATE_INTERVAL)
+                    {
+                        this.update_user(this.users[i]);
+                    }
+                }
             }
-        }.bind(this), BEST_UPDATE_INTERVAL);
+        }.bind(this), 1);
     }
 
     api_call(method, params, first)
@@ -132,8 +151,7 @@ class OsuModule
                 var bdate = new Date(beatmap.date);
                 var date = new Date(bdate.valueOf() + -60 * 8 * 60000);
 
-                //if (date > endDate)
-                if(j == 0)
+                if (date > endDate)
                 {
                     topRank = j + 1;
 
