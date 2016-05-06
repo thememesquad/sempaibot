@@ -36,7 +36,7 @@ var responses_normal = {
     OSU_ALREADY_FOLLOWING: "I'm already following \"{user}\".",
     OSU_ADDED_FOLLOWING: "I'm now following \"{user}\" on osu!",
     OSU_CHECK: "No problem! I'll check {user} on osu for you!",
-    
+
     JOIN_INVALID_INVITE: "I can't find a server with the Invite: \"{invite}\"",
     JOIN_ALREADY: "I am already part of \"{invite}\"",
     JOIN_FAILED: "I was not able to join the server \"{invite}\"",
@@ -47,9 +47,9 @@ var responses_normal = {
 
     PLEASE_HELP_TOP: "This is the current list of commands:\r\n",
     PLEASE_HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
-    
+
     SEMPAI_FUCKYOU: "I'm sorry, I didn't mean to offend you <@{user}>",
-    
+
     WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
     WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{user}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
 
@@ -154,7 +154,7 @@ var responses_tsundere = {
         "Fine. I'll check {user} for you. But only because I have nothing else to do right now!",
         "Alright. I'll check {user}. D-don't get me wrong. It's not like I'm doing this for you or anything."
     ],
-    
+
     JOIN_INVALID_INVITE: "I... It's not like I wanted to join \"{invite}\"",
     JOIN_ALREADY: "Baka... I'm already stalking \"{invite}\"...",
     JOIN_FAILED: "It seems like \"{invite}\" doesn't like me... It's not like I wanted to be liked!",
@@ -177,9 +177,9 @@ var responses_tsundere = {
         "Only because you asked nicely. D-don't get me wrong, I do this for everyone if they ask nicely!  Here is the list of my commands you asked for!:\r\n"
     ],
     PLEASE_HELP_BOTTOM: "You can also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
-    
+
     SEMPAI_FUCKYOU: "I... It's not like I cared anyways <@{user}>! B..baka...",
-    
+
     WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
     WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{user}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
 
@@ -225,12 +225,15 @@ var responses = {
             responses.current = responses_normal;
         }
 
-        db.data.update({name: "mode"}, {$set: {value: responses.currentMode} }, {}, function(err, numUpdated){
-            if(numUpdated == 0)
+        db.ConfigKeyValue.findOneAndUpdate({key: "mode"}, {value: {value: responses.currentMode}}, {}).then(function(doc){
+            if(doc === null)
             {
-                db.data.insert({name: "mode", value: responses.currentMode}, function(err, doc){});
+                var dbkey = db.ConfigKeyValue.create({key: "mode", value: {value: responses.currentMode}});
+                dbkey.save();
             }
-        })
+        }).catch(function(err){
+            console.log(err);
+        });
     }
 };
 
