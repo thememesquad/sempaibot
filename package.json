@@ -8,25 +8,27 @@
   },
   "dependencies": {
     "alea": "0.0.9",
+    "app-root-path": "^1.0.0",
     "auto-loader": "^0.2.0",
+    "camo": "^0.12.1",
     "cheerio": "^0.20.0",
     "cloudscraper": "^1.2.1",
     "discord.js": "https://github.com/hydrabolt/discord.js.git#indev",
     "ger": "0.0.98",
     "lodash": "^4.5.1",
+    "mongodb": "^2.1.18",
     "nedb": "^1.8.0",
     "net-ping": "^1.1.12",
     "object-hash": "^1.1.2",
     "parse-torrent": "^5.7.1",
     "q": "^1.4.1",
     "request": "^2.69.0",
-    "xml2js": "^0.4.16",
-    "app-root-path": "^1.0.0"
+    "xml2js": "^0.4.16"
   },
   "optionalDependencies": {
     "node-gd": "^1.2.0"
   },
   "scripts": {
-	"start": "node sempaibot.js"
+    "start": "node sempaibot.js"
   }
 }
