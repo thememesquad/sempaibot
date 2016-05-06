@@ -9,4 +9,4 @@ module.exports = {
 	db_password: "YMHthrNBafJd",
 	db_host: process.env.OPENSHIFT_MONGODB_DB_HOST,
 	db_port: process.env.OPENSHIFT_MONGODB_DB_PORT
-};
+}; 

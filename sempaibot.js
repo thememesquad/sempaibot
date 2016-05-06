@@ -153,7 +153,7 @@ Bot.discord.on("ready", function () {
             command: null,
             hidden: true,
             action: function(message){
-                Bot.respond(message, responses.get("NAME").format({author: m.author.id}));
+                Bot.respond(message, responses.get("NAME").format({author: message.author.id}));
             }
         });
 
