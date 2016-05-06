@@ -21,6 +21,13 @@ var Bot = {
     addCommand: function(command){
         command.module = Bot.currentModule;
         Bot.commands.push(command);
+    },
+    message: function(type, message){
+        //needs to be changed in the future
+        return Bot.discord.sendMessage(Bot.discord.channels.get("name", type), message);
+    },
+    respond: function(m, message){
+        return Bot.discord.sendMessage(m.channel, message);
     }
 };
 
@@ -47,14 +54,14 @@ Bot.discord.on("message", function (m){
                         data = Bot.commands[i].command[j].exec(m.content);
                         if(data === null)
                             continue;
-                        
+
                         data.splice(0, 1);
                         data = [m].concat(data);
                         m.index = j;
-                        
+
                         break;
                     }
-                    
+
                     if(data === null)
                         continue;
                 }else{
@@ -84,13 +91,13 @@ Bot.discord.on("message", function (m){
             }
 
             Bot.commands[i].action.apply(null, data);
-            
+
             if(Bot.commands[i].stealth !== undefined)
             {
                 var url = "https://discordapp.com/api/channels/" + m.channel.id + "/messages/" + m.id;
                 Bot.discord.internal.apiRequest("delete", url, true).then(function(res){});
             }
-            
+
             break;
         }
     }
@@ -124,16 +131,16 @@ Bot.discord.on("ready", function () {
                 console.log("Error: Module '" + key + "' is not setup correctly. missing function: load");
                 continue;
             }
-            
+
             var msg = "Loading module '" + key + "'";
             while(msg.length != 60)
                 msg += ".";
-            
+
             process.stdout.write(msg);
             try
             {
                 Bot.currentModule = mod.moduleName || key;
-                
+
                 mod.load(Bot);
                 console.log("....Ok");
             }catch(e)
@@ -142,9 +149,9 @@ Bot.discord.on("ready", function () {
                 console.log(e);
             }
         }
-        
+
         Bot.currentModule = "";
-        
+
         //null command
         Bot.commands.push({
             command: null,
@@ -153,9 +160,9 @@ Bot.discord.on("ready", function () {
                 Bot.discord.sendMessage(m.channel, responses.get("NAME").format({author: m.author.id}));
             }
         });
-        
-        
-        
+
+
+
         Bot.discord.joinServer(config.server, function (error, server) {
             Bot.discord.sendMessage(Bot.discord.channels.get("name", "osu"), responses.get("ONLINE"));
         });
