@@ -242,7 +242,9 @@ class OsuModule
                 break;
             }
         }
-
+        if (profile === null) {
+            return false;
+        }
         if(profile.update_in_progress !== null)
             return profile.update_in_progress;
 
