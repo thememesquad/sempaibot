@@ -6,14 +6,138 @@ var config = require("../config");
 var http = require("http");
 var request = require("request");
 var Q = require("q");
+var net = require('net');
+//var irc = require("irc");
 
 var USER_UPDATE_INTERVAL = 3600000;
 var BEST_UPDATE_INTERVAL = 60000;
+
+//Afk, Idle, Playing, Watching, Editing
+class OsuBancho
+{
+    constructor()
+    {
+        this.buffer = "";
+        this.requests = {};
+        this.online_buffer = [];
+        this.connected = Q.defer();
+        this.client = new net.Socket();
+        this.client.connect(6667, "irc.ppy.sh", function(){
+            this.onConnect();
+        }.bind(this));
+
+        var linesplit = /\r\n|\r|\n/;
+        var last = /(\r\n|\r|\n)(?=[^(\r\n|\r|\n)]*$)/;
+
+        this.client.on("data", function(data){
+            this.buffer += data.toString();
+            var str = this.buffer.substr(0, this.buffer.search(last));
+            var lines = str.split(linesplit);
+
+            this.buffer = this.buffer.substr(str.length + this.buffer.match(last)[0].length);
+            for(var i = 0;i<lines.length;i++)
+            {
+                var line = lines[i];
+                if(line.indexOf(":cho.ppy.sh") != -1)
+                {
+                    var idx1 = line.indexOf(" ");
+                    var idx2 = line.indexOf(" ", idx1 + 1);
+                    var command = line.substr(idx1 + 1, idx2 - idx1 - 1);
+
+                    //001 = welcome message
+                    //376 = names list start
+                    //353 = names list entry
+                    //366 = names list end
+
+                    if(command == "376")
+                    {
+                        this.online_buffer = [];
+                    }else if(command == "353")
+                    {
+                        var str = line.substr(line.indexOf("osu :") + "osu :".length);
+                        var names = str.split(" ");
+                        names = names.splice(0, names.length - 1);
+
+                        for(var j = 0;j<names.length;j++)
+                        {
+                            names[j] = names[j].replace("_", " ");
+                        }
+
+                        this.online_buffer = this.online_buffer.concat(names);
+                    }else if(command == "366")
+                    {
+                        var req = this.requests["names"];
+                        this.requests["names"] = null;
+                        req.resolve(this.online_buffer);
+                    }
+                }
+            }
+        }.bind(this));
+
+        this.client.on("close", function(){
+            console.log("Disconnected from Bancho, attempting reconnect in 1.5s");
+
+            setTimeout(function(){
+                console.log("Reconnecting to Bancho");
+                this.client.connect(6667, "irc.ppy.sh", function(){
+                    this.onConnect();
+                }.bind(this));
+            }.bind(this), 1500);
+        }.bind(this));
+    }
+
+    send(command)
+    {
+        this.client.write(command + "\n");
+    }
+
+    update_online_buffer()
+    {
+        if(this.requests["names"] !== undefined && this.requests["names"] !== null)
+            return this.requests["names"].promise;
+
+        var defer = Q.defer();
+
+        if(this.connected != null)
+        {
+            this.connected.promise.then(function(){
+                this.names();
+            }.bind(this));
+        }else{
+            this.names();
+        }
+
+        this.requests["names"] = defer;
+        return defer.promise;
+    }
+
+    names()
+    {
+        this.send("NAMES osu");
+    }
+
+    onConnect()
+    {
+        this.send("PASS " + config.osu_irc_password);
+        this.send("NICK " + config.osu_irc_username);
+        this.send("USER " + config.osu_irc_username + " " + config.osu_irc_username + " " + config.osu_irc_username);
+
+        console.log("Connected to Bancho");
+
+        var connected = this.connected;
+        this.connected = null;
+
+        connected.resolve();
+    }
+}
 
 class OsuModule
 {
     constructor(bot)
     {
+        if(config.osu_irc_username !== undefined && config.osu_irc_password !== undefined)
+            this.bancho = new OsuBancho();
+
         this.last_checked = -1;
         this.modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
         this.users = [];
@@ -23,6 +147,23 @@ class OsuModule
 
             if(time - this.last_checked >= BEST_UPDATE_INTERVAL)
             {
+                if(config.osu_irc_username !== undefined && config.osu_irc_password !== undefined)
+                {
+                    this.bancho.update_online_buffer().then(function(users){
+                        for(var i in this.users)
+                        {
+                            if(users.indexOf(this.users[i].username) !== -1)
+                            {
+                                this.users[i].online = true;
+                            }
+                            else
+                            {
+                                this.users[i].online = false;
+                            }
+                        }
+                    }.bind(this));
+                }
+
                 for (var i = 0; i < this.users.length; i++)
                 {
                     var user = this.users[i];
@@ -116,6 +257,14 @@ class OsuModule
 
             return;
         }
+
+        /*if(profile.online == false)
+        {
+            //if(message)
+                //TODO: Send a response message saying the user isn't online so no need to check.
+
+            return;
+        }*/
 
         var endDate = new Date();
         endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 1 * 60 * 1000);
@@ -286,8 +435,8 @@ module.exports = {
         Bot.addCommand({
             name: "OSU_FOLLOWING",
             command: [
-                /who are you following/,
-				/who do you follow/
+                /who are you following/i,
+				/who do you follow/i
             ],
             sample: "sempai who are you following?",
             description: "Lists all the people I'm following on osu.",
@@ -308,8 +457,8 @@ module.exports = {
         Bot.addCommand({
             name: "OSU_FOLLOW",
             command: [
-                /follow (.*)/,
-                /stalk (.*)/
+                /follow (.*)/i,
+                /stalk (.*)/i
             ],
             sample: "sempai follow __*user*__",
             description: "Adds the person to my following list for osu.",
@@ -326,8 +475,8 @@ module.exports = {
         Bot.addCommand({
             name: "OSU_STOP_FOLLOW",
             command: [
-                /stop following (.*)/,
-                /stop stalking (.*)/
+                /stop following (.*)/i,
+                /stop stalking (.*)/i
             ],
             sample: "sempai stop following __*user*__",
             description: "Removes the person from my following list for osu.",
@@ -360,7 +509,7 @@ module.exports = {
 
         Bot.addCommand({
             name: "OSU_CHECK",
-            command: /check (.*)/,
+            command: /check (.*)/i,
             sample: "sempai check __*user*__",
             description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
             action: function(m, user){
@@ -377,7 +526,8 @@ module.exports = {
                     pp: docs[i].pp,
                     rank: docs[i].rank,
                     last_updated: docs[i].last_updated,
-                    update_in_progress: null
+                    update_in_progress: null,
+                    online: false
                 };
 
                 osu.users.push(user);
