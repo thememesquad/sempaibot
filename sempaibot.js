@@ -118,7 +118,7 @@ Bot.discord.on("ready", function () {
                 }
             }
         }).catch(function(err){
-            console.log(err);
+            console.log("ConfgKeyValue.find: " + err);
         });
 
         for(var key in modules)

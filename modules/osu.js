@@ -37,7 +37,7 @@ class OsuModule
                 {
                     if(time - this.users[i].last_updated >= USER_UPDATE_INTERVAL)
                     {
-                        this.update_user(this.users[i].username);
+                        this.update_user(this.users[i]);
                     }
                 }
             }
@@ -118,7 +118,7 @@ class OsuModule
         endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 1 * 60 * 1000);
 
         var topRank;
-        this.get_user_best(username, 0, 50).then(function(username, json){
+        this.get_user_best(username, 0, 50).then(function(profile, json){
             for (var j = 0; j < json.length; j++)
             {
                 var beatmap = json[j];
@@ -155,8 +155,8 @@ class OsuModule
                 {
                     topRank = j + 1;
 
-                    this.get_beatmaps(beatmap.beatmap_id).then(function(username, beatmap_info){
-                        this.update_user(username).then(function(user_data){
+                    this.get_beatmaps(beatmap.beatmap_id).then(function(profile, beatmap_info){
+                        this.update_user(profile).then(function(user_data){
                             var deltapp = user_data.pp_raw - profile.pp;
                             var oldRank = profile.rank;
                             var deltaRank = user_data.pp_rank - profile.rank;
@@ -182,14 +182,30 @@ class OsuModule
 							if (beatmap.perfect == 0)
 								beatmap.additional = "| **" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
 
-                            this.bot.message("osu", responses.get("OSU_NEW_SCORE_NODATE").format({user: username, beatmap_id: beatmap.beatmap_id, pp: beatmap.pp,
-                                rank: beatmap.rank, acc: beatmap.acc, mods: beatmap.mods, map_artist: beatmap_info.artist, map_title: beatmap_info.title, map_diff_name: beatmap_info.version, additional: beatmap.additional,
-                                top_rank: topRank, delta_pp: deltapp, old_rank: oldRank, new_rank: newRank, delta_rank: deltaRank}));
-                        }.bind(this));
-                    }.bind(this, username));
+                            this.bot.message("osu", responses.get("OSU_NEW_SCORE_NODATE").format({
+                                user: profile.username,
+                                beatmap_id: beatmap.beatmap_id,
+                                pp: beatmap.pp,
+                                rank: beatmap.rank,
+                                acc: beatmap.acc,
+                                mods: beatmap.mods,
+                                map_artist: beatmap_info.artist,
+                                map_title: beatmap_info.title,
+                                map_diff_name: beatmap_info.version,
+                                additional: beatmap.additional,
+                                top_rank: topRank,
+                                delta_pp: deltapp,
+                                old_rank: oldRank,
+                                new_rank: newRank,
+                                delta_rank: deltaRank
+                            }));
+                        }.bind(this)).catch(function(err){
+                            console.log("update_user: " + err);
+                        });
+                    }.bind(this, profile));
                 }
             }
-        }.bind(this, username));
+        }.bind(this, profile));
     }
 
     check_user(username, message)
@@ -231,40 +247,30 @@ class OsuModule
         }.bind(this, username, message));
     }
 
-    update_user(username)
+    update_user(profile)
     {
-        var profile = null;
-        for(var i in this.users)
-        {
-            if(this.users[i].username == username)
-            {
-                profile = this.users[i];
-                break;
-            }
-        }
-
         if(profile.update_in_progress !== null)
-            return profile.update_in_progress;
+            return profile.update_in_progress.promise;
 
         var defer = Q.defer();
         profile.update_in_progress = defer;
 
-        this.get_user(username).then(function(profile, data){
+        this.get_user(profile.username).then(function(profile, data){
             profile.last_updated = (new Date).getTime();
 
-            db.OsuUser.findOneAndUpdate({username: data.username}, {pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
+            db.OsuUser.findOneAndUpdate({username: profile.username}, {pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
                 profile.update_in_progress.resolve(data);
                 profile.update_in_progress = null;
             }).catch(function(err){
                 profile.update_in_progress.reject(err);
                 profile.update_in_progress = null;
             });
-        }.bind(profile)).catch(function(err){
+        }.bind(this, profile)).catch(function(err){
             profile.update_in_progress.reject(err);
             profile.update_in_progress = null;
         });
 
-        return defer;
+        return profile.update_in_progress.promise;
     }
 }
 
@@ -380,11 +386,11 @@ module.exports = {
                 var time = (new Date).getTime();
                 if(user.last_updated === undefined || time - user.last_updated >= USER_UPDATE_INTERVAL)
                 {
-                    osu.update_user(user.username);
+                    osu.update_user(user);
                 }
             }
         }).catch(function(err){
-            console.log(err);
+            console.log("OsuUser.find: " + err);
         });
     }
 };
