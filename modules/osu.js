@@ -96,10 +96,13 @@ class OsuModule
 
     force_check(username, message)
     {
+        if(username === undefined)
+            return;
+
         var profile = null;
         for(var i in this.users)
         {
-            if(this.users[i].username == username)
+            if(this.users[i].username.toLowerCase() == username.toLowerCase())
             {
                 profile = this.users[i];
                 break;
@@ -155,8 +158,8 @@ class OsuModule
                 {
                     topRank = j + 1;
 
-                    this.get_beatmaps(beatmap.beatmap_id).then(function(profile, beatmap_info){
-                        this.update_user(profile).then(function(user_data){
+                    this.get_beatmaps(beatmap.beatmap_id).then(function(profile, beatmap, beatmap_info){
+                        this.update_user(profile).then(function(profile, beatmap, beatmap_info, user_data){
                             var deltapp = user_data.pp_raw - profile.pp;
                             var oldRank = profile.rank;
                             var deltaRank = user_data.pp_rank - profile.rank;
@@ -199,10 +202,10 @@ class OsuModule
                                 new_rank: newRank,
                                 delta_rank: deltaRank
                             }));
-                        }.bind(this)).catch(function(err){
+                        }.bind(this, profile, beatmap, beatmap_info)).catch(function(err){
                             console.log("update_user: " + err);
                         });
-                    }.bind(this, profile));
+                    }.bind(this, profile, beatmap));
                 }
             }
         }.bind(this, profile));
@@ -213,37 +216,38 @@ class OsuModule
         if(username === undefined)
             return;
 
+        var found = false;
+        for(var i in this.users)
+        {
+            if(this.users[i].username.toLowerCase() == username.toLowerCase())
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if(found)
+        {
+            return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING").format({author: message.author.id, user: username}));
+        }
+
         this.get_user(username).then(function(username, message, json){
             if(json === undefined || json.username === undefined)
             {
-                if(log !== undefined)
+                if(message !== undefined)
                     this.bot.respond(message, responses.get("OSU_USER_NOT_FOUND").format({author: message.author.id, user: username}));
 
                 return;
             }
 
-            var found = false;
-            for(var i in this.users)
-            {
-                if(this.users[i].username == username)
-                {
-                    found = true;
-                    break;
-                }
-            }
-
-            if(found)
-            {
-                return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING").format({author: message.author.id, user: username}));
-            }
-
             var time = (new Date).getTime();
-            this.users.push({username: username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank), last_updated: time});
+            var user = {username: json.username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank), last_updated: time};
+            this.users.push(user);
 
-            var dbuser = db.OsuUser.create({type: "user", username: username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank), last_updated: time});
+            var dbuser = db.OsuUser.create(user);
             dbuser.save();
 
-            return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: username}));
+            return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: json.username}));
         }.bind(this, username, message));
     }
 
@@ -282,13 +286,10 @@ module.exports = {
         Bot.addCommand({
             name: "OSU_FOLLOWING",
             command: [
-                /who are you following on osu/,
-				/who do you follow on osu/,
-
-                /show who you are following on osu/,
-                /show (?: the)? (?: osu)?(?: follow|following|stalking) list/
+                /who are you following/,
+				/who do you follow/
             ],
-            sample: "sempai who are you following on osu?",
+            sample: "sempai who are you following?",
             description: "Lists all the people I'm following on osu.",
             action: function(m){
                 var message = "";
@@ -307,11 +308,10 @@ module.exports = {
         Bot.addCommand({
             name: "OSU_FOLLOW",
             command: [
-                /follow (\w*)?(?: on )?(osu)?/,
-                /stalk (\w*)?(?: on )?(osu)?/,
-                /add (\w*)? to (?: follow| follow list| stalking list| following list| the follow list| the stalking list| the following list| the list| list)?(?: on )?(osu)?/
+                /follow (.*)/,
+                /stalk (.*)/
             ],
-            sample: "sempai follow __*user*__  on osu",
+            sample: "sempai follow __*user*__",
             description: "Adds the person to my following list for osu.",
             action: function(m, name){
                 if(name === undefined)
@@ -326,9 +326,8 @@ module.exports = {
         Bot.addCommand({
             name: "OSU_STOP_FOLLOW",
             command: [
-                /stop following (\w*)?(?: on )?(osu)?/,
-                /stop stalking (\w*)?(?: on )?(osu)?/,
-                /remove (\w*)? from (?: follow| the follow list| the following list| the stalking list| follow list| following list| stalking list| the list| list)?(?: on )?(osu)?/
+                /stop following (.*)/,
+                /stop stalking (.*)/
             ],
             sample: "sempai stop following __*user*__",
             description: "Removes the person from my following list for osu.",
@@ -361,7 +360,7 @@ module.exports = {
 
         Bot.addCommand({
             name: "OSU_CHECK",
-            command: /check (\w*)?(?: on )?(osu)?/,
+            command: /check (.*)/,
             sample: "sempai check __*user*__",
             description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
             action: function(m, user){
