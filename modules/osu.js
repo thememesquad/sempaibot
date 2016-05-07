@@ -37,7 +37,7 @@ class OsuModule
                 {
                     if(time - this.users[i].last_updated >= USER_UPDATE_INTERVAL)
                     {
-                        this.update_user(this.users[i]);
+                        this.update_user(this.users[i].username);
                     }
                 }
             }
