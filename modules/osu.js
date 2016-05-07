@@ -37,7 +37,7 @@ class OsuModule
                 {
                     if(time - this.users[i].last_updated >= USER_UPDATE_INTERVAL)
                     {
-                        this.update_user(this.users[i]);
+                        this.update_user(this.users[i].username);
                     }
                 }
             }
@@ -242,9 +242,7 @@ class OsuModule
                 break;
             }
         }
-        if (profile === null) {
-            return false;
-        }
+
         if(profile.update_in_progress !== null)
             return profile.update_in_progress;
 
