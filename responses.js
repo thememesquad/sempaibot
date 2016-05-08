@@ -120,18 +120,18 @@ var responses_normal = {
 	"I don't know what I did, but I'm sorry {user}. :[",
 	"Meanie. :(",
 	],
-    WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
-    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{user}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
 
     UNKNOWN_COMMAND: [
 	"Sempai doesn't understand.",
 	"I... I don't understand. What do you want me to do?",
 	"Sempai doesn't recognize that command. Or are you just talking about me behind my back?",
 	],
+
     MULTIPLE_UNKNOWN_COMMAND:[
 	"That's not a valid command either. If you need help, please type \"sempai help me\".",
 	"I still don't understand what you want me to do. If you require help, please type \"sempai help me\".",
 	],
+
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/"
 };
 
@@ -255,9 +255,6 @@ var responses_tsundere = {
     PLEASE_HELP_BOTTOM: "You can also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
 
     SEMPAI_FUCKYOU: "I... It's not like I cared about you anyway <@{user}>! B..baka... :(",
-
-    WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
-    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{user}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
 
     UNKNOWN_COMMAND: [
         "You're not making any sense to Sempai. If you ask me for help, I might just help you. If I can be bothered.",

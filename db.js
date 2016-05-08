@@ -47,7 +47,7 @@ var data = {
 
                 callback();
             }).catch(function(err){
-                console.log("ERROR CAN'T SETUP ANY DATABASE: " + err);
+                console.log("Error setting up: \r\n" + err.stack);
             })
 		});
     }

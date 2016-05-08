@@ -4,19 +4,19 @@ var util = require("../util.js");
 
 module.exports = {
     moduleName: "Reminders",
-    load: function(Bot){
+    load: function(bot){
         function remind_me(me, channel, who, when, what) {
-            if (who) 
+            if (who)
             {
                 var w = [];
                 var tmp = who.split(',');
 
-                for (var i = 0; i < tmp.length; i++) 
+                for (var i = 0; i < tmp.length; i++)
                 {
                     w.push("<@" + util.get_user(tmp[i], Bot) + ">");
                 }
-            } 
-            else 
+            }
+            else
             {
                 w = false;
             }
@@ -34,11 +34,11 @@ module.exports = {
         var remind = setInterval(function () {
             var d = new Date();
             var n = d.getTime();
-            if (reminders.length > 0) 
+            if (reminders.length > 0)
             {
-                for (var i = 0; i < reminders.length; i++) 
+                for (var i = 0; i < reminders.length; i++)
                 {
-                    if (reminders[i].when < n) 
+                    if (reminders[i].when < n)
                     {
                         remind_message(reminders[i]);
                     }
@@ -47,29 +47,29 @@ module.exports = {
         }, 1000);
 
         function remind_message(reminder) {
-            if (reminder.who) 
+            if (reminder.who)
             {
                 var w = reminder.who;
                 var who = "";
-                for (var i = 0; i < w.length; i++) 
+                for (var i = 0; i < w.length; i++)
                 {
                     if (i !== 0)
                         who += ", ";
-                    
+
                     who += w[i];
                 }
-            } 
-            else 
+            }
+            else
             {
                 who = "himself";
             }
 
-            Bot.discord.sendMessage(reminder.channel, responses.get("REMINDER").format({author: reminder.me, people: who, message: reminder.what}));
+            bot.message(reminder.channel, responses.get("REMINDER").format({author: reminder.me, people: who, message: reminder.what}));
             var index = reminders.indexOf(reminder);
             reminders.splice(index, 1);
         }
-        
-        Bot.addCommand({
+
+        bot.add_command({
             name: "REMINDER_LIST",
             command: /list my reminders/,
             sample: "sempai list my reminders",
@@ -78,8 +78,8 @@ module.exports = {
                 //todo
             }
         });
-        
-        Bot.addCommand({
+
+        bot.add_command({
             name: "REMINDER_REMIND",
             command: /remind (.*) to (.*) at (.{4,})/,
             sample: "sempai remind __*name*__  to __*reminder*__  at __*time*__",
@@ -103,7 +103,7 @@ module.exports = {
                 var parsedtime = new Date(time);
 
                 if (parsedtime < currentDate) {
-                    Bot.discord.sendMessage(message.channel, responses.get("REMIND_PAST").format(message.author.id));
+                    bot.message(message.channel, responses.get("REMIND_PAST").format({author: message.author.id}));
                     return;
                 }
 
@@ -124,9 +124,9 @@ module.exports = {
                 }
 
                 if(!who)
-                    Bot.discord.sendMessage(message.channel, responses.get("REMIND_ME").format({author: message.author.id, message: info, time: time}));
+                    bot.message(message.channel, responses.get("REMIND_ME").format({author: message.author.id, message: info, time: time}));
                 else
-                    Bot.discord.sendMessage(message.channel, responses.get("REMIND_OTHER").format({author: message.author.id, people: whos, message: info, time: time}));
+                    bot.message(message.channel, responses.get("REMIND_OTHER").format({author: message.author.id, people: whos, message: info, time: time}));
             }
         });
     }

@@ -7,12 +7,12 @@ var http = require("http");
 var request = require("request");
 var Q = require("q");
 var net = require('net');
-//var irc = require("irc");
+var lodash = require("lodash");
+const IModule = require("../IModule.js");
 
 var USER_UPDATE_INTERVAL = 3600000;
 var BEST_UPDATE_INTERVAL = 60000;
 
-//Afk, Idle, Playing, Watching, Editing
 class OsuBancho
 {
     constructor()
@@ -131,16 +131,52 @@ class OsuBancho
     }
 }
 
-class OsuModule
+class OsuModule extends IModule
 {
-    constructor(bot)
+    constructor()
     {
+        super();
+
         if(config.osu_irc_username !== undefined && config.osu_irc_password !== undefined)
             this.bancho = new OsuBancho();
 
+        this.name = "osu!";
         this.last_checked = -1;
         this.modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
         this.users = [];
+
+        this.add_command({
+            regex: [
+                /who are you following/i,
+				/who do you follow/i
+            ],
+            sample: "sempai who are you following?",
+            description: "Lists all the people I'm following on osu.",
+            permission: null,
+            global: false,
+
+            execute: this.handle_list_following
+        });
+    }
+
+    handle_list_following(message)
+    {
+        var response = "";
+
+        for(var i in this.users)
+        {
+            if(i != 0)
+                response += ", ";
+
+            //TODO: Check if the calling server actually is following that user
+            response += this.users[i].username;
+        }
+
+        this.bot.respond(message, responses.get("OSU_FOLLOWING").format({author: message.author.id, results: response}));
+    }
+
+    on_setup(bot)
+    {
         this.bot = bot;
         this.check = setInterval(function(){
             var time = (new Date).getTime();
@@ -183,6 +219,16 @@ class OsuModule
                 }
             }
         }.bind(this), 1);
+    }
+
+    on_load(server)
+    {
+        //todo
+    }
+
+    on_unload(server)
+    {
+        //todo
     }
 
     api_call(method, params, first)
@@ -334,7 +380,7 @@ class OsuModule
 							if (beatmap.perfect == 0)
 								beatmap.additional = "| **" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
 
-                            this.bot.message("osu", responses.get("OSU_NEW_SCORE_NODATE").format({
+                            var announcement = responses.get("OSU_NEW_SCORE_NODATE").format({
                                 user: profile.username,
                                 beatmap_id: beatmap.beatmap_id,
                                 pp: beatmap.pp,
@@ -350,7 +396,9 @@ class OsuModule
                                 old_rank: oldRank,
                                 new_rank: newRank,
                                 delta_rank: deltaRank
-                            }));
+                            });
+
+                            //todo: LOG IT TO ALL LISTENERS
                         }.bind(this, profile, beatmap, beatmap_info)).catch(function(err){
                             console.log("update_user: " + err);
                         });
@@ -427,12 +475,13 @@ class OsuModule
     }
 }
 
-module.exports = {
+module.exports = new OsuModule();
+/*module.exports = {
     moduleName: "osu!",
-    load: function(Bot){
-        var osu = new OsuModule(Bot);
+    load: function(bot){
+        var osu = new OsuModule(bot);
 
-        Bot.addCommand({
+        bot.add_command({
             name: "OSU_FOLLOWING",
             command: [
                 /who are you following/i,
@@ -450,11 +499,11 @@ module.exports = {
                     message += osu.users[i].username;
                 }
 
-                Bot.respond(m, responses.get("OSU_FOLLOWING").format({author: m.author.id, results: message}));
+                bot.respond(m, responses.get("OSU_FOLLOWING").format({author: m.author.id, results: message}));
             }
         });
 
-        Bot.addCommand({
+        bot.add_command({
             name: "OSU_FOLLOW",
             command: [
                 /follow (.*)/i,
@@ -465,14 +514,14 @@ module.exports = {
             action: function(m, name){
                 if(name === undefined)
                 {
-                    return Bot.respond(m, responses.get("OSU_UNDEFINED").format({author: m.author.id}));
+                    return bot.respond(m, responses.get("OSU_UNDEFINED").format({author: m.author.id}));
                 }
 
                 osu.check_user(name, m);
             }
         });
 
-        Bot.addCommand({
+        bot.add_command({
             name: "OSU_STOP_FOLLOW",
             command: [
                 /stop following (.*)/i,
@@ -493,7 +542,7 @@ module.exports = {
 
                 if(i === -1)
                 {
-                    return Bot.respond(m, responses.get("OSU_NOT_FOLLOWING").format({author: m.author.id, user: user}));
+                    return bot.respond(m, responses.get("OSU_NOT_FOLLOWING").format({author: m.author.id, user: user}));
                 }
 
                 osu.users.splice(i, 1);
@@ -503,17 +552,17 @@ module.exports = {
                     console.log("Error removing '" + user + "' from osu db: " + err);
                 });
 
-                Bot.respond(m, responses.get("OSU_STOPPED").format({author: m.author.id, user: user}));
+                bot.respond(m, responses.get("OSU_STOPPED").format({author: m.author.id, user: user}));
             }
         });
 
-        Bot.addCommand({
+        bot.add_command({
             name: "OSU_CHECK",
             command: /check (.*)/i,
             sample: "sempai check __*user*__",
             description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
             action: function(m, user){
-                Bot.respond(m, responses.get("OSU_CHECK").format({author: m.author.id, user: user}));
+                bot.respond(m, responses.get("OSU_CHECK").format({author: m.author.id, user: user}));
                 osu.force_check(user, m);
             }
         });
@@ -542,4 +591,4 @@ module.exports = {
             console.log("OsuUser.find: " + err);
         });
     }
-};
+};*/

@@ -4,10 +4,14 @@ const PING_THRESHOLD = 100;
 
 module.exports = {
     load: function(Bot){
+        Bot.discord.getServers = function(){
+            return this.internal.apiRequest("get", "https://discordapp.com/api/voice/regions", true);
+        };
+
         var serverSwitcher = function(){
             if(Bot.discord.servers.length == 0)
                 return;
-            
+
             Bot.discord.getServers().then(function(res){
                 var session = ping.createSession ();
                 var pending = 0;
@@ -66,7 +70,7 @@ module.exports = {
                 console.log(err);
             });
         };
-        
+
         setInterval(serverSwitcher, 10000);
     }
 };
