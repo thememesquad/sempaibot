@@ -2,8 +2,7 @@
 
 const responses = require("./responses.js");
 const db = require("./db.js");
-
-//TODO: Actually save & restore this stuff.
+const users = require("./users.js");
 
 class ServerData
 {
@@ -16,6 +15,14 @@ class ServerData
         this.id = server.id;
 
         var _this = this;
+        
+        for(var i = 0;i<server.members.length;i++)
+        {
+            var member = server.members[i];
+            users.add_user(member.id, member.name, this);
+        }
+        
+        //TODO: Actually save these in the initial config load instead of a per-server config load.
         db.ConfigKeyValue.findOne({key: this.server.id + "_modules"}).then(function(doc){
             if(doc === null)
             {

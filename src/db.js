@@ -3,6 +3,7 @@
 var config = require("../config");
 var connect = require('camo').connect;
 var Document = require('camo').Document;
+var Q = require("q");
 
 class OsuUser extends Document
 {
@@ -46,12 +47,14 @@ var data = {
     OsuUser: OsuUser,
     ConfigKeyValue: ConfigKeyValue,
     Role: Role,
-    load: function(callback){
+    load: function(){
+        var defer = Q.defer();
+
 		connect("mongodb://" + config.db_username + ":" + config.db_password + "@" + config.db_host + ":" + config.db_port + "/").then(function(db) {
             console.log("Using MongoDB as DB system.");
             data.db = db;
 
-            callback();
+            defer.resolve("mongodb");
 		}).catch(function(err){
             console.log(err);
 
@@ -59,11 +62,13 @@ var data = {
                 console.log("Using NeDB as DB system.");
                 data.db = db;
 
-                callback();
+                defer.resolve("nedb");
             }).catch(function(err){
-                console.log("Error setting up: \r\n" + err.stack);
+                defer.reject(err);
             })
 		});
+
+        return defer.promise;
     }
 };
 

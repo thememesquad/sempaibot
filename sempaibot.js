@@ -4,11 +4,13 @@ const process = require("process");
 process.env.TZ = "Europe/Amsterdam";
 
 const Discord = require("discord.js");
+const ServerData = require("./src/ServerData.js");
+
 const modules = require('auto-loader').load(__dirname + "/modules");
 const responses = require("./src/responses.js");
 const db = require("./src/db.js");
 const config = require("./config");
-const ServerData = require("./src/ServerData.js");
+const users = require("./src/users.js");
 
 String.prototype.format = function(args) {
     return this.replace(/{(.*?)}/g, function(match, key) {
@@ -58,20 +60,22 @@ class Bot
     on_ready()
     {
         var _this = this;
-        db.load(function(){
-            db.ConfigKeyValue.find({}, {}).then(function(docs){
-                for(var i = 0;i<docs.length;i++)
+        db.load().then(function(db_type){
+            console.log("Loading config from DB.....");
+            return db.ConfigKeyValue.find({});
+        }).then(function(docs){
+            for(var i = 0;i<docs.length;i++)
+            {
+                if(docs[i].key == "mode")
                 {
-                    if(docs[i].key == "mode")
-                    {
-                        if(docs[i].value.value != responses.currentMode)
-                            responses.setMode(docs[i].value);
-                    }
+                    if(docs[i].value.value != responses.currentMode)
+                        responses.setMode(docs[i].value);
                 }
-            }).catch(function(err){
-                console.log("ConfgKeyValue.find: " + err);
-            });
-
+            }
+            
+            console.log("Loading users from DB.....");
+            return users.load();
+        }).then(function(){
             for(var key in modules)
             {
                 var mod = modules[key];
@@ -104,14 +108,7 @@ class Bot
                 for(var i = 0;i<_this.discord.servers.length;i++)
                 {
                     var server = _this.discord.servers.get(i);
-                    try
-                    {
-                        _this.servers[server.id] = new ServerData(_this, server);
-                    }
-                    catch(e)
-                    {
-                        console.log(e.stack);
-                    }
+                    _this.servers[server.id] = new ServerData(_this, server);
 
                     for(var key in _this.modules)
                     {
@@ -120,6 +117,8 @@ class Bot
                     }
                 }
             });
+        }).catch(function(err){
+            console.log(err.stack);
         });
     }
 
