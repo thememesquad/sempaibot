@@ -132,7 +132,11 @@ var responses_normal = {
 	"I still don't understand what you want me to do. If you require help, please type \"sempai help me\".",
 	],
 
-    ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/"
+    ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
+    
+    MY_ROLE: "Your role is '{role}'.",
+    MY_PERMISSIONS: "**Your permissions are:**{permissions}",
+    NOT_ALLOWED: "Your role doesn't have the permission '{permission}', which is needed to run this command."
 };
 
 var responses_tsundere = {
@@ -173,7 +177,6 @@ var responses_tsundere = {
         "Tsundere on? Are you dumb, <@{author}>? It's already on!"
     ],
 
-    LIST_REMINDERS: "todo",
     REMIND_PAST: [
         "Uhmm... Are you dumb? That time is in the past!",
         "Baka~! That time is in the past."
@@ -188,20 +191,6 @@ var responses_tsundere = {
         "Sempai will try to remind {people}!",
         "Maybe I'll remind {people}. Just this one time!"
     ],
-    REMINDER: "<@{author}> reminded {people}: {message}.",
-    REGION_CHANGED: "Switched from region '{old_region}' to '{new_region}'.",
-
-    ANIME_SEARCH_NO_RESULTS: "No results found for '{anime}'.",
-    ANIME_SEARCH_RESULTS: "Results for '{anime}':\r\n{results}",
-    ANIME_NEW_DOWNLOAD: "New download for show '**{show}**':\r\n**{file}**:\r\n**Magnet**: {magnet}\r\n**Seeders**: {seeders}, **Leechers**: {leechers}, **Downloads**: {downloads}, **Quality**: {quality}\r\n",
-    ANIME_INVALID_ID: "Can't track {id} because the id is invalid!",
-    ANIME_ALREADY_TRACKING: "I'm already tracking '**{anime}**'!",
-    ANIME_NOW_TRACKING: "Started tracking '**{anime}**'!",
-    ANIME_TRACKING_LIST_EMPTY: "I'm not tracking any anime at the moment.",
-    ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{results}",
-    ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{anime}**':\r\n{results}",
-    ANIME_NOT_TRACKING: "I'm not even tracking {name}!",
-    ANIME_STOPPED_TRACKING: "Okay, I'll stop tracking {name}.",
 
     OSU_FOLLOWING: [
         "These are the people I like! I mean, associate with. I-it's not as if I really l-like them, or anything. Don't get any weird ideas!\r\n{results}",
@@ -243,16 +232,14 @@ var responses_tsundere = {
         "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just like helping. Here is a list of my commands:\r\n",
         "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just have a lot of free time. Here is a list of my commands:\r\n",
         "Alright. I'll help. You should feel grateful. Here's a list of my commands:\r\n",
-        "Not even a please? Sempai has feelings too, you know! I mean, I may be a bot... but bots can have feelings too! You seem to be clueless, so I'll help you this one time. But try asking nicely next time.",
+        "Not even a please? Sempai has feelings too, you know! I mean, I may be a bot... but bots can have feelings too! You seem to be clueless, so I'll help you this one time. But try asking nicely next time.\r\n",
     ],
-    HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
     PLEASE_HELP_TOP: [
         "Eheh. :3 Okay, here is the list of my commands:\r\n",
         ":3 You're going to make Sempai blush. Here is the list of my commands you asked for!:\r\n",
         "You asked me nicely! If I was keeping track, you would gain one Sempai relationship point! T-t-that doesn't mean I like you now! Don't get any weird ideas. Anyway, here is the list of my commands you asked for!:\r\n",
         "Only because you asked nicely. D-don't get me wrong, I do this for everyone if they ask nicely!  Here is the list of my commands you asked for!:\r\n"
     ],
-    PLEASE_HELP_BOTTOM: "You can also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
 
     SEMPAI_FUCKYOU: "I... It's not like I cared about you anyway <@{user}>! B..baka... :(",
 
@@ -279,13 +266,25 @@ var responses = {
     currentMode: false,
 
     get: function(name){
-        if(Array.isArray(responses.current[name]))
+        var tmp = responses.current[name];
+        if(tmp === undefined && responses.currentMode)
         {
-            var idx = Math.floor(Math.random() * responses.current[name].length);
-            return responses.current[name][idx];
+            tmp = responses_normal[name];
+            
+            if(tmp !== undefined)
+                console.log("Response '" + name + "' has no tsundere version.");
+        }
+           
+        if(tmp === undefined)
+            return responses.get("ERROR");
+            
+        if(Array.isArray(tmp))
+        {
+            var idx = Math.floor(Math.random() * tmp.length);
+            return tmp[idx];
         }
 
-        return responses.current[name];
+        return tmp;
     },
 
     setMode: function(mode)

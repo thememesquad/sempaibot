@@ -10,9 +10,25 @@ const db = require("../src/db.js");
 const responses = require("../src/responses.js");
 const permissions = require("../src/permissions.js");
 const IModule = require("../src/IModule.js");
+const Document = require('camo').Document;
 
 var USER_UPDATE_INTERVAL = 3600000;
 var BEST_UPDATE_INTERVAL = 60000;
+
+class OsuUser extends Document
+{
+    constructor()
+    {
+        super();
+
+        this.user_id = String;
+        this.username = String;
+        this.pp = Number;
+        this.rank = Number;
+        this.last_updated = Number;
+        this.servers = [String];
+    }
+}
 
 class OsuBancho
 {
@@ -32,6 +48,9 @@ class OsuBancho
 
         this.client.on("data", function(data){
             this.buffer += data.toString();
+            if(this.buffer.match(last) === null)
+                return;
+                
             var str = this.buffer.substr(0, this.buffer.search(last));
             var lines = str.split(linesplit);
 
@@ -203,23 +222,46 @@ class OsuModule extends IModule
 
     handle_list_following(message)
     {
-        var response = "";
+        var response = "```";
 
         var users = lodash.clone(this.users);
         users.sort(function(a, b){
             return a.rank - b.rank;
         });
 
+        var rank = "Rank";
+        var name = "Name";
+        var pp = "PP";
+        
+        while(rank.length != 11)
+            rank += " ";
+            
+        while(name.length != 20)
+            name += " ";
+            
+        response += rank + " " + name + " " + pp;
+        
         for(var i in users)
         {
             //Check if the server is actually following this player
             if(users[i].servers.indexOf(message.server.id) === -1)
                 continue;
 
+            var rank = users[i].rank;
+            var name = users[i].username;
+            var pp = " (" + users[i].pp + "pp)";
+            
+            while(rank.length != 10)
+                rank += " ";
+                
+            while(name.length != 20)
+                name += " ";
+                
             response += "\r\n";
-            response += "**#" + users[i].rank + "** " + users[i].username + " (**" + users[i].pp + "pp**)";
+            response += "#" + rank + " " + name + " (" + users[i].pp + "pp)";
         }
-
+        response += "```";
+        
         this.bot.respond(message, responses.get("OSU_FOLLOWING").format({author: message.author.id, results: response}));
     }
 
@@ -243,7 +285,7 @@ class OsuModule extends IModule
         var i = -1;
         for(var j in this.users)
         {
-            if(this.users[j].username == user.toLowerCase())
+            if(this.users[j].username.toLowerCase() == user.toLowerCase())
             {
                 i = j;
                 break;
@@ -264,12 +306,12 @@ class OsuModule extends IModule
         if(profile.servers.length == 1)
         {
             this.users.splice(i, 1);
-            db.OsuUser.deleteOne({_id: profile._id}, {}, function(numrem){});
+            OsuUser.deleteOne({_id: profile._id}, {}, function(numrem){});
         }
         else
         {
             profile.servers.splice(profile.servers.indexOf(message.server.id), 1);
-            db.OsuUser.findOneAndUpdate({_id: profile._id}, {servers: profile.servers}, {});
+            OsuUser.findOneAndUpdate({_id: profile._id}, {servers: profile.servers}, {});
         }
 
         this.bot.respond(message, responses.get("OSU_STOPPED").format({author: message.author.id, user: user}));
@@ -346,7 +388,7 @@ class OsuModule extends IModule
         }.bind(this), 1);
 
         var _this = this;
-        db.OsuUser.find({}).then(function (docs) {
+        OsuUser.find({}).then(function (docs) {
             for (var i = 0; i < docs.length; i++)
             {
                 var user = {
@@ -592,7 +634,7 @@ class OsuModule extends IModule
             if(profile.servers.indexOf(message.server.id) === -1)
             {
                 profile.servers.push(message.server.id);
-                db.OsuUser.findOneAndUpdate({_id: profile._id}, {servers: profile.servers}, {});
+                OsuUser.findOneAndUpdate({_id: profile._id}, {servers: profile.servers}, {});
 
                 return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: json.username}));
             }
@@ -613,7 +655,7 @@ class OsuModule extends IModule
             var user = {_id: json.user_id, user_id: json.user_id, username: json.username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank), servers: [message.server.id], last_updated: time};
             this.users.push(user);
 
-            var dbuser = db.OsuUser.create(user);
+            var dbuser = OsuUser.create(user);
             dbuser.save().catch(function(err){
                 console.log(err);
             });
@@ -635,7 +677,7 @@ class OsuModule extends IModule
         this.get_user(profile.username).then(function(profile, data){
             profile.last_updated = (new Date).getTime();
 
-            db.OsuUser.findOneAndUpdate({_id: profile._id}, {user_id: data.user_id, pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
+            OsuUser.findOneAndUpdate({_id: profile._id}, {user_id: data.user_id, pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
                 profile.update_in_progress.resolve(data);
                 profile.update_in_progress = null;
             }).catch(function(err){

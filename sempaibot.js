@@ -57,13 +57,25 @@ class Bot
         return (this.modules[name] === undefined) ? null : this.modules[name];
     }
 
+    print(message, length, newline)
+    {
+        while(message.length != length)
+            message += ".";
+            
+        if(newline)
+            console.log(message);
+        else
+            process.stdout.write(message);
+    }
+    
     on_ready()
     {
         var _this = this;
         db.load().then(function(db_type){
-            console.log("Loading config from DB.....");
+            _this.print("Loading config from DB", 70, false);
             return db.ConfigKeyValue.find({});
         }).then(function(docs){
+            console.log("....Ok");
             for(var i = 0;i<docs.length;i++)
             {
                 if(docs[i].key == "mode")
@@ -73,9 +85,10 @@ class Bot
                 }
             }
             
-            console.log("Loading users from DB.....");
+            _this.print("Loading users from DB", 70, false);
             return users.load();
         }).then(function(){
+            console.log("....Ok");
             for(var key in modules)
             {
                 var mod = modules[key];
@@ -85,11 +98,7 @@ class Bot
                     continue;
                 }
 
-                var msg = "Setting up module '" + key + "'";
-                while(msg.length != 70)
-                    msg += ".";
-
-                process.stdout.write(msg);
+                _this.print("Setting up module '" + key + "'", 70, false);
                 try
                 {
                     mod.on_setup(_this);
@@ -98,7 +107,7 @@ class Bot
                 catch(e)
                 {
                     console.log("Error:");
-                    console.log(e);
+                    console.log(e.stack);
                 }
 
                 _this.modules[mod.name] = mod;
@@ -107,7 +116,7 @@ class Bot
             _this.discord.joinServer(config.server, function (error, server) {
                 for(var i = 0;i<_this.discord.servers.length;i++)
                 {
-                    var server = _this.discord.servers.get(i);
+                    var server = _this.discord.servers[i];
                     _this.servers[server.id] = new ServerData(_this, server);
 
                     for(var key in _this.modules)
@@ -133,7 +142,9 @@ class Bot
             if(!message.channel.isPrivate)
                 server = this.servers[message.channel.server.id];
 
+            message.user = users.get_user(message.author, server);
             message.server = server;
+            
             for(var key in this.modules)
             {
                 if(this.modules[key].check_message(server, message, split))

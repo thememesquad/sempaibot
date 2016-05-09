@@ -16,6 +16,40 @@ class User extends Document
         this.user_id = String;
         this.roles = Object;
     }
+    
+    get_role(server)
+    {
+        if(server === null || server === undefined)
+        {
+            if(config.superadmins.indexOf(this.user_id) !== -1)
+                return "superadmin";
+                
+            return "normal";
+        }
+        
+        if(config.superadmins.indexOf(this.user_id) !== -1)
+        {
+            if(this.roles[server.id] === undefined || this.roles[server.id] !== "superadmin")
+            {
+                this.roles[server.id] = "superadmin";
+                this.save().catch(function(err){
+                    console.log(err);
+                });
+            }
+            
+            return "superadmin";
+        }
+        
+        if(this.roles[server.id] === undefined)
+        {
+            this.roles[server.id] = "normal";
+            this.save().catch(function(err){
+                console.log(err);
+            });
+        }
+        
+        return this.roles[server.id];
+    }
 }
 
 class Users
@@ -54,10 +88,13 @@ class Users
     add_user(id, name, server, role)
     {
         if(this.users[id] !== undefined)
-            return;
+            return this.users[id];
             
         role = role || "normal";
         
+        if(config.superadmins.indexOf(id) !== -1)
+            role = "superadmin";
+            
         var roles = {};
         roles[server.id] = role;
         
@@ -67,6 +104,17 @@ class Users
         user.save().catch(function(err){
             console.log(err);
         });
+        
+        this.users[id] = user;
+        return this.users[id];
+    }
+    
+    get_user(user, server)
+    {
+        if(this.users[user.id] === undefined)
+            return this.add_user(user.id, user.name, server);
+            
+        return this.users[user.id];
     }
     
     assign_role(id, server, role)

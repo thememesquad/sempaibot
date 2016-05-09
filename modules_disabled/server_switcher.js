@@ -2,6 +2,8 @@ var ping = require ("net-ping");
 var dns = require("dns");
 const PING_THRESHOLD = 100;
 
+//TODO: UPDATE TO THE NEW MODULE API.
+
 module.exports = {
     load: function(Bot){
         Bot.discord.getServers = function(){

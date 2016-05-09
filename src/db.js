@@ -5,21 +5,6 @@ var connect = require('camo').connect;
 var Document = require('camo').Document;
 var Q = require("q");
 
-class OsuUser extends Document
-{
-    constructor()
-    {
-        super();
-
-        this.user_id = String;
-        this.username = String;
-        this.pp = Number;
-        this.rank = Number;
-        this.last_updated = Number;
-        this.servers = [String];
-    }
-}
-
 class ConfigKeyValue extends Document
 {
     constructor()
@@ -31,22 +16,9 @@ class ConfigKeyValue extends Document
     }
 }
 
-class Role extends Document
-{
-    constructor()
-    {
-        super();
-
-        this.name = String;
-        this.permissions = Object;
-    }
-}
-
 var data = {
     db: null,
-    OsuUser: OsuUser,
     ConfigKeyValue: ConfigKeyValue,
-    Role: Role,
     load: function(){
         var defer = Q.defer();
 

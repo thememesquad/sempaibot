@@ -9,27 +9,34 @@ class Role
         this.name = name;
         this.global = (options.global === undefined) ? false : options.global;
         this.default = (options.default === undefined) ? false : options.default;
-        this.permissions = {};
+        this.permissions = {
+            "null": {}
+        };
     }
 
     add(server, permission)
     {
         if(server === null)
         {
-            this.permissions[null] = {};
-            this.permissions[null][permission] = true;
+            this.permissions["null"][permission] = true;
+            
+            for(var key in this.permissions)
+            {
+                if(this.permissions[key][permission] === undefined)
+                    this.permissions[key][permission] = true;
+            }
         }
         else
         {
             if(this.permissions[server.id] === undefined)
             {
                 this.permissions[server.id] = {};
-                if(this.permissions[null] !== undefined)
+                if(this.permissions["null"] !== undefined)
                 {
                     //use the null server permissions object as template
-                    for(key in this.permissions[null])
+                    for(var key in this.permissions["null"])
                     {
-                        this.permissions[server.id][key] = this.permissions[null][key];
+                        this.permissions[server.id][key] = this.permissions["null"][key];
                     }
                 }
             }
@@ -42,19 +49,19 @@ class Role
     {
         if(server === null)
         {
-            this.permissions[null][permission] = false;
+            this.permissions["null"][permission] = false;
         }
         else
         {
             if(this.permissions[server.id] === undefined)
             {
                 this.permissions[server.id] = {};
-                if(this.permissions[null] !== undefined)
+                if(this.permissions["null"] !== undefined)
                 {
                     //use the null server permissions object as template
-                    for(key in this.permissions[null])
+                    for(var key in this.permissions["null"])
                     {
-                        this.permissions[server.id][key] = this.permissions[null][key];
+                        this.permissions[server.id][key] = this.permissions["null"][key];
                     }
                 }
             }
@@ -67,22 +74,53 @@ class Role
     {
         if(server === null)
         {
-            if(this.permissions[null] === undefined)
+            if(this.permissions["null"] === undefined)
                 return false;
 
-            if(this.permissions[null][permission] === undefined)
+            if(this.permissions["null"][permission] === undefined)
                 return false;
 
-            return this.permissions[null][permission];
+            return this.permissions["null"][permission];
         }
 
         if(this.permissions[server.id] === undefined)
-            return false;
+        {
+            this.permissions[server.id] = {};
+            
+            //use the null server permissions object as template
+            for(var key in this.permissions["null"])
+            {
+                this.permissions[server.id][key] = this.permissions["null"][key];
+            }
+        }
 
-        if(this.permission[server.id][permission] === undefined)
-            return false;
-
+        if(this.permissions[server.id][permission] === undefined)
+        {
+            this.permissions[server.id][permission] = this.permissions["null"][permission];
+            
+            if(this.permissions[server.id][permission] === undefined)
+                return false;
+        }
+        
         return this.permissions[server.id][permission];
+    }
+    
+    get_permissions(server)
+    {
+        if(this.permissions[server.id] === undefined)
+        {
+            this.permissions[server.id] = {};
+            if(this.permissions["null"] !== undefined)
+            {
+                //use the null server permissions object as template
+                for(var key in this.permissions["null"])
+                {
+                    this.permissions[server.id][key] = this.permissions["null"][key];
+                }
+            }
+        }
+        
+        return this.permissions[server.id];
     }
 }
 
@@ -103,15 +141,27 @@ class Permissions
 
         this.roles["superadmin"].add(null, name);
         if(defaultRole === "superadmin")
+        {
+            this.roles["admin"].remove(null, name);
+            this.roles["moderator"].remove(null, name);
+            this.roles["normal"].remove(null, name);
             return;
-
+        }
+        
         this.roles["admin"].add(null, name);
         if(defaultRole === "admin")
+        {
+            this.roles["moderator"].remove(null, name);
+            this.roles["normal"].remove(null, name);
             return;
+        }
 
         this.roles["moderator"].add(null, name);
         if(defaultRole === "moderator")
+        {
+            this.roles["normal"].remove(null, name);
             return;
+        }
 
         this.roles["normal"].add(null, name);
     }
@@ -137,6 +187,11 @@ class Permissions
     is_allowed(name, role, server)
     {
         return this.roles[role].is_allowed(server, name);
+    }
+    
+    get_role(name)
+    {
+        return this.roles[name];
     }
 }
 

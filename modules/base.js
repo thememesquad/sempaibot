@@ -48,6 +48,30 @@ class BaseModule extends IModule
 
             execute: this.handle_tsundere
         });
+        
+        this.add_command({
+            regex: [
+                /what is my role/i
+            ],
+            sample: "sempai what is my role?",
+            description: "Displays what sempai thinks of you on this server.",
+            permission: null,
+            global: false,
+            
+            execute: this.handle_my_role
+        });
+        
+        this.add_command({
+            regex: [
+                /what are my permissions/i
+            ],
+            sample: "sempai what are my permissions?",
+            description: "Displays what sempai has allowed you to do.",
+            permission: null,
+            global: false,
+            
+            execute: this.handle_my_permissions
+        });
     }
 
     game_switcher()
@@ -120,12 +144,13 @@ class BaseModule extends IModule
         else
             response = responses.get("HELP_TOP").format({author: message.author.id});
 
+        var role = message.user.get_role(message.server);
         var modules = "";
         for(var key in this.bot.modules)
         {
             var module = this.bot.modules[key];
-            var enabled = message.server.is_module_enabled(module.name);
-
+            var enabled = (message.server === null) ? false : message.server.is_module_enabled(module.name);
+            
             if(enabled)
             {
                 if(modules.length !== 0)
@@ -138,6 +163,9 @@ class BaseModule extends IModule
             var tmp = "";
             for(var i = 0;i<module.commands.length;i++)
             {
+                if(module.commands[i].permission != null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
+                    continue;
+                    
                 if(module.commands[i].hide_in_help === undefined || module.commands[i].hide_in_help === false)
                 {
                     if(module.commands[i].global == false && !enabled)
@@ -158,7 +186,8 @@ class BaseModule extends IModule
             response += "\r\n";
         }
 
-        response += "**Enabled modules**: " + modules + "\r\n\r\n";
+        if(message.server !== null)
+            response += "**Enabled modules**: " + modules + "\r\n\r\n";
 
         if(please)
             response += responses.get("PLEASE_HELP_BOTTOM").format({author: message.author.id});
@@ -188,6 +217,44 @@ class BaseModule extends IModule
         }
     }
 
+    handle_my_role(message)
+    {
+        var role = message.user.get_role(message.server);
+        if(role == "superadmin")
+            role = "Superadmin";
+        else if(role == "admin")
+            role = "Admin";
+        else if(role == "moderator")
+            role = "Moderator";
+        else
+            role = "Normal";
+            
+        this.bot.respond(message, responses.get("MY_ROLE").format({author: message.author.id, role: role}));
+    }
+    
+    handle_my_permissions(message)
+    {
+        var server = message.server;
+        var role = permissions.get_role(message.user.get_role(server));
+        var list = role.get_permissions(server);
+        
+        var response = "```";
+        
+        for(var key in list)
+        {
+            var name = key;
+            while(name.length != 20)
+                name += " ";
+                
+            response += "\r\n";
+            response += name;
+            response += list[key] ? " (allowed)" : " (not allowed)";
+        }
+        response += "```";
+        
+        this.bot.respond(message, responses.get("MY_PERMISSIONS").format({author: message.author.id, permissions: response}));
+    }
+    
     on_setup(bot)
     {
         this.bot = bot;

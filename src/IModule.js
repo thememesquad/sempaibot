@@ -1,4 +1,6 @@
 "use strict";
+const permissions = require("./permissions.js");
+const responses = require("./responses.js");
 
 class IModule
 {
@@ -69,9 +71,6 @@ class IModule
             }
             else if(split.length > 1)
             {
-                var target = message.content.substr(message.content.indexOf(" ") + 1);
-                this.respond(message, responses.get("UNKNOWN_COMMAND").format({author: message.author.id, command: target}));
-
                 break;
             }
             else if(message.content.charAt(0) != "-")
@@ -83,6 +82,12 @@ class IModule
                 continue;
             }
 
+            if(command.permission !== null && !permissions.is_allowed(command.permission, message.user.get_role(message.server), message.server))
+            {
+                this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id, permission: command.permission}));
+                return true;
+            }
+            
             command.execute.apply(null, data);
             return true;
         }
