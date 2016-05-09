@@ -1,73 +1,20 @@
 "use strict";
 
-var process = require("process");
+const process = require("process");
 process.env.TZ = "Europe/Amsterdam";
 
-var Discord = require("discord.js");
-var responses = require("./responses.js");
-var modules = require('auto-loader').load(__dirname + "/modules");
-var db = require("./db.js");
-var process = require("process");
-var config = require("./config");
+const Discord = require("discord.js");
+const modules = require('auto-loader').load(__dirname + "/modules");
+const responses = require("./src/responses.js");
+const db = require("./src/db.js");
+const config = require("./config");
+const ServerData = require("./src/ServerData.js");
 
-// First, checks if it isn't implemented yet.
-if (!String.prototype.format) {
-    String.prototype.format = function(args) {
-        return this.replace(/{(.*?)}/g, function(match, key) {
-            return typeof args[key] != 'undefined' ? args[key] : match;
-        });
-    };
-}
-
-class ServerData
-{
-    constructor(bot, server)
-    {
-        this.bot = bot;
-        this.server = server;
-        this.modules = [];
-        this.channel = "osu";
-
-        //TODO: actually load stuff from the database
-        this.on_load();
-    }
-
-    on_load()
-    {
-        this.bot.message(responses.get("ONLINE"), this);
-    }
-
-    enable_module(name)
-    {
-        if(this.modules.indexOf(name) !== -1)
-            return; //already enabled
-
-        var module = this.bot.get_module(name);
-        if(module === null)
-            return; //no such module
-
-        this.modules.push(name);
-        module.on_load(this);
-    }
-
-    is_module_enabled(name)
-    {
-        return this.modules.indexOf(name) !== -1;
-    }
-
-    disable_module(name)
-    {
-        if(this.modules.indexOf(name) === -1)
-            return; //already enabled
-
-        var module = this.bot.get_module(name);
-        if(module === null)
-            return; //no such module
-
-        this.modules.splice(this.modules.indexOf(name), 1);
-        module.on_unload(this);
-    }
-}
+String.prototype.format = function(args) {
+    return this.replace(/{(.*?)}/g, function(match, key) {
+        return typeof args[key] != 'undefined' ? args[key] : match;
+    });
+};
 
 class Bot
 {
@@ -157,7 +104,14 @@ class Bot
                 for(var i = 0;i<_this.discord.servers.length;i++)
                 {
                     var server = _this.discord.servers.get(i);
-                    _this.servers[server.id] = new ServerData(_this, server);
+                    try
+                    {
+                        _this.servers[server.id] = new ServerData(_this, server);
+                    }
+                    catch(e)
+                    {
+                        console.log(e.stack);
+                    }
 
                     for(var key in _this.modules)
                     {

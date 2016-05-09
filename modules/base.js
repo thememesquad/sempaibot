@@ -1,8 +1,8 @@
 "use strict";
 
-var responses = require("../responses.js");
-const IModule = require("../IModule.js");
-const permissions = require("../permissions.js");
+const responses = require("../src/responses.js");
+const permissions = require("../src/permissions.js");
+const IModule = require("../src/IModule.js");
 
 class BaseModule extends IModule
 {
@@ -13,7 +13,7 @@ class BaseModule extends IModule
         this.name = "General";
         this.always_on = true;
 
-        permissions.add("CHANGE_PERSONALITY", "moderator");
+        permissions.register("CHANGE_PERSONALITY", "moderator");
 
         this.add_command({
             regex: /join server (.*)/i,
