@@ -105,7 +105,7 @@ var responses_normal = {
     JOIN_INVALID_INVITE: "I can't find a server with the invite: \"{invite}\".",
     JOIN_ALREADY: "I am already part of \"{invite}\".",
     JOIN_FAILED: "I was not able to join the server \"{invite}\".",
-    JOIN_SUCCESS: "I just joined \"{invite}\"! Thanks for allowing me to join.",
+    JOIN_SUCCESS: "I just joined \"{invite}\"! Thanks for allowing me to join. I made <@{admin}> the admin.",
 
     HELP_TOP: "This is the current list of commands:\r\n",
     HELP_BOTTOM: "You could also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
@@ -114,22 +114,22 @@ var responses_normal = {
     PLEASE_HELP_BOTTOM: "You could also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
 
     SEMPAI_FUCKYOU: [
-	"What did I do? :(",
-	"What did Sempai ever do to you? :(",
-	":(",
-	"I don't know what I did, but I'm sorry {user}. :[",
-	"Meanie. :(",
+        "What did I do? :(",
+        "What did Sempai ever do to you? :(",
+        ":(",
+        "I don't know what I did, but I'm sorry {user}. :[",
+        "Meanie. :(",
 	],
 
     UNKNOWN_COMMAND: [
-	"Sempai doesn't understand.",
-	"I... I don't understand. What do you want me to do?",
-	"Sempai doesn't recognize that command. Or are you just talking about me behind my back?",
+        "Sempai doesn't understand.",
+        "I... I don't understand. What do you want me to do?",
+        "Sempai doesn't recognize that command. Or are you just talking about me behind my back?",
 	],
 
     MULTIPLE_UNKNOWN_COMMAND:[
-	"That's not a valid command either. If you need help, please type \"sempai help me\".",
-	"I still don't understand what you want me to do. If you require help, please type \"sempai help me\".",
+	    "That's not a valid command either. If you need help, please type \"sempai help me\".",
+	    "I still don't understand what you want me to do. If you require help, please type \"sempai help me\".",
 	],
 
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",

@@ -226,20 +226,24 @@ class OsuModule extends IModule
 
         var users = lodash.clone(this.users);
         users.sort(function(a, b){
-            return a.rank - b.rank;
+            return b.pp - a.pp;
         });
 
         var rank = "Rank";
         var name = "Name";
         var pp = "PP";
+        var online = "online";
         
         while(rank.length != 11)
             rank += " ";
             
-        while(name.length != 20)
+        while(name.length != 15)
             name += " ";
             
-        response += rank + " " + name + " " + pp;
+        while(pp.length != 12)
+            pp += " ";
+            
+        response += rank + " " + name + " " + pp + " " + online;
         
         for(var i in users)
         {
@@ -249,16 +253,20 @@ class OsuModule extends IModule
 
             var rank = users[i].rank;
             var name = users[i].username;
-            var pp = " (" + users[i].pp + "pp)";
+            var pp = "(" + users[i].pp + "pp)";
+            var online = users[i].online ? "yes" : "no";
             
             while(rank.length != 10)
                 rank += " ";
                 
-            while(name.length != 20)
+            while(name.length != 15)
                 name += " ";
                 
+            while(pp.length != 12)
+                pp += " ";
+                
             response += "\r\n";
-            response += "#" + rank + " " + name + " (" + users[i].pp + "pp)";
+            response += "#" + rank + " " + name + " " + pp + " " + online;
         }
         response += "```";
         
@@ -652,15 +660,15 @@ class OsuModule extends IModule
             }
 
             var time = (new Date).getTime();
-            var user = {_id: json.user_id, user_id: json.user_id, username: json.username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank), servers: [message.server.id], last_updated: time};
+            var user = {_id: json.user_id, user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], last_updated: time};
             this.users.push(user);
 
             var dbuser = OsuUser.create(user);
-            dbuser.save().catch(function(err){
+            dbuser.save().then(function(doc){
+                this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: json.username}));
+            }.bind(this)).catch(function(err){
                 console.log(err);
             });
-
-            return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: json.username}));
         }.bind(this, username, message)).catch(function(err){
             console.log("get_user: " + err.stack);
         });
@@ -677,7 +685,7 @@ class OsuModule extends IModule
         this.get_user(profile.username).then(function(profile, data){
             profile.last_updated = (new Date).getTime();
 
-            OsuUser.findOneAndUpdate({_id: profile._id}, {user_id: data.user_id, pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
+            OsuUser.findOneAndUpdate({_id: profile._id}, {user_id: data.user_id, pp: Number(parseFloat(data.pp_raw)), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
                 profile.update_in_progress.resolve(data);
                 profile.update_in_progress = null;
             }).catch(function(err){

@@ -4,6 +4,7 @@ const responses = require("../src/responses.js");
 const permissions = require("../src/permissions.js");
 const IModule = require("../src/IModule.js");
 const ServerData = require("../src/ServerData.js");
+const users = require("../src/users.js");
 
 class BaseModule extends IModule
 {
@@ -142,6 +143,9 @@ class BaseModule extends IModule
                             if(_this.bot.modules[key].always_on)
                                 _this.bot.servers[server.id].enable_module(key);
                         }
+                        
+                        users.assign_role(server.owner.id, server, "admin");
+                        _this.bot.respond(message, responses.get("JOIN_SUCCESS").format({author: message.author.id, invite: server.name, admin: server.owner.id}));
                     }).catch(function(err){
                         console.log(err.stack);
                     });
@@ -149,8 +153,6 @@ class BaseModule extends IModule
                 {
                     console.log(e.stack);
                 }
-                
-                _this.bot.respond(message, responses.get("JOIN_SUCCESS").format({author: message.author.id, invite: server.name}));
             });
         });
     }

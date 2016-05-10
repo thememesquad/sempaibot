@@ -59,6 +59,7 @@ class Bot
 
     respond(m, message)
     {
+        this.discord.stopTyping(m.channel);
         return this.discord.sendMessage(m.channel, message);
     }
 
