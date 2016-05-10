@@ -56,7 +56,7 @@ class Role
         }
         else
         {
-            setup(server.id);
+            this.setup(server.id);
             this.permissions[server.id][permission] = true;
         }
     }
@@ -69,7 +69,7 @@ class Role
         }
         else
         {
-            setup(server.id);
+            this.setup(server.id);
             this.permissions[server.id][permission] = false;
         }
     }
@@ -87,7 +87,7 @@ class Role
             return this.permissions["null"][permission];
         }
 
-        setup(server.id);
+        this.setup(server.id);
         if(this.permissions[server.id][permission] === undefined)
         {
             this.permissions[server.id][permission] = this.permissions["null"][permission];
@@ -101,7 +101,7 @@ class Role
     
     get_permissions(server)
     {
-        setup(server.id);
+        this.setup(server.id);
         return this.permissions[server.id];
     }
     

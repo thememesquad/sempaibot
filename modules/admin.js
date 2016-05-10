@@ -17,6 +17,7 @@ class AdminModule extends IModule
         permissions.register("BLACKLIST_SERVERS", "superadmin");
         permissions.register("BLACKLIST_USERS", "superadmin");
         permissions.register("IGNORE_USERS", "moderator");
+        permissions.register("GOTO_CHANNEL", "moderator");
         permissions.register("MANAGE_MODULES", "admin");
         permissions.register("MANAGE_PERMISSIONS", "admin");
         permissions.register("ASSIGN_ROLES", "admin");
@@ -100,6 +101,16 @@ class AdminModule extends IModule
 
             execute: this.handle_list_modules
         });
+        
+        this.add_command({
+            regex: /go to (.*)/i,
+            sample: "sempai go to __*#channel*__",
+            description: "Tells sempai to output only to a channel (unless its a response)",
+            permission: "GOTO_CHANNEL",
+            global: false,
+            
+            execute: this.handle_goto_channel
+        })
     }
 
     handle_enable_module(message, name)
@@ -436,6 +447,18 @@ class AdminModule extends IModule
         permissions.remove(permission, role, message.server);
         
         //TODO: Add responses for this command
+    }
+    
+    handle_goto_channel(message, channel)
+    {
+        var id = channel.substr(2, channel.length - 3);
+        if(message.server.server.channels.get("id", id) === null)
+        {
+            return this.bot.respond(message, responses.get("INVALID_CHANNEL").format({author: message.author.id, channel: channel}));
+        }
+        
+        message.server.channel = id;
+        this.bot.respond(message, responses.get("OUTPUT_CHANNEL").format({author: message.author.id, channel: id}));
     }
     
     on_setup(bot)

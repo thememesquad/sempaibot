@@ -149,8 +149,11 @@ var responses_normal = {
     LIST_PERMISSIONS: "List of roles:{roles}",
     INVALID_USER: "User '{user}' doesn't exist!",
     INVALID_ROLE: "Role '{role}' is invalid.",
+    INVALID_CHANNEL: "I'm sorry, I can't seem to find a channel with the name '{channel}'.",
     ROLE_ASSIGNED: "Assigned role '{role}' to user '{user}'",
-    ROLE_ALREADY_ASSIGNED: "Already assigned role '{role}' to user '{user}'"
+    ROLE_ALREADY_ASSIGNED: "Already assigned role '{role}' to user '{user}'",
+    SETTING_UP: "Hi There! Sempai is currently setting up on this server....Where do you want me to go?\r\n(protip: use the command \"sempai go to #channel\")",
+    OUTPUT_CHANNEL: "Ok, I'm now setup to output to <#{channel}>"
 };
 
 var responses_tsundere = {

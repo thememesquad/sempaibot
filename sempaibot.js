@@ -44,8 +44,17 @@ class Bot
     message(message, server)
     {
         var channel = server.channel;
-
-        return this.discord.sendMessage(server.server.channels.get("name", channel), message);
+        if(channel.length === 0)
+        {
+            for(var i = 0;i<server.server.channels.length;i++)
+            {
+                this.discord.sendMessage(server.server.channels[i], message);
+            }
+            
+            return;
+        }
+        
+        return this.discord.sendMessage(server.server.channels.get("id", channel), message);
     }
 
     respond(m, message)
@@ -125,12 +134,13 @@ class Bot
                 {
                     var server = _this.discord.servers[i];
                     _this.servers[server.id] = new ServerData(_this, server);
-
-                    for(var key in _this.modules)
-                    {
-                        if(_this.modules[key].always_on)
-                            _this.servers[server.id].enable_module(key);
-                    }
+                    _this.servers[server.id].load_promise.promise.then(function(){
+                        for(var key in _this.modules)
+                        {
+                            if(_this.modules[key].always_on)
+                                _this.servers[server.id].enable_module(key);
+                        }
+                    });
                 }
             });
         }).catch(function(err){
