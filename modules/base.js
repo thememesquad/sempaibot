@@ -3,6 +3,7 @@
 const responses = require("../src/responses.js");
 const permissions = require("../src/permissions.js");
 const IModule = require("../src/IModule.js");
+const ServerData = require("../src/ServerData.js");
 
 class BaseModule extends IModule
 {
@@ -101,7 +102,9 @@ class BaseModule extends IModule
         _this.bot.discord.getInvite(invite, function(error, inv) {
             if (error !== null)
             {
-                _this.bot.respond(message, response.get("JOIN_INVALID_INVITE").format({author: message.author.id, invite: inv.server.name}));
+                console.log(error);
+                
+                _this.bot.respond(message, responses.get("JOIN_INVALID_INVITE").format({author: message.author.id, invite: inv.server.name}));
                 return;
             }
 
@@ -118,18 +121,36 @@ class BaseModule extends IModule
 
             if (!success)
             {
-                _this.bot.respond(message, response.get("JOIN_ALREADY").format({author: message.author.id, invite: inv.server.name}));
+                _this.bot.respond(message, responses.get("JOIN_ALREADY").format({author: message.author.id, invite: inv.server.name}));
                 return;
             }
 
             _this.bot.discord.joinServer(invite, function(error, server) {
                 if (error !== null)
                 {
-                    _this.bot.respond(message, response.get("JOIN_FAILED").format({author: message.author.id, invite: inv.server.name}));
+                    console.log(error);
+                    _this.bot.respond(message, responses.get("JOIN_FAILED").format({author: message.author.id, invite: inv.server.name}));
                     return;
                 }
 
-                _this.bot.respond(message, response.get("JOIN_SUCCESS").format({author: message.author.id, invite: server.name}));
+                try
+                {
+                    _this.bot.servers[server.id] = new ServerData(_this.bot, server);
+                    _this.bot.servers[server.id].load_promise.promise.then(function(){
+                        for(var key in _this.bot.modules)
+                        {
+                            if(_this.bot.modules[key].always_on)
+                                _this.bot.servers[server.id].enable_module(key);
+                        }
+                    }).catch(function(err){
+                        console.log(err.stack);
+                    });
+                }catch(e)
+                {
+                    console.log(e.stack);
+                }
+                
+                _this.bot.respond(message, responses.get("JOIN_SUCCESS").format({author: message.author.id, invite: server.name}));
             });
         });
     }

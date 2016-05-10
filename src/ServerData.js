@@ -81,7 +81,7 @@ class ServerData
         this.modules.push(name);
         module.on_load(this);
 
-        this.config.modules = modules;
+        this.config.value.modules = this.modules;
         this.config.save().catch(function(err){
             console.log(err);
         });
@@ -104,7 +104,7 @@ class ServerData
         this.modules.splice(this.modules.indexOf(name), 1);
         module.on_unload(this);
 
-        this.config.modules = modules;
+        this.config.value.modules = this.modules;
         this.config.save().catch(function(err){
             console.log(err);
         });
@@ -113,9 +113,7 @@ class ServerData
     set channel(channel)
     {
         this.config.value.channel = channel;
-        this.config.save().then(function(doc){
-            console.log(doc);
-        }).catch(function(err){
+        this.config.save().catch(function(err){
             console.log(err);
         });
     }
