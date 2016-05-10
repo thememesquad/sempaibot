@@ -30,7 +30,6 @@ var responses_normal = {
         "Switched from region '{old_region}' to '{new_region}'.",
         "I switched our discord region from '{old_region}' to '{new_region}'!",
 	],
-    LIST_REMINDERS: "todo",
     REMIND_PAST: [
         "That time is in the past! I can't remind you of something in the past.",
         "That time is in the past! I can't remind you of something in the past. Or well, I'd need a time machine. If you happen to have one, no problem!",
@@ -48,6 +47,7 @@ var responses_normal = {
         "Sempai will remind {people} to \"{message}\" at {time}.",
 	],
     REMINDER: "<@{author}> reminded {people}: {message}.",
+    LIST_REMINDERS: "List of reminders on this server:{response}",
 
     ANIME_SEARCH_NO_RESULTS: "No results found for '{anime}'.",
     ANIME_SEARCH_RESULTS: "Results for '{anime}':\r\n{results}",

@@ -37,9 +37,9 @@ class RemindersModule extends IModule
         });
         
         this.add_command({
-            regex: /list my reminders/i,
-            sample: "sempai list my reminders",
-            description: "Lists my reminders on this server.",
+            regex: /list reminders/i,
+            sample: "sempai list reminders",
+            description: "Lists reminders on this server.",
             permission: null,
             global: false,
             
@@ -59,6 +59,40 @@ class RemindersModule extends IModule
     
     handle_list_reminders(message)
     {
+        var response = "";
+        
+        for(var i = 0;i<this.reminders.length;i++)
+        {
+            var time = new Date();
+            var reminder = this.reminders[i];
+            
+            if(reminder.server !== message.server.id)
+                continue;
+                
+            if(time.getTime() > reminder.time)
+                continue;
+                
+            var who = "";
+            if (reminder.target.length != 0)
+            {
+                var w = reminder.target;
+                for (var i = 0; i < w.length; i++)
+                {
+                    if (i !== 0)
+                        who += ", ";
+
+                    who += "<@" + w[i] + ">";
+                }
+            }
+            else
+            {
+                who = "himself";
+            }
+            
+            response += "\r\n - at " + (new Date(reminder.time)).toLocaleString() + ", <@" + reminder.source + "> will remind " + who + " to '" + reminder.message + "'.";
+        }
+        
+        return this.bot.respond(message, responses.get("LIST_REMINDERS").format({author: message.author.id, response: response}));
     }
     
     handle_remind(message, name, reminder, time)
