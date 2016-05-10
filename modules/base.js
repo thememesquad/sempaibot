@@ -1,168 +1,296 @@
-var responses = require("../responses.js");
-var lodash = require("lodash");
+"use strict";
 
-module.exports = {
-    moduleName: "General",
-    load: function(Bot){
+const responses = require("../src/responses.js");
+const permissions = require("../src/permissions.js");
+const IModule = require("../src/IModule.js");
+const ServerData = require("../src/ServerData.js");
+const users = require("../src/users.js");
+
+class BaseModule extends IModule
+{
+    constructor()
+    {
+        super();
+
+        this.name = "General";
+        this.always_on = true;
+
+        permissions.register("CHANGE_PERSONALITY", "moderator");
+
+        this.add_command({
+            regex: /join server (.*)/i,
+            sample: "sempai join server __*invite*__",
+            description: "Allow sempai to join a new server",
+            permission: null,
+            global: true,
+
+            execute: this.handle_join_server
+        });
+
+        this.add_command({
+            regex: [
+                /help me/i,
+                /please help me/i
+            ],
+            hide_in_help: true,
+            permission: null,
+            global: true,
+
+            execute: this.handle_help_me
+        });
+
+        this.add_command({
+            regex: [
+                /tsundere on/i,
+                /tsundere off/i,
+            ],
+            hide_in_help: true,
+            permission: "CHANGE_PERSONALITY",
+            global: false,
+
+            execute: this.handle_tsundere
+        });
+        
+        this.add_command({
+            regex: [
+                /what is my role/i
+            ],
+            sample: "sempai what is my role?",
+            description: "Displays what sempai thinks of you on this server.",
+            permission: null,
+            global: false,
+            
+            execute: this.handle_my_role
+        });
+        
+        this.add_command({
+            regex: [
+                /what are my permissions/i
+            ],
+            sample: "sempai what are my permissions?",
+            description: "Displays what sempai has allowed you to do.",
+            permission: null,
+            global: false,
+            
+            execute: this.handle_my_permissions
+        });
+    }
+
+    game_switcher()
+    {
         var games = [
             "Boku no Pico",
             "Petting Zoo Simulator",
             "Hello Kitty Online",
             "Counter-Strike: Global Offensive"
         ];
+
         var game = games[Math.floor((Math.random() * games.length))];
 
-        Bot.discord.setStatus("Online", game);
+        var _this = this;
+
+        _this.bot.discord.setStatus("Online", game);
         var interval = setInterval(function() {
             var game = games[Math.floor((Math.random() * games.length))];
 
-            Bot.discord.setStatus("Online", game);
+            _this.bot.discord.setStatus("Online", game);
         }, 50000);
+    }
 
-        Bot.addCommand({
-            name: "JOIN_SERVER",
-            command: /join server (.*)/,
-            sample: "sempai join server __*invite*__",
-            description: "Allow sempai to join a new server",
-            action: function(m, invite) {
-                Bot.discord.getInvite(invite, function(error, inv) {
-                    if (error !== null) {
-                        Bot.discord.reply(m, response.get("JOIN_INVALID_INVITE").format({author: m.author.id, invite: inv.server.name}));
-                        return;
-                    }
+    handle_join_server(message, invite)
+    {
+        var _this = this;
+        _this.bot.discord.getInvite(invite, function(error, inv) {
+            if (error !== null)
+            {
+                console.log(error);
+                
+                _this.bot.respond(message, responses.get("JOIN_INVALID_INVITE").format({author: message.author.id, invite: inv.server.name}));
+                return;
+            }
 
-                    var servers = Bot.discord.servers;
-                    var success = true;
-                    for(var i = 0; i < servers.length; i++) {
-                        if (servers[i].name === inv.server.name) {
-                            success = false;
-                            break;
+            var servers = _this.bot.discord.servers;
+            var success = true;
+            for(var i = 0; i < servers.length; i++)
+            {
+                if (servers[i].id === inv.server.id)
+                {
+                    success = false;
+                    break;
+                }
+            }
+
+            if (!success)
+            {
+                _this.bot.respond(message, responses.get("JOIN_ALREADY").format({author: message.author.id, invite: inv.server.name}));
+                return;
+            }
+
+            _this.bot.discord.joinServer(invite, function(error, server) {
+                if (error !== null)
+                {
+                    console.log(error);
+                    _this.bot.respond(message, responses.get("JOIN_FAILED").format({author: message.author.id, invite: inv.server.name}));
+                    return;
+                }
+
+                try
+                {
+                    _this.bot.servers[server.id] = new ServerData(_this.bot, server);
+                    _this.bot.servers[server.id].load_promise.promise.then(function(){
+                        for(var key in _this.bot.modules)
+                        {
+                            if(_this.bot.modules[key].always_on)
+                                _this.bot.servers[server.id].enable_module(key);
                         }
-                    }
-
-                    if (!success) {
-                        Bot.discord.reply(m, response.get("JOIN_ALREADY").format({author: m.author.id, invite: inv.server.name}));
-                        return;
-                    }
-
-                    Bot.discord.joinServer(invite, function(error, server) {
-                        if (error !== null) {
-                            Bot.discord.reply(m, response.get("JOIN_FAILED").format({author: m.author.id, invite: inv.server.name}));
-                            return;
-                        }
-
-                        Bot.discord.reply(m, response.get("JOIN_SUCCESS").format({author: m.author.id, invite: server.name}));
+                        
+                        users.assign_role(server.owner.id, server, "admin");
+                        _this.bot.respond(message, responses.get("JOIN_SUCCESS").format({author: message.author.id, invite: server.name, admin: server.owner.id}));
+                    }).catch(function(err){
+                        console.log(err.stack);
                     });
-                });
-            }
-        });
-
-        Bot.addCommand({
-            command: /please help me/,
-            hidden: true,
-            action: function(m){
-                var message = responses.get("PLEASE_HELP_TOP").format({author: m.author.id});
-                var commands = lodash.clone(Bot.commands);
-                commands.sort(function(a, b){
-                    if(a.module < b.module) return -1;
-                    if(a.module > b.module) return 1;
-
-                    return 0;
-                });
-
-                for(var i = 0;i<commands.length;i++)
+                }catch(e)
                 {
-                    if(commands[i].hidden !== undefined)
-                        continue;
-
-                    if(i == 0 || commands[i].module != commands[i-1].module)
-                    {
-                        if(i != 0)
-                            message += "\r\n";
-
-                        message += "**" + commands[i].module + "**:\r\n";
-                    }
-
-                    if(commands[i].descriptionTsundere !== undefined && responses.currentMode)
-                        message += "**" + commands[i].sample + "** - " + commands[i].descriptionTsundere;
-                    else
-                        message += "**" + commands[i].sample + "** - " + commands[i].description;
-
-                    message += "\r\n";
+                    console.log(e.stack);
                 }
-                message += "\r\n";
-                message += responses.get("PLEASE_HELP_BOTTOM").format({author: m.author.id});
-
-                Bot.discord.reply(m, message);
-            }
-        });
-
-
-
-        Bot.addCommand({
-            command: /help me/,
-            hidden: true,
-            action: function(m){
-                var message = responses.get("HELP_TOP").format({author: m.author.id});
-                var commands = lodash.clone(Bot.commands);
-                commands.sort(function(a, b){
-                    if(a.module < b.module) return -1;
-                    if(a.module > b.module) return 1;
-
-                    return 0;
-                });
-
-                var lastMod = "";
-                for(var i = 0;i<commands.length;i++)
-                {
-                    if(commands[i].hidden !== undefined)
-                        continue;
-
-                    if(commands[i].module != lastMod)
-                    {
-                        if(i != 0)
-                            message += "\r\n";
-
-                        message += "**" + commands[i].module + "**:\r\n";
-                        lastMod = commands[i].module;
-                    }
-
-                    if(commands[i].descriptionTsundere !== undefined && responses.currentMode)
-                        message += "**" + commands[i].sample + "** - " + commands[i].descriptionTsundere;
-                    else
-                        message += "**" + commands[i].sample + "** - " + commands[i].description;
-
-                    message += "\r\n";
-                }
-                message += "\r\n";
-                message += responses.get("HELP_BOTTOM").format({author: m.author.id});
-
-                Bot.discord.reply(m, message);
-            }
-        });
-
-        Bot.addCommand({
-            command: /tsundere on/,
-            hidden: true,
-            action: function(m){
-                if(responses.currentMode)
-                    return Bot.discord.sendMessage(m, responses.get("ALREADY_IN_MODE").format({author: m.author.id}));
-
-                responses.setMode(true);
-                Bot.discord.sendMessage(m, responses.get("SWITCHED").format({author: m.author.id}));
-            }
-        });
-
-        Bot.addCommand({
-            command: /tsundere off/,
-            hidden: true,
-            action: function(m){
-                if(!responses.currentMode)
-                    return Bot.discord.sendMessage(m, responses.get("ALREADY_IN_MODE").format({author: m.author.id}));
-
-                responses.setMode(false);
-                Bot.discord.sendMessage(m, responses.get("SWITCHED").format({author: m.author.id}));
-            }
+            });
         });
     }
-};
+
+    handle_help_me(message)
+    {
+        var please = message.index == 1;
+        var response = "";
+
+        if(please)
+            response = responses.get("PLEASE_HELP_TOP").format({author: message.author.id});
+        else
+            response = responses.get("HELP_TOP").format({author: message.author.id});
+
+        var role = message.user.get_role(message.server);
+        var modules = "";
+        for(var key in this.bot.modules)
+        {
+            var module = this.bot.modules[key];
+            var enabled = (message.server === null) ? false : message.server.is_module_enabled(module.name);
+            
+            if(enabled)
+            {
+                if(modules.length !== 0)
+                    modules += ", ";
+
+                modules += key;
+            }
+
+            var hasNonHidden = false;
+            var tmp = "";
+            for(var i = 0;i<module.commands.length;i++)
+            {
+                if(module.commands[i].permission != null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
+                    continue;
+                    
+                if(module.commands[i].hide_in_help === undefined || module.commands[i].hide_in_help === false)
+                {
+                    if(module.commands[i].global == false && !enabled)
+                        continue;
+
+                    hasNonHidden = true;
+
+                    tmp += "**" + module.commands[i].sample + "** - " + module.commands[i].description;
+                    tmp += "\r\n";
+                }
+            }
+
+            if(!hasNonHidden)
+                continue;
+
+            response += "**" + key + "**:\r\n";
+            response += tmp;
+            response += "\r\n";
+        }
+
+        if(message.server !== null)
+            response += "**Enabled modules**: " + modules + "\r\n\r\n";
+
+        if(please)
+            response += responses.get("PLEASE_HELP_BOTTOM").format({author: message.author.id});
+        else
+            response += responses.get("HELP_BOTTOM").format({author: message.author.id});
+
+        this.bot.respond(message, response);
+    }
+
+    handle_tsundere(message)
+    {
+        var on = message.index == 0;
+
+        if(on)
+        {
+            if(responses.currentMode)
+                return this.bot.respond(message, responses.get("ALREADY_IN_MODE").format({author: message.author.id}));
+
+            responses.setMode(true);
+            this.bot.respond(message, responses.get("SWITCHED").format({author: message.author.id}));
+        }else{
+            if(!responses.currentMode)
+                return this.bot.respond(message, responses.get("ALREADY_IN_MODE").format({author: message.author.id}));
+
+            responses.setMode(false);
+            this.bot.respond(message, responses.get("SWITCHED").format({author: message.author.id}));
+        }
+    }
+
+    handle_my_role(message)
+    {
+        var role = message.user.get_role(message.server);
+        if(role == "superadmin")
+            role = "Superadmin";
+        else if(role == "admin")
+            role = "Admin";
+        else if(role == "moderator")
+            role = "Moderator";
+        else
+            role = "Normal";
+            
+        this.bot.respond(message, responses.get("MY_ROLE").format({author: message.author.id, role: role}));
+    }
+    
+    handle_my_permissions(message)
+    {
+        var server = message.server;
+        var role = permissions.get_role(message.user.get_role(server));
+        var list = role.get_permissions(server);
+        
+        var response = "```";
+        
+        for(var key in list)
+        {
+            var name = key;
+            while(name.length != 20)
+                name += " ";
+                
+            response += "\r\n";
+            response += name;
+            response += list[key] ? " (allowed)" : " (not allowed)";
+        }
+        response += "```";
+        
+        this.bot.respond(message, responses.get("MY_PERMISSIONS").format({author: message.author.id, permissions: response}));
+    }
+    
+    on_setup(bot)
+    {
+        this.bot = bot;
+        this.game_switcher();
+    }
+
+    on_load(server)
+    {
+    }
+
+    on_unload(server)
+    {
+    }
+}
+
+module.exports = new BaseModule();

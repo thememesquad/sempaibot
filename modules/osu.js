@@ -1,18 +1,35 @@
 "use strict";
 
-var db = require("../db.js");
-var responses = require("../responses.js");
-var config = require("../config");
 var http = require("http");
 var request = require("request");
 var Q = require("q");
 var net = require('net');
-//var irc = require("irc");
+var lodash = require("lodash");
+const config = require("../config");
+const db = require("../src/db.js");
+const responses = require("../src/responses.js");
+const permissions = require("../src/permissions.js");
+const IModule = require("../src/IModule.js");
+const Document = require('camo').Document;
 
 var USER_UPDATE_INTERVAL = 3600000;
 var BEST_UPDATE_INTERVAL = 60000;
 
-//Afk, Idle, Playing, Watching, Editing
+class OsuUser extends Document
+{
+    constructor()
+    {
+        super();
+
+        this.user_id = String;
+        this.username = String;
+        this.pp = Number;
+        this.rank = Number;
+        this.last_updated = Number;
+        this.servers = [String];
+    }
+}
+
 class OsuBancho
 {
     constructor()
@@ -31,6 +48,9 @@ class OsuBancho
 
         this.client.on("data", function(data){
             this.buffer += data.toString();
+            if(this.buffer.match(last) === null)
+                return;
+                
             var str = this.buffer.substr(0, this.buffer.search(last));
             var lines = str.split(linesplit);
 
@@ -131,16 +151,207 @@ class OsuBancho
     }
 }
 
-class OsuModule
+class OsuModule extends IModule
 {
-    constructor(bot)
+    constructor()
     {
+        super();
+
         if(config.osu_irc_username !== undefined && config.osu_irc_password !== undefined)
             this.bancho = new OsuBancho();
 
+        this.name = "osu!";
         this.last_checked = -1;
         this.modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
         this.users = [];
+        this.servers = {};
+
+        permissions.register("OSU_FOLLOW", "moderator");
+        permissions.register("OSU_UNFOLLOW", "moderator");
+        permissions.register("OSU_CHECK", "moderator");
+
+        this.add_command({
+            regex: [
+                /who are you following/i,
+				/who do you follow/i
+            ],
+            sample: "sempai who are you following?",
+            description: "Lists all the people I'm following on osu.",
+            permission: null,
+            global: false,
+
+            execute: this.handle_list_following
+        });
+
+        this.add_command({
+            regex: [
+                /follow (.*)/i,
+                /stalk (.*)/i
+            ],
+            sample: "sempai follow __*user*__",
+            description: "Adds the person to my following list for osu.",
+            permission: "OSU_FOLLOW",
+            global: false,
+
+            execute: this.handle_follow
+        });
+
+        this.add_command({
+            regex: [
+                /stop following (.*)/i,
+                /stop stalking (.*)/i
+            ],
+            sample: "sempai stop following __*user*__",
+            description: "Removes the person from my following list for osu.",
+            permission: "OSU_UNFOLLOW",
+            global: false,
+
+            execute: this.handle_unfollow
+        });
+
+        this.add_command({
+            regex: /check (.*)/i,
+            sample: "sempai check __*user*__",
+            description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
+            permission: "OSU_CHECK",
+            global: false,
+
+            execute: this.handle_check
+        });
+    }
+
+    handle_list_following(message)
+    {
+        var response = "```";
+
+        var users = lodash.clone(this.users);
+        users.sort(function(a, b){
+            return b.pp - a.pp;
+        });
+
+        var rank = "Rank";
+        var name = "Name";
+        var pp = "PP";
+        var online = "online";
+        
+        while(rank.length != 11)
+            rank += " ";
+            
+        while(name.length != 15)
+            name += " ";
+            
+        while(pp.length != 12)
+            pp += " ";
+            
+        response += rank + " " + name + " " + pp + " " + online;
+        
+        for(var i in users)
+        {
+            //Check if the server is actually following this player
+            if(users[i].servers.indexOf(message.server.id) === -1)
+                continue;
+
+            var rank = users[i].rank;
+            var name = users[i].username;
+            var pp = "(" + users[i].pp + "pp)";
+            var online = users[i].online ? "yes" : "no";
+            
+            while(rank.length != 10)
+                rank += " ";
+                
+            while(name.length != 15)
+                name += " ";
+                
+            while(pp.length != 12)
+                pp += " ";
+                
+            response += "\r\n";
+            response += "#" + rank + " " + name + " " + pp + " " + online;
+        }
+        response += "```";
+        
+        this.bot.respond(message, responses.get("OSU_FOLLOWING").format({author: message.author.id, results: response}));
+    }
+
+    handle_follow(message, name)
+    {
+        if(name === undefined)
+        {
+            return this.bot.respond(message, responses.get("OSU_UNDEFINED").format({author: message.author.id}));
+        }
+
+        this.check_user(name, message);
+    }
+
+    handle_unfollow(message, user)
+    {
+        if(user === undefined)
+        {
+            return this.bot.respond(message, responses.get("OSU_UNDEFINED").format({author: message.author.id}));
+        }
+
+        var i = -1;
+        for(var j in this.users)
+        {
+            if(this.users[j].username.toLowerCase() == user.toLowerCase())
+            {
+                i = j;
+                break;
+            }
+        }
+
+        if(i === -1)
+        {
+            return this.bot.respond(message, responses.get("OSU_NOT_FOLLOWING").format({author: message.author.id, user: user}));
+        }
+
+        var profile = this.users[i];
+        if(profile.servers.indexOf(message.server.id) === -1)
+        {
+            return this.bot.respond(message, responses.get("OSU_NOT_FOLLOWING").format({author: message.author.id, user: user}));
+        }
+
+        if(profile.servers.length == 1)
+        {
+            this.users.splice(i, 1);
+            OsuUser.deleteOne({_id: profile._id}, {}, function(numrem){});
+        }
+        else
+        {
+            profile.servers.splice(profile.servers.indexOf(message.server.id), 1);
+            OsuUser.findOneAndUpdate({_id: profile._id}, {servers: profile.servers}, {});
+        }
+
+        this.bot.respond(message, responses.get("OSU_STOPPED").format({author: message.author.id, user: user}));
+    }
+
+    handle_check(message, user)
+    {
+        if(user === undefined)
+        {
+            return this.bot.respond(message, responses.get("OSU_UNDEFINED").format({author: message.author.id}));
+        }
+
+        this.bot.respond(message, responses.get("OSU_CHECK").format({author: message.author.id, user: user}));
+        this.force_check(user, message);
+    }
+
+    on_new_record(profile, record)
+    {
+        for(var i = 0;i<profile.servers.length;i++)
+        {
+            var server = this.servers[profile.servers[i]];
+            if(server === undefined)
+            {
+                continue;
+            }
+
+            this.bot.message(record, server);
+        }
+    }
+
+    on_setup(bot)
+    {
         this.bot = bot;
         this.check = setInterval(function(){
             var time = (new Date).getTime();
@@ -183,6 +394,50 @@ class OsuModule
                 }
             }
         }.bind(this), 1);
+
+        var _this = this;
+        OsuUser.find({}).then(function (docs) {
+            for (var i = 0; i < docs.length; i++)
+            {
+                var user = {
+                    _id: docs[i]._id,
+                    user_id: docs[i].user_id,
+                    username: docs[i].username,
+                    pp: docs[i].pp,
+                    rank: docs[i].rank,
+                    last_updated: docs[i].last_updated,
+                    servers: docs[i].servers,
+                    update_in_progress: null,
+                    online: false
+                };
+
+                _this.users.push(user);
+
+                var time = (new Date).getTime();
+                if(user.last_updated === undefined || time - user.last_updated >= USER_UPDATE_INTERVAL)
+                {
+                    _this.update_user(user);
+                }
+            }
+        }).catch(function(err){
+            console.log("OsuUser.find: " + err);
+        });
+    }
+
+    on_load(server)
+    {
+        if(this.servers[server.id] !== undefined)
+            return;
+
+        this.servers[server.id] = server;
+    }
+
+    on_unload(server)
+    {
+        if(this.servers[server.id] === undefined)
+            return;
+
+        delete this.servers[server.id];
     }
 
     api_call(method, params, first)
@@ -269,6 +524,7 @@ class OsuModule
         var endDate = new Date();
         endDate = new Date(endDate.valueOf() + endDate.getTimezoneOffset() * 60000 - 1 * 60 * 1000);
 
+        var _this = this;
         var topRank;
         this.get_user_best(username, 0, 50).then(function(profile, json){
             for (var j = 0; j < json.length; j++)
@@ -297,7 +553,7 @@ class OsuModule
                 for(var i = 0;i<16;i++)
                 {
                     if((beatmap.enabled_mods & (1 << i)) > 0)
-                        beatmap.mods += ((beatmap.mods.length != 0) ? "" : "+") + this.modsList[i];
+                        beatmap.mods += ((beatmap.mods.length != 0) ? "" : "+") + _this.modsList[i];
                 }
 
                 var bdate = new Date(beatmap.date);
@@ -307,8 +563,8 @@ class OsuModule
                 {
                     topRank = j + 1;
 
-                    this.get_beatmaps(beatmap.beatmap_id).then(function(profile, beatmap, beatmap_info){
-                        this.update_user(profile).then(function(profile, beatmap, beatmap_info, user_data){
+                    _this.get_beatmaps(beatmap.beatmap_id).then(function(profile, beatmap, beatmap_info){
+                        _this.update_user(profile).then(function(profile, beatmap, beatmap_info, user_data){
                             var deltapp = user_data.pp_raw - profile.pp;
                             var oldRank = profile.rank;
                             var deltaRank = user_data.pp_rank - profile.rank;
@@ -334,7 +590,7 @@ class OsuModule
 							if (beatmap.perfect == 0)
 								beatmap.additional = "| **" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
 
-                            this.bot.message("osu", responses.get("OSU_NEW_SCORE_NODATE").format({
+                            var announcement = responses.get("OSU_NEW_SCORE_NODATE").format({
                                 user: profile.username,
                                 beatmap_id: beatmap.beatmap_id,
                                 pp: beatmap.pp,
@@ -350,14 +606,20 @@ class OsuModule
                                 old_rank: oldRank,
                                 new_rank: newRank,
                                 delta_rank: deltaRank
-                            }));
-                        }.bind(this, profile, beatmap, beatmap_info)).catch(function(err){
-                            console.log("update_user: " + err);
+                            });
+
+                            _this.on_new_record(profile, announcement);
+                        }.bind(null, profile, beatmap, beatmap_info)).catch(function(err){
+                            console.log("update_user: " + err.stack);
                         });
-                    }.bind(this, profile, beatmap));
+                    }.bind(null, profile, beatmap)).catch(function(err){
+                        console.log("get_beatmaps: " + err.stack);
+                    });
                 }
             }
-        }.bind(this, profile));
+        }.bind(null, profile)).catch(function(err){
+            console.log("get_user_best: " + err.stack);
+        });
     }
 
     check_user(username, message)
@@ -365,18 +627,26 @@ class OsuModule
         if(username === undefined)
             return;
 
-        var found = false;
+        var profile = null;
         for(var i in this.users)
         {
             if(this.users[i].username.toLowerCase() == username.toLowerCase())
             {
-                found = true;
+                profile = this.users[i];
                 break;
             }
         }
 
-        if(found)
+        if(profile !== null)
         {
+            if(profile.servers.indexOf(message.server.id) === -1)
+            {
+                profile.servers.push(message.server.id);
+                OsuUser.findOneAndUpdate({_id: profile._id}, {servers: profile.servers}, {});
+
+                return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: profile.username}));
+            }
+
             return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING").format({author: message.author.id, user: username}));
         }
 
@@ -390,14 +660,18 @@ class OsuModule
             }
 
             var time = (new Date).getTime();
-            var user = {username: json.username, pp: parseFloat(json.pp_raw), rank: parseInt(json.pp_rank), last_updated: time};
+            var user = {_id: json.user_id, user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], last_updated: time};
             this.users.push(user);
 
-            var dbuser = db.OsuUser.create(user);
-            dbuser.save();
-
-            return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: json.username}));
-        }.bind(this, username, message));
+            var dbuser = OsuUser.create(user);
+            dbuser.save().then(function(doc){
+                this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: json.username}));
+            }.bind(this)).catch(function(err){
+                console.log(err);
+            });
+        }.bind(this, username, message)).catch(function(err){
+            console.log("get_user: " + err.stack);
+        });
     }
 
     update_user(profile)
@@ -411,7 +685,7 @@ class OsuModule
         this.get_user(profile.username).then(function(profile, data){
             profile.last_updated = (new Date).getTime();
 
-            db.OsuUser.findOneAndUpdate({username: profile.username}, {pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
+            OsuUser.findOneAndUpdate({_id: profile._id}, {user_id: data.user_id, pp: Number(parseFloat(data.pp_raw)), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
                 profile.update_in_progress.resolve(data);
                 profile.update_in_progress = null;
             }).catch(function(err){
@@ -427,119 +701,4 @@ class OsuModule
     }
 }
 
-module.exports = {
-    moduleName: "osu!",
-    load: function(Bot){
-        var osu = new OsuModule(Bot);
-
-        Bot.addCommand({
-            name: "OSU_FOLLOWING",
-            command: [
-                /who are you following/i,
-				/who do you follow/i
-            ],
-            sample: "sempai who are you following?",
-            description: "Lists all the people I'm following on osu.",
-            action: function(m){
-                var message = "";
-                for(var i in osu.users)
-                {
-                    if(i != 0)
-                        message += ", ";
-
-                    message += osu.users[i].username;
-                }
-
-                Bot.respond(m, responses.get("OSU_FOLLOWING").format({author: m.author.id, results: message}));
-            }
-        });
-
-        Bot.addCommand({
-            name: "OSU_FOLLOW",
-            command: [
-                /follow (.*)/i,
-                /stalk (.*)/i
-            ],
-            sample: "sempai follow __*user*__",
-            description: "Adds the person to my following list for osu.",
-            action: function(m, name){
-                if(name === undefined)
-                {
-                    return Bot.respond(m, responses.get("OSU_UNDEFINED").format({author: m.author.id}));
-                }
-
-                osu.check_user(name, m);
-            }
-        });
-
-        Bot.addCommand({
-            name: "OSU_STOP_FOLLOW",
-            command: [
-                /stop following (.*)/i,
-                /stop stalking (.*)/i
-            ],
-            sample: "sempai stop following __*user*__",
-            description: "Removes the person from my following list for osu.",
-            action: function(m, user){
-                var i = -1;
-                for(var j in osu.users)
-                {
-                    if(osu.users[j].username == user)
-                    {
-                        i = j;
-                        break;
-                    }
-                }
-
-                if(i === -1)
-                {
-                    return Bot.respond(m, responses.get("OSU_NOT_FOLLOWING").format({author: m.author.id, user: user}));
-                }
-
-                osu.users.splice(i, 1);
-
-                db.OsuUser.deleteOne({username: user}, {}, function(numrem) {
-                }).catch(function(err){
-                    console.log("Error removing '" + user + "' from osu db: " + err);
-                });
-
-                Bot.respond(m, responses.get("OSU_STOPPED").format({author: m.author.id, user: user}));
-            }
-        });
-
-        Bot.addCommand({
-            name: "OSU_CHECK",
-            command: /check (.*)/i,
-            sample: "sempai check __*user*__",
-            description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
-            action: function(m, user){
-                Bot.respond(m, responses.get("OSU_CHECK").format({author: m.author.id, user: user}));
-                osu.force_check(user, m);
-            }
-        });
-
-        db.OsuUser.find({}).then(function (docs) {
-            for (var i = 0; i < docs.length; i++)
-            {
-                var user = {
-                    username: docs[i].username,
-                    pp: docs[i].pp,
-                    rank: docs[i].rank,
-                    last_updated: docs[i].last_updated,
-                    update_in_progress: null,
-                    online: false
-                };
-
-                osu.users.push(user);
-
-                var time = (new Date).getTime();
-                if(user.last_updated === undefined || time - user.last_updated >= USER_UPDATE_INTERVAL)
-                {
-                    osu.update_user(user);
-                }
-            }
-        }).catch(function(err){
-            console.log("OsuUser.find: " + err);
-        });
-    }
-};
+module.exports = new OsuModule();

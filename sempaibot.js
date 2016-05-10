@@ -1,114 +1,92 @@
-var process = require("process");
+"use strict";
+
+const process = require("process");
 process.env.TZ = "Europe/Amsterdam";
 
-var Discord = require("discord.js");
-var responses = require("./responses.js");
-var modules = require('auto-loader').load(__dirname + "/modules");
-var db = require("./db.js");
-var process = require("process");
-var config = require("./config");
+const Discord = require("discord.js");
+const ServerData = require("./src/ServerData.js");
 
-// First, checks if it isn't implemented yet.
-if (!String.prototype.format) {
-    String.prototype.format = function(args) {
-        return this.replace(/{(.*?)}/g, function(match, key) {
-            return typeof args[key] != 'undefined' ? args[key] : match;
-        });
-    };
-}
+const modules = require('auto-loader').load(__dirname + "/modules");
+const responses = require("./src/responses.js");
+const db = require("./src/db.js");
+const config = require("./config");
+const users = require("./src/users.js");
+const permissions = require("./src/permissions.js");
 
-var Bot = {
-    discord: new Discord.Client(),
-    commands: [],
-    currentModule: "",
-    addCommand: function(command){
-        command.module = Bot.currentModule;
-        Bot.commands.push(command);
-    },
-    message: function(type, message){
-        //needs to be changed in the future
-        return Bot.discord.sendMessage(Bot.discord.channels.get("name", type), message);
-    },
-    respond: function(m, message){
-        return Bot.discord.sendMessage(m.channel, message);
-    }
+String.prototype.format = function(args) {
+    return this.replace(/{(.*?)}/g, function(match, key) {
+        return typeof args[key] != 'undefined' ? args[key] : match;
+    });
 };
 
-
-
-Bot.discord.getServers = function(){
-    return this.internal.apiRequest("get", "https://discordapp.com/api/voice/regions", true);
-};
-
-Bot.discord.on("message", function (m){
-    var n = m.content.split(" ");
-
-    if(n[0].toLowerCase() == "sempai" || m.content.charAt(0) == "-")
+class Bot
+{
+    constructor()
     {
-        for(var i = 0;i<Bot.commands.length;i++)
-        {
-            var data = [];
-            if(Bot.commands[i].command !== null)
-            {
-                if(Array.isArray(Bot.commands[i].command))
-                {
-                    for(var j = 0;j<Bot.commands[i].command.length;j++)
-                    {
-                        data = Bot.commands[i].command[j].exec(m.content);
-                        if(data === null)
-                            continue;
+        this.discord = new Discord.Client();
+        this.servers = {};
+        this.modules = {};
 
-                        data.splice(0, 1);
-                        data = [m].concat(data);
-                        m.index = j;
-
-                        break;
-                    }
-
-                    if(data === null)
-                        continue;
-                }else{
-                    data = Bot.commands[i].command.exec(m.content);
-                    if(data === null)
-                        continue;
-
-                    data.splice(0, 1);
-                    data = [m].concat(data);
-                    m.index = 0;
-                }
-            }
-            else if(n.length > 1)
-            {
-                var targetName = m.content.substr(m.content.indexOf(" ") + 1);
-                Bot.discord.sendMessage(m.channel, responses.get("UNKNOWN_COMMAND").format({author: m.author.id, command: targetName}));
-                break;
-            }
-            else if(m.content.charAt(0) != "-")
-            {
-                data = [m];
-            }
-            else
-            {
-                //dont allow null commands to run without the name-keyword
-                continue;
-            }
-
-            Bot.commands[i].action.apply(null, data);
-
-            if(Bot.commands[i].stealth !== undefined)
-            {
-                var url = "https://discordapp.com/api/channels/" + m.channel.id + "/messages/" + m.id;
-                Bot.discord.internal.apiRequest("delete", url, true).then(function(res){});
-            }
-
-            break;
-        }
+        this.discord.on("message", this.handle_message.bind(this));
+        this.discord.on("ready", this.on_ready.bind(this));
     }
-});
 
-Bot.discord.on("ready", function () {
-    db.load(function(){
-        db.ConfigKeyValue.find({}, {}).then(function(docs){
+    login()
+    {
+        this.discord.login(config.user, config.pass, function (error, token) {
+            if(error != null)
+            {
+                console.log("Discord login error: " + error);
+            }
+        });
+    }
+
+    message(message, server)
+    {
+        var channel = server.channel;
+        if(channel.length === 0)
+        {
+            for(var i = 0;i<server.server.channels.length;i++)
+            {
+                this.discord.sendMessage(server.server.channels[i], message);
+            }
+            
+            return;
+        }
+        
+        return this.discord.sendMessage(server.server.channels.get("id", channel), message);
+    }
+
+    respond(m, message)
+    {
+        this.discord.stopTyping(m.channel);
+        return this.discord.sendMessage(m.channel, message);
+    }
+
+    get_module(name)
+    {
+        return (this.modules[name] === undefined) ? null : this.modules[name];
+    }
+
+    print(message, length, newline)
+    {
+        while(message.length != length)
+            message += ".";
+            
+        if(newline)
+            console.log(message);
+        else
+            process.stdout.write(message);
+    }
+    
+    on_ready()
+    {
+        var _this = this;
+        db.load().then(function(db_type){
+            _this.print("Loading config from DB", 70, false);
+            return db.ConfigKeyValue.find({});
+        }).then(function(docs){
+            console.log("....Ok");
             for(var i = 0;i<docs.length;i++)
             {
                 if(docs[i].key == "mode")
@@ -117,55 +95,93 @@ Bot.discord.on("ready", function () {
                         responses.setMode(docs[i].value);
                 }
             }
+            
+            _this.print("Loading users from DB", 70, false);
+            return users.load();
+        }).then(function(){
+            console.log("....Ok");
+            _this.print("Loading permissions from DB", 70, false);
+            return permissions.load();
+        }).then(function(){
+            console.log("....Ok");
+            for(var key in modules)
+            {
+                var mod = modules[key];
+                if(mod.on_setup === undefined)
+                {
+                    console.log("Error: Module '" + key + "' is not setup correctly. missing function: on_setup");
+                    continue;
+                }
+
+                _this.print("Setting up module '" + key + "'", 70, false);
+                try
+                {
+                    mod.on_setup(_this);
+                    console.log("....Ok");
+                }
+                catch(e)
+                {
+                    console.log("Error:");
+                    console.log(e.stack);
+                }
+
+                _this.modules[mod.name] = mod;
+            }
+
+            return permissions.save();
+        }).then(function(){
+            _this.discord.joinServer(config.server, function (error, server) {
+                for(var i = 0;i<_this.discord.servers.length;i++)
+                {
+                    var server = _this.discord.servers[i];
+                    _this.servers[server.id] = new ServerData(_this, server);
+                    _this.servers[server.id].load_promise.promise.then(function(){
+                        for(var key in _this.modules)
+                        {
+                            if(_this.modules[key].always_on)
+                                _this.servers[server.id].enable_module(key);
+                        }
+                    });
+                }
+            });
         }).catch(function(err){
-            console.log("ConfgKeyValue.find: " + err);
+            console.log(err.stack);
         });
+    }
 
-        for(var key in modules)
+    handle_message(message)
+    {
+        if(message.content.indexOf("sempai") == 0 || message.content.indexOf("-") == 0)
         {
-            var mod = modules[key];
-            if(mod.load === undefined)
+            var split = message.content.split(" ");
+            var handled = false;
+
+            var server = null;
+            if(!message.channel.isPrivate)
+                server = this.servers[message.channel.server.id];
+
+            message.user = users.get_user(message.author, server);
+            message.server = server;
+            
+            for(var key in this.modules)
             {
-                console.log("Error: Module '" + key + "' is not setup correctly. missing function: load");
-                continue;
+                if(this.modules[key].check_message(server, message, split))
+                {
+                    handled = true;
+                    break;
+                }
             }
 
-            var msg = "Loading module '" + key + "'";
-            while(msg.length != 60)
-                msg += ".";
-
-            process.stdout.write(msg);
-            try
+            if(!handled)
             {
-                Bot.currentModule = mod.moduleName || key;
-
-                mod.load(Bot);
-                console.log("....Ok");
-            }
-            catch(e)
-            {
-                console.log("Error:");
-                console.log(e);
+                if(split.length == 1)
+                    this.respond(message, responses.get("NAME").format({author: message.author.id}));
+                else
+                    this.respond(message, responses.get("UNKNOWN_COMMAND").format({author: message.author.id}));
             }
         }
+    }
+}
 
-        Bot.currentModule = "";
-
-        //null command
-        Bot.commands.push({
-            command: null,
-            hidden: true,
-            action: function(message){
-                Bot.respond(message, responses.get("NAME").format({author: message.author.id}));
-            }
-        });
-
-        Bot.discord.joinServer(config.server, function (error, server) {
-            Bot.message("osu", responses.get("ONLINE"));
-        });
-    });
-});
-
-Bot.discord.login(config.user, config.pass, function (error, token) {
-    console.log(error + "; token: " + token);
-});
+var bot = new Bot();
+bot.login();

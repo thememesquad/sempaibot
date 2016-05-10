@@ -1,21 +1,9 @@
 "use strict";
 
-var config = require("./config");
+var config = require("../config");
 var connect = require('camo').connect;
 var Document = require('camo').Document;
-
-class OsuUser extends Document
-{
-    constructor()
-    {
-        super();
-
-        this.username = String;
-        this.pp = Number;
-        this.rank = Number;
-        this.last_updated = Number;
-    }
-}
+var Q = require("q");
 
 class ConfigKeyValue extends Document
 {
@@ -30,14 +18,15 @@ class ConfigKeyValue extends Document
 
 var data = {
     db: null,
-    OsuUser: OsuUser,
     ConfigKeyValue: ConfigKeyValue,
-    load: function(callback){
+    load: function(){
+        var defer = Q.defer();
+
 		connect("mongodb://" + config.db_username + ":" + config.db_password + "@" + config.db_host + ":" + config.db_port + "/").then(function(db) {
             console.log("Using MongoDB as DB system.");
             data.db = db;
 
-            callback();
+            defer.resolve("mongodb");
 		}).catch(function(err){
             console.log(err);
 
@@ -45,11 +34,13 @@ var data = {
                 console.log("Using NeDB as DB system.");
                 data.db = db;
 
-                callback();
+                defer.resolve("nedb");
             }).catch(function(err){
-                console.log("ERROR CAN'T SETUP ANY DATABASE: " + err);
+                defer.reject(err);
             })
 		});
+
+        return defer.promise;
     }
 };
 

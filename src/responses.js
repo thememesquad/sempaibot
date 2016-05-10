@@ -2,52 +2,52 @@ var db = require("./db.js");
 
 var responses_normal = {
     ONLINE: [
-	"Hey guys! I'm back online!",
-	"Hello! I'm back online!",
-	"/me has come online!",
-	"I'm back online! How can I be of service?",
-	"I'm back online! How can I help?",
-	"Hello! I'm back online! How can I be of help?",
+        "Hey guys! I'm back online!",
+        "Hello! I'm back online!",
+        "_has come online!_",
+        "I'm back online! How can I be of service?",
+        "I'm back online! How can I help?",
+        "Hello! I'm back online! How can I be of help?",
 	],
     NAME: [
-	"Yes I'm here! What can I do for you?",
-	"Yes I'm here! How can I help?",
-	"Yes I'm here  <@{author}>! How can I help?",
-	"What's up <@{author}>? How can I help you?",
-	"I'm here! What's up?",
-	"I'm here! What's up <@{author}>?",
+        "Yes I'm here! What can I do for you?",
+        "Yes I'm here! How can I help?",
+        "Yes I'm here  <@{author}>! How can I help?",
+        "What's up <@{author}>? How can I help you?",
+        "I'm here! What's up?",
+        "I'm here! What's up <@{author}>?",
 	],
     SWITCHED: [
-	"You don't like Tsundere mode? :( Fine. I'll revert back to my normal response mode!",
-	"Alright, let me change modes... ... ...There! I'm in my normal response mode now!",
-	"Okay, I'll change back to my normal response mode!",
+        "You don't like Tsundere mode? :( Fine. I'll revert back to my normal response mode!",
+        "Alright, let me change modes... ... ...There! I'm in my normal response mode now!",
+        "Okay, I'll change back to my normal response mode!",
 	],
     ALREADY_IN_MODE: [
-	"I'm already in my normal response mode!",
-	"Sempai is already in normal response mode!",
+        "I'm already in my normal response mode!",
+        "Sempai is already in normal response mode!",
 	],
     REGION_CHANGED: [
-	"Switched from region '{old_region}' to '{new_region}'.",
-	"I switched our discord region from '{old_region}' to '{new_region}'!",
+        "Switched from region '{old_region}' to '{new_region}'.",
+        "I switched our discord region from '{old_region}' to '{new_region}'!",
 	],
-    LIST_REMINDERS: "todo",
     REMIND_PAST: [
-	"That time is in the past! I can't remind you of something in the past.",
-	"That time is in the past! I can't remind you of something in the past. Or well, I'd need a time machine. If you happen to have one, no problem!",
-	"That time is in the past! Unfortunately, Sempai is not equipped for time travel (yet!).",
-	"I can't remind you of something in the past, silly!",
-	"I can't remind you of something in the past.",
+        "That time is in the past! I can't remind you of something in the past.",
+        "That time is in the past! I can't remind you of something in the past. Or well, I'd need a time machine. If you happen to have one, no problem!",
+        "That time is in the past! Unfortunately, Sempai is not equipped for time travel (yet!).",
+        "I can't remind you of something in the past, silly!",
+        "I can't remind you of something in the past.",
 	],
     REMIND_ME: [
-	"I will remind you to \"{message}\" at {time}.",
-	"Sempai will remind you to \"{message}\" at {time}.",
-	"Sempai will remind <@{author}> to \"{message}\" at {time}.",
+        "I will remind you to \"{message}\" at {time}.",
+        "Sempai will remind you to \"{message}\" at {time}.",
+        "Sempai will remind <@{author}> to \"{message}\" at {time}.",
 	],
     REMIND_OTHER: [
-	"I will remind {people} to \"{message}\" at {time}.",
-	"Sempai will remind {people} to \"{message}\" at {time}.",
+        "I will remind {people} to \"{message}\" at {time}.",
+        "Sempai will remind {people} to \"{message}\" at {time}.",
 	],
     REMINDER: "<@{author}> reminded {people}: {message}.",
+    LIST_REMINDERS: "List of reminders on this server:{response}",
 
     ANIME_SEARCH_NO_RESULTS: "No results found for '{anime}'.",
     ANIME_SEARCH_RESULTS: "Results for '{anime}':\r\n{results}",
@@ -62,22 +62,22 @@ var responses_normal = {
     ANIME_STOPPED_TRACKING: "Okay, I'll stop tracking {name}",
 
     OSU_FOLLOWING: [
-	"Sempai is currently following: {results}",
-	"I'm currently following: {results}",
+        "Sempai is currently following: {results}",
+        "I'm currently following: {results}",
 	],
     OSU_NOT_FOLLOWING: [
-	"I'm not even following \"{user}\"!",
-	"Sempai isn't even following \"{user}\"!",
+        "I'm not even following \"{user}\"!",
+        "Sempai isn't even following \"{user}\"!",
 	],
     OSU_STOPPED: [
-	"Okay, I have stopped following {user}.",
-	"Sempai unfollowed {user}!",
-	"Alright, I unfollowed {user}!",
-	"Okay, I unfollowed {user}!",
-	"Sempai will no longer follow {user}.",
-	"I stopped following {user}!",
-	"Sempai stopped following {user}!",
-	"Got it! I've unfollowed {user}.",
+        "Okay, I have stopped following {user}.",
+        "Sempai unfollowed {user}!",
+        "Alright, I unfollowed {user}!",
+        "Okay, I unfollowed {user}!",
+        "Sempai will no longer follow {user}.",
+        "I stopped following {user}!",
+        "Sempai stopped following {user}!",
+        "Got it! I've unfollowed {user}.",
 	],
     OSU_NEW_SCORE_NODATE: "**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** ({delta_pp}) | **Rank: {rank}** | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
     OSU_USER_NOT_FOUND: [
@@ -91,21 +91,21 @@ var responses_normal = {
 		"I'm having trouble finding \"{user}\". Are you sure you typed the name correctly?",
     ],
     OSU_ALREADY_FOLLOWING: [
-	"I'm already following {user}!",
-	"Sempai is already following {user}!",
+        "I'm already following {user}!",
+        "Sempai is already following {user}!",
 	],
     OSU_ADDED_FOLLOWING: [
-	"I'm now following {user} on osu!",
-	"Sempai will now follow {user} on osu!",
+        "I'm now following {user} on osu!",
+        "Sempai will now follow {user} on osu!",
 	],
     OSU_CHECK: [
-	"No problem! I'll check {user} on osu! for you!",
-	"No problem! Sempai will check {user} on osu! for you!",
+        "No problem! I'll check {user} on osu! for you!",
+        "No problem! Sempai will check {user} on osu! for you!",
 	],
     JOIN_INVALID_INVITE: "I can't find a server with the invite: \"{invite}\".",
     JOIN_ALREADY: "I am already part of \"{invite}\".",
     JOIN_FAILED: "I was not able to join the server \"{invite}\".",
-    JOIN_SUCCESS: "I just joined \"{invite}\"! Thanks for allowing me to join.",
+    JOIN_SUCCESS: "I just joined \"{invite}\"! Thanks for allowing me to join. I made <@{admin}> the admin.",
 
     HELP_TOP: "This is the current list of commands:\r\n",
     HELP_BOTTOM: "You could also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
@@ -114,25 +114,46 @@ var responses_normal = {
     PLEASE_HELP_BOTTOM: "You could also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
 
     SEMPAI_FUCKYOU: [
-	"What did I do? :(",
-	"What did Sempai ever do to you? :(",
-	":(",
-	"I don't know what I did, but I'm sorry {user}. :[",
-	"Meanie. :(",
+        "What did I do? :(",
+        "What did Sempai ever do to you? :(",
+        ":(",
+        "I don't know what I did, but I'm sorry {user}. :[",
+        "Meanie. :(",
 	],
-    WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
-    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{user}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
 
     UNKNOWN_COMMAND: [
-	"Sempai doesn't understand.",
-	"I... I don't understand. What do you want me to do?",
-	"Sempai doesn't recognize that command. Or are you just talking about me behind my back?",
+        "Sempai doesn't understand.",
+        "I... I don't understand. What do you want me to do?",
+        "Sempai doesn't recognize that command. Or are you just talking about me behind my back?",
 	],
+
     MULTIPLE_UNKNOWN_COMMAND:[
-	"That's not a valid command either. If you need help, please type \"sempai help me\".",
-	"I still don't understand what you want me to do. If you require help, please type \"sempai help me\".",
+	    "That's not a valid command either. If you need help, please type \"sempai help me\".",
+	    "I still don't understand what you want me to do. If you require help, please type \"sempai help me\".",
 	],
-    ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/"
+
+    ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
+    
+    //New responses....need to be formatted and made tsundere
+    MY_ROLE: "Your role is '{role}'.",
+    MY_PERMISSIONS: "**Your permissions are:**{permissions}",
+    NOT_ALLOWED: "Your role doesn't have the permission '{permission}', which is needed to run this command.",
+    MODULE_INVALID: "Module '{module}' doesn't exist.",
+    MODULE_ALREADY_ENABLED: "Module '{module}' is already enabled!",
+    MODULE_NOT_ENABLED: "Module '{module}' is not enabled!",
+    MODULE_ENABLED: "Enabled module '{module}'.",
+    MODULE_DISABLED: "Disabled module '{module}'.",
+    MODULE_ALWAYS_ON: "Module '{module}' can't be disabled because it has the always on flag.",
+    MODULE_LIST: "List of modules:{modules}",
+    LIST_ROLES: "List of roles:{roles}",
+    LIST_PERMISSIONS: "List of roles:{roles}",
+    INVALID_USER: "User '{user}' doesn't exist!",
+    INVALID_ROLE: "Role '{role}' is invalid.",
+    INVALID_CHANNEL: "I'm sorry, I can't seem to find a channel with the name '{channel}'.",
+    ROLE_ASSIGNED: "Assigned role '{role}' to user '{user}'",
+    ROLE_ALREADY_ASSIGNED: "Already assigned role '{role}' to user '{user}'",
+    SETTING_UP: "Hi There! Sempai is currently setting up on this server....Where do you want me to go?\r\n(protip: use the command \"sempai go to #channel\")",
+    OUTPUT_CHANNEL: "Ok, I'm now setup to output to <#{channel}>"
 };
 
 var responses_tsundere = {
@@ -173,7 +194,6 @@ var responses_tsundere = {
         "Tsundere on? Are you dumb, <@{author}>? It's already on!"
     ],
 
-    LIST_REMINDERS: "todo",
     REMIND_PAST: [
         "Uhmm... Are you dumb? That time is in the past!",
         "Baka~! That time is in the past."
@@ -188,20 +208,6 @@ var responses_tsundere = {
         "Sempai will try to remind {people}!",
         "Maybe I'll remind {people}. Just this one time!"
     ],
-    REMINDER: "<@{author}> reminded {people}: {message}.",
-    REGION_CHANGED: "Switched from region '{old_region}' to '{new_region}'.",
-
-    ANIME_SEARCH_NO_RESULTS: "No results found for '{anime}'.",
-    ANIME_SEARCH_RESULTS: "Results for '{anime}':\r\n{results}",
-    ANIME_NEW_DOWNLOAD: "New download for show '**{show}**':\r\n**{file}**:\r\n**Magnet**: {magnet}\r\n**Seeders**: {seeders}, **Leechers**: {leechers}, **Downloads**: {downloads}, **Quality**: {quality}\r\n",
-    ANIME_INVALID_ID: "Can't track {id} because the id is invalid!",
-    ANIME_ALREADY_TRACKING: "I'm already tracking '**{anime}**'!",
-    ANIME_NOW_TRACKING: "Started tracking '**{anime}**'!",
-    ANIME_TRACKING_LIST_EMPTY: "I'm not tracking any anime at the moment.",
-    ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{results}",
-    ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{anime}**':\r\n{results}",
-    ANIME_NOT_TRACKING: "I'm not even tracking {name}!",
-    ANIME_STOPPED_TRACKING: "Okay, I'll stop tracking {name}.",
 
     OSU_FOLLOWING: [
         "These are the people I like! I mean, associate with. I-it's not as if I really l-like them, or anything. Don't get any weird ideas!\r\n{results}",
@@ -243,21 +249,16 @@ var responses_tsundere = {
         "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just like helping. Here is a list of my commands:\r\n",
         "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just have a lot of free time. Here is a list of my commands:\r\n",
         "Alright. I'll help. You should feel grateful. Here's a list of my commands:\r\n",
-        "Not even a please? Sempai has feelings too, you know! I mean, I may be a bot... but bots can have feelings too! You seem to be clueless, so I'll help you this one time. But try asking nicely next time.",
+        "Not even a please? Sempai has feelings too, you know! I mean, I may be a bot... but bots can have feelings too! You seem to be clueless, so I'll help you this one time. But try asking nicely next time.\r\n",
     ],
-    HELP_BOTTOM: "You could also just prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
     PLEASE_HELP_TOP: [
         "Eheh. :3 Okay, here is the list of my commands:\r\n",
         ":3 You're going to make Sempai blush. Here is the list of my commands you asked for!:\r\n",
         "You asked me nicely! If I was keeping track, you would gain one Sempai relationship point! T-t-that doesn't mean I like you now! Don't get any weird ideas. Anyway, here is the list of my commands you asked for!:\r\n",
         "Only because you asked nicely. D-don't get me wrong, I do this for everyone if they ask nicely!  Here is the list of my commands you asked for!:\r\n"
     ],
-    PLEASE_HELP_BOTTOM: "You can also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
 
     SEMPAI_FUCKYOU: "I... It's not like I cared about you anyway <@{user}>! B..baka... :(",
-
-    WRONG_HOLE: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo ONIICHAN VoHiYo KYAA~~~ VoHiYo",
-    WRONG_HOLE_USER: "VoHiYo THATS VoHiYo THE VoHiYo WRONG VoHiYo HOLE VoHiYo <@{user}>~ONIICHAN VoHiYo KYAA~~~ VoHiYo",
 
     UNKNOWN_COMMAND: [
         "You're not making any sense to Sempai. If you ask me for help, I might just help you. If I can be bothered.",
@@ -282,13 +283,25 @@ var responses = {
     currentMode: false,
 
     get: function(name){
-        if(Array.isArray(responses.current[name]))
+        var tmp = responses.current[name];
+        if(tmp === undefined && responses.currentMode)
         {
-            var idx = Math.floor(Math.random() * responses.current[name].length);
-            return responses.current[name][idx];
+            tmp = responses_normal[name];
+            
+            if(tmp !== undefined)
+                console.log("Response '" + name + "' has no tsundere version.");
+        }
+           
+        if(tmp === undefined)
+            return responses.get("ERROR");
+            
+        if(Array.isArray(tmp))
+        {
+            var idx = Math.floor(Math.random() * tmp.length);
+            return tmp[idx];
         }
 
-        return responses.current[name];
+        return tmp;
     },
 
     setMode: function(mode)
