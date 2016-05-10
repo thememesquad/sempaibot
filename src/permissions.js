@@ -133,10 +133,21 @@ class Permissions
         this.roles["admin"] = new Role("admin");
         this.roles["moderator"] = new Role("moderator");
         this.roles["normal"] = new Role("normal", {default: true});
+        
+        this.permissions = [];
     }
 
     register(name, defaultRole)
     {
+        //Can't register a permission twice
+        if(this.permissions.indexOf(name) !== -1)
+        {
+            console.log("Permission '" + name + "' already registered.");
+            return;
+        }
+           
+        this.permissions.push(name);
+        
         defaultRole = defaultRole || "normal";
 
         this.roles["superadmin"].add(null, name);

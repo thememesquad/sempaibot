@@ -109,23 +109,31 @@ class Users
         return this.users[id];
     }
     
+    get_user_by_id(id)
+    {
+        return (this.users[id] === undefined) ? null : this.users[id];
+    }
+    
     get_user(user, server)
     {
-        if(this.users[user.id] === undefined)
+        var ret = this.get_user_by_id(user.id);
+        if(ret === null)
             return this.add_user(user.id, user.name, server);
             
-        return this.users[user.id];
+        return ret;
     }
     
     assign_role(id, server, role)
     {
         if(this.users[id] === undefined)
-            return;
+            return false;
             
         this.users[id].roles[server.id] = role;
         this.users[id].save().catch(function(err){
             console.log(err);
         });
+        
+        return true;
     }
 }
 

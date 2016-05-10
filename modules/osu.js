@@ -166,9 +166,9 @@ class OsuModule extends IModule
         this.users = [];
         this.servers = {};
 
-        permissions.register("OSU_FOLLOW", "admin");
-        permissions.register("OSU_UNFOLLOW", "admin");
-        permissions.register("OSU_CHECK", "admin");
+        permissions.register("OSU_FOLLOW", "moderator");
+        permissions.register("OSU_UNFOLLOW", "moderator");
+        permissions.register("OSU_CHECK", "moderator");
 
         this.add_command({
             regex: [
