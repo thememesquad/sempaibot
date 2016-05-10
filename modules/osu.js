@@ -644,7 +644,7 @@ class OsuModule extends IModule
                 profile.servers.push(message.server.id);
                 OsuUser.findOneAndUpdate({_id: profile._id}, {servers: profile.servers}, {});
 
-                return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: json.username}));
+                return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: profile.username}));
             }
 
             return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING").format({author: message.author.id, user: username}));
