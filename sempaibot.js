@@ -151,17 +151,31 @@ class Bot
 
     handle_message(message)
     {
+        var server = null;
+        if(!message.channel.isPrivate)
+            server = this.servers[message.channel.server.id];
+            
+        message.user = users.get_user(message.author, server);
+        message.server = server;
+        
+        if(message.author.id !== this.discord.user.id)
+        {
+            for(var key in this.modules)
+            {
+                if(!server.is_module_enabled(key) && (this.modules[key].always_on === undefined || this.modules[key].always_on == false))
+                    continue;
+                    
+                if(this.modules[key].on_raw_message === undefined)
+                    continue;
+                    
+                this.modules[key].on_raw_message(message);
+            }
+        }
+        
         if(message.content.indexOf("sempai") == 0 || message.content.indexOf("-") == 0)
         {
             var split = message.content.split(" ");
             var handled = false;
-
-            var server = null;
-            if(!message.channel.isPrivate)
-                server = this.servers[message.channel.server.id];
-
-            message.user = users.get_user(message.author, server);
-            message.server = server;
             
             for(var key in this.modules)
             {

@@ -45,6 +45,16 @@ class ServerData
             else
             {
                 this.config = doc;
+                
+                for(var i = 0;i<this.modules.length;i++)
+                {
+                    var module = this.bot.get_module(this.modules[i]);
+                    if(module === null)
+                        continue;
+                        
+                    module.on_load(this);
+                }
+                
                 this.on_load();
             }
         }.bind(this)).catch(function(err){

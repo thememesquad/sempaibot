@@ -440,8 +440,10 @@ class OsuModule extends IModule
         delete this.servers[server.id];
     }
 
-    api_call(method, params, first)
+    api_call(method, params, first, num)
     {
+        num = (num === undefined) ? 0 : num;
+        
         first = (first === undefined) ? true : first;
         var url = "http://osu.ppy.sh/api/" + method + "?k=" + config.osuapi;
 
@@ -467,8 +469,17 @@ class OsuModule extends IModule
                 }
 
                 return defer.resolve(data);
-            }catch(e){
-                return defer.reject(e);
+            }
+            catch(e)
+            {
+                if(num === 4)
+                    return defer.reject(e);
+                    
+                api_call(method, params, first, num + 1).then(function(result){
+                    defer.resolve(result);
+                }).catch(function(err){
+                    defer.reject(err);
+                });
             }
         });
 
