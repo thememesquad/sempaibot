@@ -11,6 +11,7 @@ const responses = require("./src/responses.js");
 const db = require("./src/db.js");
 const config = require("./config");
 const users = require("./src/users.js");
+const permissions = require("./src/permissions.js");
 
 String.prototype.format = function(args) {
     return this.replace(/{(.*?)}/g, function(match, key) {
@@ -89,6 +90,10 @@ class Bot
             return users.load();
         }).then(function(){
             console.log("....Ok");
+            _this.print("Loading permissions from DB", 70, false);
+            return permissions.load();
+        }).then(function(){
+            console.log("....Ok");
             for(var key in modules)
             {
                 var mod = modules[key];
@@ -113,6 +118,8 @@ class Bot
                 _this.modules[mod.name] = mod;
             }
 
+            return permissions.save();
+        }).then(function(){
             _this.discord.joinServer(config.server, function (error, server) {
                 for(var i = 0;i<_this.discord.servers.length;i++)
                 {

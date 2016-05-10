@@ -1,4 +1,17 @@
 "use strict";
+const Q = require("q");
+var Document = require('camo').Document;
+
+class DBRole extends Document
+{
+    constructor()
+    {
+        super();
+        
+        this.name = String;
+        this.permissions = Object;
+    }
+}
 
 class Role
 {
@@ -6,6 +19,7 @@ class Role
     {
         options = options || {};
 
+        this.dbrole = null;
         this.name = name;
         this.global = (options.global === undefined) ? false : options.global;
         this.default = (options.default === undefined) ? false : options.default;
@@ -14,6 +28,20 @@ class Role
         };
     }
 
+    setup(id)
+    {
+        if(this.permissions[id] === undefined)
+        {
+            this.permissions[id] = {};
+            
+            //use the null server permissions object as template
+            for(var key in this.permissions["null"])
+            {
+                this.permissions[id][key] = this.permissions["null"][key];
+            }
+        }
+    }
+    
     add(server, permission)
     {
         if(server === null)
@@ -28,19 +56,7 @@ class Role
         }
         else
         {
-            if(this.permissions[server.id] === undefined)
-            {
-                this.permissions[server.id] = {};
-                if(this.permissions["null"] !== undefined)
-                {
-                    //use the null server permissions object as template
-                    for(var key in this.permissions["null"])
-                    {
-                        this.permissions[server.id][key] = this.permissions["null"][key];
-                    }
-                }
-            }
-
+            setup(server.id);
             this.permissions[server.id][permission] = true;
         }
     }
@@ -53,19 +69,7 @@ class Role
         }
         else
         {
-            if(this.permissions[server.id] === undefined)
-            {
-                this.permissions[server.id] = {};
-                if(this.permissions["null"] !== undefined)
-                {
-                    //use the null server permissions object as template
-                    for(var key in this.permissions["null"])
-                    {
-                        this.permissions[server.id][key] = this.permissions["null"][key];
-                    }
-                }
-            }
-
+            setup(server.id);
             this.permissions[server.id][permission] = false;
         }
     }
@@ -83,17 +87,7 @@ class Role
             return this.permissions["null"][permission];
         }
 
-        if(this.permissions[server.id] === undefined)
-        {
-            this.permissions[server.id] = {};
-            
-            //use the null server permissions object as template
-            for(var key in this.permissions["null"])
-            {
-                this.permissions[server.id][key] = this.permissions["null"][key];
-            }
-        }
-
+        setup(server.id);
         if(this.permissions[server.id][permission] === undefined)
         {
             this.permissions[server.id][permission] = this.permissions["null"][permission];
@@ -107,20 +101,47 @@ class Role
     
     get_permissions(server)
     {
-        if(this.permissions[server.id] === undefined)
-        {
-            this.permissions[server.id] = {};
-            if(this.permissions["null"] !== undefined)
-            {
-                //use the null server permissions object as template
-                for(var key in this.permissions["null"])
-                {
-                    this.permissions[server.id][key] = this.permissions["null"][key];
-                }
-            }
-        }
-        
+        setup(server.id);
         return this.permissions[server.id];
+    }
+    
+    save()
+    {
+        var defer = Q.defer();
+        
+        this.dbrole.save().then(function(doc){
+            defer.resolve();
+        }).catch(function(err){
+            defer.reject(err);
+        });
+        
+        return defer.promise;
+    }
+    
+    load()
+    {
+        var _this = this;
+        var defer = Q.defer();
+        
+        DBRole.findOne({_id: this.name}).then(function(doc){
+            if(doc === null)
+            {
+                _this.dbrole = DBRole.create({_id: _this.name, name: _this.name, permissions: _this.permissions});
+                _this.dbrole.save().then(function(doc){
+                    defer.resolve();
+                }).catch(function(err){
+                    defer.reject(err);
+                });
+            }else{
+                _this.dbrole = doc;
+                _this.permissions = _this.dbrole.permissions;
+                defer.resolve();
+            }
+        }).catch(function(err){
+            defer.reject(err);
+        });
+        
+        return defer.promise;
     }
 }
 
@@ -137,6 +158,47 @@ class Permissions
         this.permissions = [];
     }
 
+    save()
+    {
+        var defer = Q.defer();
+        var _this = this;
+        
+        
+        this.roles["superadmin"].save().then(function(){
+            return _this.roles["admin"].save();
+        }).then(function(){
+            return _this.roles["moderator"].save();
+        }).then(function(){
+            return _this.roles["normal"].save();
+        }).then(function(){
+            defer.resolve();
+        }).catch(function(err){
+            defer.reject(err);
+        });
+        
+        return defer.promise;
+    }
+    
+    load()
+    {
+        var defer = Q.defer();
+        var _this = this;
+        
+        this.roles["superadmin"].load().then(function(){
+            return _this.roles["admin"].load();
+        }).then(function(){
+            return _this.roles["moderator"].load();
+        }).then(function(){
+            return _this.roles["normal"].load();
+        }).then(function(){
+            defer.resolve();
+        }).catch(function(err){
+            defer.reject(err);
+        });
+        
+        return defer.promise;
+    }
+    
     register(name, defaultRole)
     {
         //Can't register a permission twice
@@ -183,6 +245,8 @@ class Permissions
             return false;
 
         this.roles[role].add(server, name);
+        this.roles[role].save();
+        
         return true;
     }
 
@@ -192,6 +256,8 @@ class Permissions
             return false;
 
         this.roles[role].remove(server, name);
+        this.roles[role].save();
+        
         return true;
     }
 

@@ -42,16 +42,6 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            regex: /remove role (.*) from user (.*)/i,
-            sample: "sempai remove role __*role*__ from user __*user*__",
-            description: "Removes a role from a user",
-            permission: "ASSIGN_ROLES",
-            global: false,
-            
-            execute: this.handle_remove_role
-        });
-
-        this.add_command({
             regex: /assign role (.*) to user (.*)/i,
             sample: "sempai assign role __*role*__ to user __*user*__",
             description: "Assigns a role to a user",
@@ -292,11 +282,6 @@ class AdminModule extends IModule
         return this.bot.respond(message, responses.get("ROLE_ASSIGNED").format({author: message.author.id, role: role, user: user_id}));
     }
     
-    handle_remove_role(message, role, user)
-    {
-        console.log("STUB; handle_remove_role(message, role=" + role + ", user=" + user + ")");
-    }
-    
     print(role, server)
     {
         var ret = "\r\n" + role + ":";
@@ -384,7 +369,7 @@ class AdminModule extends IModule
             return;
         }
         
-        if(!permissions.is_allowed(permission, role, message.server))
+        if(!permissions.is_allowed(permission, message.user.get_role(message.server), message.server))
         {
             //not allowed to add a permission if your role doesn't even have that permission
             return;
@@ -442,7 +427,7 @@ class AdminModule extends IModule
             return;
         }
         
-        if(!permissions.is_allowed(permission, role, message.server))
+        if(!permissions.is_allowed(permission, message.user.get_role(message.server), message.server))
         {
             //not allowed to remove a permission if your role doesn't even have that permission
             return;
