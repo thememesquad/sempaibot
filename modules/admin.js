@@ -2,6 +2,7 @@
 
 const IModule = require("../src/IModule.js");
 const permissions = require("../src/permissions.js");
+const responses = require("../src/responses.js");
 
 class AdminModule extends IModule
 {
@@ -12,7 +13,6 @@ class AdminModule extends IModule
         this.name = "Admin";
         this.always_on = true;
 
-        permissions.register("RESTRICT_MODULES", "superadmin");
         permissions.register("BLACKLIST_SERVERS", "superadmin");
         permissions.register("BLACKLIST_USERS", "superadmin");
         permissions.register("IGNORE_USERS", "admin");
@@ -41,26 +41,6 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            regex: /restrict module (.*)/i,
-            sample: "sempai restrict module __*module*__",
-            description: "Restricts a module to this server.",
-            permission: "RESTRICT_MODULES",
-            global: false,
-
-            execute: this.handle_restrict_module
-        });
-
-        this.add_command({
-            regex: /allow module (.*)/i,
-            sample: "sempai allow module __*module*__",
-            description: "Allows a module on this server.",
-            permission: "RESTRICT_MODULES",
-            global: false,
-
-            execute: this.handle_allow_module
-        });
-
-        this.add_command({
             regex: /list modules/i,
             sample: "sempai list modules",
             description: "Lists all the available modules for this server.",
@@ -76,18 +56,16 @@ class AdminModule extends IModule
         var module = this.bot.get_module(name);
         if(module === null)
         {
-            //TODO: send "module doesn't exist" response
-            return;
+            return this.bot.respond(message, responses.get("MODULE_INVALID").format({author: message.author.id, module: name}));
         }
 
         if(message.server.is_module_enabled(name))
         {
-            //TODO: send "module already enabled" response
-            return;
+            return this.bot.respond(message, responses.get("MODULE_ALREADY_ENABLED").format({author: message.author.id, module: name}));
         }
 
         message.server.enable_module(name);
-        //TODO: send "module enabled" response
+        return this.bot.respond(message, responses.get("MODULE_ENABLED").format({author: message.author.id, module: name}));
     }
 
     handle_disable_module(message, name)
@@ -95,37 +73,45 @@ class AdminModule extends IModule
         var module = this.bot.get_module(name);
         if(module === null)
         {
-            //TODO: send "module doesn't exist" response
-            return;
+            return this.bot.respond(message, responses.get("MODULE_INVALID").format({author: message.author.id, module: name}));
         }
 
         if(!message.server.is_module_enabled(name))
         {
-            //TODO: send "module not enabled" response
-            return;
+            return this.bot.respond(message, responses.get("MODULE_NOT_ENABLED").format({author: message.author.id, module: name}));
         }
 
         if(module.always_on)
         {
-            //TODO: send "module can't be disabled" response
-            return;
+            return this.bot.respond(message, responses.get("MODULE_ALWAYS_ON").format({author: message.author.id, module: name}));
         }
 
         message.server.disable_module(name);
-        //TODO: send "module disabled" response
-    }
-
-    handle_restrict_module(message, name)
-    {
-    }
-
-    handle_allow_module(message, name)
-    {
+        return this.bot.respond(message, responses.get("MODULE_DISABLED").format({author: message.author.id, module: name}));
     }
     
     handle_list_modules(message)
     {
-        //TODO
+        var response = "```"
+        
+        for(var key in this.bot.modules)
+        {
+            var enabled = message.server.is_module_enabled(key);
+            var always_on = this.bot.modules[key].always_on;
+            
+            var name = key;
+            while(name.length != 20)
+                name += " ";
+                
+            response += name + " " + (enabled ? "(enabled)" : "(disabled)");
+            if(always_on)
+                response += " (always_on)";
+                
+            response += "\r\n";
+        }
+        
+        response += "```";
+        this.bot.respond(message, responses.get("MODULE_LIST").format({author: message.author.id, modules: response}));
     }
 
     on_setup(bot)

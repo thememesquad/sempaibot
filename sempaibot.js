@@ -156,7 +156,10 @@ class Bot
 
             if(!handled)
             {
-                this.respond(message, responses.get("NAME").format({author: message.author.id}));
+                if(split.length == 1)
+                    this.respond(message, responses.get("NAME").format({author: message.author.id}));
+                else
+                    this.respond(message, responses.get("UNKNOWN_COMMAND").format({author: message.author.id}));
             }
         }
     }

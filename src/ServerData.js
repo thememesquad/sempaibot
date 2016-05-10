@@ -15,30 +15,30 @@ class ServerData
         this.id = server.id;
 
         var _this = this;
-        
+
         for(var i = 0;i<server.members.length;i++)
         {
             var member = server.members[i];
             users.add_user(member.id, member.name, this);
         }
-        
-        //TODO: Actually save these in the initial config load instead of a per-server config load.
+
         db.ConfigKeyValue.findOne({key: this.server.id + "_modules"}).then(function(doc){
             if(doc === null)
             {
-                var doc = db.ConfigKeyValue.create({key: _this.server.id + "_modules", value: {modules: _this.modules}});
+                var doc = db.ConfigKeyValue.create({_id: this.server.id + "_modules", key: this.server.id + "_modules", value: {modules: this.modules}});
                 doc.save().then(function(doc){
-                    _this.on_load();
-                }).catch(function(err){
+                    this.on_load();
+                }.bind(this)).catch(function(err){
                     console.log(err);
-                });
+                    this.on_load();
+                }.bind(this));
             }
             else
             {
-                _this.modules = doc.value.modules;
-                _this.on_load();
+                this.modules = doc.value.modules;
+                this.on_load();
             }
-        }).catch(function(err){
+        }.bind(this)).catch(function(err){
             console.log(err);
         });
     }
@@ -60,7 +60,9 @@ class ServerData
         this.modules.push(name);
         module.on_load(this);
 
-        db.ConfigKeyValue.findOneAndUpdate({key: this.server.id + "_modules"}, {value: {modules: this.modules}}, {});
+        db.ConfigKeyValue.findOneAndUpdate({key: this.server.id + "_modules"}, {value: {modules: this.modules}}, {}).catch(function(err){
+            console.log(err);
+        });
     }
 
     is_module_enabled(name)
@@ -80,7 +82,9 @@ class ServerData
         this.modules.splice(this.modules.indexOf(name), 1);
         module.on_unload(this);
 
-        db.ConfigKeyValue.findOneAndUpdate({key: this.server.id + "_" + modules}, {value: {modules: this.modules}}, {});
+        db.ConfigKeyValue.findOneAndUpdate({key: this.server.id + "_modules"}, {value: {modules: this.modules}}, {}).catch(function(err){
+            console.log(err);
+        });
     }
 }
 

@@ -134,9 +134,17 @@ var responses_normal = {
 
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
     
+    //New responses....need to be formatted and made tsundere
     MY_ROLE: "Your role is '{role}'.",
     MY_PERMISSIONS: "**Your permissions are:**{permissions}",
-    NOT_ALLOWED: "Your role doesn't have the permission '{permission}', which is needed to run this command."
+    NOT_ALLOWED: "Your role doesn't have the permission '{permission}', which is needed to run this command.",
+    MODULE_INVALID: "Module '{module}' doesn't exist.",
+    MODULE_ALREADY_ENABLED: "Module '{module}' is already enabled!",
+    MODULE_NOT_ENABLED: "Module '{module}' is not enabled!",
+    MODULE_ENABLED: "Enabled module '{module}'.",
+    MODULE_DISABLED: "Disabled module '{module}'.",
+    MODULE_ALWAYS_ON: "Module '{module}' can't be disabled because it has the always on flag.",
+    MODULE_LIST: "List of modules:{modules}"
 };
 
 var responses_tsundere = {
