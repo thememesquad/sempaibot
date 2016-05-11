@@ -21,7 +21,11 @@ Easy! Add the bot to your server by pressing this button!
 
 # Node Modules
 This Bot uses the following Modules:
-- discord.js
-- lodash
-- nedb
-- Other things (which Calvin/Sem will write soon I hope)
+- [discord.js](https://github.com/hydrabolt/discord.js/)
+- [lodash](https://lodash.com/)
+- [auto-loader](https://github.com/jwerle/node-auto-loader)
+- [camo](https://github.com/scottwrobinson/camo)
+- [mongodb](https://github.com/mongodb/node-mongodb-native)
+- [nedb](https://github.com/louischatriot/nedb)
+- [q](https://github.com/kriskowal/q)
+- [request](https://github.com/request/request)
