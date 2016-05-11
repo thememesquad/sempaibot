@@ -11,6 +11,7 @@ const responses = require("./src/responses.js");
 const db = require("./src/db.js");
 const config = require("./config");
 const users = require("./src/users.js");
+const permissions = require("./src/permissions.js");
 
 String.prototype.format = function(args) {
     return this.replace(/{(.*?)}/g, function(match, key) {
@@ -43,12 +44,22 @@ class Bot
     message(message, server)
     {
         var channel = server.channel;
-
-        return this.discord.sendMessage(server.server.channels.get("name", channel), message);
+        if(channel.length === 0)
+        {
+            for(var i = 0;i<server.server.channels.length;i++)
+            {
+                this.discord.sendMessage(server.server.channels[i], message);
+            }
+            
+            return;
+        }
+        
+        return this.discord.sendMessage(server.server.channels.get("id", channel), message);
     }
 
     respond(m, message)
     {
+        this.discord.stopTyping(m.channel);
         return this.discord.sendMessage(m.channel, message);
     }
 
@@ -89,6 +100,10 @@ class Bot
             return users.load();
         }).then(function(){
             console.log("....Ok");
+            _this.print("Loading permissions from DB", 70, false);
+            return permissions.load();
+        }).then(function(){
+            console.log("....Ok");
             for(var key in modules)
             {
                 var mod = modules[key];
@@ -113,17 +128,20 @@ class Bot
                 _this.modules[mod.name] = mod;
             }
 
+            return permissions.save();
+        }).then(function(){
             _this.discord.joinServer(config.server, function (error, server) {
                 for(var i = 0;i<_this.discord.servers.length;i++)
                 {
                     var server = _this.discord.servers[i];
                     _this.servers[server.id] = new ServerData(_this, server);
-
-                    for(var key in _this.modules)
-                    {
-                        if(_this.modules[key].always_on)
-                            _this.servers[server.id].enable_module(key);
-                    }
+                    _this.servers[server.id].load_promise.promise.then(function(){
+                        for(var key in _this.modules)
+                        {
+                            if(_this.modules[key].always_on)
+                                _this.servers[server.id].enable_module(key);
+                        }
+                    });
                 }
             });
         }).catch(function(err){

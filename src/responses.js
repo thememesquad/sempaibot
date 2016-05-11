@@ -30,7 +30,6 @@ var responses_normal = {
         "Switched from region '{old_region}' to '{new_region}'.",
         "I switched our discord region from '{old_region}' to '{new_region}'!",
 	],
-    LIST_REMINDERS: "todo",
     REMIND_PAST: [
         "That time is in the past! I can't remind you of something in the past.",
         "That time is in the past! I can't remind you of something in the past. Or well, I'd need a time machine. If you happen to have one, no problem!",
@@ -48,6 +47,7 @@ var responses_normal = {
         "Sempai will remind {people} to \"{message}\" at {time}.",
 	],
     REMINDER: "<@{author}> reminded {people}: {message}.",
+    LIST_REMINDERS: "List of reminders on this server:{response}",
 
     ANIME_SEARCH_NO_RESULTS: "No results found for '{anime}'.",
     ANIME_SEARCH_RESULTS: "Results for '{anime}':\r\n{results}",
@@ -105,7 +105,7 @@ var responses_normal = {
     JOIN_INVALID_INVITE: "I can't find a server with the invite: \"{invite}\".",
     JOIN_ALREADY: "I am already part of \"{invite}\".",
     JOIN_FAILED: "I was not able to join the server \"{invite}\".",
-    JOIN_SUCCESS: "I just joined \"{invite}\"! Thanks for allowing me to join.",
+    JOIN_SUCCESS: "I just joined \"{invite}\"! Thanks for allowing me to join. I made <@{admin}> the admin.",
 
     HELP_TOP: "This is the current list of commands:\r\n",
     HELP_BOTTOM: "You could also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
@@ -114,22 +114,22 @@ var responses_normal = {
     PLEASE_HELP_BOTTOM: "You could also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
 
     SEMPAI_FUCKYOU: [
-	"What did I do? :(",
-	"What did Sempai ever do to you? :(",
-	":(",
-	"I don't know what I did, but I'm sorry {user}. :[",
-	"Meanie. :(",
+        "What did I do? :(",
+        "What did Sempai ever do to you? :(",
+        ":(",
+        "I don't know what I did, but I'm sorry {user}. :[",
+        "Meanie. :(",
 	],
 
     UNKNOWN_COMMAND: [
-	"Sempai doesn't understand.",
-	"I... I don't understand. What do you want me to do?",
-	"Sempai doesn't recognize that command. Or are you just talking about me behind my back?",
+        "Sempai doesn't understand.",
+        "I... I don't understand. What do you want me to do?",
+        "Sempai doesn't recognize that command. Or are you just talking about me behind my back?",
 	],
 
     MULTIPLE_UNKNOWN_COMMAND:[
-	"That's not a valid command either. If you need help, please type \"sempai help me\".",
-	"I still don't understand what you want me to do. If you require help, please type \"sempai help me\".",
+	    "That's not a valid command either. If you need help, please type \"sempai help me\".",
+	    "I still don't understand what you want me to do. If you require help, please type \"sempai help me\".",
 	],
 
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
@@ -149,8 +149,11 @@ var responses_normal = {
     LIST_PERMISSIONS: "List of permissions:{permissions}",
     INVALID_USER: "User '{user}' doesn't exist!",
     INVALID_ROLE: "Role '{role}' is invalid.",
-    ROLE_ASSIGNED: "Assigned role '{role}' to user '{user}'.",
-    ROLE_ALREADY_ASSIGNED: "Already assigned role '{role}' to user '{user}'."
+    INVALID_CHANNEL: "I'm sorry, I can't seem to find a channel with the name '{channel}'.",
+    ROLE_ASSIGNED: "Assigned role '{role}' to user '{user}'",
+    ROLE_ALREADY_ASSIGNED: "Already assigned role '{role}' to user '{user}'",
+    SETTING_UP: "Hi There! Sempai is currently setting up on this server....Where do you want me to go?\r\n(protip: use the command \"sempai go to #channel\")",
+    OUTPUT_CHANNEL: "Ok, I'm now setup to output to <#{channel}>"
 };
 
 var responses_tsundere = {
