@@ -12,6 +12,7 @@ const db = require("./src/db.js");
 const config = require("./config");
 const users = require("./src/users.js");
 const permissions = require("./src/permissions.js");
+const Q = require("q");
 
 String.prototype.format = function(args) {
     return this.replace(/{(.*?)}/g, function(match, key) {
@@ -45,24 +46,38 @@ class Bot
 
     message(message, server)
     {
+        var defer = Q.defer();
+        
         var channel = server.channel;
         if(channel.length === 0)
         {
-            for(var i = 0;i<server.server.channels.length;i++)
-            {
-                this.discord.sendMessage(server.server.channels[i], message);
-            }
-            
-            return;
+            channel = server.server.channels[0].id;
         }
         
-        return this.discord.sendMessage(server.server.channels.get("id", channel), message);
+        this.discord.stopTyping(m.channel);
+        this.discord.sendMessage(server.server.channels.get("id", channel), message, {}, function(err, message){
+            if(err !== null)
+                return defer.reject(err);
+                
+            defer.resolve(message);
+        });
+        
+        return defer.promise;
     }
 
     respond(m, message)
     {
+        var defer = Q.defer();
+        
         this.discord.stopTyping(m.channel);
-        return this.discord.sendMessage(m.channel, message);
+        this.discord.sendMessage(m.channel, message, {}, function(err, message){
+            if(err !== null)
+                return defer.reject(err);
+                
+            defer.resolve(message);
+        });
+        
+        return defer.promise;
     }
 
     get_module(name)
@@ -204,6 +219,17 @@ class Bot
         
         if(message.content.indexOf("sempai") == 0 || message.content.indexOf("-") == 0)
         {
+            var msg = message.content;
+            if(msg.indexOf("sempai") == 0)
+            {
+                msg = msg.substr("sempai".length + 1).trim();
+            }
+            else
+            {
+                msg = msg.substr(1).trim();
+            }
+            
+            message.content = msg;
             var split = message.content.split(" ");
             var handled = false;
             

@@ -154,6 +154,8 @@ var responses_normal = {
 	SETTING_UP: "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"sempai go to #channel\")",
     OUTPUT_CHANNEL: "Okay, I'm now set up in <#{channel}>! If you want to know more about what I can do, type \"Sempai help me\"",
     SHOW_IGNORELIST: "Ignore list:{list}"
+	IGNORE_LIST_EMPTY: "I'm not ignoring anyone right now!",
+    OSU_FOLLOW_LIST_EMPTY: "I'm not following anyone on osu! right now."
 };
 
 var responses_tsundere = {
