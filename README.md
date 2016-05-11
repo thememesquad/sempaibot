@@ -1,5 +1,5 @@
 # sempaibot
-A fun modular discord bot for osu! and other things! :>
+A fun, modular discord bot for osu! and other things! :>
 
 # General functionality
 - Reminders! Have the bot send you or others a reminder message in a couple of minutes or at a certain time or date!
