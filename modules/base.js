@@ -265,24 +265,7 @@ class BaseModule extends IModule
                     return;
                 }
 
-                try
-                {
-                    _this.bot.servers[server.id] = new ServerData(_this.bot, server);
-                    _this.bot.servers[server.id].load_promise.promise.then(function(server){
-                        for(var key in this.bot.modules)
-                        {
-                            if(this.bot.modules[key].always_on)
-                                this.bot.servers[server.id].enable_module(key);
-                        }
-                        
-                        this.bot.respond(message, responses.get("JOIN_SUCCESS").format({author: message.author.id, invite: server.name, admin: server.owner.id}));
-                    }.bind(_this, server)).catch(function(err){
-                        console.log(err.stack);
-                    });
-                }catch(e)
-                {
-                    console.log(e.stack);
-                }
+                _this.bot.respond(message, responses.get("JOIN_SUCCESS").format({author: message.author.id, invite: server.name, admin: server.owner.id}));
             });
         });
     }

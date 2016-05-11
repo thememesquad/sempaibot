@@ -39,7 +39,7 @@ class ServerData
                 this.config.save().then(function(doc){
                     this.on_load();
                 }.bind(this)).catch(function(err){
-                    console.log(err);
+                    console.log("save: " + err);
                     this.on_load();
                 }.bind(this));
             }
@@ -59,7 +59,7 @@ class ServerData
                 this.on_load();
             }
         }.bind(this)).catch(function(err){
-            console.log(err);
+            console.log("findOne: " + err.stack);
         });
     }
 
@@ -136,8 +136,6 @@ class ServerData
     unignore_user(user)
     {
         var idx = this.ignorelist.indexOf(user._id);
-        console.log(idx, user);
-        
         if(idx !== -1)
         {
             this.config.value.ignorelist.splice(idx, 1);

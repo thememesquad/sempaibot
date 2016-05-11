@@ -684,7 +684,7 @@ class OsuModule extends IModule
             dbuser.save().then(function(doc){
                 this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: json.username}));
             }.bind(this)).catch(function(err){
-                console.log(err);
+                console.log(err.stack);
             });
         }.bind(this, username, message)).catch(function(err){
             console.log("get_user: " + err.stack);

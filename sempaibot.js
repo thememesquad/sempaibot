@@ -32,6 +32,8 @@ class Bot
 
         this.discord.on("message", this.handle_message.bind(this));
         this.discord.on("ready", this.on_ready.bind(this));
+        this.discord.on("serverCreated", this.on_server_created.bind(this));
+        this.discord.on("serverDeleted", this.on_server_deleted.bind(this));
     }
 
     login()
@@ -54,7 +56,7 @@ class Bot
             channel = server.server.channels[0].id;
         }
         
-        this.discord.stopTyping(m.channel);
+        this.discord.stopTyping(message.channel);
         this.discord.sendMessage(server.server.channels.get("id", channel), message, {}, function(err, message){
             if(err !== null)
                 return defer.reject(err);
@@ -190,6 +192,29 @@ class Bot
         });
     }
 
+    on_server_created(server)
+    {
+        console.log("Joined server '" + server.name + "'.");
+        
+        this.servers[server.id] = new ServerData(this, server);
+        this.servers[server.id].load_promise.promise.then(function(server){
+            for(var key in this.modules)
+            {
+                if(this.modules[key].always_on)
+                    this.servers[server.id].enable_module(key);
+            }
+        }.bind(this, server)).catch(function(err){
+            console.log(err);
+        });
+    }
+    
+    on_server_deleted(server)
+    {
+        console.log("Left server '" + server.name + "'.");
+        
+        delete this.servers[server.id];
+    }
+    
     handle_message(message)
     {
         var server = null;
