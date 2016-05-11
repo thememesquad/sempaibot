@@ -134,27 +134,26 @@ var responses_normal = {
 
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
     
-    //New responses....need to be formatted and made tsundere
     MY_ROLE: "Your role is '{role}'.",
-    MY_PERMISSIONS: "**Your permissions are:**{permissions}",
-    NOT_ALLOWED: "You don't have the permission to do that.",
-    MODULE_INVALID: "Module '{module}' doesn't exist.",
-    MODULE_ALREADY_ENABLED: "Module '{module}' is already enabled!",
-    MODULE_NOT_ENABLED: "Module '{module}' is not enabled!",
-    MODULE_ENABLED: "Enabled module '{module}'.",
-    MODULE_DISABLED: "Disabled module '{module}'.",
-    MODULE_ALWAYS_ON: "Module '{module}' can't be disabled.",
+    MY_PERMISSIONS: "Your permissions are:{permissions}",
+    NOT_ALLOWED: "You don't have permission to do that.",
+    MODULE_INVALID: "That's not a valid module name.",
+    MODULE_ALREADY_ENABLED: "That module is already enabled!",
+    MODULE_NOT_ENABLED: "That module is already disabled!",
+    MODULE_ENABLED: "{module} module is now enabled!",
+    MODULE_DISABLED: "{module} module is now disabled.",
+    MODULE_ALWAYS_ON: "The {module} module can't be disabled.",
     MODULE_LIST: "List of modules:{modules}",
     LIST_ROLES: "List of roles:{roles}",
     LIST_PERMISSIONS: "List of permissions:{permissions}",
-    INVALID_USER: "User '{user}' doesn't exist!",
-    INVALID_ROLE: "Role '{role}' is invalid.",
-    INVALID_CHANNEL: "I'm sorry, I can't seem to find a channel with the name '{channel}'.",
-    ROLE_ASSIGNED: "Assigned role '{role}' to user '{user}'",
-    ROLE_ALREADY_ASSIGNED: "Already assigned role '{role}' to user '{user}'",
-    SETTING_UP: "Hi There! Sempai is currently setting up on this server....Where do you want me to go?\r\n(protip: use the command \"sempai go to #channel\")",
-    OUTPUT_CHANNEL: "Ok, I'm now setup to output to <#{channel}>",
-    SHOW_IGNORELIST: "Ignorelist:{list}"
+    INVALID_USER: "That user doesn't exist!",
+    INVALID_ROLE: "That's not a valid role!",
+	INVALID_CHANNEL: "There's no channel with that name.",
+    ROLE_ASSIGNED: "Assigned {role} to {user}.",
+    ROLE_ALREADY_ASSIGNED: "Already assigned {role} to {user}."
+	SETTING_UP: "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"sempai go to #channel\")",
+    OUTPUT_CHANNEL: "Okay, I'm now set up in <#{channel}>! If you want to know more about what I can do, type \"Sempai help me\"",
+    SHOW_IGNORELIST: "Ignore list:{list}"
 };
 
 var responses_tsundere = {
@@ -258,7 +257,7 @@ var responses_tsundere = {
         "You asked me nicely! If I was keeping track, you would gain one Sempai relationship point! T-t-that doesn't mean I like you now! Don't get any weird ideas. Anyway, here is the list of my commands you asked for!:\r\n",
         "Only because you asked nicely. D-don't get me wrong, I do this for everyone if they ask nicely!  Here is the list of my commands you asked for!:\r\n"
     ],
-
+	
     SEMPAI_FUCKYOU: "I... It's not like I cared about you anyway <@{user}>! B..baka... :(",
 
     UNKNOWN_COMMAND: [
