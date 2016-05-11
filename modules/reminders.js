@@ -37,7 +37,7 @@ class RemindersModule extends IModule
         });
         
         this.add_command({
-            regex: /list reminders/i,
+            regex: /^list reminders/i,
             sample: "sempai list reminders",
             description: "Lists reminders on this server.",
             permission: null,
@@ -47,7 +47,7 @@ class RemindersModule extends IModule
         });
         
         this.add_command({
-            regex: /remind (.*) to (.*) at (.{4,})/i,
+            regex: /^remind (.*) to (.*) at (.{4,})/i,
             sample: "sempai remind __*name*__  to __*reminder*__  at __*time*__",
             description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself) (Timezone is set to the timezone of your discord server).",
             permission: null,

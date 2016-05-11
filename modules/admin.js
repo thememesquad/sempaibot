@@ -23,7 +23,7 @@ class AdminModule extends IModule
         permissions.register("ASSIGN_ROLES", "admin");
 
         this.add_command({
-            regex: /\senable module (.*)/i,
+            regex: /^enable module (.*)/i,
             sample: "sempai enable module __*module*__",
             description: "Enables a module for this server.",
             permission: "MANAGE_MODULES",
@@ -33,7 +33,7 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            regex: /\sdisable module (.*)/i,
+            regex: /^disable module (.*)/i,
             sample: "sempai disable module __*module*__",
             description: "Disables a module for this server.",
             permission: "MANAGE_MODULES",
@@ -43,7 +43,7 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            regex: /\sassign role (.*) to user (.*)/i,
+            regex: /^assign role (.*) to user (.*)/i,
             sample: "sempai assign role __*role*__ to user __*@user*__",
             description: "Assigns a role to a user",
             permission: "ASSIGN_ROLES",
@@ -53,7 +53,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /\sadd permission (.*) to role (.*)/i,
+            regex: /^add permission (.*) to role (.*)/i,
             sample: "sempai add permission __*permission*__ to role __*role*__",
             description: "Adds a permission to the role.",
             permission: "MANAGE_PERMISSIONS",
@@ -63,7 +63,7 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            regex: /\sremove permission (.*) from role (.*)/i,
+            regex: /^remove permission (.*) from role (.*)/i,
             sample: "sempai remove permission __*permission*__ from role __*role*__",
             description: "Removes a permission from the role.",
             permission: "MANAGE_PERMISSIONS",
@@ -73,7 +73,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /\slist modules/i,
+            regex: /^list modules/i,
             sample: "sempai list modules",
             description: "Lists all the available modules for this server.",
             permission: "MANAGE_MODULES",
@@ -83,7 +83,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /\signore (.*)/i,
+            regex: /^ignore (.*)/i,
             sample: "sempai ignore __*@user*__",
             description: "Ignores a user on this server",
             permission: "IGNORE_USERS",
@@ -93,7 +93,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /\sunignore (.*)/i,
+            regex: /^unignore (.*)/i,
             sample: "sempai unignore __*@user*__",
             description: "Stops ignoring user on this server",
             permission: "IGNORE_USERS",
@@ -103,7 +103,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /\sgo to (.*)/i,
+            regex: /^go to (.*)/i,
             sample: "sempai go to __*#channel*__",
             description: "Tells sempai to output only to a channel (unless its a response)",
             permission: "GOTO_CHANNEL",

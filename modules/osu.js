@@ -172,8 +172,8 @@ class OsuModule extends IModule
 
         this.add_command({
             regex: [
-                /who are you following/i,
-				/who do you follow/i
+                /^who are you following/i,
+				/^who do you follow/i
             ],
             sample: "sempai who are you following?",
             description: "Lists all the people I'm following on osu.",
@@ -185,8 +185,8 @@ class OsuModule extends IModule
 
         this.add_command({
             regex: [
-                /follow (.*)/i,
-                /stalk (.*)/i
+                /^follow (.*)/i,
+                /^stalk (.*)/i
             ],
             sample: "sempai follow __*user*__",
             description: "Adds the person to my following list for osu.",
@@ -198,8 +198,8 @@ class OsuModule extends IModule
 
         this.add_command({
             regex: [
-                /stop following (.*)/i,
-                /stop stalking (.*)/i
+                /^stop following (.*)/i,
+                /^stop stalking (.*)/i
             ],
             sample: "sempai stop following __*user*__",
             description: "Removes the person from my following list for osu.",
@@ -210,7 +210,7 @@ class OsuModule extends IModule
         });
 
         this.add_command({
-            regex: /check (.*)/i,
+            regex: /^check (.*)/i,
             sample: "sempai check __*user*__",
             description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
             permission: "OSU_CHECK",
@@ -245,6 +245,7 @@ class OsuModule extends IModule
             
         response += rank + " " + name + " " + pp + " " + online;
         
+        var num = 0;
         for(var i in users)
         {
             //Check if the server is actually following this player
@@ -267,10 +268,15 @@ class OsuModule extends IModule
                 
             response += "\r\n";
             response += "#" + rank + " " + name + " " + pp + " " + online;
+            
+            num++;
         }
         response += "```";
         
-        this.bot.respond(message, responses.get("OSU_FOLLOWING").format({author: message.author.id, results: response}));
+        if(num === 0)
+            this.bot.respond(message, responses.get("OSU_FOLLOW_LIST_EMPTY").format({author: message.author.id}));
+        else
+            this.bot.respond(message, responses.get("OSU_FOLLOWING").format({author: message.author.id, results: response}));
     }
 
     handle_follow(message, name)

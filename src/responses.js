@@ -154,7 +154,9 @@ var responses_normal = {
     ROLE_ALREADY_ASSIGNED: "Already assigned role '{role}' to user '{user}'",
     SETTING_UP: "Hi There! Sempai is currently setting up on this server....Where do you want me to go?\r\n(protip: use the command \"sempai go to #channel\")",
     OUTPUT_CHANNEL: "Ok, I'm now setup to output to <#{channel}>",
-    SHOW_IGNORELIST: "Ignorelist:{list}"
+    SHOW_IGNORELIST: "Ignorelist:{list}",
+    IGNORE_LIST_EMPTY: "Halp, mah ignore list is empty yo.",
+    OSU_FOLLOW_LIST_EMPTY: "Halp, mah osu follow list is empty yo."
 };
 
 var responses_tsundere = {

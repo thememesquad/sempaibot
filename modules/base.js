@@ -18,7 +18,7 @@ class BaseModule extends IModule
         permissions.register("CHANGE_PERSONALITY", "moderator");
 
         this.add_command({
-            regex: /join server (.*)/i,
+            regex: /^join server (.*)/i,
             sample: "sempai join server __*invite*__",
             description: "Allow sempai to join a new server",
             permission: null,
@@ -30,8 +30,8 @@ class BaseModule extends IModule
 
         this.add_command({
             regex: [
-                /help me/i,
-                /please help me/i
+                /^help me/i,
+                /^please help me/i
             ],
             hide_in_help: true,
             permission: null,
@@ -42,8 +42,8 @@ class BaseModule extends IModule
 
         this.add_command({
             regex: [
-                /tsundere on/i,
-                /tsundere off/i,
+                /^tsundere on/i,
+                /^tsundere off/i,
             ],
             hide_in_help: true,
             permission: "CHANGE_PERSONALITY",
@@ -54,7 +54,7 @@ class BaseModule extends IModule
         
         this.add_command({
             regex: [
-                /what is my role/i
+                /^what is my role/i
             ],
             sample: "sempai what is my role?",
             description: "Displays what sempai thinks of you on this server.",
@@ -66,7 +66,7 @@ class BaseModule extends IModule
         
         this.add_command({
             regex: [
-                /what are my permissions/i
+                /^what are my permissions/i
             ],
             sample: "sempai what are my permissions?",
             description: "Displays what sempai has allowed you to do.",
@@ -77,7 +77,7 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            regex: /list roles/i,
+            regex: /^list roles/i,
             sample: "sempai list roles",
             description: "Lists the users per role.",
             permission: null,
@@ -87,7 +87,7 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            regex: /list permissions/i,
+            regex: /^list permissions/i,
             sample: "sempai list permissions",
             description: "Lists all the available permissions per role.",
             permission: null,
@@ -97,7 +97,7 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            regex: /show ignorelist/i,
+            regex: /^show ignorelist/i,
             sample: "sempai show ignorelist",
             description: "Shows the list of people I'm currently ignoring (on this server)",
             permission: null,
@@ -222,7 +222,10 @@ class BaseModule extends IModule
         
         response += "```";
         
-        this.bot.respond(message, responses.get("SHOW_IGNORELIST").format({author: message.author.id, list: response}));
+        if(message.server.ignorelist.length === 0)
+            this.bot.respond(message, responses.get("IGNORE_LIST_EMPTY").format({author: message.author.id}));
+        else
+            this.bot.respond(message, responses.get("SHOW_IGNORELIST").format({author: message.author.id, list: response}));
     }
     
     handle_join_server(message, invite)
@@ -286,70 +289,105 @@ class BaseModule extends IModule
 
     handle_help_me(message)
     {
-        var please = message.index == 1;
-        var response = "";
-
-        if(please)
-            response = responses.get("PLEASE_HELP_TOP").format({author: message.author.id});
-        else
-            response = responses.get("HELP_TOP").format({author: message.author.id});
-
-        var role = message.user.get_role(message.server);
-        var modules = "";
-        for(var key in this.bot.modules)
+        try
         {
-            var module = this.bot.modules[key];
-            var enabled = (message.server === null) ? false : message.server.is_module_enabled(module.name);
-            
-            if(enabled)
-            {
-                if(modules.length !== 0)
-                    modules += ", ";
+            var please = message.index == 1;
+            var response = "";
 
-                modules += key;
-            }
+            if(please)
+                response = responses.get("PLEASE_HELP_TOP").format({author: message.author.id});
+            else
+                response = responses.get("HELP_TOP").format({author: message.author.id});
 
-            var hasNonHidden = false;
-            var tmp = "";
-            for(var i = 0;i<module.commands.length;i++)
+            var message_queue = [];
+            var role = message.user.get_role(message.server);
+            var modules = "";
+            for(var key in this.bot.modules)
             {
-                if(module.commands[i].permission != null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
-                    continue;
-                    
-                if(module.commands[i].hide_in_help === undefined || module.commands[i].hide_in_help === false)
+                var module = this.bot.modules[key];
+                var enabled = (message.server === null) ? false : message.server.is_module_enabled(module.name);
+             
+                if(enabled)
                 {
-                    var is_private = module.commands[i].private !== undefined && module.commands[i].private === true;
-                    
-                    if(message.server !== null && is_private)
+                    if(modules.length !== 0)
+                        modules += ", ";
+
+                    modules += key;
+                }
+
+                var hasNonHidden = false;
+                var tmp = "";
+                for(var i = 0;i<module.commands.length;i++)
+                {
+                    if(module.commands[i].permission != null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
                         continue;
                         
-                    if(module.commands[i].global == false && !enabled)
-                        continue;
+                    if(module.commands[i].hide_in_help === undefined || module.commands[i].hide_in_help === false)
+                    {
+                        var is_private = module.commands[i].private !== undefined && module.commands[i].private === true;
+                        
+                        if(message.server !== null && is_private)
+                            continue;
+                            
+                        if(module.commands[i].global == false && !enabled)
+                            continue;
 
-                    hasNonHidden = true;
+                        hasNonHidden = true;
 
-                    tmp += "**" + module.commands[i].sample + "** - " + module.commands[i].description;
-                    tmp += "\r\n";
+                        tmp += "**" + module.commands[i].sample + "** - " + module.commands[i].description;
+                        tmp += "\r\n";
+                    }
                 }
+
+                if(!hasNonHidden)
+                    continue;
+
+                if(response.length + tmp.length >= 1900)
+                {
+                    message_queue.push(response);
+                    response = "";
+                }
+                
+                response += "**" + key + "**:\r\n";
+                response += tmp;
+                response += "\r\n";
             }
 
-            if(!hasNonHidden)
-                continue;
+            var add = "";
+            if(message.server !== null)
+                add += "**Enabled modules**: " + modules + "\r\n\r\n";
 
-            response += "**" + key + "**:\r\n";
-            response += tmp;
-            response += "\r\n";
+            if(please)
+                add += responses.get("PLEASE_HELP_BOTTOM").format({author: message.author.id});
+            else
+                add += responses.get("HELP_BOTTOM").format({author: message.author.id});
+
+            if(response.length + add.length >= 1900)
+            {
+                message_queue.push(response);
+                message_queue.push(add);
+            }
+            else
+            {
+                message_queue.push(response + add);
+            }
+            
+            var send = function(queue, message, index, send)
+            {
+                if(index >= queue.length)
+                    return;
+                    
+                this.bot.respond(message, queue[index]).then(function(queue, message, index, send){
+                    return send(index + 1, send);
+                }.bind(this, queue, message, index, send)).catch(function(err){
+                    console.log(err);
+                });
+            }.bind(this, message_queue, message);
+            send(0, send);
+        }catch(e)
+        {
+            console.log(e.stack);
         }
-
-        if(message.server !== null)
-            response += "**Enabled modules**: " + modules + "\r\n\r\n";
-
-        if(please)
-            response += responses.get("PLEASE_HELP_BOTTOM").format({author: message.author.id});
-        else
-            response += responses.get("HELP_BOTTOM").format({author: message.author.id});
-
-        this.bot.respond(message, response);
     }
 
     handle_tsundere(message)
