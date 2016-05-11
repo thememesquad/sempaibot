@@ -334,7 +334,7 @@ class AdminModule extends IModule
         
         response += "```";
         
-        this.bot.respond(message, responses.get("LIST_PERMISSIONS").format({author: message.author.id, roles: response}));
+        this.bot.respond(message, responses.get("LIST_PERMISSIONS").format({author: message.author.id, permissions: response}));
     }
     
     handle_add_permission(message, permission, role)
