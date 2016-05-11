@@ -184,7 +184,11 @@ class Bot
         message.user = users.get_user(message.author, server);
         message.server = server;
         
-        if(message.author.id !== this.discord.user.id)
+        //Is the user blacklisted/ignored
+        if(this.is_user_blacklisted(message.user) || (message.server !== null && message.server.is_user_ignored(message.user)))
+            return;
+            
+        if(message.author.id !== this.discord.user.id && message.server !== null)
         {
             for(var key in this.modules)
             {
@@ -200,10 +204,6 @@ class Bot
         
         if(message.content.indexOf("sempai") == 0 || message.content.indexOf("-") == 0)
         {
-            //Is the user blacklisted/ignored
-            if(this.is_user_blacklisted(message.user) || (message.server !== null && message.server.is_user_ignored(message.user)))
-                return;
-                
             var split = message.content.split(" ");
             var handled = false;
             

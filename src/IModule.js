@@ -23,8 +23,9 @@ class IModule
         {
             var command = this.commands[i];
             var data = null;
-
-            if(server != null && !command.global)
+            var is_private = this.commands[i].private !== undefined && this.commands[i].private === true;
+            
+            if(server !== null && !command.global)
             {
                 if(!server.is_module_enabled(this.name))
                 {
@@ -32,7 +33,11 @@ class IModule
                     continue;
                 }
             }
-            else if(server == null && !command.global)
+            else if(server !== null && is_private)
+            {
+                continue;
+            }
+            else if(server === null && !command.global)
             {
                 //only global commands are allowed in private channels
                 continue;

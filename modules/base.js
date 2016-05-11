@@ -23,6 +23,7 @@ class BaseModule extends IModule
             description: "Allow sempai to join a new server",
             permission: null,
             global: true,
+            private: true,
 
             execute: this.handle_join_server
         });
@@ -271,7 +272,6 @@ class BaseModule extends IModule
                                 this.bot.servers[server.id].enable_module(key);
                         }
                         
-                        users.assign_role(server.owner.id, server, "admin");
                         this.bot.respond(message, responses.get("JOIN_SUCCESS").format({author: message.author.id, invite: server.name, admin: server.owner.id}));
                     }.bind(_this, server)).catch(function(err){
                         console.log(err.stack);
@@ -318,6 +318,11 @@ class BaseModule extends IModule
                     
                 if(module.commands[i].hide_in_help === undefined || module.commands[i].hide_in_help === false)
                 {
+                    var is_private = module.commands[i].private !== undefined && module.commands[i].private === true;
+                    
+                    if(message.server !== null && is_private)
+                        continue;
+                        
                     if(module.commands[i].global == false && !enabled)
                         continue;
 

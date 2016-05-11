@@ -74,6 +74,7 @@ class ServerData
             
             this.bot.message(responses.get("ONLINE"), this);
         }else{
+            users.assign_role(this.server.owner.id, this.server, "admin");
             this.bot.message(responses.get("SETTING_UP"), this);
         }
         
