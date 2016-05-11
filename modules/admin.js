@@ -23,7 +23,7 @@ class AdminModule extends IModule
         permissions.register("ASSIGN_ROLES", "admin");
 
         this.add_command({
-            regex: /enable module (.*)/i,
+            regex: /\senable module (.*)/i,
             sample: "sempai enable module __*module*__",
             description: "Enables a module for this server.",
             permission: "MANAGE_MODULES",
@@ -33,7 +33,7 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            regex: /disable module (.*)/i,
+            regex: /\sdisable module (.*)/i,
             sample: "sempai disable module __*module*__",
             description: "Disables a module for this server.",
             permission: "MANAGE_MODULES",
@@ -43,8 +43,8 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            regex: /assign role (.*) to user (.*)/i,
-            sample: "sempai assign role __*role*__ to user __*user*__",
+            regex: /\sassign role (.*) to user (.*)/i,
+            sample: "sempai assign role __*role*__ to user __*@user*__",
             description: "Assigns a role to a user",
             permission: "ASSIGN_ROLES",
             global: false,
@@ -53,7 +53,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /add permission (.*) to role (.*)/i,
+            regex: /\sadd permission (.*) to role (.*)/i,
             sample: "sempai add permission __*permission*__ to role __*role*__",
             description: "Adds a permission to the role.",
             permission: "MANAGE_PERMISSIONS",
@@ -63,7 +63,7 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            regex: /remove permission (.*) from role (.*)/i,
+            regex: /\sremove permission (.*) from role (.*)/i,
             sample: "sempai remove permission __*permission*__ from role __*role*__",
             description: "Removes a permission from the role.",
             permission: "MANAGE_PERMISSIONS",
@@ -73,27 +73,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /list permissions/i,
-            sample: "sempai list permissions",
-            description: "Lists all the available permissions per role.",
-            permission: null,
-            global: false,
-            
-            execute: this.handle_list_permissions
-        });
-        
-        this.add_command({
-            regex: /list roles/i,
-            sample: "sempai list roles",
-            description: "Lists the users per role.",
-            permission: null,
-            global: false,
-            
-            execute: this.handle_list_roles
-        })
-        
-        this.add_command({
-            regex: /list modules/i,
+            regex: /\slist modules/i,
             sample: "sempai list modules",
             description: "Lists all the available modules for this server.",
             permission: "MANAGE_MODULES",
@@ -103,7 +83,27 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /go to (.*)/i,
+            regex: /\signore (.*)/i,
+            sample: "sempai ignore __*@user*__",
+            description: "Ignores a user on this server",
+            permission: "IGNORE_USERS",
+            global: false,
+            
+            execute: this.handle_ignore_user
+        });
+        
+        this.add_command({
+            regex: /\sunignore (.*)/i,
+            sample: "sempai unignore __*@user*__",
+            description: "Stops ignoring user on this server",
+            permission: "IGNORE_USERS",
+            global: false,
+            
+            execute: this.handle_unignore_user
+        });
+        
+        this.add_command({
+            regex: /\sgo to (.*)/i,
             sample: "sempai go to __*#channel*__",
             description: "Tells sempai to output only to a channel (unless its a response)",
             permission: "GOTO_CHANNEL",
@@ -151,7 +151,7 @@ class AdminModule extends IModule
         message.server.disable_module(name);
         return this.bot.respond(message, responses.get("MODULE_DISABLED").format({author: message.author.id, module: name}));
     }
-    
+
     handle_list_modules(message)
     {
         var response = "```"
@@ -174,46 +174,6 @@ class AdminModule extends IModule
         
         response += "```";
         this.bot.respond(message, responses.get("MODULE_LIST").format({author: message.author.id, modules: response}));
-    }
-
-    print_users(role, server)
-    {
-        var ret = "\r\n" + role + ":";
-        var tmp = permissions.get_role(role).get_permissions(server);
-        var admin_permissions = permissions.get_role("admin").get_permissions(server);
-        
-        for(var i = 0;i<server.server.members.length;i++)
-        {
-            var user = users.get_user_by_id(server.server.members[i].id);
-            if(server.server.members[i].id === this.bot.discord.user.id)
-                continue;
-                
-            if(user.get_role(server) !== role)
-                continue;
-                
-            var name = user.name;
-            while(name.length != 30)
-                name += " ";
-                
-            ret += "\r\n   " + name;
-        }
-        
-        return ret;
-    }
-
-    handle_list_roles(message)
-    {
-        var response = "```";
-        
-        response += this.print_users("admin", message.server);
-        response += "\r\n";
-        response += this.print_users("moderator", message.server);
-        response += "\r\n";
-        response += this.print_users("normal", message.server);
-        
-        response += "```";
-        
-        this.bot.respond(message, responses.get("LIST_ROLES").format({author: message.author.id, roles: response}));
     }
     
     get_user(user_id)
@@ -280,57 +240,17 @@ class AdminModule extends IModule
             return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
         }
         
-        if(!users.assign_role(user._id, message.server, role))
-        {
-            return this.bot.respond(message, responses.get("ERROR").format({author: message.author.id}));
-        }
-        
         if(user.get_role(message.server) === role)
         {
             return this.bot.respond(message, responses.get("ROLE_ALREADY_ASSIGNED").format({author: message.author.id, role: role, user: user_id}));
         }
         
-        return this.bot.respond(message, responses.get("ROLE_ASSIGNED").format({author: message.author.id, role: role, user: user_id}));
-    }
-    
-    print(role, server)
-    {
-        var ret = "\r\n" + role + ":";
-        var tmp = permissions.get_role(role).get_permissions(server);
-        var admin_permissions = permissions.get_role("admin").get_permissions(server);
-        
-        for(var key in tmp)
+        if(!users.assign_role(user._id, message.server, role))
         {
-            var name = key;
-            while(name.length != 20)
-                name += " ";
-            
-            if(!tmp[key] && !admin_permissions[key])
-                continue;
-                
-            ret += "\r\n   " + name;
-            if(tmp[key])
-                ret += " (allowed)";
-            else
-                ret += " (not allowed)";
+            return this.bot.respond(message, responses.get("ERROR").format({author: message.author.id}));
         }
         
-        return ret;
-    }
-    
-    handle_list_permissions(message)
-    {
-        var response = "```";
-        
-        response += this.print("admin", message.server);
-        response += "\r\n";
-        response += this.print("moderator", message.server);
-        response += "\r\n";
-        response += this.print("normal", message.server);
-        
-        response += "```";
-        
-        this.bot.respond(message, responses.get("LIST_PERMISSIONS").format({author: message.author.id, roles: response}));
+        return this.bot.respond(message, responses.get("ROLE_ASSIGNED").format({author: message.author.id, role: role, user: user_id}));
     }
     
     handle_add_permission(message, permission, role)
@@ -459,6 +379,44 @@ class AdminModule extends IModule
         
         message.server.channel = id;
         this.bot.respond(message, responses.get("OUTPUT_CHANNEL").format({author: message.author.id, channel: id}));
+    }
+    
+    handle_ignore_user(message, user_id)
+    {
+        var user = users.get_user_by_id(user_id.substr(2, user_id.length - 3));
+        if(user === null)
+        {
+            //no such user
+            return;
+        }
+        
+        if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
+        {
+            //not allowed
+            return;
+        }
+        
+        message.server.ignore_user(user);
+        //started ignoring user
+    }
+    
+    handle_unignore_user(message, user_id)
+    {
+        var user = users.get_user_by_id(user_id.substr(2, user_id.length - 3));
+        if(user === null)
+        {
+            //no such user
+            return;
+        }
+        
+        if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
+        {
+            //not allowed
+            return;
+        }
+        
+        message.server.unignore_user(user);
+        //stopped ignoring user
     }
     
     on_setup(bot)

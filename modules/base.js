@@ -74,6 +74,36 @@ class BaseModule extends IModule
             
             execute: this.handle_my_permissions
         });
+        
+        this.add_command({
+            regex: /list roles/i,
+            sample: "sempai list roles",
+            description: "Lists the users per role.",
+            permission: null,
+            global: false,
+            
+            execute: this.handle_list_roles
+        });
+        
+        this.add_command({
+            regex: /list permissions/i,
+            sample: "sempai list permissions",
+            description: "Lists all the available permissions per role.",
+            permission: null,
+            global: false,
+            
+            execute: this.handle_list_permissions
+        });
+        
+        this.add_command({
+            regex: /show ignorelist/i,
+            sample: "sempai show ignorelist",
+            description: "Shows the list of people I'm currently ignoring (on this server)",
+            permission: null,
+            global: false,
+            
+            execute: this.handle_show_ignorelist
+        });
     }
 
     game_switcher()
@@ -97,6 +127,103 @@ class BaseModule extends IModule
         }, 50000);
     }
 
+    print_users(role, server)
+    {
+        var ret = "\r\n" + role + ":";
+        var tmp = permissions.get_role(role).get_permissions(server);
+        var admin_permissions = permissions.get_role("admin").get_permissions(server);
+        
+        for(var i = 0;i<server.server.members.length;i++)
+        {
+            var user = users.get_user_by_id(server.server.members[i].id);
+            if(server.server.members[i].id === this.bot.discord.user.id)
+                continue;
+                
+            if(user.get_role(server) !== role)
+                continue;
+                
+            var name = user.name;
+            while(name.length != 30)
+                name += " ";
+                
+            ret += "\r\n   " + name;
+        }
+        
+        return ret;
+    }
+
+    handle_list_roles(message)
+    {
+        var response = "```";
+        
+        response += this.print_users("admin", message.server);
+        response += "\r\n";
+        response += this.print_users("moderator", message.server);
+        response += "\r\n";
+        response += this.print_users("normal", message.server);
+        
+        response += "```";
+        
+        this.bot.respond(message, responses.get("LIST_ROLES").format({author: message.author.id, roles: response}));
+    }
+    
+    print(role, server)
+    {
+        var ret = "\r\n" + role + ":";
+        var tmp = permissions.get_role(role).get_permissions(server);
+        var admin_permissions = permissions.get_role("admin").get_permissions(server);
+        
+        for(var key in tmp)
+        {
+            var name = key;
+            while(name.length != 20)
+                name += " ";
+            
+            if(!tmp[key] && !admin_permissions[key])
+                continue;
+                
+            ret += "\r\n   " + name;
+            if(tmp[key])
+                ret += " (allowed)";
+            else
+                ret += " (not allowed)";
+        }
+        
+        return ret;
+    }
+    
+    handle_list_permissions(message)
+    {
+        var response = "```";
+        
+        response += this.print("admin", message.server);
+        response += "\r\n";
+        response += this.print("moderator", message.server);
+        response += "\r\n";
+        response += this.print("normal", message.server);
+        
+        response += "```";
+        
+        this.bot.respond(message, responses.get("LIST_PERMISSIONS").format({author: message.author.id, roles: response}));
+    }
+    
+    handle_show_ignorelist(message)
+    {
+        var response = "``` ";
+        
+        for(var i = 0;i<message.server.ignorelist.length;i++)
+        {
+            if(i != 0)
+                response += "\r\n";
+                
+            response += users.get_user_by_id(message.server.ignorelist[i]).name;
+        }
+        
+        response += "```";
+        
+        this.bot.respond(message, responses.get("SHOW_IGNORELIST").format({author: message.author.id, list: response}));
+    }
+    
     handle_join_server(message, invite)
     {
         var _this = this;
@@ -137,16 +264,16 @@ class BaseModule extends IModule
                 try
                 {
                     _this.bot.servers[server.id] = new ServerData(_this.bot, server);
-                    _this.bot.servers[server.id].load_promise.promise.then(function(){
-                        for(var key in _this.bot.modules)
+                    _this.bot.servers[server.id].load_promise.promise.then(function(server){
+                        for(var key in this.bot.modules)
                         {
-                            if(_this.bot.modules[key].always_on)
-                                _this.bot.servers[server.id].enable_module(key);
+                            if(this.bot.modules[key].always_on)
+                                this.bot.servers[server.id].enable_module(key);
                         }
                         
                         users.assign_role(server.owner.id, server, "admin");
-                        _this.bot.respond(message, responses.get("JOIN_SUCCESS").format({author: message.author.id, invite: server.name, admin: server.owner.id}));
-                    }).catch(function(err){
+                        this.bot.respond(message, responses.get("JOIN_SUCCESS").format({author: message.author.id, invite: server.name, admin: server.owner.id}));
+                    }.bind(_this, server)).catch(function(err){
                         console.log(err.stack);
                     });
                 }catch(e)

@@ -31,7 +31,8 @@ class ServerData
                     key: this.server.id + "_config", 
                     value: {
                         channel: "", 
-                        modules: []
+                        modules: [],
+                        ignorelist: []
                     }
                 });
                 
@@ -120,6 +121,36 @@ class ServerData
         });
     }
     
+    ignore_user(user)
+    {
+        if(this.ignorelist.indexOf(user._id) === -1)
+        {
+            this.config.value.ignorelist.push(user._id);
+            this.config.save().catch(function(err){
+                console.log(err);
+            });
+        }
+    }
+    
+    unignore_user(user)
+    {
+        var idx = this.ignorelist.indexOf(user._id);
+        console.log(idx, user);
+        
+        if(idx !== -1)
+        {
+            this.config.value.ignorelist.splice(idx, 1);
+            this.config.save().catch(function(err){
+                console.log(err);
+            });
+        }
+    }
+    
+    is_user_ignored(user)
+    {
+        return this.ignorelist.indexOf(user._id) !== -1;
+    }
+    
     set channel(channel)
     {
         this.config.value.channel = channel;
@@ -136,6 +167,11 @@ class ServerData
     get modules()
     {
         return this.config.value.modules;
+    }
+    
+    get ignorelist()
+    {
+        return this.config.value.ignorelist;
     }
 }
 

@@ -50,6 +50,24 @@ class User extends Document
         
         return this.roles[server.id];
     }
+    
+    get_role_id(server)
+    {
+        var role = this.get_role();
+        switch(role)
+        {
+            case "superadmin":
+                return 0;
+                
+            case "admin":
+                return 1;
+                
+            case "moderator":
+                return 2;
+        }
+        
+        return 3;
+    }
 }
 
 class Users
@@ -88,8 +106,18 @@ class Users
     add_user(id, name, server, role)
     {
         if(this.users[id] !== undefined)
-            return this.users[id];
+        {
+            if(this.users[id].name != name)
+            {
+                this.users[id].name = name;
+                this.users[id].save().catch(function(err){
+                    console.log(err);
+                });
+            }
             
+            return this.users[id];
+        }
+          
         role = role || "normal";
         
         if(config.superadmins.indexOf(id) !== -1)

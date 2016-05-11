@@ -26,6 +26,8 @@ class Bot
         this.discord = new Discord.Client();
         this.servers = {};
         this.modules = {};
+        this.user_blacklist = null;
+        this.server_blacklist = null;
 
         this.discord.on("message", this.handle_message.bind(this));
         this.discord.on("ready", this.on_ready.bind(this));
@@ -94,6 +96,30 @@ class Bot
                     if(docs[i].value.value != responses.currentMode)
                         responses.setMode(docs[i].value);
                 }
+                else if(docs[i].key == "user_blacklist")
+                {
+                    _this.user_blacklist = docs[i];
+                }
+                else if(docs[i].key == "server_blacklist")
+                {
+                    _this.server_blacklist = docs[i];
+                }
+            }
+            
+            if(_this.user_blacklist === null)
+            {
+                _this.user_blacklist = db.ConfigKeyValue.create({_id: "user_blacklist", key: "user_blacklist", value: {blacklist: []}});
+                _this.user_blacklist.save().catch(function(err){
+                    console.log(err);
+                });
+            }
+            
+            if(_this.server_blacklist === null)
+            {
+                _this.server_blacklist = db.ConfigKeyValue.create({_id: "server_blacklist", key: "server_blacklist", value: {blacklist: []}});
+                _this.server_blacklist.save().catch(function(err){
+                    console.log(err);
+                });
             }
             
             _this.print("Loading users from DB", 70, false);
@@ -135,13 +161,13 @@ class Bot
                 {
                     var server = _this.discord.servers[i];
                     _this.servers[server.id] = new ServerData(_this, server);
-                    _this.servers[server.id].load_promise.promise.then(function(){
-                        for(var key in _this.modules)
+                    _this.servers[server.id].load_promise.promise.then(function(server){
+                        for(var key in this.modules)
                         {
-                            if(_this.modules[key].always_on)
-                                _this.servers[server.id].enable_module(key);
+                            if(this.modules[key].always_on)
+                                this.servers[server.id].enable_module(key);
                         }
-                    });
+                    }.bind(_this, _this.servers[server.id]));
                 }
             });
         }).catch(function(err){
@@ -174,6 +200,10 @@ class Bot
         
         if(message.content.indexOf("sempai") == 0 || message.content.indexOf("-") == 0)
         {
+            //Is the user blacklisted/ignored
+            if(this.is_user_blacklisted(message.user) || (message.server !== null && message.server.is_user_ignored(message.user)))
+                return;
+                
             var split = message.content.split(" ");
             var handled = false;
             
@@ -194,6 +224,55 @@ class Bot
                     this.respond(message, responses.get("UNKNOWN_COMMAND").format({author: message.author.id}));
             }
         }
+    }
+    
+    blacklist_user(user)
+    {
+        this.user_blacklist.value.blacklist.push(user._id);
+        this.user_blacklist.save().catch(function(err){
+            console.log(err);
+        });
+    }
+    
+    blacklist_server(server_id)
+    {
+        this.server_blacklist.value.blacklist.push(server_id);
+        this.server_blacklist.save().catch(function(err){
+            console.log(err);
+        });
+    }
+    
+    whitelist_user(user)
+    {
+        var idx = this.user_blacklist.value.blacklist.indexOf(user._id);
+        if(idx === -1)
+            return false;
+        
+        this.user_blacklist.value.blacklist.splice(idx, 1);
+        this.user_blacklist.save().catch(function(err){
+            console.log(err);
+        });
+        
+        return true;
+    }
+    
+    whitelist_server(server_id)
+    {
+        var idx = this.server_blacklist.value.blacklist.indexOf(server_id);
+        if(idx === -1)
+            return false;
+        
+        this.server_blacklist.value.blacklist.splice(idx, 1);
+        this.server_blacklist.save().catch(function(err){
+            console.log(err);
+        });
+        
+        return true;
+    }
+    
+    is_user_blacklisted(user)
+    {
+        return this.user_blacklist.value.blacklist.indexOf(user._id) !== -1;
     }
 }
 
