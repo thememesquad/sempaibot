@@ -1,10 +1,11 @@
 # sempaibot
-A modular discord bot for osu! and other things! :>
+A fun modular discord bot for osu! and other things! :>
 
 # General functionality
 - Reminders! Have the bot send you or others a reminder message in a couple of minutes or at a certain time or date!
 - A permission system (so people can't mess with the bot if you don't want them to).
 - Ignore list (same reason as above)
+- Tsundere mode, because it's fun.
 
 # osu! module functionality
 - Track and announce when one of your friends/follows achieves a top score!
