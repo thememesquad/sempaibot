@@ -65,11 +65,22 @@ class OsuBancho
                     var command = line.substr(idx1 + 1, idx2 - idx1 - 1);
 
                     //001 = welcome message
+                    //375 = motd start
+                    //372 = motd entry
                     //376 = names list start
                     //353 = names list entry
                     //366 = names list end
 
-                    if(command == "376")
+                    if(command == "001")
+                    {
+                    }
+                    else if(command == "375")
+                    {
+                    }
+                    else if(command == "372")
+                    {
+                    }
+                    else if(command == "376")
                     {
                         this.online_buffer = [];
                     }else if(command == "353")
@@ -89,6 +100,8 @@ class OsuBancho
                         var req = this.requests["names"];
                         this.requests["names"] = null;
                         req.resolve(this.online_buffer);
+                    }else{
+                        console.log(line);
                     }
                 }
             }
@@ -99,6 +112,8 @@ class OsuBancho
 
             setTimeout(function(){
                 console.log("Reconnecting to Bancho");
+                
+                this.connected = Q.defer();
                 this.client.connect(6667, "irc.ppy.sh", function(){
                     this.onConnect();
                 }.bind(this));
