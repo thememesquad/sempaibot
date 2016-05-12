@@ -38,13 +38,13 @@ var responses_normal = {
         "I can't remind you of something in the past.",
 	],
     REMIND_ME: [
-        "I will remind you to \"{message}\" at {time}.",
-        "Sempai will remind you to \"{message}\" at {time}.",
-        "Sempai will remind <@{author}> to \"{message}\" at {time}.",
+        "I will remind you to \"{message}\" {time}.",
+        "Sempai will remind you to \"{message}\" {time}.",
+        "Sempai will remind <@{author}> to \"{message}\" {time}.",
 	],
     REMIND_OTHER: [
-        "I will remind {people} to \"{message}\" at {time}.",
-        "Sempai will remind {people} to \"{message}\" at {time}.",
+        "I will remind {people} to \"{message}\" {time}.",
+        "Sempai will remind {people} to \"{message}\" {time}.",
 	],
     REMINDER: "<@{author}> reminded {people}: {message}.",
     LIST_REMINDERS: "List of reminders on this server:{response}",

@@ -48,7 +48,7 @@ class RemindersModule extends IModule
         
         this.add_command({
             regex: [
-                /^remind (\S+)(?:(?:\s+)to)?(?:\s+)([^0-9]+)(?:at|in|after)(?:\s+)(.{4,})/i,
+                /^remind (\S+)(?:(?:\s+)to)?(?:\s+)([^0-9]+)(at|in|after|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow)(?:\s+)?(.{4,})?/i,
                 /^remind (\S+)(?:(?:\s+)to)?(?:\s+)([^0-9]+)(?:\s+)(.{4,})/i
             ],
             sample: "sempai remind __*name*__  to __*reminder*__  at __*time*__",
@@ -59,15 +59,15 @@ class RemindersModule extends IModule
             execute: this.handle_remind
         });
         
-        /*console.log("5 minutes: " + this.parse_timestring("5 minutes"));
-        console.log("1 hour: " + this.parse_timestring("1 hour"));
-        console.log("1 year: " + this.parse_timestring("1 year"));
-        console.log("19:30: " + this.parse_timestring("19:30"));
-        console.log("tomorrow: " + this.parse_timestring("tomorrow"));
-        console.log("next week: " + this.parse_timestring("next week"));
-        console.log("2 weeks: " + this.parse_timestring("2 weeks"));
-        console.log("tuesday: " + this.parse_timestring("tuesday"));
-        console.log("saturday: " + this.parse_timestring("saturday"));*/
+        /*console.log("5 minutes: " + this.parse_timestring("", "5 minutes"));
+        console.log("1 hour: " + this.parse_timestring("", "1 hour"));
+        console.log("1 year: " + this.parse_timestring("", "1 year"));
+        console.log("19:30: " + this.parse_timestring("", "19:30"));
+        console.log("tomorrow: " + this.parse_timestring("", "tomorrow"));
+        console.log("next week: " + this.parse_timestring("next", "week"));
+        console.log("2 weeks: " + this.parse_timestring("", "2 weeks"));
+        console.log("tuesday: " + this.parse_timestring("", "tuesday"));
+        console.log("saturday: " + this.parse_timestring("", "saturday"));*/
     }
     
     handle_list_reminders(message)
@@ -108,7 +108,7 @@ class RemindersModule extends IModule
         return this.bot.respond(message, responses.get("LIST_REMINDERS").format({author: message.author.id, response: response}));
     }
     
-    parse_timestring(str)
+    parse_timestring(base, str)
     {
         str = str.toLowerCase();
         
@@ -117,7 +117,7 @@ class RemindersModule extends IModule
         var time = "";
         var currentDate = new Date();
         
-        var day_func = function(target){
+        var day_func = function(target, day){
             var current = currentDate.getDay();
             
             if(current == target)
@@ -129,49 +129,67 @@ class RemindersModule extends IModule
             else
                 num = target - current;
                 
-            return (new Date(currentDate.getTime() + (num * 86400000)));
+            return ["on " + day, (new Date(currentDate.getTime() + (num * 86400000)))];
         };
         
         switch(str)
         {
             case "monday":
             {
-                return day_func(1);
+                return day_func(1, "monday");
             }
             
             case "tuesday":
             {
-                return day_func(2);
+                return day_func(2, "tuesday");
             }
             
             case "wednesday":
             {
-                return day_func(3);
+                return day_func(3, "wednesday");
             }
             
             case "thursday":
             {
-                return day_func(4);
+                return day_func(4, "thursday");
             }
             
             case "friday":
             {
-                return day_func(5);
+                return day_func(5, "friday");
             }
             
             case "saturday":
             {
-                return day_func(6);
+                return day_func(6, "saturday");
             }
             
             case "sunday":
             {
-                return day_func(0);
+                return day_func(0, "sunday");
             }
             
             case "tomorrow":
             {
-                return (new Date(currentDate.getTime() + 86400000));
+                return ["tomorrow", (new Date(currentDate.getTime() + 86400000))];
+            }
+            
+            case "week":
+            case "weeks":
+            {
+                var num = 0;
+                var name = "";
+                
+                if(base === "next")
+                {
+                    num = 1;
+                    name = "next week";
+                }else{
+                    console.log("Unknown week: " + base, str);
+                    return currentDate;
+                }
+                
+                return [name, (new Date(currentDate.getTime() + ((num * 7) * 86400000)))];
             }
         }
         
@@ -190,7 +208,13 @@ class RemindersModule extends IModule
                         return currentDate;
                     }
                     
-                    return (new Date(currentDate.getTime() + (num * 1000)));
+                    var name = "" + num;
+                    if(num == 1)
+                        name += " second";
+                    else
+                        name += " seconds";
+                        
+                    return ["in " + name, (new Date(currentDate.getTime() + (num * 1000)))];
                 }
                 
                 case "minute":
@@ -203,7 +227,13 @@ class RemindersModule extends IModule
                         return currentDate;
                     }
                     
-                    return (new Date(currentDate.getTime() + (num * 60000)));
+                    var name = "" + num;
+                    if(num == 1)
+                        name += " minute";
+                    else
+                        name += " minutes";
+                    
+                    return ["in " + name, (new Date(currentDate.getTime() + (num * 60000)))];
                 }
                 
                 case "hour":
@@ -216,7 +246,13 @@ class RemindersModule extends IModule
                         return currentDate;
                     }
                     
-                    return (new Date(currentDate.getTime() + (num * 3600000)));
+                    var name = "" + num;
+                    if(num == 1)
+                        name += " hour";
+                    else
+                        name += " hours";
+                    
+                    return ["in " + name, (new Date(currentDate.getTime() + (num * 3600000)))];
                 }
                 
                 case "day":
@@ -229,7 +265,13 @@ class RemindersModule extends IModule
                         return currentDate;
                     }
                     
-                    return (new Date(currentDate.getTime() + (num * 86400000)));
+                    var name = "" + num;
+                    if(num == 1)
+                        name += " day";
+                    else
+                        name += " days";
+                    
+                    return ["in " + name, (new Date(currentDate.getTime() + (num * 86400000)))];
                 }
                 
                 case "week":
@@ -250,7 +292,13 @@ class RemindersModule extends IModule
                         }
                     }
                     
-                    return (new Date(currentDate.getTime() + ((num * 7) * 86400000)));
+                    var name = "" + num;
+                    if(num == 1)
+                        name += " week";
+                    else
+                        name += " weeks";
+                    
+                    return ["in " + name, (new Date(currentDate.getTime() + ((num * 7) * 86400000)))];
                 }
                 
                 case "month":
@@ -263,10 +311,16 @@ class RemindersModule extends IModule
                         return currentDate;
                     }
                     
+                    var name = "" + num;
+                    if(num == 1)
+                        name += " month";
+                    else
+                        name += " months";
+                    
                     var month = (currentDate.getMonth() + num) % 12;
                     time = (month + 1) + "-" + currentDate.getDate() + "-" + currentDate.getFullYear() + " " + currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
                     
-                    return new Date(time);
+                    return ["in " + name, new Date(time)];
                 }
                 
                 case "year":
@@ -279,10 +333,16 @@ class RemindersModule extends IModule
                         return currentDate;
                     }
                     
+                    var name = "" + num;
+                    if(num == 1)
+                        name += " year";
+                    else
+                        name += " years";
+                    
                     var year = currentDate.getFullYear() + num;
                     time = (currentDate.getMonth() + 1) + "-" + currentDate.getDate() + "-" + year + " " + currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
                     
-                    return new Date(time);
+                    return ["in " + name, new Date(time)];
                 }
             }
         }
@@ -293,10 +353,10 @@ class RemindersModule extends IModule
             time = (currentDate.getMonth() + 1) + "-" + currentDate.getDate() + "-" + currentDate.getFullYear() + " " + time;
         }
         
-        return new Date(time);
+        return ["at " + time, new Date(time)];
     }
     
-    handle_remind(message, name, reminder, time)
+    handle_remind(message, name, reminder, base, time)
     {
         var who = false;
         if (name != "me")
@@ -306,7 +366,8 @@ class RemindersModule extends IModule
 
         var currentDate = new Date();
         var info = reminder.trim();
-        var parsedtime = this.parse_timestring(time);
+        var parsed = (message.index === 0) ? ((time === undefined) ? this.parse_timestring("", base) : this.parse_timestring(base, time)) : this.parse_timestring("", base);
+        var parsedtime = parsed[1];
 
         if (parsedtime < currentDate) 
         {
@@ -326,16 +387,16 @@ class RemindersModule extends IModule
 
                 whos += w[i];
             }
-        } 
+        }
         else 
         {
             whos = "himself";
         }
 
         if(!who)
-            this.bot.respond(message, responses.get("REMIND_ME").format({author: message.author.id, message: info, time: time}));
+            this.bot.respond(message, responses.get("REMIND_ME").format({author: message.author.id, message: info, time: parsed[0]}));
         else
-            this.bot.respond(message, responses.get("REMIND_OTHER").format({author: message.author.id, people: whos, message: info, time: time}));
+            this.bot.respond(message, responses.get("REMIND_OTHER").format({author: message.author.id, people: whos, message: info, time: parsed[0]}));
     }
     
     create_reminder(me, server, who, when, what)
