@@ -193,7 +193,7 @@ class AdminModule extends IModule
         switch(role)
         {
             case "superadmin":
-                return false; //we can't assign new superadmins
+                return this.bot.respond(message, responses.get("ROLE_SUPERADMIN").format({author: message.author.id}));
                 
             case "admin":
                 role_id = 1;
@@ -208,30 +208,10 @@ class AdminModule extends IModule
                 break;
         }
         
-        var my_role = 0;
-        switch(message.user.get_role(message.server))
-        {
-            case "superadmin":
-                my_role = 0;
-                break;
-                
-            case "admin":
-                my_role = 1;
-                break;
-                
-            case "moderator":
-                my_role = 2;
-                break;
-                
-            default:
-                my_role = 3;
-                break;
-        }
-        
+        var my_role = message.user.get_role_id(message.server);
         if(role_id < my_role)
         {
-            //not allowed to assign higher roles
-            return;
+            return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
         var user = this.get_user(user_id);
@@ -255,11 +235,14 @@ class AdminModule extends IModule
     
     handle_add_permission(message, permission, role)
     {
+        permission = permission.toUpperCase();
+        role = role.toLowerCase();
+        
         var role_id = 0;
         switch(role)
         {
             case "superadmin":
-                return false; //we can't add permissions to the superadmin
+                return this.bot.respond(message, responses.get("PERMISSION_SUPERADMIN").format({author: message.author.id}));
                 
             case "admin":
                 role_id = 1;
@@ -274,41 +257,19 @@ class AdminModule extends IModule
                 break;
         }
         
-        var my_role = 0;
-        switch(message.user.get_role(message.server))
-        {
-            case "superadmin":
-                my_role = 0;
-                break;
-                
-            case "admin":
-                my_role = 1;
-                break;
-                
-            case "moderator":
-                my_role = 2;
-                break;
-                
-            default:
-                my_role = 3;
-                break;
-        }
-        
+        var my_role = message.user.get_role_id(message.server);
         if(role_id < my_role)
         {
-            //not allowed to change higher roles (ie, moderator can't change an admin)
-            return;
+            return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
         if(!permissions.is_allowed(permission, message.user.get_role(message.server), message.server))
         {
-            //not allowed to add a permission if your role doesn't even have that permission
-            return;
+            return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
         permissions.add(permission, role, message.server);
-        
-        //TODO: Add responses for this command
+        this.bot.respond(message, responses.get("ADDED_PERMISSION").format({author: message.author.id, permission: permission, role: role}));
     }
 
     handle_remove_permission(message, permission, role)
@@ -317,7 +278,7 @@ class AdminModule extends IModule
         switch(role)
         {
             case "superadmin":
-                return false; //we can't remove permissions from the superadmin
+                return this.bot.respond(message, responses.get("PERMISSION_SUPERADMIN").format({author: message.author.id}));
                 
             case "admin":
                 role_id = 1;
@@ -332,41 +293,19 @@ class AdminModule extends IModule
                 break;
         }
         
-        var my_role = 0;
-        switch(message.user.get_role(message.server))
-        {
-            case "superadmin":
-                my_role = 0;
-                break;
-                
-            case "admin":
-                my_role = 1;
-                break;
-                
-            case "moderator":
-                my_role = 2;
-                break;
-                
-            default:
-                my_role = 3;
-                break;
-        }
-        
+        var my_role = message.user.get_role_id(message.server);
         if(role_id < my_role)
         {
-            //not allowed to change higher roles (ie, moderator can't change an admin)
-            return;
+            return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
         if(!permissions.is_allowed(permission, message.user.get_role(message.server), message.server))
         {
-            //not allowed to remove a permission if your role doesn't even have that permission
-            return;
+            return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
         permissions.remove(permission, role, message.server);
-        
-        //TODO: Add responses for this command
+        this.bot.respond(message, responses.get("REMOVED_PERMISSION").format({author: message.author.id, permission: permission, role: role}));
     }
     
     handle_goto_channel(message, channel)
@@ -378,7 +317,7 @@ class AdminModule extends IModule
         }
         
         message.server.channel = id;
-        this.bot.respond(message, responses.get("OUTPUT_CHANNEL").format({author: message.author.id, channel: id}));
+        this.bot.message(responses.get("OUTPUT_CHANNEL").format({author: message.author.id, channel: id}), message.server);
     }
     
     handle_ignore_user(message, user_id)
@@ -386,18 +325,16 @@ class AdminModule extends IModule
         var user = users.get_user_by_id(user_id.substr(2, user_id.length - 3));
         if(user === null)
         {
-            //no such user
-            return;
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
         }
         
         if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
         {
-            //not allowed
-            return;
+            return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
         message.server.ignore_user(user);
-        //started ignoring user
+        return this.bot.respond(message, responses.get("STARTED_IGNORING").format({author: message.author.id, user: user_id}));
     }
     
     handle_unignore_user(message, user_id)
@@ -405,18 +342,16 @@ class AdminModule extends IModule
         var user = users.get_user_by_id(user_id.substr(2, user_id.length - 3));
         if(user === null)
         {
-            //no such user
-            return;
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
         }
         
         if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
         {
-            //not allowed
-            return;
+            return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
         message.server.unignore_user(user);
-        //stopped ignoring user
+        return this.bot.respond(message, responses.get("STOPPED_IGNORING").format({author: message.author.id, user: user_id}));
     }
     
     on_setup(bot)

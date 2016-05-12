@@ -155,7 +155,13 @@ var responses_normal = {
     OUTPUT_CHANNEL: "Okay, I'm now set up in <#{channel}>! If you want to know more about what I can do, type \"Sempai help me\"",
     SHOW_IGNORELIST: "Ignore list:{list}",
 	IGNORE_LIST_EMPTY: "I'm not ignoring anyone right now!",
-    OSU_FOLLOW_LIST_EMPTY: "I'm not following anyone on osu! right now."
+    OSU_FOLLOW_LIST_EMPTY: "I'm not following anyone on osu! right now.",
+    STARTED_IGNORING: "Ok, I'm now ignoring <@{user}>",
+    STOPPED_IGNORING: "Ok, I have stopped ignoring <@{user}>",
+    PERMISSION_SUPERADMIN: "Can't change permissions of the superadmin role!",
+    ADDED_PERMISSION: "Added permission '{permission}' to role '{role}'.",
+    REMOVED_PERMISSION: "Removed permission '{permission}' from role '{role}'.",
+    ROLE_SUPERADMIN: "Can't assign new superadmins!"
 };
 
 var responses_tsundere = {
