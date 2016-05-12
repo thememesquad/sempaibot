@@ -152,16 +152,14 @@ var responses_normal = {
     ROLE_ASSIGNED: "Assigned {role} to {user}.",
     ROLE_ALREADY_ASSIGNED: "Already assigned {role} to {user}.",
 	SETTING_UP: "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"sempai go to #channel\")",
-    OUTPUT_CHANNEL: "Okay, I'm now set up in <#{channel}>! If you want to know more about what I can do, type \"Sempai help me\"",
+    OUTPUT_CHANNEL: "Okay, I'm now set up in <#{channel}>! If you want to know more about what I can do, type \"sempai help me\"",
     SHOW_IGNORELIST: "Ignore list:{list}",
 	IGNORE_LIST_EMPTY: "I'm not ignoring anyone right now!",
     OSU_FOLLOW_LIST_EMPTY: "I'm not following anyone on osu! right now.",
     STARTED_IGNORING: "Ok, I'm now ignoring <@{user}>",
     STOPPED_IGNORING: "Ok, I have stopped ignoring <@{user}>",
-    PERMISSION_SUPERADMIN: "Can't change permissions of the superadmin role!",
     ADDED_PERMISSION: "Added permission '{permission}' to role '{role}'.",
-    REMOVED_PERMISSION: "Removed permission '{permission}' from role '{role}'.",
-    ROLE_SUPERADMIN: "Can't assign new superadmins!"
+    REMOVED_PERMISSION: "Removed permission '{permission}' from role '{role}'."
 };
 
 var responses_tsundere = {
@@ -232,7 +230,6 @@ var responses_tsundere = {
         "Okay. I won't follow {user} anymore. I-it's not like I really liked that person or anything anyway...  :'( "
     ],
 
-    OSU_NEW_SCORE_NODATE: "**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** ({delta_pp}) | **Rank: {rank}** | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
     OSU_USER_NOT_FOUND: "Baka~! I can't find that user. Did you type the username correctly?",
     OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {user}",
     OSU_ADDED_FOLLOWING: [

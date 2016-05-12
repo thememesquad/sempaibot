@@ -184,6 +184,8 @@ class AdminModule extends IModule
     
     handle_assign_role(message, role, user_id)
     {
+        role = role.toLowerCase();
+        
         if(role === "superadmin")
         {
             return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
@@ -193,7 +195,7 @@ class AdminModule extends IModule
         switch(role)
         {
             case "superadmin":
-                return this.bot.respond(message, responses.get("ROLE_SUPERADMIN").format({author: message.author.id}));
+                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
                 
             case "admin":
                 role_id = 1;
@@ -242,7 +244,7 @@ class AdminModule extends IModule
         switch(role)
         {
             case "superadmin":
-                return this.bot.respond(message, responses.get("PERMISSION_SUPERADMIN").format({author: message.author.id}));
+                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
                 
             case "admin":
                 role_id = 1;
@@ -274,11 +276,14 @@ class AdminModule extends IModule
 
     handle_remove_permission(message, permission, role)
     {
+        permission = permission.toUpperCase();
+        role = role.toLowerCase();
+        
         var role_id = 0;
         switch(role)
         {
             case "superadmin":
-                return this.bot.respond(message, responses.get("PERMISSION_SUPERADMIN").format({author: message.author.id}));
+                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
                 
             case "admin":
                 role_id = 1;

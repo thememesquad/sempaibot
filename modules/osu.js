@@ -369,7 +369,7 @@ class OsuModule extends IModule
                     this.bancho.update_online_buffer().then(function(users){
                         for(var i in this.users)
                         {
-                            if(users.indexOf(this.users[i].username) !== -1)
+                            if(users.indexOf(this.users[i].username) != -1)
                             {
                                 this.users[i].online = true;
                             }
@@ -677,7 +677,7 @@ class OsuModule extends IModule
             }
 
             var time = (new Date).getTime();
-            var user = {_id: json.user_id, user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], last_updated: time};
+            var user = {_id: json.user_id, user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_updated: time};
             this.users.push(user);
 
             var dbuser = OsuUser.create(user);
@@ -702,7 +702,7 @@ class OsuModule extends IModule
         this.get_user(profile.username).then(function(profile, data){
             profile.last_updated = (new Date).getTime();
 
-            OsuUser.findOneAndUpdate({_id: profile._id}, {user_id: data.user_id, pp: Number(parseFloat(data.pp_raw)), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
+            OsuUser.findOneAndUpdate({_id: profile._id}, {user_id: data.user_id, pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
                 profile.update_in_progress.resolve(data);
                 profile.update_in_progress = null;
             }).catch(function(err){
