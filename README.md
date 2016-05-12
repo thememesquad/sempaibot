@@ -29,3 +29,5 @@ This Bot uses the following Modules:
 - [nedb](https://github.com/louischatriot/nedb)
 - [q](https://github.com/kriskowal/q)
 - [request](https://github.com/request/request)
+- [moment](http://momentjs.com/)
+- [moment-timezone](http://momentjs.com/timezone/)
