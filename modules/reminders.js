@@ -48,7 +48,7 @@ class RemindersModule extends IModule
         
         this.add_command({
             regex: [
-                /^remind (\S+)(?:(?:\s+)to)?(?:\s+)([^0-9]+)(at|in|after|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow)(?:\s+)?(.{4,})?/i,
+                /^remind (\S+)(?:(?:\s+)to)?(?:\s+)([^0-9]+)(at|in|after|on|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow)(?:\s+)?(.{4,})?/i,
                 /^remind (\S+)(?:(?:\s+)to)?(?:\s+)([^0-9]+)(?:\s+)(.{4,})/i
             ],
             sample: "sempai remind __*name*__  to __*reminder*__  at __*time*__",
