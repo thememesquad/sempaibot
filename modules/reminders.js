@@ -39,7 +39,7 @@ class RemindersModule extends IModule
         this.add_command({
             regex: /^list reminders/i,
             sample: "sempai list reminders",
-            description: "Lists reminders on this server.",
+            description: "Lists all active reminders.",
             permission: null,
             global: false,
             
@@ -51,8 +51,8 @@ class RemindersModule extends IModule
                 /^remind (\S+)(?:(?:\s+)to)?(?:\s+)([^0-9]+)(at|in|after|on|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow)(?:\s+)?(.{4,})?/i,
                 /^remind (\S+)(?:(?:\s+)to)?(?:\s+)([^0-9]+)(?:\s+)(.{4,})/i
             ],
-            sample: "sempai remind __*name*__  to __*reminder*__  at __*time*__",
-            description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself) (Timezone is set to the timezone of your discord server).",
+            sample: "sempai remind __*name*__  to __*reminder message*__  at __*time*__",
+            description: "Send yourself (or someone else) a reminder at a specified time! Use \"me\" to refer to yourself. The timezone is set to the timezone of your discord server.",
             permission: null,
             global: false,
             

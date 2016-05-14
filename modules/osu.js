@@ -176,7 +176,7 @@ class OsuModule extends IModule
 				/^who do you follow/i
             ],
             sample: "sempai who are you following?",
-            description: "Lists all the people I'm following on osu.",
+            description: "Lists all the people I'm following on osu!",
             permission: null,
             global: false,
 
@@ -188,8 +188,8 @@ class OsuModule extends IModule
                 /^follow (.*)/i,
                 /^stalk (.*)/i
             ],
-            sample: "sempai follow __*user*__",
-            description: "Adds the person to my following list for osu.",
+            sample: "sempai follow __*osu! username or id*__",
+            description: "Adds the specified person to my following list for osu!",
             permission: "OSU_FOLLOW",
             global: false,
 
@@ -201,8 +201,8 @@ class OsuModule extends IModule
                 /^stop following (.*)/i,
                 /^stop stalking (.*)/i
             ],
-            sample: "sempai stop following __*user*__",
-            description: "Removes the person from my following list for osu.",
+            sample: "sempai stop following __*osu! username or id*__",
+            description: "Removes the specified person from my following list for osu!",
             permission: "OSU_UNFOLLOW",
             global: false,
 
@@ -211,8 +211,8 @@ class OsuModule extends IModule
 
         this.add_command({
             regex: /^check (.*)/i,
-            sample: "sempai check __*user*__",
-            description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
+            sample: "sempai check __*osu! username or id*__",
+            description: "Forces Sempai to check the specified person for scores that Sempai may have somehow missed.",
             permission: "OSU_CHECK",
             global: false,
 

@@ -20,7 +20,7 @@ class BaseModule extends IModule
         this.add_command({
             regex: /^join server (.*)/i,
             sample: "sempai join server __*invite*__",
-            description: "Allow sempai to join a new server",
+            description: "Allow Sempai to join a new server.",
             permission: null,
             global: true,
             private: true,
@@ -57,7 +57,7 @@ class BaseModule extends IModule
                 /^what is my role/i
             ],
             sample: "sempai what is my role?",
-            description: "Displays what sempai thinks of you on this server.",
+            description: "Displays your role on this server.",
             permission: null,
             global: false,
             
@@ -69,7 +69,7 @@ class BaseModule extends IModule
                 /^what are my permissions/i
             ],
             sample: "sempai what are my permissions?",
-            description: "Displays what sempai has allowed you to do.",
+            description: "Displays your role's permissions.",
             permission: null,
             global: false,
             
@@ -79,7 +79,7 @@ class BaseModule extends IModule
         this.add_command({
             regex: /^list roles/i,
             sample: "sempai list roles",
-            description: "Lists the users per role.",
+            description: "Lists every user's role.",
             permission: null,
             global: false,
             
@@ -89,7 +89,7 @@ class BaseModule extends IModule
         this.add_command({
             regex: /^list permissions/i,
             sample: "sempai list permissions",
-            description: "Lists all the available permissions per role.",
+            description: "Lists the available permissions for each role.",
             permission: null,
             global: false,
             
@@ -99,7 +99,7 @@ class BaseModule extends IModule
         this.add_command({
             regex: /^show ignorelist/i,
             sample: "sempai show ignorelist",
-            description: "Shows the list of people I'm currently ignoring (on this server)",
+            description: "Shows the list of people I'm currently ignoring on this server!",
             permission: null,
             global: false,
             
@@ -113,7 +113,8 @@ class BaseModule extends IModule
             "Boku no Pico",
             "Petting Zoo Simulator",
             "Hello Kitty Online",
-            "Counter-Strike: Global Offensive"
+            "Counter-Strike: Global Offensive",
+			"osu!"
         ];
 
         var game = games[Math.floor((Math.random() * games.length))];
@@ -205,7 +206,7 @@ class BaseModule extends IModule
         
         response += "```";
         
-        this.bot.respond(message, responses.get("LIST_PERMISSIONS").format({author: message.author.id, roles: response}));
+        this.bot.respond(message, responses.get("LIST_PERMISSIONS").format({author: message.author.id, permissions: response}));
     }
     
     handle_show_ignorelist(message)

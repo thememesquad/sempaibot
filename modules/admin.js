@@ -35,7 +35,7 @@ class AdminModule extends IModule
         this.add_command({
             regex: /^disable module (.*)/i,
             sample: "sempai disable module __*module*__",
-            description: "Disables a module for this server.",
+            description: "Disables the specified module for this server.",
             permission: "MANAGE_MODULES",
             global: false,
 
@@ -45,7 +45,7 @@ class AdminModule extends IModule
         this.add_command({
             regex: /^assign role (.*) to user (.*)/i,
             sample: "sempai assign role __*role*__ to user __*@user*__",
-            description: "Assigns a role to a user",
+            description: "Assigns the specified role to the specified user.",
             permission: "ASSIGN_ROLES",
             global: false,
             
@@ -55,7 +55,7 @@ class AdminModule extends IModule
         this.add_command({
             regex: /^add permission (.*) to role (.*)/i,
             sample: "sempai add permission __*permission*__ to role __*role*__",
-            description: "Adds a permission to the role.",
+            description: "Adds the specified permission to the specified role.",
             permission: "MANAGE_PERMISSIONS",
             global: false,
             
@@ -65,7 +65,7 @@ class AdminModule extends IModule
         this.add_command({
             regex: /^remove permission (.*) from role (.*)/i,
             sample: "sempai remove permission __*permission*__ from role __*role*__",
-            description: "Removes a permission from the role.",
+            description: "Removes the specified permission from the specified role.",
             permission: "MANAGE_PERMISSIONS",
             global: false,
             
@@ -85,7 +85,7 @@ class AdminModule extends IModule
         this.add_command({
             regex: /^ignore (.*)/i,
             sample: "sempai ignore __*@user*__",
-            description: "Ignores a user on this server",
+            description: "Ignores the specified user on this server.",
             permission: "IGNORE_USERS",
             global: false,
             
@@ -95,7 +95,7 @@ class AdminModule extends IModule
         this.add_command({
             regex: /^unignore (.*)/i,
             sample: "sempai unignore __*@user*__",
-            description: "Stops ignoring user on this server",
+            description: "Stops ignoring the specified user on this server.",
             permission: "IGNORE_USERS",
             global: false,
             
@@ -105,7 +105,7 @@ class AdminModule extends IModule
         this.add_command({
             regex: /^go to (.*)/i,
             sample: "sempai go to __*#channel*__",
-            description: "Tells sempai to output only to a channel (unless its a response)",
+            description: "Tells Sempai to output to the specified channel.",
             permission: "GOTO_CHANNEL",
             global: false,
             

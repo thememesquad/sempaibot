@@ -134,7 +134,7 @@ var responses_normal = {
 
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
     
-    MY_ROLE: "Your role is '{role}'.",
+    MY_ROLE: "Your role is {role}.",
     MY_PERMISSIONS: "Your permissions are:{permissions}",
     NOT_ALLOWED: "You don't have permission to do that.",
     MODULE_INVALID: "That's not a valid module name.",
@@ -152,16 +152,16 @@ var responses_normal = {
     ROLE_ASSIGNED: "Assigned {role} to {user}.",
     ROLE_ALREADY_ASSIGNED: "Already assigned {role} to {user}.",
 	SETTING_UP: "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"sempai go to #channel\")",
-    OUTPUT_CHANNEL: "Okay, I'm now set up in <#{channel}>! If you want to know more about what I can do, type \"Sempai help me\"",
+    OUTPUT_CHANNEL: "Okay, I'm now set up in <#{channel}>! If you want to know more about what I can do, type \"Sempai help me\".",
     SHOW_IGNORELIST: "Ignore list:{list}",
 	IGNORE_LIST_EMPTY: "I'm not ignoring anyone right now!",
     OSU_FOLLOW_LIST_EMPTY: "I'm not following anyone on osu! right now.",
-    STARTED_IGNORING: "Ok, I'm now ignoring <@{user}>",
-    STOPPED_IGNORING: "Ok, I have stopped ignoring <@{user}>",
-    PERMISSION_SUPERADMIN: "Can't change permissions of the superadmin role!",
-    ADDED_PERMISSION: "Added permission '{permission}' to role '{role}'.",
-    REMOVED_PERMISSION: "Removed permission '{permission}' from role '{role}'.",
-    ROLE_SUPERADMIN: "Can't assign new superadmins!"
+    STARTED_IGNORING: "Got it! I'll ignore {user} from now on!",
+    STOPPED_IGNORING: "Alright, I'll stop ignoring {user}.",
+    ADDED_PERMISSION: "Added permission {permission} to {role}.",
+    REMOVED_PERMISSION: "Removed permission {permission} from {role}.",
+    ROLE_SUPERADMIN: "That's not a valid role!",
+	PERMISSION_SUPERADMIN: "Can't change permissions of the superadmin role!"
 };
 
 var responses_tsundere = {
