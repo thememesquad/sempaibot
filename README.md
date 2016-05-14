@@ -31,3 +31,4 @@ This Bot uses the following Modules:
 - [request](https://github.com/request/request)
 - [moment](http://momentjs.com/)
 - [moment-timezone](http://momentjs.com/timezone/)
+- [chrono](https://github.com/wanasit/chrono)
