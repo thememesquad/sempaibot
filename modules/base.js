@@ -13,6 +13,7 @@ class BaseModule extends IModule
         super();
 
         this.name = "General";
+		this.description = "This is the base module! Cannot be disabled."
         this.always_on = true;
 
         permissions.register("CHANGE_PERSONALITY", "moderator");
@@ -33,7 +34,7 @@ class BaseModule extends IModule
                 return [id];
             },
             sample: "sempai join server __*invite*__",
-            description: "Allow sempai to join a new server",
+            description: "Allow Sempai to join a new server.",
             permission: null,
             global: true,
             private: true,
@@ -93,7 +94,7 @@ class BaseModule extends IModule
                 return [];
             },
             sample: "sempai what is my role?",
-            description: "Displays what sempai thinks of you on this server.",
+            description: "Displays your role.",
             permission: null,
             global: false,
             
@@ -108,7 +109,7 @@ class BaseModule extends IModule
                 return [];
             },
             sample: "sempai what are my permissions?",
-            description: "Displays what sempai has allowed you to do.",
+            description: "Displays your role's permissions.",
             permission: null,
             global: false,
             
@@ -123,7 +124,7 @@ class BaseModule extends IModule
                 return [];
             },
             sample: "sempai list roles",
-            description: "Lists the users per role.",
+            description: "Lists every user's role.",
             permission: null,
             global: false,
             
@@ -138,7 +139,7 @@ class BaseModule extends IModule
                 return [];
             },
             sample: "sempai list permissions",
-            description: "Lists all the available permissions per role.",
+            description: "Lists the available permissions for each role.",
             permission: null,
             global: false,
             
@@ -153,7 +154,7 @@ class BaseModule extends IModule
                 return [];
             },
             sample: "sempai show ignorelist",
-            description: "Shows the list of people I'm currently ignoring (on this server)",
+            description: "Shows the list of people I'm currently ignoring!",
             permission: null,
             global: false,
             
@@ -167,7 +168,8 @@ class BaseModule extends IModule
             "Boku no Pico",
             "Petting Zoo Simulator",
             "Hello Kitty Online",
-            "Counter-Strike: Global Offensive"
+            "Counter-Strike: Global Offensive",
+			"osu!"
         ];
 
         var game = games[Math.floor((Math.random() * games.length))];

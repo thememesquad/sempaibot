@@ -12,6 +12,7 @@ class AdminModule extends IModule
         super();
 
         this.name = "Admin";
+		this.description = "This is the permissions and roles module! Cannot be disabled.";
         this.always_on = true;
 
         permissions.register("BLACKLIST_SERVERS", "superadmin");
@@ -36,7 +37,7 @@ class AdminModule extends IModule
                 
                 return [mod];
             },
-            sample: "sempai enable module __*module*__",
+            sample: "sempai enable module __*module name*__",
             description: "Enables a module for this server.",
             permission: "MANAGE_MODULES",
             global: false,
@@ -58,8 +59,8 @@ class AdminModule extends IModule
                 
                 return [mod];
             },
-            sample: "sempai disable module __*module*__",
-            description: "Disables a module for this server.",
+            sample: "sempai disable module __*module name*__",
+            description: "Disables the specified module for this server.",
             permission: "MANAGE_MODULES",
             global: false,
 
@@ -84,7 +85,7 @@ class AdminModule extends IModule
                 return [role.toLowerCase(), user.toLowerCase()];
             },
             sample: "sempai assign role __*role*__ to user __*@user*__",
-            description: "Assigns a role to a user",
+            description: "Assigns the specified role to the specified user.",
             permission: "ASSIGN_ROLES",
             global: false,
             
@@ -108,8 +109,8 @@ class AdminModule extends IModule
                 
                 return [permission.toUpperCase(), role.toLowerCase()];
             },
-            sample: "sempai add permission __*permission*__ to role __*role*__",
-            description: "Adds a permission to the role.",
+            sample: "sempai add permission __*permission*__ to role __*role name*__",
+            description: "Adds the specified permission to the specified role.",
             permission: "MANAGE_PERMISSIONS",
             global: false,
             
@@ -134,7 +135,7 @@ class AdminModule extends IModule
                 return [permission.toUpperCase(), role.toLowerCase()];
             },
             sample: "sempai remove permission __*permission*__ from role __*role*__",
-            description: "Removes a permission from the role.",
+            description: "Removes the specified permission from the specified role.",
             permission: "MANAGE_PERMISSIONS",
             global: false,
             
@@ -149,7 +150,7 @@ class AdminModule extends IModule
                 return [];
             },
             sample: "sempai list modules",
-            description: "Lists all the available modules for this server.",
+            description: "Lists all available modules.",
             permission: "MANAGE_MODULES",
             global: false,
 
@@ -171,7 +172,7 @@ class AdminModule extends IModule
                 return [mod];
             },
             sample: "sempai ignore __*@user*__",
-            description: "Ignores a user on this server",
+            description: "Ignores the specified user.",
             permission: "IGNORE_USERS",
             global: false,
             
@@ -193,7 +194,7 @@ class AdminModule extends IModule
                 return [mod];
             },
             sample: "sempai unignore __*@user*__",
-            description: "Stops ignoring user on this server",
+            description: "Stops ignoring the specified user.",
             permission: "IGNORE_USERS",
             global: false,
             
@@ -215,7 +216,7 @@ class AdminModule extends IModule
                 return [mod];
             },
             sample: "sempai go to __*#channel*__",
-            description: "Tells sempai to output only to a channel (unless its a response)",
+            description: "Tells Sempai to output to the specified channel.",
             permission: "GOTO_CHANNEL",
             global: false,
             

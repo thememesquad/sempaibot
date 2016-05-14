@@ -207,6 +207,14 @@ class OsuModule extends IModule
             this.bancho = new OsuBancho();
 
         this.name = "osu!";
+		this.description = [
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Great if you want to fanboy about Cookiezi, or make fun of your friend for setting a new PP score with bad acc!",
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Great if you want to keep track of our Erogelord225's crazy score sprees.",
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Who needs /r/osugame when you have this?",
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! This is like /r/osugame, but automated and with worse memes. I tried, okay.",
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Just don't follow everyone on osu! because Peppy will get angry at us.",
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Also, don't bother following Azer he's not going to get PP."
+		];
         this.last_checked = -1;
         this.modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
         this.users = [];
@@ -232,7 +240,7 @@ class OsuModule extends IModule
                 return null;
             },
             sample: "sempai who are you following?",
-            description: "Lists all the people I'm following on osu.",
+            description: "Lists all the people I'm following on osu!",
             permission: null,
             global: false,
 
@@ -263,8 +271,8 @@ class OsuModule extends IModule
                 
                 return null;
             },
-            sample: "sempai follow __*user*__",
-            description: "Adds the person to my following list for osu.",
+            sample: "sempai follow __*osu! username or id*__",
+            description: "Adds the specified person to my following list for osu!",
             permission: "OSU_FOLLOW",
             global: false,
 
@@ -295,8 +303,8 @@ class OsuModule extends IModule
                 
                 return null;
             },
-            sample: "sempai stop following __*user*__",
-            description: "Removes the person from my following list for osu.",
+            sample: "sempai stop following __*osu! username or id*__",
+            description: "Removes the specified person from my following list for osu!",
             permission: "OSU_UNFOLLOW",
             global: false,
 
@@ -317,8 +325,8 @@ class OsuModule extends IModule
                 
                 return [tmp]; 
             },
-            sample: "sempai check __*user*__",
-            description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
+            sample: "sempai check __*osu! username or id*__",
+            description: "Forces Sempai to check the specified person for scores that Sempai may have somehow missed.",
             permission: "OSU_CHECK",
             global: false,
 

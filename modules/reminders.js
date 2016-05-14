@@ -29,6 +29,7 @@ class RemindersModule extends IModule
         super();
         
         this.name = "Reminders";
+		this.description = "This module adds the possibility to send reminders to people! Cannot be disabled.";
         this.always_on = true;
         
         var _this = this;
@@ -50,7 +51,7 @@ class RemindersModule extends IModule
                 return [];
             },
             sample: "sempai list reminders",
-            description: "Lists reminders on this server.",
+            description: "Lists all active reminders.",
             permission: null,
             global: false,
             
@@ -102,8 +103,8 @@ class RemindersModule extends IModule
                 
                 return [name, message, date.ret];
             },
-            sample: "sempai remind __*name*__  to __*reminder*__  at __*time*__",
-            description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself) (Timezone is set to the timezone of your discord server).",
+            sample: "sempai remind __*name*__  to __*reminder message*__  at __*time*__",
+            description: "Send yourself (or someone else) a reminder at a specified time! Use \"me\" to refer to yourself. The timezone is set to the timezone of your discord server.",
             permission: null,
             global: false,
             
