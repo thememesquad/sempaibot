@@ -166,7 +166,8 @@ var responses_normal = {
     INCORRECT_FORMAT: "Seems you tried to execute a command while using an incorrect calling format.\r\nThe correct format is: \"{sample}\".",
     CHANNEL_DELETED: "Oops, I forgot where I'm allowed to talk! Can you remind sempai?\r\n(use the command \"sempai go to #channel\")",
     REMINDERS_LIST_EMPTY: "Reminder list is empty",
-    REMOVED_REMINDER: "Ok, I removed the reminder \"{message}\" scheduled at {time} by {who}."
+    REMOVED_REMINDER: "Ok, I removed the reminder \"{message}\" scheduled at {time} by {who}.",
+    TIMEZONE_LIST: "List of known timezones:{timezones}"
 };
 
 var responses_tsundere = {

@@ -5,6 +5,7 @@ const permissions = require("../src/permissions.js");
 const IModule = require("../src/IModule.js");
 const ServerData = require("../src/ServerData.js");
 const users = require("../src/users.js");
+var moment = require('moment-timezone');
 
 class BaseModule extends IModule
 {
@@ -159,6 +160,28 @@ class BaseModule extends IModule
             global: false,
             
             execute: this.handle_show_ignorelist
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("list timezones"))
+                    return null;
+                    
+                var area = message.content.substr("list timezones".length + 1);
+                if(area.length === 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [area.toLowerCase()];
+            },
+            sample: "sempai list timezones __*area*__",
+            description: "Lists all the timezones",
+            permission: null,
+            global: false,
+            
+            execute: this.handle_list_timezones
         });
     }
 
@@ -476,6 +499,85 @@ class BaseModule extends IModule
         response += "```";
         
         this.bot.respond(message, responses.get("MY_PERMISSIONS").format({author: message.author.id, permissions: response}));
+    }
+    
+    handle_list_timezones(message, area)
+    {
+        var timezones = moment.tz.names();
+        for(var i = timezones.length - 1;i>=0;i--)
+        {
+            var t = timezones[i];
+            if(!t.toLowerCase().startsWith(area))
+            {
+                timezones.splice(i, 1);
+            }
+        }
+        
+        var tmp = [];
+        var num = 0;
+        var response = "```";
+        var name = "Name";
+        var abbr = "Abbreviation";
+        
+        while(name.length < 26)
+            name += " ";
+            
+        while(abbr.length < 10)
+            abbr += " ";
+            
+        response += name + abbr + "\r\n";
+        for(var i = 0;i<timezones.length;i++)
+        {
+            var zone = moment.tz.zone(timezones[i]);
+            var name = zone.name;
+            var abbr = zone.abbrs[0];
+            
+            while(name.length < 26)
+                name += " ";
+                
+            while(abbr.length < 10)
+                abbr += " ";
+                
+            num++;
+            response += name + abbr + "\r\n";
+            
+            if(response.length >= 1800)
+            {
+                response += "```";
+                tmp.push(response);
+                
+                response = "```";
+                var name = "Name";
+                var abbr = "Abbreviation";
+                
+                while(name.length < 26)
+                    name += " ";
+                    
+                while(abbr.length < 10)
+                    abbr += " ";
+                    
+                response += name + abbr + "\r\n";
+                num = 0;
+            }
+        }
+        
+        if(num != 0)
+        {
+            response += "```";
+            tmp.push(response);
+        }
+        
+        tmp[0] = responses.get("TIMEZONE_LIST").format({author: message.author.id, timezones: tmp[0]});
+        var send = function(message, tmp, index){
+            if(index == tmp.length)
+                return;
+                
+            this.bot.respond(message, tmp[index]).then(function(){
+                send(index + 1);
+            });
+        }.bind(this, message, tmp);
+        
+        send(0);
     }
     
     on_setup(bot)
