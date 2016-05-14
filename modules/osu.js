@@ -65,11 +65,22 @@ class OsuBancho
                     var command = line.substr(idx1 + 1, idx2 - idx1 - 1);
 
                     //001 = welcome message
+                    //375 = motd start
+                    //372 = motd entry
                     //376 = names list start
                     //353 = names list entry
                     //366 = names list end
 
-                    if(command == "376")
+                    if(command == "001")
+                    {
+                    }
+                    else if(command == "375")
+                    {
+                    }
+                    else if(command == "372")
+                    {
+                    }
+                    else if(command == "376")
                     {
                         this.online_buffer = [];
                     }else if(command == "353")
@@ -89,6 +100,8 @@ class OsuBancho
                         var req = this.requests["names"];
                         this.requests["names"] = null;
                         req.resolve(this.online_buffer);
+                    }else{
+                        console.log(line);
                     }
                 }
             }
@@ -99,6 +112,8 @@ class OsuBancho
 
             setTimeout(function(){
                 console.log("Reconnecting to Bancho");
+                
+                this.connected = Q.defer();
                 this.client.connect(6667, "irc.ppy.sh", function(){
                     this.onConnect();
                 }.bind(this));
@@ -161,6 +176,14 @@ class OsuModule extends IModule
             this.bancho = new OsuBancho();
 
         this.name = "osu!";
+		this.description = [
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Great if you want to fanboy about Cookiezi, or make fun of your friend for setting a new PP score with bad acc!",
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Great if you want to keep track of our Erogelord225's crazy score sprees.",
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Who needs /r/osugame when you have this?",
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! This is like /r/osugame, but automated and with worse memes. I tried, okay.",
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Just don't follow everyone on osu! because Peppy will get angry at us.",
+			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Also, don't bother following Azer he's not going to get PP."
+		];
         this.last_checked = -1;
         this.modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
         this.users = [];
@@ -369,7 +392,7 @@ class OsuModule extends IModule
                     this.bancho.update_online_buffer().then(function(users){
                         for(var i in this.users)
                         {
-                            if(users.indexOf(this.users[i].username) !== -1)
+                            if(users.indexOf(this.users[i].username) != -1)
                             {
                                 this.users[i].online = true;
                             }
@@ -677,7 +700,7 @@ class OsuModule extends IModule
             }
 
             var time = (new Date).getTime();
-            var user = {_id: json.user_id, user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], last_updated: time};
+            var user = {_id: json.user_id, user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_updated: time};
             this.users.push(user);
 
             var dbuser = OsuUser.create(user);
@@ -702,7 +725,7 @@ class OsuModule extends IModule
         this.get_user(profile.username).then(function(profile, data){
             profile.last_updated = (new Date).getTime();
 
-            OsuUser.findOneAndUpdate({_id: profile._id}, {user_id: data.user_id, pp: Number(parseFloat(data.pp_raw)), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
+            OsuUser.findOneAndUpdate({_id: profile._id}, {user_id: data.user_id, pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
                 profile.update_in_progress.resolve(data);
                 profile.update_in_progress = null;
             }).catch(function(err){

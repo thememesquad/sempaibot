@@ -12,6 +12,7 @@ class AdminModule extends IModule
         super();
 
         this.name = "Admin";
+		this.description = "This is the permissions and roles module! Cannot be disabled.";
         this.always_on = true;
 
         permissions.register("BLACKLIST_SERVERS", "superadmin");
@@ -24,7 +25,7 @@ class AdminModule extends IModule
 
         this.add_command({
             regex: /^enable module (.*)/i,
-            sample: "sempai enable module __*module*__",
+            sample: "sempai enable module __*module name*__",
             description: "Enables a module for this server.",
             permission: "MANAGE_MODULES",
             global: false,
@@ -34,7 +35,7 @@ class AdminModule extends IModule
 
         this.add_command({
             regex: /^disable module (.*)/i,
-            sample: "sempai disable module __*module*__",
+            sample: "sempai disable module __*module name*__",
             description: "Disables the specified module for this server.",
             permission: "MANAGE_MODULES",
             global: false,
@@ -54,7 +55,7 @@ class AdminModule extends IModule
         
         this.add_command({
             regex: /^add permission (.*) to role (.*)/i,
-            sample: "sempai add permission __*permission*__ to role __*role*__",
+            sample: "sempai add permission __*permission*__ to role __*role name*__",
             description: "Adds the specified permission to the specified role.",
             permission: "MANAGE_PERMISSIONS",
             global: false,
@@ -75,7 +76,7 @@ class AdminModule extends IModule
         this.add_command({
             regex: /^list modules/i,
             sample: "sempai list modules",
-            description: "Lists all the available modules for this server.",
+            description: "Lists all available modules.",
             permission: "MANAGE_MODULES",
             global: false,
 
@@ -85,7 +86,7 @@ class AdminModule extends IModule
         this.add_command({
             regex: /^ignore (.*)/i,
             sample: "sempai ignore __*@user*__",
-            description: "Ignores the specified user on this server.",
+            description: "Ignores the specified user.",
             permission: "IGNORE_USERS",
             global: false,
             
@@ -95,7 +96,7 @@ class AdminModule extends IModule
         this.add_command({
             regex: /^unignore (.*)/i,
             sample: "sempai unignore __*@user*__",
-            description: "Stops ignoring the specified user on this server.",
+            description: "Stops ignoring the specified user.",
             permission: "IGNORE_USERS",
             global: false,
             
@@ -184,6 +185,8 @@ class AdminModule extends IModule
     
     handle_assign_role(message, role, user_id)
     {
+        role = role.toLowerCase();
+        
         if(role === "superadmin")
         {
             return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
@@ -193,7 +196,7 @@ class AdminModule extends IModule
         switch(role)
         {
             case "superadmin":
-                return this.bot.respond(message, responses.get("ROLE_SUPERADMIN").format({author: message.author.id}));
+                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
                 
             case "admin":
                 role_id = 1;
@@ -242,7 +245,7 @@ class AdminModule extends IModule
         switch(role)
         {
             case "superadmin":
-                return this.bot.respond(message, responses.get("PERMISSION_SUPERADMIN").format({author: message.author.id}));
+                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
                 
             case "admin":
                 role_id = 1;
@@ -274,11 +277,14 @@ class AdminModule extends IModule
 
     handle_remove_permission(message, permission, role)
     {
+        permission = permission.toUpperCase();
+        role = role.toLowerCase();
+        
         var role_id = 0;
         switch(role)
         {
             case "superadmin":
-                return this.bot.respond(message, responses.get("PERMISSION_SUPERADMIN").format({author: message.author.id}));
+                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
                 
             case "admin":
                 role_id = 1;

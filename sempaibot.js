@@ -24,7 +24,9 @@ class Bot
 {
     constructor()
     {
-        this.discord = new Discord.Client();
+        this.discord = new Discord.Client({
+            autoReconnect: true
+        });
         this.servers = {};
         this.modules = {};
         this.user_blacklist = null;

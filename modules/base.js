@@ -13,6 +13,7 @@ class BaseModule extends IModule
         super();
 
         this.name = "General";
+		this.description = "This is the base module! Cannot be disabled."
         this.always_on = true;
 
         permissions.register("CHANGE_PERSONALITY", "moderator");
@@ -57,7 +58,7 @@ class BaseModule extends IModule
                 /^what is my role/i
             ],
             sample: "sempai what is my role?",
-            description: "Displays your role on this server.",
+            description: "Displays your role.",
             permission: null,
             global: false,
             
@@ -99,7 +100,7 @@ class BaseModule extends IModule
         this.add_command({
             regex: /^show ignorelist/i,
             sample: "sempai show ignorelist",
-            description: "Shows the list of people I'm currently ignoring on this server!",
+            description: "Shows the list of people I'm currently ignoring!",
             permission: null,
             global: false,
             

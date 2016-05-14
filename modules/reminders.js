@@ -3,6 +3,7 @@
 const responses = require("../src/responses.js");
 const IModule = require("../src/IModule.js");
 const Document = require("camo").Document;
+const moment = require("moment");
 
 class Reminder extends Document
 {
@@ -25,6 +26,7 @@ class RemindersModule extends IModule
         super();
         
         this.name = "Reminders";
+		this.description = "This module adds the possibility to send reminders to people! Cannot be disabled.";
         this.always_on = true;
         
         var _this = this;
@@ -102,7 +104,7 @@ class RemindersModule extends IModule
                 who = "himself";
             }
             
-            response += "\r\n - at " + (new Date(reminder.time)).toLocaleString() + ", <@" + reminder.source + "> will remind " + who + " to '" + reminder.message + "'.";
+            response += "\r\n - " + moment(reminder.time).calendar() + ", <@" + reminder.source + "> will remind " + who + " to '" + reminder.message + "'.";
         }
         
         return this.bot.respond(message, responses.get("LIST_REMINDERS").format({author: message.author.id, response: response}));
@@ -115,10 +117,10 @@ class RemindersModule extends IModule
         var regex = /(\S+)(?:\s+)(\S+)/i;
         
         var time = "";
-        var currentDate = new Date();
+        var currentDate = moment();
         
         var day_func = function(target, day){
-            var current = currentDate.getDay();
+            var current = currentDate.day();
             
             if(current == target)
                 return currentDate;
@@ -128,8 +130,8 @@ class RemindersModule extends IModule
                 num = ((target + 6) - current) + 1;
             else
                 num = target - current;
-                
-            return ["on " + day, (new Date(currentDate.getTime() + (num * 86400000)))];
+            
+            return ["on " + day, currentDate.add(num, "days")];
         };
         
         switch(str)
@@ -171,7 +173,7 @@ class RemindersModule extends IModule
             
             case "tomorrow":
             {
-                return ["tomorrow", (new Date(currentDate.getTime() + 86400000))];
+                return ["tomorrow", currentDate.add(1, "day")];
             }
             
             case "week":
@@ -189,7 +191,7 @@ class RemindersModule extends IModule
                     return currentDate;
                 }
                 
-                return [name, (new Date(currentDate.getTime() + ((num * 7) * 86400000)))];
+                return [name, currentDate.add(num, "weeks")];
             }
         }
         
@@ -214,7 +216,7 @@ class RemindersModule extends IModule
                     else
                         name += " seconds";
                         
-                    return ["in " + name, (new Date(currentDate.getTime() + (num * 1000)))];
+                    return ["in " + name, moment(currentDate.getTime() + (num * 1000))];
                 }
                 
                 case "minute":
@@ -233,7 +235,7 @@ class RemindersModule extends IModule
                     else
                         name += " minutes";
                     
-                    return ["in " + name, (new Date(currentDate.getTime() + (num * 60000)))];
+                    return ["in " + name, currentDate.add(num, "minutes")];
                 }
                 
                 case "hour":
@@ -252,7 +254,7 @@ class RemindersModule extends IModule
                     else
                         name += " hours";
                     
-                    return ["in " + name, (new Date(currentDate.getTime() + (num * 3600000)))];
+                    return ["in " + name, currentDate.add(num, "hours")];
                 }
                 
                 case "day":
@@ -271,7 +273,7 @@ class RemindersModule extends IModule
                     else
                         name += " days";
                     
-                    return ["in " + name, (new Date(currentDate.getTime() + (num * 86400000)))];
+                    return ["in " + name, currentDate.add(num, "days")];
                 }
                 
                 case "week":
@@ -298,7 +300,7 @@ class RemindersModule extends IModule
                     else
                         name += " weeks";
                     
-                    return ["in " + name, (new Date(currentDate.getTime() + ((num * 7) * 86400000)))];
+                    return ["in " + name, currentDate.add(num, "weeks")];
                 }
                 
                 case "month":
@@ -317,10 +319,7 @@ class RemindersModule extends IModule
                     else
                         name += " months";
                     
-                    var month = (currentDate.getMonth() + num) % 12;
-                    time = (month + 1) + "-" + currentDate.getDate() + "-" + currentDate.getFullYear() + " " + currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
-                    
-                    return ["in " + name, new Date(time)];
+                    return ["in " + name, currentDate.add(num, "months")];
                 }
                 
                 case "year":
@@ -339,21 +338,19 @@ class RemindersModule extends IModule
                     else
                         name += " years";
                     
-                    var year = currentDate.getFullYear() + num;
-                    time = (currentDate.getMonth() + 1) + "-" + currentDate.getDate() + "-" + year + " " + currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
-                    
-                    return ["in " + name, new Date(time)];
+                    return ["in " + name, currentDate.add(num, "years")];
                 }
             }
         }
         
         time = str;
-        if (time.split(" ").length == 1)
+        var tmp = moment(time, "YYYY-MM-DD HH:mm");
+        if(!tmp.isValid())
         {
-            time = (currentDate.getMonth() + 1) + "-" + currentDate.getDate() + "-" + currentDate.getFullYear() + " " + time;
+            tmp = moment(time, "HH:mm");
         }
         
-        return ["at " + time, new Date(time)];
+        return ["at " + time, tmp];
     }
     
     handle_remind(message, name, reminder, base, time)
@@ -364,7 +361,7 @@ class RemindersModule extends IModule
             who = name;
         }
 
-        var currentDate = new Date();
+        var currentDate = moment();
         var info = reminder.trim();
         var parsed = (message.index === 0) ? ((time === undefined) ? this.parse_timestring("", base) : this.parse_timestring(base, time)) : this.parse_timestring("", base);
         var parsedtime = parsed[1];
@@ -413,7 +410,7 @@ class RemindersModule extends IModule
             }
         }
 
-        var reminder = Reminder.create({source: me, target: w, time: when.getTime(), message: what, server: server.id})
+        var reminder = Reminder.create({source: me, target: w, time: when.valueOf(), message: what, server: server.id})
         reminder.save().catch(function(err){
             console.log(err);
         });
@@ -454,8 +451,8 @@ class RemindersModule extends IModule
         this.bot = bot;
         
         this.remind = setInterval(function () {
-            var d = new Date();
-            var n = d.getTime();
+            var d = moment();
+            var n = d.valueOf();
             if (this.reminders.length > 0)
             {
                 for (var i = this.reminders.length - 1; i >= 0; i--)
