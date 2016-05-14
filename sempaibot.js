@@ -31,11 +31,14 @@ class Bot
         this.modules = {};
         this.user_blacklist = null;
         this.server_blacklist = null;
+        this.connected_once = false;
 
         this.discord.on("message", this.handle_message.bind(this));
         this.discord.on("ready", this.on_ready.bind(this));
         this.discord.on("serverCreated", this.on_server_created.bind(this));
         this.discord.on("serverDeleted", this.on_server_deleted.bind(this));
+        this.discord.on("disconnected", this.on_disconnected.bind(this));
+        this.discord.on("error", this.on_error.bind(this));
     }
 
     login()
@@ -102,6 +105,13 @@ class Bot
     
     on_ready()
     {
+        console.log("Connected to discord.");
+        
+        if(this.connected_once)
+            return;
+            
+        this.connected_once = true;
+        
         var _this = this;
         db.load().then(function(db_type){
             _this.print("Loading config from DB", 70, false);
@@ -217,6 +227,16 @@ class Bot
         delete this.servers[server.id];
     }
     
+    on_disconnected()
+    {
+        console.log("Disconnected from discord.");
+    }
+    
+    on_error(err)
+    {
+        console.log("Discord error: " + err);
+    }
+    
     handle_message(message)
     {
         var server = null;
@@ -249,11 +269,11 @@ class Bot
             var msg = message.content;
             if(msg.indexOf("sempai") == 0)
             {
-                msg = msg.substr("sempai".length + 1).trim();
+                msg = msg.substr("sempai".length + 1).replace(/\s+/g, ' ').trim();
             }
             else
             {
-                msg = msg.substr(1).trim();
+                msg = msg.substr(1).replace(/\s+/g, ' ').trim();
             }
             
             message.content = msg;

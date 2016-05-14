@@ -65,14 +65,28 @@ class ServerData
 
     on_load()
     {
+        this.channel_check = setInterval(function(){
+            if(this.channel.length !== 0)
+            {
+                if(this.server.channels.get("id", this.channel) === null)
+                {
+                    this.channel = "";
+                    this.bot.message(responses.get("CHANNEL_DELETED"), this);
+                }
+            }
+        }.bind(this), 100);
+        
         if(this.channel.length !== 0)
         {
             if(this.server.channels.get("id", this.channel) === null)
             {
-                //TODO: Check if the channel still exists and if not, display a "Oops, I forgot where I'm allowed to talk! Can you remind sempai?"
+                this.bot.message(responses.get("CHANNEL_DELETED"), this);
+                this.channel = "";
             }
-            
-            this.bot.message(responses.get("ONLINE"), this);
+            else
+            {
+                this.bot.message(responses.get("ONLINE"), this);
+            }
         }else{
             users.assign_role(this.server.owner.id, this.server, "admin");
             this.bot.message(responses.get("SETTING_UP"), this);

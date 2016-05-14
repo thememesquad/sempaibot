@@ -4,6 +4,9 @@ const responses = require("../src/responses.js");
 const IModule = require("../src/IModule.js");
 const Document = require("camo").Document;
 const moment = require("moment");
+const permissions = require("../src/permissions.js");
+const users = require("../src/users.js");
+const Time = require("../src/time.js");
 
 class Reminder extends Document
 {
@@ -37,8 +40,15 @@ class RemindersModule extends IModule
             _this.reminders = docs;
         });
         
+        permissions.register("MANAGE_REMINDERS", "moderator");
+        
         this.add_command({
-            regex: /^list reminders/i,
+            match: function(message){
+                if(!message.content.startsWith("list reminders"))
+                    return null;
+                    
+                return [];
+            },
             sample: "sempai list reminders",
             description: "Lists reminders on this server.",
             permission: null,
@@ -48,10 +58,50 @@ class RemindersModule extends IModule
         });
         
         this.add_command({
-            regex: [
-                /^remind (\S+)(?:(?:\s+)to)?(?:\s+)([^0-9]+)(at|in|after|on|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow)(?:\s+)?(.{4,})?/i,
-                /^remind (\S+)(?:(?:\s+)to)?(?:\s+)([^0-9]+)(?:\s+)(.{4,})/i
-            ],
+            match: match = function(message){
+                if(!message.content.startsWith("remind"))
+                    return null;
+                    
+                var parsed = Time.parse(message.content);
+                if(parsed.length === 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                var date = parsed[parsed.length - 1];
+                if(!date.ret[1].isValid())
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                var str = message.content.substr(0, date.index).trim();
+                var keywords = ["in", "after", "on", "at"];
+                
+                var split = str.split(" ");
+                var name = split[1];
+                var message = "";
+                
+                for(var i = 2;i<split.length;i++)
+                {
+                    if(i == 2 && split[i].toLowerCase() == "to")
+                        continue;
+                        
+                    if(i == split.length - 1)
+                    {
+                        if(keywords.indexOf(split[i].toLowerCase()) !== -1)
+                            continue;
+                    }
+                    
+                    if(message.length != 0)
+                        message += " ";
+                        
+                    message += split[i];
+                }
+                
+                return [name, message, date.ret];
+            },
             sample: "sempai remind __*name*__  to __*reminder*__  at __*time*__",
             description: "Send yourself (or someone else) a reminder at a given timestamp. (name should be me when referring to yourself) (Timezone is set to the timezone of your discord server).",
             permission: null,
@@ -60,30 +110,58 @@ class RemindersModule extends IModule
             execute: this.handle_remind
         });
         
-        /*console.log("5 minutes: " + this.parse_timestring("", "5 minutes"));
-        console.log("1 hour: " + this.parse_timestring("", "1 hour"));
-        console.log("1 year: " + this.parse_timestring("", "1 year"));
-        console.log("19:30: " + this.parse_timestring("", "19:30"));
-        console.log("tomorrow: " + this.parse_timestring("", "tomorrow"));
-        console.log("next week: " + this.parse_timestring("next", "week"));
-        console.log("2 weeks: " + this.parse_timestring("", "2 weeks"));
-        console.log("tuesday: " + this.parse_timestring("", "tuesday"));
-        console.log("saturday: " + this.parse_timestring("", "saturday"));*/
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("clear reminders"))
+                    return null;
+                    
+                return [];
+            },
+            sample: "sempai clear reminders",
+            description: "Clears all the reminders for this server.",
+            permission: "MANAGE_REMINDERS",
+            global: false,
+            
+            execute: this.handle_clear_reminders
+        });
+    }
+    
+    handle_clear_reminders(message)
+    {
+        var num = 0;
+        
+        for(var i = this.reminders.length - 1;i>=0;i--)
+        {
+            var reminder = this.reminders[i];
+            
+            if(reminder.server !== message.server.id)
+                continue;
+                
+            this.reminders.splice(i, 1);
+            reminder.delete().catch(function(e){
+                console.log(e);
+            });
+            
+            num++;
+        }
+        
+        this.bot.respond(message, responses.get("CLEARED_REMINDERS").format({author: message.author.id, num: num}));
     }
     
     handle_list_reminders(message)
     {
         var response = "";
         
+        var j = 0;
         for(var i = 0;i<this.reminders.length;i++)
         {
-            var time = new Date();
+            var time = moment();
             var reminder = this.reminders[i];
             
             if(reminder.server !== message.server.id)
                 continue;
                 
-            if(time.getTime() > reminder.time)
+            if(time.valueOf() > reminder.time)
                 continue;
                 
             var who = "";
@@ -103,256 +181,16 @@ class RemindersModule extends IModule
                 who = "himself";
             }
             
-            response += "\r\n - " + moment(reminder.time).calendar() + ", <@" + reminder.source + "> will remind " + who + " to '" + reminder.message + "'.";
+            response += "\r\n #" + ((j++) + 1) + ". " + moment(reminder.time).calendar() + ", <@" + reminder.source + "> will remind " + who + ": '" + reminder.message + "'.";
         }
         
+        if(j == 0)
+            return this.bot.respond(message, responses.get("REMINDERS_LIST_EMPTY").format({author: message.author.id}));
+            
         return this.bot.respond(message, responses.get("LIST_REMINDERS").format({author: message.author.id, response: response}));
     }
     
-    parse_timestring(base, str)
-    {
-        str = str.toLowerCase();
-        
-        var regex = /(\S+)(?:\s+)(\S+)/i;
-        
-        var time = "";
-        var currentDate = moment();
-        
-        var day_func = function(target, day){
-            var current = currentDate.day();
-            
-            if(current == target)
-                return currentDate;
-                
-            var num = 0;
-            if(current > target)
-                num = ((target + 6) - current) + 1;
-            else
-                num = target - current;
-            
-            return ["on " + day, currentDate.add(num, "days")];
-        };
-        
-        switch(str)
-        {
-            case "monday":
-            {
-                return day_func(1, "monday");
-            }
-            
-            case "tuesday":
-            {
-                return day_func(2, "tuesday");
-            }
-            
-            case "wednesday":
-            {
-                return day_func(3, "wednesday");
-            }
-            
-            case "thursday":
-            {
-                return day_func(4, "thursday");
-            }
-            
-            case "friday":
-            {
-                return day_func(5, "friday");
-            }
-            
-            case "saturday":
-            {
-                return day_func(6, "saturday");
-            }
-            
-            case "sunday":
-            {
-                return day_func(0, "sunday");
-            }
-            
-            case "tomorrow":
-            {
-                return ["tomorrow", currentDate.add(1, "day")];
-            }
-            
-            case "week":
-            case "weeks":
-            {
-                var num = 0;
-                var name = "";
-                
-                if(base === "next")
-                {
-                    num = 1;
-                    name = "next week";
-                }else{
-                    console.log("Unknown week: " + base, str);
-                    return currentDate;
-                }
-                
-                return [name, currentDate.add(num, "weeks")];
-            }
-        }
-        
-        var match = regex.exec(str);
-        if(match !== null)
-        {
-            switch(match[2])
-            {
-                case "second":
-                case "seconds":
-                {
-                    var num = parseInt(match[1]);
-                    if(isNaN(num))
-                    {
-                        console.log("Unknown second: " + match[1]);
-                        return currentDate;
-                    }
-                    
-                    var name = "" + num;
-                    if(num == 1)
-                        name += " second";
-                    else
-                        name += " seconds";
-                        
-                    return ["in " + name, moment(currentDate.getTime() + (num * 1000))];
-                }
-                
-                case "minute":
-                case "minutes":
-                {
-                    var num = parseInt(match[1]);
-                    if(isNaN(num))
-                    {
-                        console.log("Unknown minute: " + match[1]);
-                        return currentDate;
-                    }
-                    
-                    var name = "" + num;
-                    if(num == 1)
-                        name += " minute";
-                    else
-                        name += " minutes";
-                    
-                    return ["in " + name, currentDate.add(num, "minutes")];
-                }
-                
-                case "hour":
-                case "hours":
-                {
-                    var num = parseInt(match[1]);
-                    if(isNaN(num))
-                    {
-                        console.log("Unknown hour: " + match[1]);
-                        return currentDate;
-                    }
-                    
-                    var name = "" + num;
-                    if(num == 1)
-                        name += " hour";
-                    else
-                        name += " hours";
-                    
-                    return ["in " + name, currentDate.add(num, "hours")];
-                }
-                
-                case "day":
-                case "days":
-                {
-                    var num = parseInt(match[1]);
-                    if(isNaN(num))
-                    {
-                        console.log("Unknown day: " + match[1]);
-                        return currentDate;
-                    }
-                    
-                    var name = "" + num;
-                    if(num == 1)
-                        name += " day";
-                    else
-                        name += " days";
-                    
-                    return ["in " + name, currentDate.add(num, "days")];
-                }
-                
-                case "week":
-                case "weeks":
-                {
-                    var num = parseInt(match[1]);
-                    if(isNaN(num))
-                    {
-                        switch(match[1])
-                        {
-                            case "next":
-                                num = 1;
-                                break;
-                                
-                            default:
-                                console.log("Unknown week: " + match[1]);
-                                return currentDate;
-                        }
-                    }
-                    
-                    var name = "" + num;
-                    if(num == 1)
-                        name += " week";
-                    else
-                        name += " weeks";
-                    
-                    return ["in " + name, currentDate.add(num, "weeks")];
-                }
-                
-                case "month":
-                case "months":
-                {
-                    var num = parseInt(match[1]);
-                    if(isNaN(num))
-                    {
-                        console.log("Unknown month: " + match[1]);
-                        return currentDate;
-                    }
-                    
-                    var name = "" + num;
-                    if(num == 1)
-                        name += " month";
-                    else
-                        name += " months";
-                    
-                    return ["in " + name, currentDate.add(num, "months")];
-                }
-                
-                case "year":
-                case "years":
-                {
-                    var num = parseInt(match[1]);
-                    if(isNaN(num))
-                    {
-                        console.log("Unknown year: " + match[1]);
-                        return currentDate;
-                    }
-                    
-                    var name = "" + num;
-                    if(num == 1)
-                        name += " year";
-                    else
-                        name += " years";
-                    
-                    return ["in " + name, currentDate.add(num, "years")];
-                }
-            }
-        }
-        
-        time = str;
-        var tmp = moment(time, "YYYY-MM-DD HH:mm");
-        if(!tmp.isValid())
-        {
-            tmp = moment(time, "HH:mm");
-        }
-        
-        return ["at " + time, tmp];
-    }
-    
-    handle_remind(message, name, reminder, base, time)
+    handle_remind(message, name, reminder, parsed)
     {
         var who = false;
         if (name != "me")
@@ -362,7 +200,6 @@ class RemindersModule extends IModule
 
         var currentDate = moment();
         var info = reminder.trim();
-        var parsed = (message.index === 0) ? ((time === undefined) ? this.parse_timestring("", base) : this.parse_timestring(base, time)) : this.parse_timestring("", base);
         var parsedtime = parsed[1];
 
         if (parsedtime < currentDate) 
@@ -370,7 +207,10 @@ class RemindersModule extends IModule
             return this.bot.respond(message, responses.get("REMIND_PAST").format({author: message.author.id}));
         }
 
-        this.create_reminder(message.user._id, message.server, who, parsedtime, info);
+        if(!this.create_reminder(message.user._id, message.server, who, parsedtime, info))
+        {
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id}));
+        }
 
         if (who)
         {
@@ -398,6 +238,7 @@ class RemindersModule extends IModule
     create_reminder(me, server, who, when, what)
     {
         var w = [];
+        var valid = true;
         
         if (who)
         {
@@ -405,16 +246,27 @@ class RemindersModule extends IModule
 
             for (var i = 0; i < tmp.length; i++)
             {
-                w.push(tmp[i].substr(2, tmp[i].length - 3));
+                var id = tmp[i].substr(2, tmp[i].length - 3);
+                if(users.get_user_by_id(id) === null)
+                {
+                    valid = false;
+                    break;
+                }
+                
+                w.push(id);
             }
         }
 
+        if(!valid)
+            return false;
+            
         var reminder = Reminder.create({source: me, target: w, time: when.valueOf(), message: what, server: server.id})
         reminder.save().catch(function(err){
             console.log(err);
         });
         
         this.reminders.push(reminder);
+        return true;
     }
     
     on_remind(index)
@@ -474,4 +326,75 @@ class RemindersModule extends IModule
     }
 }
 
-module.exports = new RemindersModule();
+if(require.main == module)
+{
+    var match = function(message){
+        if(!message.content.startsWith("remind"))
+            return null;
+            
+        var parsed = Time.parse(message.content);
+        if(parsed.length === 0)
+        {
+            message.almost = true;
+            return null;
+        }
+        
+        var date = parsed[parsed.length - 1];
+        if(!date.ret[1].isValid())
+        {
+            message.almost = true;
+            return null;
+        }
+        
+        var str = message.content.substr(0, date.index).trim();
+        var keywords = ["in", "after", "on", "at"];
+        
+        var split = str.split(" ");
+        var name = split[1];
+        var message = "";
+        
+        for(var i = 2;i<split.length;i++)
+        {
+            if(i == 2 && split[i].toLowerCase() == "to")
+                continue;
+                
+            if(i == split.length - 1)
+            {
+                if(keywords.indexOf(split[i].toLowerCase()) !== -1)
+                    continue;
+            }
+            
+            if(message.length != 0)
+                message += " ";
+                
+            message += split[i];
+        }
+        
+        return [name, message, date.ret];
+    };
+    
+    var match_test = function(message){
+        var m = match(message);
+        if(m === null)
+            console.log(message.content + " -> null");
+        else
+        {
+            var msg = message.content + " -> \r\n";
+            msg += "  name: " + m[0] + "\r\n";
+            msg += "  message: " + m[1] + "\r\n";
+            msg += "  date: " + m[2][1].calendar() + "\r\n";
+            
+            console.log(msg);
+        }
+    };
+    
+    match_test({content: "remind me to test on sunday"});
+    match_test({content: "remind me to test at 19:30"});
+    match_test({content: "remind me to dhdfgh after 3 days"});
+    match_test({content: "remind me to dfhgsdfg on 14 april 2018"});
+    match_test({content: "remind me to dfhgsdfg on april 14th 2018"});
+    match_test({content: "remind me dfhgsdfg dfgh gdfh dfgh dfghdfghdf 2 years"});
+    match_test({content: "remind me dsjklfnhbskdj fhgkjs dhfkgjs dhfkjgshd fkgsh dkjfgh kj 5 april 1800"});
+}else{
+    module.exports = new RemindersModule();
+}

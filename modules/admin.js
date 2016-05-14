@@ -23,7 +23,19 @@ class AdminModule extends IModule
         permissions.register("ASSIGN_ROLES", "admin");
 
         this.add_command({
-            regex: /^enable module (.*)/i,
+            match: function(message, split){
+                if(!message.content.startsWith("enable module"))
+                    return null;
+                    
+                var mod = message.content.substr("enable module".length + 1).trim();
+                if(mod.length == 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [mod];
+            },
             sample: "sempai enable module __*module*__",
             description: "Enables a module for this server.",
             permission: "MANAGE_MODULES",
@@ -33,7 +45,19 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            regex: /^disable module (.*)/i,
+            match: function(message){
+                if(!message.content.startsWith("disable module"))
+                    return null;
+                    
+                var mod = message.content.substr("disable module".length + 1).trim();
+                if(mod.length == 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [mod];
+            },
             sample: "sempai disable module __*module*__",
             description: "Disables a module for this server.",
             permission: "MANAGE_MODULES",
@@ -43,7 +67,22 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            regex: /^assign role (.*) to user (.*)/i,
+            match: function(message){
+                if(!message.content.startsWith("assign role"))
+                    return null;
+                    
+                var split = message.content.split(" ");
+                if(split.length !== 6)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                var role = split[2];
+                var user = split[5];
+                
+                return [role.toLowerCase(), user.toLowerCase()];
+            },
             sample: "sempai assign role __*role*__ to user __*@user*__",
             description: "Assigns a role to a user",
             permission: "ASSIGN_ROLES",
@@ -53,7 +92,22 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /^add permission (.*) to role (.*)/i,
+            match: function(message){
+                if(!message.content.startsWith("add permission"))
+                    return null;
+                    
+                var split = message.content.split(" ");
+                if(split.length !== 6)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                var permission = split[2];
+                var role = split[5];
+                
+                return [permission.toUpperCase(), role.toLowerCase()];
+            },
             sample: "sempai add permission __*permission*__ to role __*role*__",
             description: "Adds a permission to the role.",
             permission: "MANAGE_PERMISSIONS",
@@ -63,7 +117,22 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            regex: /^remove permission (.*) from role (.*)/i,
+            match: function(message){
+                if(!message.content.startsWith("remove permission"))
+                    return null;
+                    
+                var split = message.content.split(" ");
+                if(split.length !== 6)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                var permission = split[2];
+                var role = split[5];
+                
+                return [permission.toUpperCase(), role.toLowerCase()];
+            },
             sample: "sempai remove permission __*permission*__ from role __*role*__",
             description: "Removes a permission from the role.",
             permission: "MANAGE_PERMISSIONS",
@@ -73,7 +142,12 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /^list modules/i,
+            match: function(message){
+                if(!message.content.startsWith("list modules"))
+                    return null;
+                    
+                return [];
+            },
             sample: "sempai list modules",
             description: "Lists all the available modules for this server.",
             permission: "MANAGE_MODULES",
@@ -83,7 +157,19 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /^ignore (.*)/i,
+            match: function(message, split){
+                if(!message.content.startsWith("ignore"))
+                    return null;
+                    
+                var mod = message.content.substr("ignore".length + 1).trim();
+                if(mod.length == 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [mod];
+            },
             sample: "sempai ignore __*@user*__",
             description: "Ignores a user on this server",
             permission: "IGNORE_USERS",
@@ -93,7 +179,19 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /^unignore (.*)/i,
+            match: function(message, split){
+                if(!message.content.startsWith("unignore"))
+                    return null;
+                    
+                var mod = message.content.substr("unignore".length + 1).trim();
+                if(mod.length == 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [mod];
+            },
             sample: "sempai unignore __*@user*__",
             description: "Stops ignoring user on this server",
             permission: "IGNORE_USERS",
@@ -103,14 +201,26 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            regex: /^go to (.*)/i,
+            match: function(message, split){
+                if(!message.content.startsWith("go to"))
+                    return null;
+                    
+                var mod = message.content.substr("go to".length + 1).trim();
+                if(mod.length == 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [mod];
+            },
             sample: "sempai go to __*#channel*__",
             description: "Tells sempai to output only to a channel (unless its a response)",
             permission: "GOTO_CHANNEL",
             global: false,
             
             execute: this.handle_goto_channel
-        })
+        });
     }
 
     handle_enable_module(message, name)
@@ -330,7 +440,7 @@ class AdminModule extends IModule
         var user = users.get_user_by_id(user_id.substr(2, user_id.length - 3));
         if(user === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user._id}));
         }
         
         if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
@@ -339,7 +449,7 @@ class AdminModule extends IModule
         }
         
         message.server.ignore_user(user);
-        return this.bot.respond(message, responses.get("STARTED_IGNORING").format({author: message.author.id, user: user_id}));
+        return this.bot.respond(message, responses.get("STARTED_IGNORING").format({author: message.author.id, user: user._id}));
     }
     
     handle_unignore_user(message, user_id)
@@ -347,7 +457,7 @@ class AdminModule extends IModule
         var user = users.get_user_by_id(user_id.substr(2, user_id.length - 3));
         if(user === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user._id}));
         }
         
         if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
@@ -356,7 +466,7 @@ class AdminModule extends IModule
         }
         
         message.server.unignore_user(user);
-        return this.bot.respond(message, responses.get("STOPPED_IGNORING").format({author: message.author.id, user: user_id}));
+        return this.bot.respond(message, responses.get("STOPPED_IGNORING").format({author: message.author.id, user: user._id}));
     }
     
     on_setup(bot)

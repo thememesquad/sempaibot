@@ -18,7 +18,20 @@ class BaseModule extends IModule
         permissions.register("CHANGE_PERSONALITY", "moderator");
 
         this.add_command({
-            regex: /^join server (.*)/i,
+            match: function(message){
+                if(!message.content.startsWith("join server"))
+                    return null;
+                    
+                var id = message.content.substr("join server".length + 1).trim();
+                if(id.startsWith("http"))
+                {
+                    id = id.substr(id.lastIndexOf("/") + 1);
+                    if(id.endsWith("/"))
+                        id = id.substr(0, id.length - 1);
+                }
+                
+                return [id];
+            },
             sample: "sempai join server __*invite*__",
             description: "Allow sempai to join a new server",
             permission: null,
@@ -29,10 +42,20 @@ class BaseModule extends IModule
         });
 
         this.add_command({
-            regex: [
-                /^help me/i,
-                /^please help me/i
-            ],
+            match: function(message){
+                var please = false;
+                
+                if(message.content.startsWith("please help me"))
+                {
+                    please = true;
+                }
+                else if(!message.content.startsWith("help me"))
+                {
+                    return null;
+                }
+                
+                return [please];
+            },
             hide_in_help: true,
             permission: null,
             global: true,
@@ -41,10 +64,20 @@ class BaseModule extends IModule
         });
 
         this.add_command({
-            regex: [
-                /^tsundere on/i,
-                /^tsundere off/i,
-            ],
+            match: function(message){
+                var on = false;
+                
+                if(message.content.startsWith("tsundere on"))
+                {
+                    on = true;
+                }
+                else if(!message.content.startsWith("tsundere off"))
+                {
+                    return null;
+                }
+                
+                return [on];
+            },
             hide_in_help: true,
             permission: "CHANGE_PERSONALITY",
             global: false,
@@ -53,9 +86,12 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            regex: [
-                /^what is my role/i
-            ],
+            match: function(message){
+                if(!message.content.startsWith("what is my role"))
+                    return null;
+                    
+                return [];
+            },
             sample: "sempai what is my role?",
             description: "Displays what sempai thinks of you on this server.",
             permission: null,
@@ -65,9 +101,12 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            regex: [
-                /^what are my permissions/i
-            ],
+            match: function(message){
+                if(!message.content.startsWith("what are my permissions"))
+                    return null;
+                    
+                return [];
+            },
             sample: "sempai what are my permissions?",
             description: "Displays what sempai has allowed you to do.",
             permission: null,
@@ -77,7 +116,12 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            regex: /^list roles/i,
+            match: function(message){
+                if(!message.content.startsWith("list roles"))
+                    return null;
+                    
+                return [];
+            },
             sample: "sempai list roles",
             description: "Lists the users per role.",
             permission: null,
@@ -87,7 +131,12 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            regex: /^list permissions/i,
+            match: function(message){
+                if(!message.content.startsWith("list permissions"))
+                    return null;
+                    
+                return [];
+            },
             sample: "sempai list permissions",
             description: "Lists all the available permissions per role.",
             permission: null,
@@ -97,7 +146,12 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            regex: /^show ignorelist/i,
+            match: function(message){
+                if(!message.content.startsWith("show ignorelist"))
+                    return null;
+                    
+                return [];
+            },
             sample: "sempai show ignorelist",
             description: "Shows the list of people I'm currently ignoring (on this server)",
             permission: null,
@@ -205,7 +259,7 @@ class BaseModule extends IModule
         
         response += "```";
         
-        this.bot.respond(message, responses.get("LIST_PERMISSIONS").format({author: message.author.id, roles: response}));
+        this.bot.respond(message, responses.get("LIST_PERMISSIONS").format({author: message.author.id, permissions: response}));
     }
     
     handle_show_ignorelist(message)
@@ -270,113 +324,104 @@ class BaseModule extends IModule
         });
     }
 
-    handle_help_me(message)
+    handle_help_me(message, please)
     {
-        try
+        var response = "";
+
+        if(please)
+            response = responses.get("PLEASE_HELP_TOP").format({author: message.author.id});
+        else
+            response = responses.get("HELP_TOP").format({author: message.author.id});
+
+        var message_queue = [];
+        var role = message.user.get_role(message.server);
+        var modules = "";
+        for(var key in this.bot.modules)
         {
-            var please = message.index == 1;
-            var response = "";
-
-            if(please)
-                response = responses.get("PLEASE_HELP_TOP").format({author: message.author.id});
-            else
-                response = responses.get("HELP_TOP").format({author: message.author.id});
-
-            var message_queue = [];
-            var role = message.user.get_role(message.server);
-            var modules = "";
-            for(var key in this.bot.modules)
+            var module = this.bot.modules[key];
+            var enabled = (message.server === null) ? false : message.server.is_module_enabled(module.name);
+            
+            if(enabled)
             {
-                var module = this.bot.modules[key];
-                var enabled = (message.server === null) ? false : message.server.is_module_enabled(module.name);
-             
-                if(enabled)
-                {
-                    if(modules.length !== 0)
-                        modules += ", ";
+                if(modules.length !== 0)
+                    modules += ", ";
 
-                    modules += key;
-                }
+                modules += key;
+            }
 
-                var hasNonHidden = false;
-                var tmp = "";
-                for(var i = 0;i<module.commands.length;i++)
+            var hasNonHidden = false;
+            var tmp = "";
+            for(var i = 0;i<module.commands.length;i++)
+            {
+                if(module.commands[i].permission != null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
+                    continue;
+                    
+                if(module.commands[i].hide_in_help === undefined || module.commands[i].hide_in_help === false)
                 {
-                    if(module.commands[i].permission != null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
+                    var is_private = module.commands[i].private !== undefined && module.commands[i].private === true;
+                    
+                    if(message.server !== null && is_private)
                         continue;
                         
-                    if(module.commands[i].hide_in_help === undefined || module.commands[i].hide_in_help === false)
-                    {
-                        var is_private = module.commands[i].private !== undefined && module.commands[i].private === true;
-                        
-                        if(message.server !== null && is_private)
-                            continue;
-                            
-                        if(module.commands[i].global == false && !enabled)
-                            continue;
+                    if(module.commands[i].global == false && !enabled)
+                        continue;
 
-                        hasNonHidden = true;
+                    hasNonHidden = true;
 
-                        tmp += "**" + module.commands[i].sample + "** - " + module.commands[i].description;
-                        tmp += "\r\n";
-                    }
+                    tmp += "**" + module.commands[i].sample + "** - " + module.commands[i].description;
+                    tmp += "\r\n";
                 }
-
-                if(!hasNonHidden)
-                    continue;
-
-                if(response.length + tmp.length >= 1900)
-                {
-                    message_queue.push(response);
-                    response = "";
-                }
-                
-                response += "**" + key + "**:\r\n";
-                response += tmp;
-                response += "\r\n";
             }
 
-            var add = "";
-            if(message.server !== null)
-                add += "**Enabled modules**: " + modules + "\r\n\r\n";
+            if(!hasNonHidden)
+                continue;
 
-            if(please)
-                add += responses.get("PLEASE_HELP_BOTTOM").format({author: message.author.id});
-            else
-                add += responses.get("HELP_BOTTOM").format({author: message.author.id});
-
-            if(response.length + add.length >= 1900)
+            if(response.length + tmp.length >= 1900)
             {
                 message_queue.push(response);
-                message_queue.push(add);
-            }
-            else
-            {
-                message_queue.push(response + add);
+                response = "";
             }
             
-            var send = function(queue, message, index, send)
-            {
-                if(index >= queue.length)
-                    return;
-                    
-                this.bot.respond(message, queue[index]).then(function(queue, message, index, send){
-                    return send(index + 1, send);
-                }.bind(this, queue, message, index, send)).catch(function(err){
-                    console.log(err);
-                });
-            }.bind(this, message_queue, message);
-            send(0, send);
-        }catch(e)
-        {
-            console.log(e.stack);
+            response += "**" + key + "**:\r\n";
+            response += tmp;
+            response += "\r\n";
         }
+
+        var add = "";
+        if(message.server !== null)
+            add += "**Enabled modules**: " + modules + "\r\n\r\n";
+
+        if(please)
+            add += responses.get("PLEASE_HELP_BOTTOM").format({author: message.author.id});
+        else
+            add += responses.get("HELP_BOTTOM").format({author: message.author.id});
+
+        if(response.length + add.length >= 1900)
+        {
+            message_queue.push(response);
+            message_queue.push(add);
+        }
+        else
+        {
+            message_queue.push(response + add);
+        }
+        
+        var send = function(queue, message, index, send)
+        {
+            if(index >= queue.length)
+                return;
+                
+            this.bot.respond(message, queue[index]).then(function(queue, message, index, send){
+                return send(index + 1, send);
+            }.bind(this, queue, message, index, send)).catch(function(err){
+                console.log(err);
+            });
+        }.bind(this, message_queue, message);
+        send(0, send);
     }
 
-    handle_tsundere(message)
+    handle_tsundere(message, on)
     {
-        var on = message.index == 0;
-
         if(on)
         {
             if(responses.currentMode)

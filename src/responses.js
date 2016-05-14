@@ -159,7 +159,14 @@ var responses_normal = {
     STARTED_IGNORING: "Ok, I'm now ignoring <@{user}>",
     STOPPED_IGNORING: "Ok, I have stopped ignoring <@{user}>",
     ADDED_PERMISSION: "Added permission '{permission}' to role '{role}'.",
-    REMOVED_PERMISSION: "Removed permission '{permission}' from role '{role}'."
+    REMOVED_PERMISSION: "Removed permission '{permission}' from role '{role}'.",
+    
+    //Few new ones
+    CLEARED_REMINDERS: "Cleared {num} reminders.",
+    INCORRECT_FORMAT: "Seems you tried to execute a command while using an incorrect calling format.\r\nThe correct format is: \"{sample}\".",
+    CHANNEL_DELETED: "Oops, I forgot where I'm allowed to talk! Can you remind sempai?\r\n(use the command \"sempai go to #channel\")",
+    REMINDERS_LIST_EMPTY: "Reminder list is empty",
+    REMOVED_REMINDER: "Ok, I removed the reminder \"{message}\" scheduled at {time} by {who}."
 };
 
 var responses_tsundere = {

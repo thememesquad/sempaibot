@@ -30,6 +30,9 @@ class OsuUser extends Document
     }
 }
 
+const ReconnectTimer = 15000;
+const ReconnectTime = "15.0s";
+
 class OsuBancho
 {
     constructor()
@@ -39,10 +42,23 @@ class OsuBancho
         this.online_buffer = [];
         this.connected = Q.defer();
         this.client = new net.Socket();
-        this.client.connect(6667, "irc.ppy.sh", function(){
-            this.onConnect();
-        }.bind(this));
-
+        
+        var connect = function(){
+            try
+            {
+                this.client.connect(6667, "irc.ppy.sh", function(){
+                    this.onConnect();
+                }.bind(this));
+            }
+            catch(e)
+            {
+                console.log("Failed to connect to bancho, new attempt in " + ReconnectTime);
+                setTimeout(connect, ReconnectTimer);
+            }
+        }.bind(this);
+        
+        connect();
+        
         var linesplit = /\r\n|\r|\n/;
         var last = /(\r\n|\r|\n)(?=[^(\r\n|\r|\n)]*$)/;
 
@@ -108,17 +124,32 @@ class OsuBancho
         }.bind(this));
 
         this.client.on("close", function(){
-            console.log("Disconnected from Bancho, attempting reconnect in 1.5s");
+            console.log("Disconnected from Bancho, attempting reconnect in " + ReconnectTime);
 
-            setTimeout(function(){
+            var reconnect = function(){
                 console.log("Reconnecting to Bancho");
                 
                 this.connected = Q.defer();
-                this.client.connect(6667, "irc.ppy.sh", function(){
-                    this.onConnect();
-                }.bind(this));
-            }.bind(this), 1500);
+                try
+                {
+                    this.client.connect(6667, "irc.ppy.sh", function(){
+                        this.onConnect();
+                    }.bind(this));
+                }
+                catch(e)
+                {
+                    console.log("Failed to connect, attempting reconnect in " + ReconnectTime);
+                    setTimeout(reconnect, ReconnectTimer);
+                }
+            }.bind(this);
+            
+            setTimeout(reconnect, ReconnectTimer);
         }.bind(this));
+        
+        this.client.on("error", function(error){
+            console.log("Error in the connection to bancho: " + error + ", reconnecting in " + ReconnectTime);
+            setTimeout(connect, ReconnectTimer);
+        })
     }
 
     send(command)
@@ -186,10 +217,20 @@ class OsuModule extends IModule
         permissions.register("OSU_CHECK", "moderator");
 
         this.add_command({
-            regex: [
-                /^who are you following/i,
-				/^who do you follow/i
-            ],
+            match: function(message){
+                var messages = [
+                    "who are you following",
+                    "who do you follow"
+                ];
+                
+                for(var i = 0;i<messages.length;i++)
+                {
+                    if(message.content.startsWith(messages[i]))
+                        return [];
+                }
+                
+                return null;
+            },
             sample: "sempai who are you following?",
             description: "Lists all the people I'm following on osu.",
             permission: null,
@@ -199,10 +240,29 @@ class OsuModule extends IModule
         });
 
         this.add_command({
-            regex: [
-                /^follow (.*)/i,
-                /^stalk (.*)/i
-            ],
+            match: function(message){
+                var messages = [
+                    "follow",
+                    "stalk"
+                ];
+                
+                for(var i = 0;i<messages.length;i++)
+                {
+                    if(message.content.startsWith(messages[i]))
+                    {
+                        var tmp = message.content.substr(messages[i].length + 1);
+                        if(tmp.length === 0)
+                        {
+                            message.almost = true;
+                            return null;
+                        }
+                        
+                        return [tmp];
+                    }
+                }
+                
+                return null;
+            },
             sample: "sempai follow __*user*__",
             description: "Adds the person to my following list for osu.",
             permission: "OSU_FOLLOW",
@@ -212,10 +272,29 @@ class OsuModule extends IModule
         });
 
         this.add_command({
-            regex: [
-                /^stop following (.*)/i,
-                /^stop stalking (.*)/i
-            ],
+            match: function(message){
+                var messages = [
+                    "stop following",
+                    "stop stalking"
+                ];
+                
+                for(var i = 0;i<messages.length;i++)
+                {
+                    if(message.content.startsWith(messages[i]))
+                    {
+                        var tmp = message.content.substr(messages[i].length + 1);
+                        if(tmp.length === 0)
+                        {
+                            message.almost = true;
+                            return null;
+                        }
+                        
+                        return [tmp];
+                    }
+                }
+                
+                return null;
+            },
             sample: "sempai stop following __*user*__",
             description: "Removes the person from my following list for osu.",
             permission: "OSU_UNFOLLOW",
@@ -225,7 +304,19 @@ class OsuModule extends IModule
         });
 
         this.add_command({
-            regex: /^check (.*)/i,
+            match: function(message){
+                if(!message.content.startsWith("check"))
+                    return null;
+                   
+                var tmp = message.content.substr("check".length + 1);
+                if(tmp.length === 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [tmp]; 
+            },
             sample: "sempai check __*user*__",
             description: "Forces Sempai to check the person for scores that Sempai may have somehow missed.",
             permission: "OSU_CHECK",
@@ -296,25 +387,15 @@ class OsuModule extends IModule
 
     handle_follow(message, name)
     {
-        if(name === undefined)
-        {
-            return this.bot.respond(message, responses.get("OSU_UNDEFINED").format({author: message.author.id}));
-        }
-
         this.check_user(name, message);
     }
 
     handle_unfollow(message, user)
     {
-        if(user === undefined)
-        {
-            return this.bot.respond(message, responses.get("OSU_UNDEFINED").format({author: message.author.id}));
-        }
-
         var i = -1;
         for(var j in this.users)
         {
-            if(this.users[j].username.toLowerCase() == user.toLowerCase())
+            if(this.users[j].username.toLowerCase() == user.toLowerCase() || this.users[j]._id == user.toLowerCase())
             {
                 i = j;
                 break;
@@ -343,17 +424,11 @@ class OsuModule extends IModule
             OsuUser.findOneAndUpdate({_id: profile._id}, {servers: profile.servers}, {});
         }
 
-        this.bot.respond(message, responses.get("OSU_STOPPED").format({author: message.author.id, user: user}));
+        this.bot.respond(message, responses.get("OSU_STOPPED").format({author: message.author.id, user: profile.username}));
     }
 
     handle_check(message, user)
     {
-        if(user === undefined)
-        {
-            return this.bot.respond(message, responses.get("OSU_UNDEFINED").format({author: message.author.id}));
-        }
-
-        this.bot.respond(message, responses.get("OSU_CHECK").format({author: message.author.id, user: user}));
         this.force_check(user, message);
     }
 
@@ -524,13 +599,10 @@ class OsuModule extends IModule
 
     force_check(username, message)
     {
-        if(username === undefined)
-            return;
-
         var profile = null;
         for(var i in this.users)
         {
-            if(this.users[i].username.toLowerCase() == username.toLowerCase())
+            if(this.users[i].username.toLowerCase() == username.toLowerCase() || this.users[i]._id == username.toLowerCase())
             {
                 profile = this.users[i];
                 break;
@@ -545,6 +617,9 @@ class OsuModule extends IModule
             return;
         }
 
+        if(message)
+            this.bot.respond(message, responses.get("OSU_CHECK").format({author: message.author.id, user: profile.username}));
+        
         /*if(profile.online == false)
         {
             //if(message)
@@ -656,13 +731,10 @@ class OsuModule extends IModule
 
     check_user(username, message)
     {
-        if(username === undefined)
-            return;
-
         var profile = null;
         for(var i in this.users)
         {
-            if(this.users[i].username.toLowerCase() == username.toLowerCase())
+            if(this.users[i].username.toLowerCase() == username.toLowerCase() || this.users[i]._id == username.toLowerCase())
             {
                 profile = this.users[i];
                 break;
@@ -679,7 +751,7 @@ class OsuModule extends IModule
                 return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: profile.username}));
             }
 
-            return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING").format({author: message.author.id, user: username}));
+            return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING").format({author: message.author.id, user: profile.username}));
         }
 
         this.get_user(username).then(function(username, message, json){

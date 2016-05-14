@@ -43,50 +43,19 @@ class IModule
                 continue;
             }
 
-            if(command.regex !== null)
-            {
-                if(Array.isArray(command.regex))
-                {
-                    for(var j = 0;j<command.regex.length;j++)
-                    {
-                        data = command.regex[j].exec(message.content);
-                        if(data === null)
-                            continue;
-
-                        data.splice(0, 1);
-                        data = [message].concat(data);
-                        message.index = j;
-
-                        break;
-                    }
-
-                    if(data === null)
-                        continue;
-                }
-                else
-                {
-                    data = command.regex.exec(message.content);
-                    if(data === null)
-                        continue;
-
-                    data.splice(0, 1);
-                    data = [message].concat(data);
-                    message.index = 0;
-                }
-            }
-            else if(split.length > 1)
-            {
-                break;
-            }
-            else if(message.content.charAt(0) != "-")
-            {
-                data = [message];
-            }
-            else
+            var ret = command.match(message);
+            if(ret === null && message.almost === undefined)
             {
                 continue;
             }
-
+            else if(message.almost === true)
+            {
+                this.bot.respond(message, responses.get("INCORRECT_FORMAT").format({author: message.author.id, sample: command.sample}));
+                return true;
+            }
+            
+            data = [message].concat(ret);
+            
             if(command.permission !== null && !permissions.is_allowed(command.permission, message.user.get_role(message.server), message.server))
             {
                 this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id, permission: command.permission}));
