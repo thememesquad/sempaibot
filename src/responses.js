@@ -156,8 +156,8 @@ var responses_normal = {
     SHOW_IGNORELIST: "Ignore list:{list}",
 	IGNORE_LIST_EMPTY: "I'm not ignoring anyone right now!",
     OSU_FOLLOW_LIST_EMPTY: "I'm not following anyone on osu! right now.",
-    STARTED_IGNORING: "Got it! I'll ignore {user} from now on!",
-    STOPPED_IGNORING: "Alright, I'll stop ignoring {user}.",
+    STARTED_IGNORING: "Got it! I'll ignore <@{user}> from now on!",
+    STOPPED_IGNORING: "Alright, I'll stop ignoring <@{user}>.",
     ADDED_PERMISSION: "Added permission {permission} to {role}.",
     REMOVED_PERMISSION: "Removed permission {permission} from {role}.",
     
