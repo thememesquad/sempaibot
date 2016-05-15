@@ -31,3 +31,4 @@ This Bot uses the following Modules:
 - [request](https://github.com/request/request)
 - [moment](http://momentjs.com/)
 - [moment-timezone](http://momentjs.com/timezone/)
+- [node-tldr](https://github.com/philpl/node-tldr)
