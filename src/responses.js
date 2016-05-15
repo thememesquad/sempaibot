@@ -1,4 +1,4 @@
-var db = require("./db.js");
+const db = require("./db.js");
 
 var responses_normal = {
     ONLINE: [
@@ -167,7 +167,9 @@ var responses_normal = {
     CHANNEL_DELETED: "Oops, I forgot where I'm allowed to talk! Can you remind sempai?\r\n(use the command \"sempai go to #channel\")",
     REMINDERS_LIST_EMPTY: "Reminder list is empty",
     REMOVED_REMINDER: "Ok, I removed the reminder \"{message}\" scheduled at {time} by {who}.",
-    TIMEZONE_LIST: "List of known timezones:{timezones}"
+    TIMEZONE_LIST: "List of known timezones:{timezones}",
+    TLDR_FAILED: "Failed to create a tldr. My tldr functionality works best with web articles.",
+    TLDR: "**{title}**:\r\n\"{summary}\"\r\n**Original reduced by {percentage}%.**"
 };
 
 var responses_tsundere = {
