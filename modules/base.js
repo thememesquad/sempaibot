@@ -21,30 +21,6 @@ class BaseModule extends IModule
 
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("join server"))
-                    return null;
-                    
-                var id = message.content.substr("join server".length + 1).trim();
-                if(id.startsWith("http"))
-                {
-                    id = id.substr(id.lastIndexOf("/") + 1);
-                    if(id.endsWith("/"))
-                        id = id.substr(0, id.length - 1);
-                }
-                
-                return [id];
-            },
-            sample: "sempai join server __*invite*__",
-            description: "Allow Sempai to join a new server.",
-            permission: null,
-            global: true,
-            private: true,
-
-            execute: this.handle_join_server
-        });
-
-        this.add_command({
-            match: function(message){
                 var please = false;
                 
                 if(message.content.startsWith("please help me"))
@@ -199,11 +175,11 @@ class BaseModule extends IModule
 
         var _this = this;
 
-        _this.bot.discord.setStatus("Online", game);
+        _this.bot.set_status("Online", game);
         var interval = setInterval(function() {
             var game = games[Math.floor((Math.random() * games.length))];
 
-            _this.bot.discord.setStatus("Online", game);
+            _this.bot.set_status("Online", game);
         }, 50000);
     }
 
@@ -216,7 +192,7 @@ class BaseModule extends IModule
         for(var i = 0;i<server.server.members.length;i++)
         {
             var user = users.get_user_by_id(server.server.members[i].id);
-            if(server.server.members[i].id === this.bot.discord.user.id)
+            if(server.server.members[i].id === this.bot.user._id)
                 continue;
                 
             if(user.get_role(server) !== role)
@@ -305,48 +281,6 @@ class BaseModule extends IModule
             this.bot.respond(message, responses.get("IGNORE_LIST_EMPTY").format({author: message.author.id}));
         else
             this.bot.respond(message, responses.get("SHOW_IGNORELIST").format({author: message.author.id, list: response}));
-    }
-    
-    handle_join_server(message, invite)
-    {
-        var _this = this;
-        _this.bot.discord.getInvite(invite, function(error, inv) {
-            if (error !== null)
-            {
-                console.log(error);
-                
-                _this.bot.respond(message, responses.get("JOIN_INVALID_INVITE").format({author: message.author.id, invite: inv.server.name}));
-                return;
-            }
-
-            var servers = _this.bot.discord.servers;
-            var success = true;
-            for(var i = 0; i < servers.length; i++)
-            {
-                if (servers[i].id === inv.server.id)
-                {
-                    success = false;
-                    break;
-                }
-            }
-
-            if (!success)
-            {
-                _this.bot.respond(message, responses.get("JOIN_ALREADY").format({author: message.author.id, invite: inv.server.name}));
-                return;
-            }
-
-            _this.bot.discord.joinServer(invite, function(error, server) {
-                if (error !== null)
-                {
-                    console.log(error);
-                    _this.bot.respond(message, responses.get("JOIN_FAILED").format({author: message.author.id, invite: inv.server.name}));
-                    return;
-                }
-
-                _this.bot.respond(message, responses.get("JOIN_SUCCESS").format({author: message.author.id, invite: server.name, admin: server.owner.id}));
-            });
-        });
     }
 
     handle_help_me(message, please)

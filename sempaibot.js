@@ -32,6 +32,8 @@ class Bot
         this.user_blacklist = null;
         this.server_blacklist = null;
         this.connected_once = false;
+        this.connected = false;
+        this.queue = [];
 
         this.discord.on("message", this.handle_message.bind(this));
         this.discord.on("ready", this.on_ready.bind(this));
@@ -43,7 +45,7 @@ class Bot
 
     login()
     {
-        this.discord.login(config.user, config.pass, function (error, token) {
+        this.discord.loginWithToken(config.token, function (error, token) {
             if(error != null)
             {
                 console.log("Discord login error: " + error);
@@ -51,6 +53,42 @@ class Bot
         });
     }
 
+    set_status(status, game)
+    {
+        if(!this.connected)
+        {
+            return this.queue.push(this.set_status.bind(this, status, game));
+        }
+        
+        try
+        {
+            this.discord.setStatus(status, game);
+        }
+        catch(e)
+        {
+            this.connected = false;
+            this.queue.push(this.set_status.bind(this, status, game));
+        }
+    }
+    
+    get_invite(invite)
+    {
+        var defer = Q.defer();
+        
+        //not allowed with bot users
+        
+        return defer.promise;
+    }
+    
+    join_server(inv)
+    {
+        var defer = Q.defer();
+        
+        //not allowed with bot users
+        
+        return defer.promise;
+    }
+    
     message(message, server)
     {
         var defer = Q.defer();
@@ -61,13 +99,37 @@ class Bot
             channel = server.server.channels[0].id;
         }
         
-        this.discord.stopTyping(message.channel);
-        this.discord.sendMessage(server.server.channels.get("id", channel), message, {}, function(err, message){
-            if(err !== null)
-                return defer.reject(err);
-                
-            defer.resolve(message);
-        });
+        var queue = function(message, server, defer){
+            this.queue.push(this.discord.stopTyping.bind(this.discord, message.channel));
+            this.queue.push(this.discord.sendMessage.bind(this.discord, server.server.channels.get("id", channel), message, {}, function(defer, err, message){
+                if(err !== null)
+                    return defer.reject(err);
+                    
+                defer.resolve(message);
+            }.bind(this, defer)));
+        }.bind(this, message, server, defer);
+        
+        if(!this.connected)
+        {
+            queue();
+            return defer.promise;
+        }
+        
+        try
+        {
+            this.discord.stopTyping(message.channel);
+            this.discord.sendMessage(server.server.channels.get("id", channel), message, {}, function(err, message){
+                if(err !== null)
+                    return defer.reject(err);
+                    
+                defer.resolve(message);
+            });
+        }
+        catch(e)
+        {
+            this.connected = false;
+            queue();
+        }
         
         return defer.promise;
     }
@@ -76,13 +138,37 @@ class Bot
     {
         var defer = Q.defer();
         
-        this.discord.stopTyping(m.channel);
-        this.discord.sendMessage(m.channel, message, {}, function(err, message){
-            if(err !== null)
-                return defer.reject(err);
-                
-            defer.resolve(message);
-        });
+        var queue = function(m, message, defer){
+            this.queue.push(this.discord.stopTyping.bind(this.discord, m.channel));
+            this.queue.push(this.discord.sendMessage.bind(this.discord, m.channel, message, {}, function(defer, err, message){
+                if(err !== null)
+                    return defer.reject(err);
+                    
+                defer.resolve(message);
+            }.bind(this, defer)));
+        }.bind(this, m, message, defer);
+        
+        if(!this.connected)
+        {
+            queue();
+            return defer.promise;
+        }
+        
+        try
+        {
+            this.discord.stopTyping(m.channel);
+            this.discord.sendMessage(m.channel, message, {}, function(err, message){
+                if(err !== null)
+                    return defer.reject(err);
+                    
+                defer.resolve(message);
+            });
+        }
+        catch(e)
+        {
+            this.connected = false;
+            queue();
+        }
         
         return defer.promise;
     }
@@ -105,11 +191,21 @@ class Bot
     
     on_ready()
     {
+        this.connected = true;
+        
         console.log("Connected to discord.");
         
         if(this.connected_once)
-            return;
+        {
+            while(this.queue.length != 0)
+            {
+                this.queue[0]();
+                this.queue.splice(0, 1);
+            }
             
+            return;
+        }
+           
         this.connected_once = true;
         
         var _this = this;
@@ -185,20 +281,18 @@ class Bot
 
             return permissions.save();
         }).then(function(){
-            _this.discord.joinServer(config.server, function (error, server) {
-                for(var i = 0;i<_this.discord.servers.length;i++)
-                {
-                    var server = _this.discord.servers[i];
-                    _this.servers[server.id] = new ServerData(_this, server);
-                    _this.servers[server.id].load_promise.promise.then(function(server){
-                        for(var key in this.modules)
-                        {
-                            if(this.modules[key].always_on)
-                                this.servers[server.id].enable_module(key);
-                        }
-                    }.bind(_this, _this.servers[server.id]));
-                }
-            });
+            for(var i = 0;i<_this.discord.servers.length;i++)
+            {
+                var server = _this.discord.servers[i];
+                _this.servers[server.id] = new ServerData(_this, server);
+                _this.servers[server.id].load_promise.promise.then(function(server){
+                    for(var key in this.modules)
+                    {
+                        if(this.modules[key].always_on)
+                            this.servers[server.id].enable_module(key);
+                    }
+                }.bind(_this, _this.servers[server.id]));
+            }
         }).catch(function(err){
             console.log(err.stack);
         });
@@ -229,6 +323,8 @@ class Bot
     
     on_disconnected()
     {
+        this.connected = false;
+        
         console.log("Disconnected from discord.");
     }
     
@@ -346,6 +442,11 @@ class Bot
     is_user_blacklisted(user)
     {
         return this.user_blacklist.value.blacklist.indexOf(user._id) !== -1;
+    }
+    
+    get user()
+    {
+        return users.get_user_by_id(this.discord.user.id);
     }
 }
 
