@@ -7,6 +7,7 @@ const moment = require("moment");
 const permissions = require("../src/permissions.js");
 const users = require("../src/users.js");
 const Time = require("../src/time.js");
+const Util = require("../src/util.js");
 
 class Reminder extends Document
 {
@@ -247,8 +248,13 @@ class RemindersModule extends IModule
 
             for (var i = 0; i < tmp.length; i++)
             {
-                var id = tmp[i].substr(2, tmp[i].length - 3);
-                if(users.get_user_by_id(id, server) === null)
+                var id = Util.parse_id(tmp[i]);
+                if(id.type != "user")
+                {
+                    continue;
+                }
+                
+                if(users.get_user_by_id(id.id, server) === null)
                 {
                     valid = false;
                     break;
