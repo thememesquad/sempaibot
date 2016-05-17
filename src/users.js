@@ -68,6 +68,47 @@ class User extends Document
         
         return 3;
     }
+    
+    get_name(server)
+    {
+        for(var i = 0;i<server.server.members.length;i++)
+        {
+            if(server.server.members[i].id == this.user_id)
+            {
+                var details = server.server.detailsOf(server.server.members[i]);
+                if(details.nick)
+                    return details.nick;
+                    
+                return this.name;
+            }
+        }
+        
+        return this.name;
+    }
+    
+    get_name_detailed(server)
+    {
+        for(var i = 0;i<server.server.members.length;i++)
+        {
+            if(server.server.members[i].id == this.user_id)
+            {
+                var name = this.name;
+                var details = server.server.detailsOf(server.server.members[i]);
+                if(details.nick)
+                {
+                    name = details.nick + " (" + this.name + "#" + server.server.members[i].discriminator + ")";
+                }
+                else
+                {
+                    name = this.name + "#" + server.server.members[i].discriminator;
+                }
+                    
+                return name;
+            }
+        }
+        
+        return this.name + "#unknown";
+    }
 }
 
 class Users
