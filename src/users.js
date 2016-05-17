@@ -86,28 +86,35 @@ class User extends Document
         return this.name;
     }
     
-    get_name_detailed(server)
+    get_name_detailed(server, member)
     {
-        for(var i = 0;i<server.server.members.length;i++)
+        if(member === undefined)
         {
-            if(server.server.members[i].id == this.user_id)
+            for(var i = 0;i<server.server.members.length;i++)
             {
-                var name = this.name;
-                var details = server.server.detailsOf(server.server.members[i]);
-                if(details.nick)
+                if(server.server.members[i].id == this.user_id)
                 {
-                    name = details.nick + " (" + this.name + "#" + server.server.members[i].discriminator + ")";
+                    member = server.server.members[i];
+                    break;
                 }
-                else
-                {
-                    name = this.name + "#" + server.server.members[i].discriminator;
-                }
-                    
-                return name;
             }
         }
         
-        return this.name + "#unknown";
+        if(member === undefined)
+            return this.name + "#unknown";
+            
+        var name = this.name;
+        var details = server.server.detailsOf(member);
+        if(details.nick)
+        {
+            name = details.nick + " (" + this.name + "#" + member.discriminator + ")";
+        }
+        else
+        {
+            name = this.name + "#" + member.discriminator;
+        }
+            
+        return name;
     }
 }
 
