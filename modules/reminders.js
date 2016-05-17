@@ -14,6 +14,7 @@ class Reminder extends Document
     {
         super();
         
+        this._id = String;
         this.source = String;
         this.target = [String];
         this.time = Number;

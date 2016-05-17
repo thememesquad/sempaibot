@@ -21,6 +21,7 @@ class OsuUser extends Document
     {
         super();
 
+        this._id = String;
         this.user_id = String;
         this.username = String;
         this.pp = Number;
