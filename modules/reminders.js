@@ -248,7 +248,7 @@ class RemindersModule extends IModule
             for (var i = 0; i < tmp.length; i++)
             {
                 var id = tmp[i].substr(2, tmp[i].length - 3);
-                if(users.get_user_by_id(id) === null)
+                if(users.get_user_by_id(id, server) === null)
                 {
                     valid = false;
                     break;
