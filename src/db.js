@@ -11,6 +11,7 @@ class ConfigKeyValue extends Document
     {
         super();
 
+        this._id = String;
         this.key = String;
         this.value = Object;
     }
