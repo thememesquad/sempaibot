@@ -191,7 +191,7 @@ class BaseModule extends IModule
         
         for(var i = 0;i<server.server.members.length;i++)
         {
-            var user = users.get_user_by_id(server.server.members[i].id);
+            var user = users.get_user_by_id(server.server.members[i].id, message.server);
             if(server.server.members[i].id === this.bot.user.user_id)
                 continue;
                 
@@ -272,7 +272,7 @@ class BaseModule extends IModule
             if(i != 0)
                 response += "\r\n";
                 
-            response += users.get_user_by_id(message.server.ignorelist[i]).name;
+            response += users.get_user_by_id(message.server.ignorelist[i], message.server).name;
         }
         
         response += "```";

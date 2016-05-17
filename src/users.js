@@ -137,14 +137,31 @@ class Users
         return this.users[id];
     }
     
-    get_user_by_id(id)
+    get_user_by_id(id, server)
     {
+        var user = this.users[id];
+        if(user === undefined)
+        {
+            if(server !== undefined)
+            {
+                for(var i = 0;i<server.server.members.length;i++)
+                {
+                    if(server.server.members[i].id == id)
+                    {
+                        return this.add_user(id, server.server.members[i].name, server);
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
         return (this.users[id] === undefined) ? null : this.users[id];
     }
     
     get_user(user, server)
     {
-        var ret = this.get_user_by_id(user.id);
+        var ret = this.get_user_by_id(user.id, server);
         if(ret === null)
             return this.add_user(user.id, user.name, server);
             

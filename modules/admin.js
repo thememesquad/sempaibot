@@ -287,20 +287,15 @@ class AdminModule extends IModule
         this.bot.respond(message, responses.get("MODULE_LIST").format({author: message.author.id, modules: response}));
     }
     
-    get_user(user_id)
+    get_user(user_id, server)
     {
         var id = user_id.substr(2, user_id.length - 3);
-        return users.get_user_by_id(id);
+        return users.get_user_by_id(id, server);
     }
     
     handle_assign_role(message, role, user_id)
     {
         role = role.toLowerCase();
-        
-        if(role === "superadmin")
-        {
-            return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
-        }
         
         var role_id = 0;
         switch(role)
@@ -327,7 +322,7 @@ class AdminModule extends IModule
             return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
-        var user = this.get_user(user_id);
+        var user = this.get_user(user_id, message.server);
         if(user === null)
         {
             return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
@@ -438,10 +433,10 @@ class AdminModule extends IModule
     
     handle_ignore_user(message, user_id)
     {
-        var user = users.get_user_by_id(user_id.substr(2, user_id.length - 3));
+        var user = this.get_user(user_id, message.server);
         if(user === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user.user_id}));
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
         }
         
         if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
@@ -455,10 +450,10 @@ class AdminModule extends IModule
     
     handle_unignore_user(message, user_id)
     {
-        var user = users.get_user_by_id(user_id.substr(2, user_id.length - 3));
+        var user = this.get_user(user_id, message.server);
         if(user === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user.user_id}));
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
         }
         
         if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
