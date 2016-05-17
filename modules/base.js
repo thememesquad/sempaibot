@@ -192,7 +192,7 @@ class BaseModule extends IModule
         for(var i = 0;i<server.server.members.length;i++)
         {
             var user = users.get_user_by_id(server.server.members[i].id);
-            if(server.server.members[i].id === this.bot.user._id)
+            if(server.server.members[i].id === this.bot.user.user_id)
                 continue;
                 
             if(user.get_role(server) !== role)

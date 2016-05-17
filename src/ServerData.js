@@ -27,7 +27,6 @@ class ServerData
             if(doc === null)
             {
                 this.config = db.ConfigKeyValue.create({
-                    _id: this.server.id + "_config", 
                     key: this.server.id + "_config", 
                     value: {
                         channel: "", 
@@ -138,9 +137,9 @@ class ServerData
     
     ignore_user(user)
     {
-        if(this.ignorelist.indexOf(user._id) === -1)
+        if(this.ignorelist.indexOf(user.user_id) === -1)
         {
-            this.config.value.ignorelist.push(user._id);
+            this.config.value.ignorelist.push(user.user_id);
             this.config.save().catch(function(err){
                 console.log(err);
             });
@@ -149,7 +148,7 @@ class ServerData
     
     unignore_user(user)
     {
-        var idx = this.ignorelist.indexOf(user._id);
+        var idx = this.ignorelist.indexOf(user.user_id);
         if(idx !== -1)
         {
             this.config.value.ignorelist.splice(idx, 1);
@@ -161,7 +160,7 @@ class ServerData
     
     is_user_ignored(user)
     {
-        return this.ignorelist.indexOf(user._id) !== -1;
+        return this.ignorelist.indexOf(user.user_id) !== -1;
     }
     
     set channel(channel)

@@ -21,7 +21,6 @@ class OsuUser extends Document
     {
         super();
 
-        this._id = String;
         this.user_id = String;
         this.username = String;
         this.pp = Number;
@@ -404,7 +403,7 @@ class OsuModule extends IModule
         var i = -1;
         for(var j in this.users)
         {
-            if(this.users[j].username.toLowerCase() == user.toLowerCase() || this.users[j]._id == user.toLowerCase())
+            if(this.users[j].username.toLowerCase() == user.toLowerCase() || this.users[j].user_id == user.toLowerCase())
             {
                 i = j;
                 break;
@@ -425,12 +424,12 @@ class OsuModule extends IModule
         if(profile.servers.length == 1)
         {
             this.users.splice(i, 1);
-            OsuUser.deleteOne({_id: profile._id}, {}, function(numrem){});
+            OsuUser.deleteOne({user_id: profile.user_id}, {}, function(numrem){});
         }
         else
         {
             profile.servers.splice(profile.servers.indexOf(message.server.id), 1);
-            OsuUser.findOneAndUpdate({_id: profile._id}, {servers: profile.servers}, {});
+            OsuUser.findOneAndUpdate({user_id: profile.user_id}, {servers: profile.servers}, {});
         }
 
         this.bot.respond(message, responses.get("OSU_STOPPED").format({author: message.author.id, user: profile.username}));
@@ -505,7 +504,6 @@ class OsuModule extends IModule
             for (var i = 0; i < docs.length; i++)
             {
                 var user = {
-                    _id: docs[i]._id,
                     user_id: docs[i].user_id,
                     username: docs[i].username,
                     pp: docs[i].pp,
@@ -611,7 +609,7 @@ class OsuModule extends IModule
         var profile = null;
         for(var i in this.users)
         {
-            if(this.users[i].username.toLowerCase() == username.toLowerCase() || this.users[i]._id == username.toLowerCase())
+            if(this.users[i].username.toLowerCase() == username.toLowerCase() || this.users[i].user_id == username.toLowerCase())
             {
                 profile = this.users[i];
                 break;
@@ -743,7 +741,7 @@ class OsuModule extends IModule
         var profile = null;
         for(var i in this.users)
         {
-            if(this.users[i].username.toLowerCase() == username.toLowerCase() || this.users[i]._id == username.toLowerCase())
+            if(this.users[i].username.toLowerCase() == username.toLowerCase() || this.users[i].user_id == username.toLowerCase())
             {
                 profile = this.users[i];
                 break;
@@ -755,7 +753,7 @@ class OsuModule extends IModule
             if(profile.servers.indexOf(message.server.id) === -1)
             {
                 profile.servers.push(message.server.id);
-                OsuUser.findOneAndUpdate({_id: profile._id}, {servers: profile.servers}, {});
+                OsuUser.findOneAndUpdate({user_id: profile.user_id}, {servers: profile.servers}, {});
 
                 return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: profile.username}));
             }
@@ -773,7 +771,7 @@ class OsuModule extends IModule
             }
 
             var time = (new Date).getTime();
-            var user = {_id: json.user_id, user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_updated: time};
+            var user = {user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_updated: time};
             this.users.push(user);
 
             var dbuser = OsuUser.create(user);
@@ -798,7 +796,7 @@ class OsuModule extends IModule
         this.get_user(profile.username).then(function(profile, data){
             profile.last_updated = (new Date).getTime();
 
-            OsuUser.findOneAndUpdate({_id: profile._id}, {user_id: data.user_id, pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
+            OsuUser.findOneAndUpdate({user_id: profile.user_id}, {user_id: data.user_id, pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(doc){
                 profile.update_in_progress.resolve(data);
                 profile.update_in_progress = null;
             }).catch(function(err){

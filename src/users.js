@@ -86,7 +86,7 @@ class Users
             for(var i = 0;i<docs.length;i++)
             {
                 var user = docs[i];
-                if(config.superadmins.indexOf(user._id) !== -1)
+                if(config.superadmins.indexOf(user.user_id) !== -1)
                 {
                     for(var key in user.roles)
                     {
@@ -94,7 +94,7 @@ class Users
                     }
                 }
                 
-                _this.users[user._id] = user;
+                _this.users[user.user_id] = user;
             }
             
             defer.resolve();
@@ -128,7 +128,7 @@ class Users
         
         console.log("Adding user '" + id + "' (" + name + ") from server '" + server.server.name + "'.");
         
-        var user = User.create({_id: id, name: name, user_id: id, roles: roles});
+        var user = User.create({name: name, user_id: id, roles: roles});
         user.save().catch(function(err){
             console.log(err);
         });
