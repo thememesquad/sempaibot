@@ -549,7 +549,7 @@ class OsuModule extends IModule
         num = (num === undefined) ? 0 : num;
         
         first = (first === undefined) ? true : first;
-        var url = "http://osu.ppy.sh/api/" + method + "?k=" + config.osuapi;
+        var url = "http://osu.ppy.sh/api/" + method + "?k=" + config.osu_api;
 
         for(var key in params)
         {
@@ -579,13 +579,13 @@ class OsuModule extends IModule
                 if(num === 4)
                     return defer.reject(e);
                     
-                api_call(method, params, first, num + 1).then(function(result){
+                this.api_call(method, params, first, num + 1).then(function(result){
                     defer.resolve(result);
                 }).catch(function(err){
                     defer.reject(err);
                 });
             }
-        });
+        }.bind(this));
 
         return defer.promise;
     }
