@@ -4,6 +4,7 @@ const IModule = require("../src/IModule.js");
 const permissions = require("../src/permissions.js");
 const responses = require("../src/responses.js");
 const users = require("../src/users.js");
+const Util = require("../src/util.js");
 
 class AdminModule extends IModule
 {
@@ -80,9 +81,15 @@ class AdminModule extends IModule
                 }
                 
                 var role = split[2];
-                var user = split[5];
+                var user = Util.parse_id(split[5]);
                 
-                return [role.toLowerCase(), user.toLowerCase()];
+                if(user.type != "user")
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [role.toLowerCase(), user.id.toLowerCase()];
             },
             sample: "sempai assign role __*role*__ to user __*@user*__",
             description: "Assigns the specified role to the specified user.",
@@ -169,7 +176,14 @@ class AdminModule extends IModule
                     return null;
                 }
                 
-                return [mod];
+                var user = Util.parse_id(mod);
+                if(user.type != "user")
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [user.id];
             },
             sample: "sempai ignore __*@user*__",
             description: "Ignores the specified user.",
@@ -191,7 +205,14 @@ class AdminModule extends IModule
                     return null;
                 }
                 
-                return [mod];
+                var user = Util.parse_id(mod);
+                if(user.type != "user")
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [user.id];
             },
             sample: "sempai unignore __*@user*__",
             description: "Stops ignoring the specified user.",
@@ -213,7 +234,14 @@ class AdminModule extends IModule
                     return null;
                 }
                 
-                return [mod];
+                var channel = Util.parse_id(mod);
+                if(channel.type != "channel")
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [channel.id];
             },
             sample: "sempai go to __*#channel*__",
             description: "Tells Sempai to output to the specified channel.",
@@ -289,8 +317,7 @@ class AdminModule extends IModule
     
     get_user(user_id, server)
     {
-        var id = user_id.substr(2, user_id.length - 3);
-        return users.get_user_by_id(id, server);
+        return users.get_user_by_id(user_id, server);
     }
     
     handle_assign_role(message, role, user_id)
@@ -421,7 +448,7 @@ class AdminModule extends IModule
     
     handle_goto_channel(message, channel)
     {
-        var id = channel.substr(2, channel.length - 3);
+        var id = channel;
         if(message.server.server.channels.get("id", id) === null)
         {
             return this.bot.respond(message, responses.get("INVALID_CHANNEL").format({author: message.author.id, channel: channel}));
