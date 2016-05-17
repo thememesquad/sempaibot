@@ -199,7 +199,7 @@ class BaseModule extends IModule
                 continue;
                 
             var name = user.get_name_detailed(server, server.server.members[i]);
-            while(name.length != 30)
+            while(name.length < 50)
                 name += " ";
                 
             ret += "\r\n   " + name;
