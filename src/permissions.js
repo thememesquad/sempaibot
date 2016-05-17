@@ -123,10 +123,10 @@ class Role
         var _this = this;
         var defer = Q.defer();
         
-        DBRole.findOne({_id: this.name}).then(function(doc){
+        DBRole.findOne({name: this.name}).then(function(doc){
             if(doc === null)
             {
-                _this.dbrole = DBRole.create({_id: _this.name, name: _this.name, permissions: _this.permissions});
+                _this.dbrole = DBRole.create({name: _this.name, permissions: _this.permissions});
                 _this.dbrole.save().then(function(doc){
                     defer.resolve();
                 }).catch(function(err){

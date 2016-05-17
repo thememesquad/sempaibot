@@ -338,7 +338,7 @@ class AdminModule extends IModule
             return this.bot.respond(message, responses.get("ROLE_ALREADY_ASSIGNED").format({author: message.author.id, role: role, user: user_id}));
         }
         
-        if(!users.assign_role(user._id, message.server, role))
+        if(!users.assign_role(user.user_id, message.server, role))
         {
             return this.bot.respond(message, responses.get("ERROR").format({author: message.author.id}));
         }
@@ -441,7 +441,7 @@ class AdminModule extends IModule
         var user = users.get_user_by_id(user_id.substr(2, user_id.length - 3));
         if(user === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user._id}));
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user.user_id}));
         }
         
         if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
@@ -450,7 +450,7 @@ class AdminModule extends IModule
         }
         
         message.server.ignore_user(user);
-        return this.bot.respond(message, responses.get("STARTED_IGNORING").format({author: message.author.id, user: user._id}));
+        return this.bot.respond(message, responses.get("STARTED_IGNORING").format({author: message.author.id, user: user.user_id}));
     }
     
     handle_unignore_user(message, user_id)
@@ -458,7 +458,7 @@ class AdminModule extends IModule
         var user = users.get_user_by_id(user_id.substr(2, user_id.length - 3));
         if(user === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user._id}));
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user.user_id}));
         }
         
         if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
@@ -467,7 +467,7 @@ class AdminModule extends IModule
         }
         
         message.server.unignore_user(user);
-        return this.bot.respond(message, responses.get("STOPPED_IGNORING").format({author: message.author.id, user: user._id}));
+        return this.bot.respond(message, responses.get("STOPPED_IGNORING").format({author: message.author.id, user: user.user_id}));
     }
     
     on_setup(bot)

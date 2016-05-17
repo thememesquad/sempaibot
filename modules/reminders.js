@@ -14,7 +14,6 @@ class Reminder extends Document
     {
         super();
         
-        this._id = String;
         this.source = String;
         this.target = [String];
         this.time = Number;
@@ -209,7 +208,7 @@ class RemindersModule extends IModule
             return this.bot.respond(message, responses.get("REMIND_PAST").format({author: message.author.id}));
         }
 
-        if(!this.create_reminder(message.user._id, message.server, who, parsedtime, info))
+        if(!this.create_reminder(message.user.user_id, message.server, who, parsedtime, info))
         {
             return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id}));
         }

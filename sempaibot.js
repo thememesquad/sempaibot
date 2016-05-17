@@ -233,7 +233,7 @@ class Bot
             
             if(_this.user_blacklist === null)
             {
-                _this.user_blacklist = db.ConfigKeyValue.create({_id: "user_blacklist", key: "user_blacklist", value: {blacklist: []}});
+                _this.user_blacklist = db.ConfigKeyValue.create({key: "user_blacklist", value: {blacklist: []}});
                 _this.user_blacklist.save().catch(function(err){
                     console.log(err);
                 });
@@ -241,7 +241,7 @@ class Bot
             
             if(_this.server_blacklist === null)
             {
-                _this.server_blacklist = db.ConfigKeyValue.create({_id: "server_blacklist", key: "server_blacklist", value: {blacklist: []}});
+                _this.server_blacklist = db.ConfigKeyValue.create({key: "server_blacklist", value: {blacklist: []}});
                 _this.server_blacklist.save().catch(function(err){
                     console.log(err);
                 });
@@ -397,7 +397,7 @@ class Bot
     
     blacklist_user(user)
     {
-        this.user_blacklist.value.blacklist.push(user._id);
+        this.user_blacklist.value.blacklist.push(user.user_id);
         this.user_blacklist.save().catch(function(err){
             console.log(err);
         });
@@ -413,7 +413,7 @@ class Bot
     
     whitelist_user(user)
     {
-        var idx = this.user_blacklist.value.blacklist.indexOf(user._id);
+        var idx = this.user_blacklist.value.blacklist.indexOf(user.user_id);
         if(idx === -1)
             return false;
         
@@ -441,7 +441,7 @@ class Bot
     
     is_user_blacklisted(user)
     {
-        return this.user_blacklist.value.blacklist.indexOf(user._id) !== -1;
+        return this.user_blacklist.value.blacklist.indexOf(user.user_id) !== -1;
     }
     
     get user()
