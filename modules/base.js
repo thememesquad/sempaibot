@@ -198,7 +198,7 @@ class BaseModule extends IModule
             if(user.get_role(server) !== role)
                 continue;
                 
-            var name = user.get_name_detailed(server);
+            var name = user.get_name_detailed(server, server.server.members[i]);
             while(name.length != 30)
                 name += " ";
                 
