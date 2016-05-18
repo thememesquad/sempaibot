@@ -19,7 +19,7 @@ class AdminModule extends IModule
         permissions.register("BLACKLIST_SERVERS", "superadmin");
         permissions.register("BLACKLIST_USERS", "superadmin");
         permissions.register("IGNORE_USERS", "moderator");
-        permissions.register("GOTO_CHANNEL", "moderator");
+        permissions.register("GO_TO_CHANNEL", "moderator");
         permissions.register("MANAGE_MODULES", "admin");
         permissions.register("MANAGE_PERMISSIONS", "admin");
         permissions.register("ASSIGN_ROLES", "admin");
@@ -245,7 +245,7 @@ class AdminModule extends IModule
             },
             sample: "sempai go to __*#channel*__",
             description: "Tells Sempai to output to the specified channel.",
-            permission: "GOTO_CHANNEL",
+            permission: "GO_TO_CHANNEL",
             global: false,
             
             execute: this.handle_goto_channel

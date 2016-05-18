@@ -222,40 +222,41 @@ class BaseModule extends IModule
         var server = message.server;
         var admin_permissions = permissions.get_role("admin").get_permissions(server);
         
-        var columns = {permission: "Permission", allowed: "Allowed", role: "Role"};
+        var columns = {permission: "Permission", roles: "Roles"};
         var data = [];
         var roles = ["admin", "moderator", "normal"];
         
-        for(var i = 0;i<roles.length;i++)
+        for(var key in admin_permissions)
         {
-            var role = roles[i];
-            var p = permissions.get_role(role).get_permissions(server);
-            var tmp = [];
-            
-            for(var key in p)
+            if(!admin_permissions[key])
+                continue;
+                
+            var tmp = "";
+            for(var i = 0;i<roles.length;i++)
             {
-                if(!admin_permissions[key])
+                var role = roles[i];
+                    
+                if(!permissions.get_role(role).is_allowed(server, key))
                     continue;
                     
-                tmp.push({permission: key, allowed: p[key] ? "yes" : "no", role: role});
+                if(tmp.length != 0)
+                    tmp += " ";
+                    
+                tmp += role;
             }
             
-            tmp.sort(function(a, b){
-                if(a.permission < b.permission) return -1;
-                if(a.permission > b.permission) return 1;
-                return 0;
-            });
-            
-            for(var j = 0;j<tmp.length;j++)
-            {
-                data.push(tmp[j]);
-            }
-            
-            if(i != roles.length - 1)
-                data.push({permission: "", allowed: "", role: ""});
+            data.push({permission: key.toLowerCase(), roles: tmp});
         }
         
-        var messages = Util.generate_table(responses.get("LIST_PERMISSION").format({author: message.author.id}), columns, data, {permission: 20, allowed: 7, role: 15});
+        data.sort(function(a, b){
+            if(a.roles.length < b.roles.length) return -1;
+            if(a.roles.length > b.roles.length) return 1;
+            if(a.permission < b.permission) return -1;
+            if(a.permission > b.permission) return 1;
+            return 0;
+        });
+        
+        var messages = Util.generate_table(responses.get("LIST_PERMISSIONS").format({author: message.author.id}), columns, data, {permission: 20, roles: 15});
         this.bot.respond_queue(message, messages);
     }
     
