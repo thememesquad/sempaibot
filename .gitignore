@@ -1,0 +1,10 @@
+/config.js
+/nbproject/private/
+/node_modules
+/ffmpeg.exe
+/ffplay.exe
+/ffprobe.exe
+/saved
+/data/configkeyvalues.db
+/data/osuusers.db
+/coverage
