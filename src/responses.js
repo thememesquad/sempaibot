@@ -161,11 +161,20 @@ var responses_normal = {
     ADDED_PERMISSION: "Added permission {permission} to {role}.",
     REMOVED_PERMISSION: "Removed permission {permission} from {role}.",
     
-    //Few new ones
     CLEARED_REMINDERS: "Cleared {num} reminders.",
-    INCORRECT_FORMAT: "Seems you tried to execute a command while using an incorrect calling format.\r\nThe correct format is: \"{sample}\".",
-    CHANNEL_DELETED: "Oops, I forgot where I'm allowed to talk! Can you remind sempai?\r\n(use the command \"sempai go to #channel\")",
-    REMINDERS_LIST_EMPTY: "Reminder list is empty",
+    INCORRECT_FORMAT: [
+	"Sorry, Sempai is a little dumb sometimes... I won't know what you mean unless you tell me in a way I can understand!\r\nThe correct format is: \"{sample}\".",
+	"I... I don't understand.\r\nPlease use this format: \"{sample}\".",
+	"Huh? ...That's not the correct format!\r\nPlease use this format: \"{sample}\".",
+	"Sorry, what do you want me to do, exactly?\r\nPlease use this format: \"{sample}\".",
+	],
+    CHANNEL_DELETED: [
+	"You... you destroyed my home. :( All those good chat memories we had there. Gone! Where do I go now? (use the command \"sempai go to #channel\")",
+	"Did...did you just delete my home? My home channel? Who would do such a thing? Wait, am I getting an upgrade? A better channel? (use the command \"sempai go to #channel\")",
+	"Did...did you just destroy my home channel? You can't just do these things! Bots have rights too, you know! Where do I go now? (use the command \"sempai go to #channel\")",
+	"You... deleted? My home channel? My home? Why...? So am I-... am I homeless now? A homeless bot? Or are you going to give me a new home? (use the command \"sempai go to #channel\")",
+	],
+    REMINDERS_LIST_EMPTY: "The reminder list is empty.",
     REMOVED_REMINDER: "Ok, I removed the reminder \"{message}\" scheduled at {time} by {who}.",
     TIMEZONE_LIST: "List of known timezones:{timezones}",
     TLDR_FAILED: "Failed to create a tldr. My tldr functionality works best with web articles.",

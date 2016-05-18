@@ -107,7 +107,7 @@ class Util
                 tmp += val;
             }
             
-            tmp = tmp.trim();
+            tmp = tmp.replace(/\s+$/gm, "");
             tmp += "\r\n";
             
             message += tmp;
