@@ -134,6 +134,27 @@ class Bot
         return defer.promise;
     }
 
+    message_queue(messages, server)
+    {
+        var defer = Q.defer();
+        
+        var send = function(server, messages, defer, index, send){
+            if(index >= messages.length)
+            {
+                return defer.resolve();
+            }
+            
+            this.message(messages[index], server).then(function(index, send, defer){
+                send(index + 1, send);
+            }.bind(this, index, send, defer)).catch(function(defer, error){
+                defer.reject(error);
+            }.bind(this, defer));
+        }.bind(this, server, messages, defer);
+        
+        send(0, send);
+        return defer.promise;
+    }
+    
     respond(m, message)
     {
         var defer = Q.defer();
@@ -170,6 +191,27 @@ class Bot
             queue();
         }
         
+        return defer.promise;
+    }
+
+    respond_queue(message, messages)
+    {
+        var defer = Q.defer();
+        
+        var send = function(message, messages, defer, index, send){
+            if(index >= messages.length)
+            {
+                return defer.resolve();
+            }
+            
+            this.respond(message, messages[index]).then(function(index, send, defer){
+                send(index + 1, send);
+            }.bind(this, index, send, defer)).catch(function(defer, error){
+                defer.reject(error);
+            }.bind(this, defer));
+        }.bind(this, message, messages, defer);
+        
+        send(0, send);
         return defer.promise;
     }
 

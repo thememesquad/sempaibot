@@ -53,7 +53,7 @@ class User extends Document
     
     get_role_id(server)
     {
-        var role = this.get_role();
+        var role = this.get_role(server);
         switch(role)
         {
             case "superadmin":

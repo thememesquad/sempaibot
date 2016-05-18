@@ -311,6 +311,8 @@ class RemindersModule extends IModule
         this.remind = setInterval(function () {
             var d = moment();
             var n = d.valueOf();
+            
+            console.log("Reminders: " + this.reminders.length);
             if (this.reminders.length > 0)
             {
                 for (var i = this.reminders.length - 1; i >= 0; i--)

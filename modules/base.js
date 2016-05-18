@@ -5,7 +5,8 @@ const permissions = require("../src/permissions.js");
 const IModule = require("../src/IModule.js");
 const ServerData = require("../src/ServerData.js");
 const users = require("../src/users.js");
-var moment = require('moment-timezone');
+const moment = require('moment-timezone');
+const Util = require("../src/util.js");
 
 class BaseModule extends IModule
 {
@@ -183,11 +184,10 @@ class BaseModule extends IModule
         }, 50000);
     }
 
-    print_users(role, server)
+    handle_list_roles(message)
     {
-        var ret = "\r\n" + role + ":";
-        var tmp = permissions.get_role(role).get_permissions(server);
-        var admin_permissions = permissions.get_role("admin").get_permissions(server);
+        var server = message.server;
+        var tmp = [];
         
         for(var i = 0;i<server.server.members.length;i++)
         {
@@ -195,72 +195,68 @@ class BaseModule extends IModule
             if(server.server.members[i].id === this.bot.user.user_id)
                 continue;
                 
-            if(user.get_role(server) !== role)
+            if(user.get_role_id(server) === 0)
                 continue;
                 
-            var name = user.get_name_detailed(server, server.server.members[i]);
-            while(name.length < 50)
-                name += " ";
-                
-            ret += "\r\n   " + name;
+            tmp.push(user);
         }
         
-        return ret;
-    }
-
-    handle_list_roles(message)
-    {
-        var response = "```";
+        tmp.sort(function(a, b){
+            return a.get_role_id(server) - b.get_role_id(server);
+        });
         
-        response += this.print_users("admin", message.server);
-        response += "\r\n";
-        response += this.print_users("moderator", message.server);
-        response += "\r\n";
-        response += this.print_users("normal", message.server);
+        var columns = {name: "Name", role: "Role"};
+        var data = [];
         
-        response += "```";
-        
-        this.bot.respond(message, responses.get("LIST_ROLES").format({author: message.author.id, roles: response}));
-    }
-    
-    print(role, server)
-    {
-        var ret = "\r\n" + role + ":";
-        var tmp = permissions.get_role(role).get_permissions(server);
-        var admin_permissions = permissions.get_role("admin").get_permissions(server);
-        
-        for(var key in tmp)
+        for(var i = 0;i<tmp.length;i++)
         {
-            var name = key;
-            while(name.length != 20)
-                name += " ";
-            
-            if(!tmp[key] && !admin_permissions[key])
-                continue;
-                
-            ret += "\r\n   " + name;
-            if(tmp[key])
-                ret += " (allowed)";
-            else
-                ret += " (not allowed)";
+            data.push({name: tmp[i].get_name_detailed(server), role: tmp[i].get_role(server)});
         }
         
-        return ret;
+        var messages = Util.generate_table(responses.get("LIST_ROLES").format({author: message.author.id}), columns, data, {name: 30, role: 15});
+        this.bot.respond_queue(message, messages);
     }
     
     handle_list_permissions(message)
     {
-        var response = "```";
+        var server = message.server;
+        var admin_permissions = permissions.get_role("admin").get_permissions(server);
         
-        response += this.print("admin", message.server);
-        response += "\r\n";
-        response += this.print("moderator", message.server);
-        response += "\r\n";
-        response += this.print("normal", message.server);
+        var columns = {permission: "Permission", allowed: "Allowed", role: "Role"};
+        var data = [];
+        var roles = ["admin", "moderator", "normal"];
         
-        response += "```";
+        for(var i = 0;i<roles.length;i++)
+        {
+            var role = roles[i];
+            var p = permissions.get_role(role).get_permissions(server);
+            var tmp = [];
+            
+            for(var key in p)
+            {
+                if(!admin_permissions[key])
+                    continue;
+                    
+                tmp.push({permission: key, allowed: p[key] ? "yes" : "no", role: role});
+            }
+            
+            tmp.sort(function(a, b){
+                if(a.permission < b.permission) return -1;
+                if(a.permission > b.permission) return 1;
+                return 0;
+            });
+            
+            for(var j = 0;j<tmp.length;j++)
+            {
+                data.push(tmp[j]);
+            }
+            
+            if(i != roles.length - 1)
+                data.push({permission: "", allowed: "", role: ""});
+        }
         
-        this.bot.respond(message, responses.get("LIST_PERMISSIONS").format({author: message.author.id, permissions: response}));
+        var messages = Util.generate_table(responses.get("LIST_PERMISSION").format({author: message.author.id}), columns, data, {permission: 20, allowed: 7, role: 15});
+        this.bot.respond_queue(message, messages);
     }
     
     handle_show_ignorelist(message)
