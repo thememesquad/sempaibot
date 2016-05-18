@@ -124,7 +124,6 @@ var responses_normal = {
     UNKNOWN_COMMAND: [
         "Sempai doesn't understand.",
         "I... I don't understand. What do you want me to do?",
-        "Sempai doesn't recognize that command. Or are you just talking about me behind my back?",
 	],
 
     MULTIPLE_UNKNOWN_COMMAND:[
@@ -152,7 +151,10 @@ var responses_normal = {
     ROLE_ASSIGNED: "Assigned {role} to {user}.",
     ROLE_ALREADY_ASSIGNED: "Already assigned {role} to {user}.",
 	SETTING_UP: "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"sempai go to #channel\")",
-    OUTPUT_CHANNEL: "Okay, I'm now set up in <#{channel}>! If you want to know more about what I can do, type \"sempai help me\"",
+    OUTPUT_CHANNEL: [
+	"Okay then, <#{channel}> will be my new home channel! Hurray~! If you want to know more about what I can do, type \"sempai help me\".",
+	"All right! This is my new home channel, huh? I like it. If you want to know more about what I can do, type \"sempai help me\".",
+	],
     SHOW_IGNORELIST: "Ignore list:{list}",
 	IGNORE_LIST_EMPTY: "I'm not ignoring anyone right now!",
     OSU_FOLLOW_LIST_EMPTY: "I'm not following anyone on osu! right now.",
