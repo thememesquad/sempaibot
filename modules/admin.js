@@ -293,26 +293,19 @@ class AdminModule extends IModule
 
     handle_list_modules(message)
     {
-        var response = "```"
+        var columns = {name: "Name", enabled: "Enabled", flags: "Flags"};
+        var data = [];
         
         for(var key in this.bot.modules)
         {
             var enabled = message.server.is_module_enabled(key);
             var always_on = this.bot.modules[key].always_on;
             
-            var name = key;
-            while(name.length != 20)
-                name += " ";
-                
-            response += name + " " + (enabled ? "(enabled)" : "(disabled)");
-            if(always_on)
-                response += " (always_on)";
-                
-            response += "\r\n";
+            data.push({name: key, enabled: (enabled) ? "yes" : "no", flags: (always_on) ? "always_on" : ""});
         }
         
-        response += "```";
-        this.bot.respond(message, responses.get("MODULE_LIST").format({author: message.author.id, modules: response}));
+        var messages = Util.generate_table(responses.get("MODULE_LIST").format({author: message.author.id}), columns, data, {name: 20, enabled: 10, flags: 15});
+        this.bot.respond_queue(message, messages);
     }
     
     get_user(user_id, server)
