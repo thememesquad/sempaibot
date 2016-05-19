@@ -22,7 +22,8 @@ var data = {
     load: function(){
         var defer = Q.defer();
 
-		connect("mongodb://" + config.db_username + ":" + config.db_password + "@" + config.db_host + ":" + config.db_port + "/").then(function(db) {
+		var db_name = config.db_database || "";
+		connect("mongodb://" + config.db_username + ":" + config.db_password + "@" + config.db_host + ":" + config.db_port + "/" + db_name).then(function(db) {
             console.log("Using MongoDB as DB system.");
             data.db = db;
 
