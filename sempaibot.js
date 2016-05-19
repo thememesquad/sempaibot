@@ -2,6 +2,7 @@
 
 const process = require("process");
 process.env.TZ = "Europe/Amsterdam";
+const version = "0.1";
 
 const Discord = require("discord.js");
 const ServerData = require("./src/ServerData.js");

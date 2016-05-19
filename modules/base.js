@@ -164,15 +164,8 @@ class BaseModule extends IModule
 
     game_switcher()
     {
-        var games = [
-            "Boku no Pico",
-            "Petting Zoo Simulator",
-            "Hello Kitty Online",
-            "Counter-Strike: Global Offensive",
-			"osu!"
-        ];
 
-        var game = games[Math.floor((Math.random() * games.length))];
+        var game = "Version: " + version;
 
         var _this = this;
 
