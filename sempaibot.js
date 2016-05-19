@@ -35,6 +35,7 @@ class Bot
         this.connected_once = false;
         this.connected = false;
         this.queue = [];
+        this.ready = false;
 
         this.discord.on("message", this.handle_message.bind(this));
         this.discord.on("ready", this.on_ready.bind(this));
@@ -251,11 +252,10 @@ class Bot
            
         this.connected_once = true;
         
-        var _this = this;
         db.load().then(function(db_type){
-            _this.print("Loading config from DB", 70, false);
+            this.print("Loading config from DB", 70, false);
             return db.ConfigKeyValue.find({});
-        }).then(function(docs){
+        }.bind(this)).then(function(docs){
             console.log("....Ok");
             for(var i = 0;i<docs.length;i++)
             {
@@ -266,37 +266,37 @@ class Bot
                 }
                 else if(docs[i].key == "user_blacklist")
                 {
-                    _this.user_blacklist = docs[i];
+                    this.user_blacklist = docs[i];
                 }
                 else if(docs[i].key == "server_blacklist")
                 {
-                    _this.server_blacklist = docs[i];
+                    this.server_blacklist = docs[i];
                 }
             }
             
-            if(_this.user_blacklist === null)
+            if(this.user_blacklist === null)
             {
-                _this.user_blacklist = db.ConfigKeyValue.create({key: "user_blacklist", value: {blacklist: []}});
-                _this.user_blacklist.save().catch(function(err){
+                this.user_blacklist = db.ConfigKeyValue.create({key: "user_blacklist", value: {blacklist: []}});
+                this.user_blacklist.save().catch(function(err){
                     console.log(err);
                 });
             }
             
-            if(_this.server_blacklist === null)
+            if(this.server_blacklist === null)
             {
-                _this.server_blacklist = db.ConfigKeyValue.create({key: "server_blacklist", value: {blacklist: []}});
-                _this.server_blacklist.save().catch(function(err){
+                this.server_blacklist = db.ConfigKeyValue.create({key: "server_blacklist", value: {blacklist: []}});
+                this.server_blacklist.save().catch(function(err){
                     console.log(err);
                 });
             }
             
-            _this.print("Loading users from DB", 70, false);
+            this.print("Loading users from DB", 70, false);
             return users.load();
-        }).then(function(){
+        }.bind(this)).then(function(){
             console.log("....Ok");
-            _this.print("Loading permissions from DB", 70, false);
+            this.print("Loading permissions from DB", 70, false);
             return permissions.load();
-        }).then(function(){
+        }.bind(this)).then(function(){
             console.log("....Ok");
             for(var key in modules)
             {
@@ -307,10 +307,10 @@ class Bot
                     continue;
                 }
 
-                _this.print("Setting up module '" + key + "'", 70, false);
+                this.print("Setting up module '" + key + "'", 70, false);
                 try
                 {
-                    mod.on_setup(_this);
+                    mod.on_setup(this);
                     console.log("....Ok");
                 }
                 catch(e)
@@ -319,30 +319,35 @@ class Bot
                     console.log(e.stack);
                 }
 
-                _this.modules[mod.name] = mod;
+                this.modules[mod.name] = mod;
             }
 
             return permissions.save();
-        }).then(function(){
-            for(var i = 0;i<_this.discord.servers.length;i++)
+        }.bind(this)).then(function(){
+            for(var i = 0;i<this.discord.servers.length;i++)
             {
-                var server = _this.discord.servers[i];
-                _this.servers[server.id] = new ServerData(_this, server);
-                _this.servers[server.id].load_promise.promise.then(function(server){
+                var server = this.discord.servers[i];
+                this.servers[server.id] = new ServerData(this, server);
+                this.servers[server.id].load_promise.promise.then(function(server){
                     for(var key in this.modules)
                     {
                         if(this.modules[key].always_on)
                             this.servers[server.id].enable_module(key);
                     }
-                }.bind(_this, _this.servers[server.id]));
+                }.bind(this, this.servers[server.id]));
             }
-        }).catch(function(err){
+            
+            this.ready = true;
+        }.bind(this)).catch(function(err){
             console.log(err.stack);
         });
     }
 
     on_server_created(server)
     {
+        if(!this.connected || !this.ready)
+            return;
+            
         console.log("Joined server '" + server.name + "'.");
         
         this.servers[server.id] = new ServerData(this, server);
@@ -359,6 +364,9 @@ class Bot
     
     on_server_deleted(server)
     {
+        if(!this.connected || !this.ready)
+            return;
+            
         console.log("Left server '" + server.name + "'.");
         
         delete this.servers[server.id];
