@@ -163,6 +163,11 @@ var responses_normal = {
     ADDED_PERMISSION: "Added permission {permission} to {role}.",
     REMOVED_PERMISSION: "Removed permission {permission} from {role}.",
     
+    REPORT_SUCCESS: "<@{author}>, Thank you for reporting your problem. My developers will soon take a look and respond as soon as possible",
+    RESOLVED_REPORT: "Report #{id} by \"{reporter}\" has been resolved!", 
+    NO_REPORTS: "No reports where found",
+    REPORT_NOT_FOUND: "The report with ID #{id} was not found",
+    
     CLEARED_REMINDERS: "Cleared {num} reminders.",
     INCORRECT_FORMAT: [
 	"Sorry, Sempai is a little dumb sometimes... I won't know what you mean unless you tell me in a way I can understand!\r\nThe correct format is: \"{sample}\".",

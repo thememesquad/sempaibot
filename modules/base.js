@@ -7,6 +7,16 @@ const ServerData = require("../src/ServerData.js");
 const users = require("../src/users.js");
 const moment = require('moment-timezone');
 const Util = require("../src/util.js");
+const Document = require('camo').Document;
+
+class Report extends Document {
+    constructor() {
+        super();
+        
+        this.user = String;
+        this.message = String;
+    }
+}
 
 class BaseModule extends IModule
 {
@@ -19,6 +29,7 @@ class BaseModule extends IModule
         this.always_on = true;
 
         permissions.register("CHANGE_PERSONALITY", "moderator");
+        permissions.register("REPORTS", "superadmin");
 
         this.add_command({
             match: function(message){
@@ -160,21 +171,72 @@ class BaseModule extends IModule
             
             execute: this.handle_list_timezones
         });
+        
+        this.add_command({
+            match: function(m) {
+                if (!m.content.startsWith("report:"))
+                    return null;
+                
+                var message = m.content.substr("report:".length + 1);
+                if (message.length === 0) {
+                    m.almost = true;
+                    return null;
+                }
+                
+                return [message];
+            },
+            sample: "sempai report: __*message*__",
+            description: "Report a message to the Developers",
+            permission: null,
+            global: false,
+            
+            execute: this.handle_reports
+        });
+        
+        this.add_command({
+            match: function(m) {
+                if (!m.content.startsWith("show reports"))
+                    return null;
+                
+                return [];
+            },
+            sample: "sempai show reports",
+            description: "Show all reports that where made",
+            permission: "REPORTS",
+            global: true,
+            hidden: true,
+            
+            execute: this.show_reports
+        });
+        
+        this.add_command({
+            match: function(m) {
+                if (!m.content.startsWith("resolve report"))
+                    return null;
+                
+                var id = m.content.substr("resolve report".length + 1);
+                if (id.length === 0 && parseInt(id) === "NaN") {
+                    m.almost = true;
+                    return null;
+                }
+                
+                return [id];
+            },
+            sample: "sempai resolve report 1",
+            description: "Resolve a report by number",
+            permission: "REPORTS",
+            global: true,
+            hidden: true,
+            
+            execute: this.resolve_report
+        });
     }
 
     game_switcher()
     {
-
-        var game = "Version: " + version;
-
         var _this = this;
 
-        _this.bot.set_status("Online", game);
-        var interval = setInterval(function() {
-            var game = games[Math.floor((Math.random() * games.length))];
-
-            _this.bot.set_status("Online", game);
-        }, 50000);
+        _this.bot.set_status("Online", "Version: 0.1");
     }
 
     handle_list_roles(message)
@@ -502,6 +564,65 @@ class BaseModule extends IModule
         }.bind(this, message, tmp);
         
         send(0);
+    }
+    
+    handle_reports(m, msg) {
+        var u = m.author.username;
+        var doc = Report.create({user: u, message: msg});
+        
+        doc.save().then(
+            function(m, db_doc) {
+                var resp = responses.get("REPORT_SUCCESS").format({author: m.author.id});
+                this.bot.respond(m, resp);
+            }.bind(this, m)
+        ).catch(
+            function(m, err) {
+                console.log(err);
+            }.bind(this, m)
+        );
+    }
+    
+    show_reports(m) {
+        Report.find({}).then(function(list) {
+            var message = "```";
+            var first = true;
+            var i = 1;
+            if (list.length <= 0) {
+                this.bot.respond(m, responses.get("NO_REPORTS"));
+                return true;
+            }
+            list.forEach(function(item) {
+                if (!first) message += "\r\n";
+                first = false;
+                message += "#" + i + " \"" + item.user + "\" reported: " + item.message;
+                i++;
+            });
+            message += "```";
+            this.bot.respond(m, message);
+        }.bind(this)).catch(function(err) {
+            console.log(err);
+        });
+    }
+    
+    resolve_report(m, id) {
+        id = parseInt(id) - 1;
+        Report.findOne({}, {skip: id}).then(function(id, m, e) {
+            if (e === null) {
+                id = id + 1;
+                var resp = responses.get("REPORT_NOT_FOUND").format({id: id});
+                this.bot.respond(m, resp);
+                return true;
+            }
+            Report.deleteOne({_id: e._id}).then(function(user, eid, m, doc) {
+                eid = eid + 1;
+                var resp = responses.get("RESOLVED_REPORT").format({id: eid, reporter: user});
+                this.bot.respond(m, resp);
+            }.bind(this, e.user, id, m)).catch(function(err) {
+                console.log(err);
+            });
+        }.bind(this, id, m)).catch(function(err) {
+            console.log(err);
+        });
     }
     
     on_setup(bot)
