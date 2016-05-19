@@ -5,10 +5,10 @@ module.exports = {
 	osu_api: "a8f348302f1c7ecc7167a0a1c80233a69171974a",
 	osu_irc_username: "calsmurf2904",
 	osu_irc_password: "077bec43",
-	db_username: "admin",
+	db_username: "3feb9b1e6dd0754a8ff7abbb62a841af",
 	db_password: "YMHthrNBafJd",
-	db_host: process.env.OPENSHIFT_MONGODB_DB_HOST,
-	db_port: process.env.OPENSHIFT_MONGODB_DB_PORT,
+	db_host: "eu-1.evennode.com",
+	db_port: 27017,
 	
 	superadmins: [
 		"110525719133577216",
