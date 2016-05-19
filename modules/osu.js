@@ -70,7 +70,6 @@ class OsuBancho
             var str = this.buffer.substr(0, this.buffer.search(last));
             var lines = str.split(linesplit);
 
-            console.log("Lines: " + lines.length);
             this.buffer = this.buffer.substr(str.length + this.buffer.match(last)[0].length);
             for(var i = 0;i<lines.length;i++)
             {
@@ -84,45 +83,58 @@ class OsuBancho
                     //001 = welcome message
                     //375 = motd start
                     //372 = motd entry
-                    //376 = names list start
+                    //376 = motd end
                     //353 = names list entry
                     //366 = names list end
 
                     if(command == "001")
                     {
+                        //welcome message
                     }
                     else if(command == "375")
                     {
+                        //motd start
                     }
                     else if(command == "372")
                     {
+                        //motd entry
                     }
                     else if(command == "376")
                     {
-                        this.online_buffer = [];
-                    }else if(command == "353")
+                        //motd end
+                    }
+                    else if(command == "353")
                     {
                         var str = line.substr(line.indexOf("osu :") + "osu :".length);
                         var names = str.split(" ");
                         names = names.splice(0, names.length - 1);
 
-                        console.log("Names: " + names.length);
                         for(var j = 0;j<names.length;j++)
                         {
                             names[j] = names[j].replace("_", " ");
                         }
 
                         this.online_buffer = this.online_buffer.concat(names);
-                    }else if(command == "366")
+                    }
+                    else if(command == "366")
                     {
                         var req = this.requests["names"];
                         this.requests["names"] = null;
-                        req.resolve(this.online_buffer);
-                    }else{
+                        
+                        var tmp = this.online_buffer;
+                        this.online_buffer = null;
+                        
+                        req.resolve(tmp);
+                    }
+                    else
+                    {
                         console.log(line);
                     }
                 }
             }
+            
+            lines = null;
+            str = null;
         }.bind(this));
 
         this.client.on("close", function(){
@@ -181,6 +193,7 @@ class OsuBancho
 
     names()
     {
+        this.online_buffer = [];
         this.send("NAMES osu");
     }
 
@@ -468,7 +481,6 @@ class OsuModule extends IModule
                 if(config.osu_irc_username !== undefined && config.osu_irc_password !== undefined)
                 {
                     this.bancho.update_online_buffer().then(function(users){
-                        console.log("OnlineUpdate: " + this.users.length);
                         for(var i in this.users)
                         {
                             if(users.indexOf(this.users[i].username) != -1)
@@ -483,7 +495,6 @@ class OsuModule extends IModule
                     }.bind(this));
                 }
 
-                console.log("ForceCheck: " + this.users.length);
                 for (var i = 0; i < this.users.length; i++)
                 {
                     var user = this.users[i];
@@ -497,7 +508,6 @@ class OsuModule extends IModule
                 {
                     if(time - this.users[i].last_updated >= USER_UPDATE_INTERVAL)
                     {
-                        console.log("Updating user " + i);
                         this.update_user(this.users[i]);
                     }
                 }
@@ -646,7 +656,6 @@ class OsuModule extends IModule
         var _this = this;
         var topRank;
         this.get_user_best(username, 0, 50).then(function(profile, json){
-            console.log("GetUserBest: " + json.length);
             for (var j = 0; j < json.length; j++)
             {
                 var beatmap = json[j];
