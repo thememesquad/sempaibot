@@ -7,6 +7,7 @@ module.exports = {
 	osu_irc_password: "077bec43",
 	db_username: "3feb9b1e6dd0754a8ff7abbb62a841af",
 	db_password: "YMHthrNBafJd",
+	db_database: "3feb9b1e6dd0754a8ff7abbb62a841af",
 	db_host: "eu-1.evennode.com",
 	db_port: 27017,
 	
