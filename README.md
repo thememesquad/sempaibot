@@ -1,29 +1,34 @@
 # sempaibot
-A discord bot for Anime and Osu :>
+A fun, modular discord bot for osu! and other things! :>
+
+# General functionality
+- Reminders! Have the bot send you or others a reminder message in a couple of minutes or at a certain time or date!
+- A permission system (so people can't mess with the bot if you don't want them to).
+- Ignore list (same reason as above)
+- Tsundere mode, because it's fun.
+
+# osu! module functionality
+- Track and announce when one of your friends/follows achieves a top score!
+- Show profile information
+
+# Anime module functionality (coming soon)
+- Announce when there's a new download for an anime you follow through Nyaa's RSS-feed
+- Posts a magnet link for the .torrent file
+
+# How to use
+Easy! Add the bot to your server by pressing this button!
+[button here soon]
 
 # Node Modules
 This Bot uses the following Modules:
-- discord.js
-- http
-- cheerio
-- cloudscraper
-- ger
-- lodash
-- nedb
-- net-ping
-- parse-torrent
-- xml2js
-
-# How to use
-Rename config.example.js to config.js and edit it with your Discord Account user information.
-
-# Functionality
-
-The following functionality will be build in:
-- Search for Anime magnets.
-- Search for Anime info.
-- Remind your friends that you're going to do something together (like watching anime)
-
-# Osu functionality
-- Announce that one of your friends has Achieved a new top score!
-- Show Profile information
+- [discord.js](https://github.com/hydrabolt/discord.js/)
+- [lodash](https://lodash.com/)
+- [auto-loader](https://github.com/jwerle/node-auto-loader)
+- [camo](https://github.com/scottwrobinson/camo)
+- [mongodb](https://github.com/mongodb/node-mongodb-native)
+- [nedb](https://github.com/louischatriot/nedb)
+- [q](https://github.com/kriskowal/q)
+- [request](https://github.com/request/request)
+- [moment](http://momentjs.com/)
+- [moment-timezone](http://momentjs.com/timezone/)
+- [node-tldr](https://github.com/philpl/node-tldr)
