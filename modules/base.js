@@ -164,24 +164,7 @@ class BaseModule extends IModule
 
     game_switcher()
     {
-        var games = [
-            "Boku no Pico",
-            "Petting Zoo Simulator",
-            "Hello Kitty Online",
-            "Counter-Strike: Global Offensive",
-			"osu!"
-        ];
-
-        var game = games[Math.floor((Math.random() * games.length))];
-
-        var _this = this;
-
-        _this.bot.set_status("Online", game);
-        var interval = setInterval(function() {
-            var game = games[Math.floor((Math.random() * games.length))];
-
-            _this.bot.set_status("Online", game);
-        }, 50000);
+        this.bot.set_status("Online", "osu!");
     }
 
     handle_list_roles(message)
