@@ -225,11 +225,9 @@ class OsuModule extends IModule
         this.name = "osu!";
 		this.description = [
 			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Great if you want to fanboy about Cookiezi, or make fun of your friend for setting a new PP score with bad acc!",
-			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Great if you want to keep track of our Erogelord225's crazy score sprees.",
 			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Who needs /r/osugame when you have this?",
 			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! This is like /r/osugame, but automated and with worse memes. I tried, okay.",
 			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Just don't follow everyone on osu! because Peppy will get angry at us.",
-			"This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Also, don't bother following Azer he's not going to get PP."
 		];
         this.last_checked = -1;
         this.modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
