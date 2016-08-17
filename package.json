@@ -22,9 +22,6 @@
     "q": "^1.4.1",
     "request": "^2.69.0"
   },
-  "optionalDependencies": {
-    "node-gd": "^1.2.0"
-  },
   "scripts": {
     "start": "node sempaibot.js",
     "test": "node_modules/.bin/isparta cover node_modules/mocha/bin/_mocha"
