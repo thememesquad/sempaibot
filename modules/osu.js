@@ -771,7 +771,7 @@ class OsuModule extends IModule
         }
 
         if(num === MAX_USER_LIMIT)
-            return this.bot.respond(message, responses.get("OSU_MAX_USER_LIMIT").format({author: message.author.id, user: profile.username});
+            return this.bot.respond(message, responses.get("OSU_MAX_USER_LIMIT").format({author: message.author.id, user: profile.username}));
 
         if(profile !== null)
         {
