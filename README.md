@@ -11,13 +11,11 @@ A fun, modular discord bot for osu! and other things! :>
 - Track and announce when one of your friends/follows achieves a top score!
 - Show profile information
 
-# Anime module functionality (coming soon)
-- Announce when there's a new download for an anime you follow through Nyaa's RSS-feed
-- Posts a magnet link for the .torrent file
-
 # How to use
-Easy! Add the bot to your server by pressing this button!
-[button here soon]
+Easy! Add to your discord server by [\[clicking  here!\]](https://discordapp.com/oauth2/authorize?client_id=182114190364901377&scope=bot&permissions=103992320)
+
+# Suggestions / support
+Require help? Encountered a bug? Have a cool feature idea? Or just wanna hang out? [Join our Discord server!](https://discord.gg/011LAjb1kyzCD0BY5)
 
 # Node Modules
 This Bot uses the following Modules:
