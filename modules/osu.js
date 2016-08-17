@@ -12,8 +12,9 @@ const permissions = require("../src/permissions.js");
 const IModule = require("../src/IModule.js");
 const Document = require('camo').Document;
 
-var USER_UPDATE_INTERVAL = 3600000;
-var BEST_UPDATE_INTERVAL = 60000;
+const USER_UPDATE_INTERVAL = 1200000;
+const BEST_UPDATE_INTERVAL = 60000;
+const MAX_USER_LIMIT = 50;
 
 class OsuUser extends Document
 {
@@ -218,7 +219,7 @@ class OsuModule extends IModule
     {
         super();
 
-        if(config.osu_irc_username !== undefined && config.osu_irc_password !== undefined)
+        if(config["osu_irc_username"] !== undefined && config["osu_irc_password"] !== undefined)
             this.bancho = new OsuBancho();
 
         this.name = "osu!";
@@ -234,6 +235,7 @@ class OsuModule extends IModule
         this.modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
         this.users = [];
         this.servers = {};
+        this.default_on = true;
 
         permissions.register("OSU_FOLLOW", "moderator");
         permissions.register("OSU_UNFOLLOW", "moderator");
@@ -361,7 +363,7 @@ class OsuModule extends IModule
         var rank = "Rank";
         var name = "Name";
         var pp = "PP";
-        var online = "online";
+        var online = "Profile";
         
         while(rank.length != 11)
             rank += " ";
@@ -384,7 +386,7 @@ class OsuModule extends IModule
             var rank = users[i].rank;
             var name = users[i].username;
             var pp = "(" + users[i].pp + "pp)";
-            var online = users[i].online ? "yes" : "no";
+            var online = "https://osu.ppy.sh/u/" + users[i].user_id;
             
             while(rank.length != 10)
                 rank += " ";
@@ -478,7 +480,7 @@ class OsuModule extends IModule
 
             if(time - this.last_checked >= BEST_UPDATE_INTERVAL)
             {
-                if(config.osu_irc_username !== undefined && config.osu_irc_password !== undefined)
+                if(config["osu_irc_username"] !== undefined && config["osu_irc_password"] !== undefined)
                 {
                     this.bancho.update_online_buffer().then(function(users){
                         for(var i in this.users)
@@ -502,7 +504,7 @@ class OsuModule extends IModule
                 }
 
                 this.last_checked = time;
-            }else{
+            }//else{
                 //don't update users when the beatmaps are being updated since there is a chance that the beatmap update code will also trigger a user update.
                 for(var i in this.users)
                 {
@@ -511,7 +513,7 @@ class OsuModule extends IModule
                         this.update_user(this.users[i]);
                     }
                 }
-            }
+            //}
         }.bind(this), 1);
 
         var _this = this;
@@ -754,14 +756,22 @@ class OsuModule extends IModule
     check_user(username, message)
     {
         var profile = null;
+        var num = 0;
+
         for(var i in this.users)
         {
             if(this.users[i].username.toLowerCase() == username.toLowerCase() || this.users[i].user_id == username.toLowerCase())
             {
                 profile = this.users[i];
-                break;
+                //break;
             }
+
+            if(this.users[i].servers.indexOf(message.server.id) !== -1)
+                num++;
         }
+
+        if(num === MAX_USER_LIMIT)
+            return this.bot.respond(message, responses.get("OSU_MAX_USER_LIMIT").format({author: message.author.id, user: profile.username});
 
         if(profile !== null)
         {

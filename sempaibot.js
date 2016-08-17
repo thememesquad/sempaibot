@@ -355,6 +355,9 @@ class Bot
             {
                 if(this.modules[key].always_on)
                     this.servers[server.id].enable_module(key);
+
+                if(this.modules[key].default_on)
+                    this.servers[server.id].enable_module(key);
             }
         }.bind(this, server)).catch(function(err){
             console.log(err);

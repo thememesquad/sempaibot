@@ -180,7 +180,8 @@ var responses_normal = {
     REMOVED_REMINDER: "Ok, I removed the reminder \"{message}\" scheduled at {time} by {who}.",
     TIMEZONE_LIST: "List of known timezones:{timezones}",
     TLDR_FAILED: "Failed to create a tldr. My tldr functionality works best with web articles.",
-    TLDR: "**{title}**:\r\n\"{summary}\"\r\n**Original reduced by {percentage}%.**"
+    TLDR: "**{title}**:\r\n\"{summary}\"\r\n**Original reduced by {percentage}%.**",
+    OSU_MAX_USER_LIMIT: "Reached the user limit of '50'."
 };
 
 var responses_tsundere = {
