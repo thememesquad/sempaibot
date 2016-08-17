@@ -361,7 +361,6 @@ class OsuModule extends IModule
         var rank = "Rank";
         var name = "Name";
         var pp = "PP";
-        var online = "Profile";
         
         while(rank.length != 11)
             rank += " ";
@@ -372,7 +371,7 @@ class OsuModule extends IModule
         while(pp.length != 12)
             pp += " ";
             
-        response += rank + " " + name + " " + pp + " " + online;
+        response += rank + " " + name + " " + pp + " ";
         
         var num = 0;
         for(var i in users)
@@ -384,7 +383,6 @@ class OsuModule extends IModule
             var rank = users[i].rank;
             var name = users[i].username;
             var pp = "(" + users[i].pp + "pp)";
-            var online = "https://osu.ppy.sh/u/" + users[i].user_id;
             
             while(rank.length != 10)
                 rank += " ";
@@ -396,7 +394,7 @@ class OsuModule extends IModule
                 pp += " ";
                 
             response += "\r\n";
-            response += "#" + rank + " " + name + " " + pp + " " + online;
+            response += "#" + rank + " " + name + " " + pp + " ";
             
             num++;
         }

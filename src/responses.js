@@ -134,7 +134,7 @@ var responses_normal = {
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
     
     MY_ROLE: "Your role is {role}.",
-    MY_PERMISSIONS: "Your permissions are:{permissions}",
+    MY_PERMISSIONS: "Your permissions are:",
     NOT_ALLOWED: "You don't have permission to do that.",
     MODULE_INVALID: "That's not a valid module name.",
     MODULE_ALREADY_ENABLED: "That module is already enabled!",
@@ -142,14 +142,14 @@ var responses_normal = {
     MODULE_ENABLED: "{module} module is now enabled!",
     MODULE_DISABLED: "{module} module is now disabled.",
     MODULE_ALWAYS_ON: "The {module} module can't be disabled.",
-    MODULE_LIST: "List of modules:{modules}",
-    LIST_ROLES: "List of roles:{roles}",
+    MODULE_LIST: "List of modules:",
+    LIST_ROLES: "List of roles:",
     LIST_PERMISSIONS: "List of permissions:{permissions}",
     INVALID_USER: "That user doesn't exist!",
     INVALID_ROLE: "That's not a valid role!",
 	INVALID_CHANNEL: "There's no channel with that name.",
-    ROLE_ASSIGNED: "Assigned {role} to {user}.",
-    ROLE_ALREADY_ASSIGNED: "Already assigned {role} to {user}.",
+    ROLE_ASSIGNED: "Assigned {role} to <@{user}>.",
+    ROLE_ALREADY_ASSIGNED: "Already assigned {role} to <@{user}>.",
 	SETTING_UP: "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"sempai go to #channel\")",
     OUTPUT_CHANNEL: [
 	"Okay then, <#{channel}> will be my new home channel! Hurray~! If you want to know more about what I can do, type \"sempai help me\".",
@@ -257,12 +257,18 @@ var responses_tsundere = {
     OSU_ADDED_FOLLOWING: [
         "Ooh a new osu! friend? I-It's not like I wanted more friends!",
         "Ooh a new osu! friend? Yaa~y! Uhm, I mean... I-It's not like I wanted more friends or anything!",
-        "Added {user} to my osu! ~~stalk~~ follow list!"
+        "Added {user} to my osu! ~~stalk~~ follow list!",
+		"Hmpf! It's not like I wanted more friends! But I will add {user} this one time! You should feel glad!",
     ],
     OSU_CHECK: [
         "Fine. I'll check {user} for you. But only because I have nothing else to do right now!",
         "Alright. I'll check {user}. D-don't get me wrong. It's not like I'm doing this for you or anything."
     ],
+	
+	OSU_MAX_USER_LIMIT: [
+		"It's not like I don't want more friends... But Sempai just can't handle any more right now. 50 is my maximum!",
+		"I could add more friends, but I just don't feel like it right now! 50 is enough, don't you think? Any more and Sempai's head will overload!",
+	],
 
     JOIN_INVALID_INVITE: "I... It's not like I wanted to join \"{invite}\"",
     JOIN_ALREADY: "Baka... I'm already stalking \"{invite}\"...",
