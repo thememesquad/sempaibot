@@ -1,167 +1,507 @@
-var Discord = require("discord.js");
-var responses = require("./responses.js");
-var modules = require('auto-loader').load(__dirname + "/modules");
-var db = require("./db.js");
-var process = require("process");
-var config = require("./config");
+"use strict";
 
-// First, checks if it isn't implemented yet.
-if (!String.prototype.format) {
-    String.prototype.format = function(args) {
-        return this.replace(/{(.*?)}/g, function(match, key) {
-            return typeof args[key] != 'undefined' ? args[key] : match;
-        });
-    };
-}
+const process = require("process");
+process.env.TZ = "Europe/Amsterdam";
 
-var Bot = {
-    discord: new Discord.Client(),
-    commands: [],
-    currentModule: "",
-    addCommand: function(command){
-        command.module = Bot.currentModule;
-        Bot.commands.push(command);
-    }
+const Discord = require("discord.js");
+const ServerData = require("./src/ServerData.js");
+
+const modules = require('auto-loader').load(__dirname + "/modules");
+const responses = require("./src/responses.js");
+const db = require("./src/db.js");
+const config = require("./config");
+const users = require("./src/users.js");
+const permissions = require("./src/permissions.js");
+const Q = require("q");
+
+String.prototype.format = function(args) {
+    return this.replace(/{(.*?)}/g, function(match, key) {
+        return typeof args[key] != 'undefined' ? args[key] : match;
+    });
 };
 
-
-
-Bot.discord.getServers = function(){
-    return this.internal.apiRequest("get", "https://discordapp.com/api/voice/regions", true);
-};
-
-Bot.discord.on("message", function (m){
-    var n = m.content.split(" ");
-
-    if(n[0].toLowerCase() == "sempai" || m.content.charAt(0) == "-")
+class Bot
+{
+    constructor()
     {
-        for(var i = 0;i<Bot.commands.length;i++)
-        {
-            var data = [];
-            if(Bot.commands[i].command !== null)
-            {
-                if(Array.isArray(Bot.commands[i].command))
-                {
-                    for(var j = 0;j<Bot.commands[i].command.length;j++)
-                    {
-                        data = Bot.commands[i].command[j].exec(m.content);
-                        if(data === null)
-                            continue;
-                        
-                        data.splice(0, 1);
-                        data = [m].concat(data);
-                        m.index = j;
-                        
-                        break;
-                    }
-                    
-                    if(data === null)
-                        continue;
-                }else{
-                    data = Bot.commands[i].command.exec(m.content);
-                    if(data === null)
-                        continue;
+        this.discord = new Discord.Client({
+            autoReconnect: true
+        });
+        this.servers = {};
+        this.modules = {};
+        this.user_blacklist = null;
+        this.server_blacklist = null;
+        this.connected_once = false;
+        this.connected = false;
+        this.queue = [];
+        this.ready = false;
 
-                    data.splice(0, 1);
-                    data = [m].concat(data);
-                    m.index = 0;
+        this.discord.on("message", this.handle_message.bind(this));
+        this.discord.on("ready", this.on_ready.bind(this));
+        this.discord.on("serverCreated", this.on_server_created.bind(this));
+        this.discord.on("serverDeleted", this.on_server_deleted.bind(this));
+        this.discord.on("disconnected", this.on_disconnected.bind(this));
+        this.discord.on("error", this.on_error.bind(this));
+    }
+
+    login()
+    {
+        this.discord.loginWithToken(config.token, function (error, token) {
+            if(error != null)
+            {
+                console.log("Discord login error: " + error);
+            }
+        });
+    }
+
+    set_status(status, game)
+    {
+        if(!this.connected)
+        {
+            return this.queue.push(this.set_status.bind(this, status, game));
+        }
+        
+        try
+        {
+            this.discord.setStatus(status, game);
+        }
+        catch(e)
+        {
+            this.connected = false;
+            this.queue.push(this.set_status.bind(this, status, game));
+        }
+    }
+    
+    get_invite(invite)
+    {
+        var defer = Q.defer();
+        
+        //not allowed with bot users
+        
+        return defer.promise;
+    }
+    
+    join_server(inv)
+    {
+        var defer = Q.defer();
+        
+        //not allowed with bot users
+        
+        return defer.promise;
+    }
+    
+    message(message, server)
+    {
+        var defer = Q.defer();
+        
+        var channel = server.channel;
+        if(channel.length === 0)
+        {
+            channel = server.server.channels[0].id;
+        }
+        
+        var queue = function(message, server, defer){
+            this.queue.push(this.discord.stopTyping.bind(this.discord, message.channel));
+            this.queue.push(this.discord.sendMessage.bind(this.discord, server.server.channels.get("id", channel), message, {}, function(defer, err, message){
+                if(err !== null)
+                    return defer.reject(err);
+                    
+                defer.resolve(message);
+            }.bind(this, defer)));
+        }.bind(this, message, server, defer);
+        
+        if(!this.connected)
+        {
+            queue();
+            return defer.promise;
+        }
+        
+        try
+        {
+            this.discord.stopTyping(message.channel);
+            this.discord.sendMessage(server.server.channels.get("id", channel), message, {}, function(err, message){
+                if(err !== null)
+                    return defer.reject(err);
+                    
+                defer.resolve(message);
+            });
+        }
+        catch(e)
+        {
+            this.connected = false;
+            queue();
+        }
+        
+        return defer.promise;
+    }
+
+    message_queue(messages, server)
+    {
+        var defer = Q.defer();
+        
+        var send = function(server, messages, defer, index, send){
+            if(index >= messages.length)
+            {
+                return defer.resolve();
+            }
+            
+            this.message(messages[index], server).then(function(index, send, defer){
+                send(index + 1, send);
+            }.bind(this, index, send, defer)).catch(function(defer, error){
+                defer.reject(error);
+            }.bind(this, defer));
+        }.bind(this, server, messages, defer);
+        
+        send(0, send);
+        return defer.promise;
+    }
+    
+    respond(m, message)
+    {
+        var defer = Q.defer();
+        
+        var queue = function(m, message, defer){
+            this.queue.push(this.discord.stopTyping.bind(this.discord, m.channel));
+            this.queue.push(this.discord.sendMessage.bind(this.discord, m.channel, message, {}, function(defer, err, message){
+                if(err !== null)
+                    return defer.reject(err);
+                    
+                defer.resolve(message);
+            }.bind(this, defer)));
+        }.bind(this, m, message, defer);
+        
+        if(!this.connected)
+        {
+            queue();
+            return defer.promise;
+        }
+        
+        try
+        {
+            this.discord.stopTyping(m.channel);
+            this.discord.sendMessage(m.channel, message, {}, function(err, message){
+                if(err !== null)
+                    return defer.reject(err);
+                    
+                defer.resolve(message);
+            });
+        }
+        catch(e)
+        {
+            this.connected = false;
+            queue();
+        }
+        
+        return defer.promise;
+    }
+
+    respond_queue(message, messages)
+    {
+        var defer = Q.defer();
+        
+        var send = function(message, messages, defer, index, send){
+            if(index >= messages.length)
+            {
+                return defer.resolve();
+            }
+            
+            this.respond(message, messages[index]).then(function(index, send, defer){
+                send(index + 1, send);
+            }.bind(this, index, send, defer)).catch(function(defer, error){
+                defer.reject(error);
+            }.bind(this, defer));
+        }.bind(this, message, messages, defer);
+        
+        send(0, send);
+        return defer.promise;
+    }
+
+    get_module(name)
+    {
+        return (this.modules[name] === undefined) ? null : this.modules[name];
+    }
+
+    print(message, length, newline)
+    {
+        while(message.length != length)
+            message += ".";
+            
+        if(newline)
+            console.log(message);
+        else
+            process.stdout.write(message);
+    }
+    
+    on_ready()
+    {
+        this.connected = true;
+        
+        console.log("Connected to discord.");
+        
+        if(this.connected_once)
+        {
+            while(this.queue.length != 0)
+            {
+                this.queue[0]();
+                this.queue.splice(0, 1);
+            }
+            
+            return;
+        }
+           
+        this.connected_once = true;
+        
+        db.load().then(function(db_type){
+            this.print("Loading config from DB", 70, false);
+            return db.ConfigKeyValue.find({});
+        }.bind(this)).then(function(docs){
+            console.log("....Ok");
+            for(var i = 0;i<docs.length;i++)
+            {
+                if(docs[i].key == "mode")
+                {
+                    if(docs[i].value.value != responses.currentMode)
+                        responses.setMode(docs[i].value);
+                }
+                else if(docs[i].key == "user_blacklist")
+                {
+                    this.user_blacklist = docs[i];
+                }
+                else if(docs[i].key == "server_blacklist")
+                {
+                    this.server_blacklist = docs[i];
                 }
             }
-            else if(n.length > 1)
+            
+            if(this.user_blacklist === null)
             {
-                var targetName = m.content.substr(m.content.indexOf(" ") + 1);
-                Bot.discord.sendMessage(m.channel, responses.get("UNKNOWN_COMMAND").format({author: m.author.id, command: targetName}));
-                break;
+                this.user_blacklist = db.ConfigKeyValue.create({key: "user_blacklist", value: {blacklist: []}});
+                this.user_blacklist.save().catch(function(err){
+                    console.log(err);
+                });
             }
-            else if(m.content.charAt(0) != "-")
+            
+            if(this.server_blacklist === null)
             {
-                data = [m];
+                this.server_blacklist = db.ConfigKeyValue.create({key: "server_blacklist", value: {blacklist: []}});
+                this.server_blacklist.save().catch(function(err){
+                    console.log(err);
+                });
+            }
+            
+            this.print("Loading users from DB", 70, false);
+            return users.load();
+        }.bind(this)).then(function(){
+            console.log("....Ok");
+            this.print("Loading permissions from DB", 70, false);
+            return permissions.load();
+        }.bind(this)).then(function(){
+            console.log("....Ok");
+            for(var key in modules)
+            {
+                var mod = modules[key];
+                if(mod.on_setup === undefined)
+                {
+                    console.log("Error: Module '" + key + "' is not setup correctly. missing function: on_setup");
+                    continue;
+                }
+
+                this.print("Setting up module '" + key + "'", 70, false);
+                try
+                {
+                    mod.on_setup(this);
+                    console.log("....Ok");
+                }
+                catch(e)
+                {
+                    console.log("Error:");
+                    console.log(e.stack);
+                }
+
+                this.modules[mod.name] = mod;
+            }
+
+            return permissions.save();
+        }.bind(this)).then(function(){
+            for(var i = 0;i<this.discord.servers.length;i++)
+            {
+                var server = this.discord.servers[i];
+                this.servers[server.id] = new ServerData(this, server);
+                this.servers[server.id].load_promise.promise.then(function(server){
+                    for(var key in this.modules)
+                    {
+                        if(this.modules[key].always_on)
+                            this.servers[server.id].enable_module(key);
+                    }
+                }.bind(this, this.servers[server.id]));
+            }
+            
+            this.ready = true;
+        }.bind(this)).catch(function(err){
+            console.log(err.stack);
+        });
+    }
+
+    on_server_created(server)
+    {
+        if(!this.connected || !this.ready)
+            return;
+            
+        console.log("Joined server '" + server.name + "'.");
+        
+        this.servers[server.id] = new ServerData(this, server);
+        this.servers[server.id].load_promise.promise.then(function(server){
+            for(var key in this.modules)
+            {
+                if(this.modules[key].always_on)
+                    this.servers[server.id].enable_module(key);
+
+                if(this.modules[key].default_on)
+                    this.servers[server.id].enable_module(key);
+            }
+        }.bind(this, server)).catch(function(err){
+            console.log(err);
+        });
+    }
+    
+    on_server_deleted(server)
+    {
+        if(!this.connected || !this.ready)
+            return;
+            
+        console.log("Left server '" + server.name + "'.");
+        
+        delete this.servers[server.id];
+    }
+    
+    on_disconnected()
+    {
+        this.connected = false;
+        
+        console.log("Disconnected from discord.");
+    }
+    
+    on_error(err)
+    {
+        console.log("Discord error: " + err);
+    }
+    
+    handle_message(message)
+    {
+        var server = null;
+        if(!message.channel.isPrivate)
+            server = this.servers[message.channel.server.id];
+            
+        message.user = users.get_user(message.author, server);
+        message.server = server;
+        
+        //Is the user blacklisted/ignored
+        if(this.is_user_blacklisted(message.user) || (message.server !== null && message.server.is_user_ignored(message.user)))
+            return;
+            
+        if(message.author.id !== this.discord.user.id && message.server !== null)
+        {
+            for(var key in this.modules)
+            {
+                if(!server.is_module_enabled(key) && (this.modules[key].always_on === undefined || this.modules[key].always_on == false))
+                    continue;
+                    
+                if(this.modules[key].on_raw_message === undefined)
+                    continue;
+                    
+                this.modules[key].on_raw_message(message);
+            }
+        }
+        
+        if(message.content.indexOf("sempai") == 0 || message.content.indexOf("-") == 0)
+        {
+            var msg = message.content;
+            if(msg.indexOf("sempai") == 0)
+            {
+                msg = msg.substr("sempai".length + 1).replace(/\s+/g, ' ').trim();
             }
             else
             {
-                //dont allow null commands to run without the name-keyword
-                continue;
-            }
-
-            Bot.commands[i].action.apply(null, data);
-            
-            if(Bot.commands[i].stealth !== undefined)
-            {
-                var url = "https://discordapp.com/api/channels/" + m.channel.id + "/messages/" + m.id;
-                Bot.discord.internal.apiRequest("delete", url, true).then(function(res){});
+                msg = msg.substr(1).replace(/\s+/g, ' ').trim();
             }
             
-            break;
-        }
-    }
-});
-
-Bot.discord.on("ready", function () {
-    db.load(function(){
-        db.data.find({}, function(err, docs){
-            if (err !== null)
-                return console.log(err);
-
-            for(var i = 0;i<docs.length;i++)
+            message.content = msg;
+            var split = message.content.split(" ");
+            var handled = false;
+            
+            for(var key in this.modules)
             {
-                if(docs[i].name == "mode")
+                if(this.modules[key].check_message(server, message, split))
                 {
-                    if(docs[i].value != responses.currentMode)
-                        responses.setMode(docs[i].value);
-                }else if(docs[i].name == "anime_tracked")
-                {
-                    continue;
-                }else{
+                    handled = true;
+                    break;
                 }
             }
-        });
 
-        for(var key in modules)
-        {
-            var mod = modules[key];
-            if(mod.load === undefined)
+            if(!handled)
             {
-                console.log("Error: Module '" + key + "' is not setup correctly. missing function: load");
-                continue;
-            }
-            
-            var msg = "Loading module '" + key + "'";
-            while(msg.length != 60)
-                msg += ".";
-            
-            process.stdout.write(msg);
-            try
-            {
-                Bot.currentModule = mod.moduleName || key;
-                
-                mod.load(Bot);
-                console.log("....Ok");
-            }catch(e)
-            {
-                console.log("Error:");
-                console.log(e);
+                if(split.length == 1)
+                    this.respond(message, responses.get("NAME").format({author: message.author.id}));
+                else
+                    this.respond(message, responses.get("UNKNOWN_COMMAND").format({author: message.author.id}));
             }
         }
+    }
+    
+    blacklist_user(user)
+    {
+        this.user_blacklist.value.blacklist.push(user.user_id);
+        this.user_blacklist.save().catch(function(err){
+            console.log(err);
+        });
+    }
+    
+    blacklist_server(server_id)
+    {
+        this.server_blacklist.value.blacklist.push(server_id);
+        this.server_blacklist.save().catch(function(err){
+            console.log(err);
+        });
+    }
+    
+    whitelist_user(user)
+    {
+        var idx = this.user_blacklist.value.blacklist.indexOf(user.user_id);
+        if(idx === -1)
+            return false;
         
-        Bot.currentModule = "";
-        
-        //null command
-        Bot.commands.push({
-            command: null,
-            hidden: true,
-            action: function(m){
-                Bot.discord.sendMessage(m.channel, responses.get("NAME").format({author: m.author.id}));
-            }
+        this.user_blacklist.value.blacklist.splice(idx, 1);
+        this.user_blacklist.save().catch(function(err){
+            console.log(err);
         });
         
+        return true;
+    }
+    
+    whitelist_server(server_id)
+    {
+        var idx = this.server_blacklist.value.blacklist.indexOf(server_id);
+        if(idx === -1)
+            return false;
         
-        
-        Bot.discord.joinServer(config.server, function (error, server) {
-            Bot.discord.sendMessage(Bot.discord.channels.get("name", "osu"), responses.get("ONLINE"));
+        this.server_blacklist.value.blacklist.splice(idx, 1);
+        this.server_blacklist.save().catch(function(err){
+            console.log(err);
         });
-    });
-});
+        
+        return true;
+    }
+    
+    is_user_blacklisted(user)
+    {
+        return this.user_blacklist.value.blacklist.indexOf(user.user_id) !== -1;
+    }
+    
+    get user()
+    {
+        return users.get_user_by_id(this.discord.user.id);
+    }
+}
 
-Bot.discord.login(config.user, config.pass, function (error, token) {
-    console.log(error + "; token: " + token);
-});
+var bot = new Bot();
+bot.login();

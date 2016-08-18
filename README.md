@@ -30,3 +30,6 @@ This Bot uses the following Modules:
 - [moment](http://momentjs.com/)
 - [moment-timezone](http://momentjs.com/timezone/)
 - [node-tldr](https://github.com/philpl/node-tldr)
+
+# License
+SempaiBot is licensed under the [General Public License Version 3.0](https://www.gnu.org/licenses/gpl-3.0.en.html).
