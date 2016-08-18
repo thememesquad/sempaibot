@@ -144,7 +144,7 @@ var responses_normal = {
     MODULE_ALWAYS_ON: "The {module} module can't be disabled.",
     MODULE_LIST: "List of modules:",
     LIST_ROLES: "List of roles:",
-    LIST_PERMISSIONS: "List of permissions:{permissions}",
+    LIST_PERMISSIONS: "List of permissions:",
     INVALID_USER: "That user doesn't exist!",
     INVALID_ROLE: "That's not a valid role!",
 	INVALID_CHANNEL: "There's no channel with that name.",
