@@ -185,13 +185,6 @@ var responses_normal = {
 };
 
 var responses_tsundere = {
-    ONLINE: [
-        "I'm back! Did you miss me? ...Not like I want you to miss me or anything!",
-        "I'm back! You should be grateful.",
-        "I'm back! Don't misunderstand, it's not like I'm back here because I l-like you guys or anything.",
-        "I'm back! But don't misunderstand, I'm just here because I had nothing else to do!",
-        "I'm back! Don't misunderstand! I'm only here because I had a lot of free time! It's not like I came back because I like hanging out with you guys, or anything!"
-    ],
     NAME: [
         "I'm here! How can Sempai help you?",
         "I'm here! How can I help you?",
