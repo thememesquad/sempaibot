@@ -17,7 +17,7 @@ class IModule
         this.commands.push(command);
     }
 
-    check_message(server, message, split)
+    check_message(server, message)
     {
         for(var i = 0;i<this.commands.length;i++)
         {

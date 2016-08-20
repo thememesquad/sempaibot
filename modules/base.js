@@ -3,9 +3,8 @@
 const responses = require("../src/responses.js");
 const permissions = require("../src/permissions.js");
 const IModule = require("../src/IModule.js");
-const ServerData = require("../src/ServerData.js");
 const users = require("../src/users.js");
-const moment = require('moment-timezone');
+const moment = require("moment-timezone");
 const Util = require("../src/util.js");
 
 class BaseModule extends IModule
@@ -15,7 +14,7 @@ class BaseModule extends IModule
         super();
 
         this.name = "General";
-		this.description = "This is the base module! Cannot be disabled."
+        this.description = "This is the base module! Cannot be disabled.";
         this.always_on = true;
 
         permissions.register("CHANGE_PERSONALITY", "moderator");
@@ -171,8 +170,9 @@ class BaseModule extends IModule
     {
         var server = message.server;
         var tmp = [];
+        var i;
         
-        for(var i = 0;i<server.server.members.length;i++)
+        for(i = 0;i<server.server.members.length;i++)
         {
             var user = users.get_user_by_id(server.server.members[i].id, server);
             if(server.server.members[i].id === this.bot.user.user_id)
@@ -191,7 +191,7 @@ class BaseModule extends IModule
         var columns = {name: "Name", role: "Role"};
         var data = [];
         
-        for(var i = 0;i<tmp.length;i++)
+        for(i = 0;i<tmp.length;i++)
         {
             data.push({name: tmp[i].get_name_detailed(server), role: tmp[i].get_role(server)});
         }
@@ -417,8 +417,9 @@ class BaseModule extends IModule
     
     handle_list_timezones(message, area)
     {
+        var i;
         var timezones = moment.tz.names();
-        for(var i = timezones.length - 1;i>=0;i--)
+        for(i = timezones.length - 1;i>=0;i--)
         {
             var t = timezones[i];
             if(!t.toLowerCase().startsWith(area))
@@ -440,11 +441,11 @@ class BaseModule extends IModule
             abbr += " ";
             
         response += name + abbr + "\r\n";
-        for(var i = 0;i<timezones.length;i++)
+        for(i = 0;i<timezones.length;i++)
         {
             var zone = moment.tz.zone(timezones[i]);
-            var name = zone.name;
-            var abbr = zone.abbrs[0];
+            name = zone.name;
+            abbr = zone.abbrs[0];
             
             while(name.length < 26)
                 name += " ";
@@ -461,8 +462,8 @@ class BaseModule extends IModule
                 tmp.push(response);
                 
                 response = "```";
-                var name = "Name";
-                var abbr = "Abbreviation";
+                name = "Name";
+                abbr = "Abbreviation";
                 
                 while(name.length < 26)
                     name += " ";
@@ -500,11 +501,11 @@ class BaseModule extends IModule
         this.game_switcher();
     }
 
-    on_load(server)
+    on_load()
     {
     }
 
-    on_unload(server)
+    on_unload()
     {
     }
 }

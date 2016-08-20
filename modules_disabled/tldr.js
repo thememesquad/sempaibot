@@ -1,6 +1,7 @@
 "use strict";
+
 const IModule = require("../src/IModule.js");
-const summary = require('node-tldr');
+const summary = require("node-tldr");
 const responses = require("../src/responses.js");
 
 class TLDRModule extends IModule
@@ -62,7 +63,7 @@ class TLDRModule extends IModule
             if(reduction.indexOf(".") !== -1)
                 reduction = reduction.substr(0, reduction.indexOf("."));
                 
-            this.bot.respond(message, responses.get("TLDR").format({author: message.author.id, title: result.title, summary: summary, num_words: result.words, percentage: reduction}))
+            this.bot.respond(message, responses.get("TLDR").format({author: message.author.id, title: result.title, summary: summary, num_words: result.words, percentage: reduction}));
         }.bind(this, message));
     }
     
@@ -71,11 +72,11 @@ class TLDRModule extends IModule
         this.bot = bot;
     }
     
-    on_load(server)
+    on_load()
     {
     }
     
-    on_unload(server)
+    on_unload()
     {
     }
 }

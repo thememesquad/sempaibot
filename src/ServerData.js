@@ -14,8 +14,6 @@ class ServerData
         this.server = server;
         this.id = server.id;
         this.load_promise = Q.defer();
-        
-        var _this = this;
 
         for(var i = 0;i<server.members.length;i++)
         {
@@ -35,11 +33,11 @@ class ServerData
                     }
                 });
                 
-                this.config.save().then(function(doc){
-                    this.on_load();
+                this.config.save().then(function(){
+                    this.on_load(true);
                 }.bind(this)).catch(function(err){
                     console.log("save: " + err);
-                    this.on_load();
+                    this.on_load(true);
                 }.bind(this));
             }
             else
@@ -55,14 +53,14 @@ class ServerData
                     module.on_load(this);
                 }
                 
-                this.on_load();
+                this.on_load(false);
             }
         }.bind(this)).catch(function(err){
             console.log("findOne: " + err.stack);
         });
     }
 
-    on_load()
+    on_load(initial)
     {
         this.channel_check = setInterval(function(){
             if(this.channel.length !== 0)
@@ -87,7 +85,7 @@ class ServerData
             this.bot.message(responses.get("SETTING_UP"), this);
         }
         
-        this.load_promise.resolve();
+        this.load_promise.resolve(initial);
     }
 
     enable_module(name)

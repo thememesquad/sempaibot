@@ -6,7 +6,7 @@ process.env.TZ = "Europe/Amsterdam";
 const Discord = require("discord.js");
 const ServerData = require("./src/ServerData.js");
 
-const modules = require('auto-loader').load(__dirname + "/modules");
+const modules = require("auto-loader").load(__dirname + "/modules");
 const responses = require("./src/responses.js");
 const db = require("./src/db.js");
 const config = require("./config");
@@ -16,7 +16,7 @@ const Q = require("q");
 
 String.prototype.format = function(args) {
     return this.replace(/{(.*?)}/g, function(match, key) {
-        return typeof args[key] != 'undefined' ? args[key] : match;
+        return typeof args[key] != "undefined" ? args[key] : match;
     });
 };
 
@@ -49,8 +49,10 @@ class Bot
         this.discord.loginWithToken(config.token, function (error, token) {
             if(error != null)
             {
-                console.log("Discord login error: " + error);
+                return console.error("Discord login error: " + error);
             }
+            
+            console.log("Logged in with token '" + token + "'.");
         });
     }
 
@@ -70,24 +72,6 @@ class Bot
             this.connected = false;
             this.queue.push(this.set_status.bind(this, status, game));
         }
-    }
-    
-    get_invite(invite)
-    {
-        var defer = Q.defer();
-        
-        //not allowed with bot users
-        
-        return defer.promise;
-    }
-    
-    join_server(inv)
-    {
-        var defer = Q.defer();
-        
-        //not allowed with bot users
-        
-        return defer.promise;
     }
     
     message(message, server)
@@ -145,9 +129,9 @@ class Bot
                 return defer.resolve();
             }
             
-            this.message(messages[index], server).then(function(index, send, defer){
+            this.message(messages[index], server).then(function(index, send){
                 send(index + 1, send);
-            }.bind(this, index, send, defer)).catch(function(defer, error){
+            }.bind(this, index, send)).catch(function(defer, error){
                 defer.reject(error);
             }.bind(this, defer));
         }.bind(this, server, messages, defer);
@@ -205,7 +189,7 @@ class Bot
                 return defer.resolve();
             }
             
-            this.respond(message, messages[index]).then(function(index, send, defer){
+            this.respond(message, messages[index]).then(function(index, send){
                 send(index + 1, send);
             }.bind(this, index, send, defer)).catch(function(defer, error){
                 defer.reject(error);
@@ -251,7 +235,7 @@ class Bot
            
         this.connected_once = true;
         
-        db.load().then(function(db_type){
+        db.load().then(function(){
             this.print("Loading config from DB", 70, false);
             return db.ConfigKeyValue.find({});
         }.bind(this)).then(function(docs){
@@ -327,10 +311,13 @@ class Bot
             {
                 var server = this.discord.servers[i];
                 this.servers[server.id] = new ServerData(this, server);
-                this.servers[server.id].load_promise.promise.then(function(server){
+                this.servers[server.id].load_promise.promise.then(function(server, initial){
                     for(var key in this.modules)
                     {
                         if(this.modules[key].always_on)
+                            this.servers[server.id].enable_module(key);
+                        
+                        if(initial && this.modules[key].default_on)
                             this.servers[server.id].enable_module(key);
                     }
                 }.bind(this, this.servers[server.id]));
@@ -389,6 +376,8 @@ class Bot
     handle_message(message)
     {
         var server = null;
+        var key;
+        
         if(!message.channel.isPrivate)
             server = this.servers[message.channel.server.id];
             
@@ -401,7 +390,7 @@ class Bot
             
         if(message.author.id !== this.discord.user.id && message.server !== null)
         {
-            for(var key in this.modules)
+            for(key in this.modules)
             {
                 if(!server.is_module_enabled(key) && (this.modules[key].always_on === undefined || this.modules[key].always_on == false))
                     continue;
@@ -418,18 +407,18 @@ class Bot
             var msg = message.content;
             if(msg.indexOf("sempai") == 0)
             {
-                msg = msg.substr("sempai".length + 1).replace(/\s+/g, ' ').trim();
+                msg = msg.substr("sempai".length + 1).replace(/\s+/g, " ").trim();
             }
             else
             {
-                msg = msg.substr(1).replace(/\s+/g, ' ').trim();
+                msg = msg.substr(1).replace(/\s+/g, " ").trim();
             }
             
             message.content = msg;
             var split = message.content.split(" ");
             var handled = false;
             
-            for(var key in this.modules)
+            for(key in this.modules)
             {
                 if(this.modules[key].check_message(server, message, split))
                 {

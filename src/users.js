@@ -1,10 +1,8 @@
 "use strict";
 
-const permissions = require("./permissions.js");
-const db = require("./db.js");
 const config = require("../config.js");
 const Q = require("q");
-const Document = require('camo').Document;
+const Document = require("camo").Document;
 
 class User extends Document
 {

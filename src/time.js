@@ -1,10 +1,11 @@
+"use strict";
+
 const moment = require("moment");
 
 function parse_timestring_internal(str)
 {
     str = str.toLowerCase().trim();
     
-    var time = "";
     var currentDate = moment();
     
     var day_func = function(target, day){
@@ -68,19 +69,21 @@ function parse_timestring_internal(str)
     
     if(match.length == 2)
     {
+        var num, name;
+        
         switch(match[1])
         {
             case "second":
             case "seconds":
             {
-                var num = parseInt(match[0]);
+                num = parseInt(match[0]);
                 if(isNaN(num))
                 {
                     console.log("Unknown second: " + match[0]);
                     return null;
                 }
                 
-                var name = "" + num;
+                name = "" + num;
                 if(num == 1)
                     name += " second";
                 else
@@ -92,14 +95,14 @@ function parse_timestring_internal(str)
             case "minute":
             case "minutes":
             {
-                var num = parseInt(match[0]);
+                num = parseInt(match[0]);
                 if(isNaN(num))
                 {
                     console.log("Unknown minute: " + match[0]);
                     return null;
                 }
                 
-                var name = "" + num;
+                name = "" + num;
                 if(num == 1)
                     name += " minute";
                 else
@@ -111,14 +114,14 @@ function parse_timestring_internal(str)
             case "hour":
             case "hours":
             {
-                var num = parseInt(match[0]);
+                num = parseInt(match[0]);
                 if(isNaN(num))
                 {
                     console.log("Unknown hour: " + match[0]);
                     return null;
                 }
                 
-                var name = "" + num;
+                name = "" + num;
                 if(num == 1)
                     name += " hour";
                 else
@@ -130,14 +133,14 @@ function parse_timestring_internal(str)
             case "day":
             case "days":
             {
-                var num = parseInt(match[0]);
+                num = parseInt(match[0]);
                 if(isNaN(num))
                 {
                     console.log("Unknown day: " + match[0]);
                     return null;
                 }
                 
-                var name = "" + num;
+                name = "" + num;
                 if(num == 1)
                     name += " day";
                 else
@@ -149,7 +152,7 @@ function parse_timestring_internal(str)
             case "week":
             case "weeks":
             {
-                var num = parseInt(match[0]);
+                num = parseInt(match[0]);
                 if(isNaN(num))
                 {
                     switch(match[0])
@@ -164,7 +167,7 @@ function parse_timestring_internal(str)
                     }
                 }
                 
-                var name = "" + num;
+                name = "" + num;
                 if(num == 1)
                     name += " week";
                 else
@@ -176,14 +179,14 @@ function parse_timestring_internal(str)
             case "month":
             case "months":
             {
-                var num = parseInt(match[0]);
+                num = parseInt(match[0]);
                 if(isNaN(num))
                 {
                     console.log("Unknown month: " + match[0]);
                     return null;
                 }
                 
-                var name = "" + num;
+                name = "" + num;
                 if(num == 1)
                     name += " month";
                 else
@@ -195,14 +198,14 @@ function parse_timestring_internal(str)
             case "year":
             case "years":
             {
-                var num = parseInt(match[0]);
+                num = parseInt(match[0]);
                 if(isNaN(num))
                 {
                     console.log("Unknown year: " + match[0]);
                     return null;
                 }
                 
-                var name = "" + num;
+                name = "" + num;
                 if(num == 1)
                     name += " year";
                 else
@@ -237,7 +240,7 @@ function parse_timestring(str)
     var split = str.trim().split(" ");
     
     var size = split.length;
-    while(true)
+    while(size > 1)
     {
         var matches = [];
                 
@@ -277,9 +280,6 @@ function parse_timestring(str)
         
         ret = ret.concat(matches);
         size--;
-        
-        if(size < 1)
-            break;
     }
     
     return ret;
