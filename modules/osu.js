@@ -755,27 +755,24 @@ class OsuModule extends IModule
                                 if (beatmap.perfect == 0)
                                     beatmap.additional = "| **" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
 
-                                var announcement = responses.get("OSU_NEW_SCORE_NODATE").format({
-                                    user: profile.username,
-                                    beatmap_id: beatmap.beatmap_id,
-                                    pp: beatmap.pp,
-                                    rank: beatmap.rank,
-                                    acc: beatmap.acc,
-                                    mods: beatmap.mods,
-                                    map_artist: beatmap_info.artist,
-                                    map_title: beatmap_info.title,
-                                    map_diff_name: beatmap_info.version,
-                                    additional: beatmap.additional,
-                                    top_rank: topRank,
-                                    delta_pp: deltapp,
-                                    old_rank: oldRank,
-                                    new_rank: newRank,
-                                    delta_rank: deltaRank
-                                });
-
-                                _this.on_new_record(profile, announcement);
-                            }.bind(null, profile, beatmap, beatmap_info)).catch(function(err){
-                                console.log("update_user: ", err.stack);
+                            var announcement = responses.get("OSU_NEW_SCORE_NODATE").format({
+                                user: profile.username,
+                                beatmap_id: beatmap.beatmap_id,
+                                pp: beatmap.pp,
+                                rank: beatmap.rank,
+                                acc: beatmap.acc,
+                                mods: beatmap.mods,
+                                map_artist: beatmap_info.artist,	
+                                map_title: beatmap_info.title,
+                                map_diff_name: beatmap_info.version,
+                                additional: beatmap.additional,
+                                top_rank: topRank,
+								old_total_pp = oldTotalpp,
+								new_total_pp = newTotalpp,
+                                delta_pp: deltapp,
+                                old_rank: oldRank,
+                                new_rank: newRank,
+                                delta_rank: deltaRank
                             });
                         }.bind(null, profile, beatmap)).catch(function(err){
                             console.log("get_beatmaps: ", err);
