@@ -692,6 +692,9 @@ class OsuModule extends IModule
 
                     _this.get_beatmaps(beatmap.beatmap_id).then(function(profile, beatmap, beatmap_info){
                         _this.update_user(profile).then(function(profile, beatmap, beatmap_info, user_data){
+							
+							var oldTotalpp = profile.pp;
+							var newTotalpp = user_data.pp_raw;
                             var deltapp = user_data.pp_raw - profile.pp;
                             var oldRank = profile.rank;
                             var deltaRank = user_data.pp_rank - profile.rank;
@@ -724,11 +727,13 @@ class OsuModule extends IModule
                                 rank: beatmap.rank,
                                 acc: beatmap.acc,
                                 mods: beatmap.mods,
-                                map_artist: beatmap_info.artist,
+                                map_artist: beatmap_info.artist,	
                                 map_title: beatmap_info.title,
                                 map_diff_name: beatmap_info.version,
                                 additional: beatmap.additional,
                                 top_rank: topRank,
+								old_total_pp = oldTotalpp,
+								new_total_pp = newTotalpp,
                                 delta_pp: deltapp,
                                 old_rank: oldRank,
                                 new_rank: newRank,
