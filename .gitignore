@@ -5,6 +5,6 @@
 /ffplay.exe
 /ffprobe.exe
 /saved
-/data/configkeyvalues.db
-/data/osuusers.db
+/data
+/data
 /coverage

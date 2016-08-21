@@ -730,6 +730,8 @@ class OsuModule extends IModule
                     {
                         _this.get_beatmaps(beatmap.beatmap_id).then(function(profile, beatmap, beatmap_info){
                             _this.update_user(profile).then(function(profile, beatmap, beatmap_info, user_data){
+                                var oldTotalpp = profile.pp;
+                                var newTotalpp = user_data.pp_raw;
                                 var deltapp = user_data.pp_raw - profile.pp;
                                 var oldRank = profile.rank;
                                 var deltaRank = user_data.pp_rank - profile.rank;
@@ -755,27 +757,32 @@ class OsuModule extends IModule
                                 if (beatmap.perfect == 0)
                                     beatmap.additional = "| **" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
 
-                            var announcement = responses.get("OSU_NEW_SCORE_NODATE").format({
-                                user: profile.username,
-                                beatmap_id: beatmap.beatmap_id,
-                                pp: beatmap.pp,
-                                rank: beatmap.rank,
-                                acc: beatmap.acc,
-                                mods: beatmap.mods,
-                                map_artist: beatmap_info.artist,	
-                                map_title: beatmap_info.title,
-                                map_diff_name: beatmap_info.version,
-                                additional: beatmap.additional,
-                                top_rank: topRank,
-								old_total_pp = oldTotalpp,
-								new_total_pp = newTotalpp,
-                                delta_pp: deltapp,
-                                old_rank: oldRank,
-                                new_rank: newRank,
-                                delta_rank: deltaRank
+                                var announcement = responses.get("OSU_NEW_SCORE_NODATE").format({
+                                    user: profile.username,
+                                    beatmap_id: beatmap.beatmap_id,
+                                    pp: beatmap.pp,
+                                    rank: beatmap.rank,
+                                    acc: beatmap.acc,
+                                    mods: beatmap.mods,
+                                    map_artist: beatmap_info.artist,	
+                                    map_title: beatmap_info.title,
+                                    map_diff_name: beatmap_info.version,
+                                    additional: beatmap.additional,
+                                    top_rank: topRank,
+                                    old_total_pp: oldTotalpp,
+                                    new_total_pp: newTotalpp,
+                                    delta_pp: deltapp,
+                                    old_rank: oldRank,
+                                    new_rank: newRank,
+                                    delta_rank: deltaRank
+                                });
+                                
+                                _this.on_new_record(profile, announcement);
+                            }.bind(null, profile, beatmap, beatmap_info)).catch(function(err){
+                                console.log("update_user: ", err, err.stack);
                             });
                         }.bind(null, profile, beatmap)).catch(function(err){
-                            console.log("get_beatmaps: ", err);
+                            console.log("get_beatmaps: ", err, err.stack);
                         });
                     }
                 }
@@ -853,10 +860,9 @@ class OsuModule extends IModule
         if(profile.update_in_progress !== null)
             return profile.update_in_progress.promise;
 
+        var defer = Q.defer();
         if((new Date).getTime() - profile.last_updated < USER_UPDATE_INTERVAL)
         {
-            var defer = Q.defer();
-            
             setTimeout(function(){
                 defer.resolve({
                     pp_raw: profile.pp,
@@ -866,7 +872,7 @@ class OsuModule extends IModule
             
             return defer.promise;
         }
-        var defer = Q.defer();
+        
         profile.update_in_progress = defer;
 
         this.get_user(profile.username).then(function(profile, data){

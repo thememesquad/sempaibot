@@ -77,9 +77,9 @@ var responses_normal = {
         "Sempai will no longer follow {user}.",
         "I stopped following {user}!",
         "Sempai stopped following {user}!",
-        "Got it! I've unfollowed {user}.",
-	],
-OSU_NEW_SCORE_NODATE: "**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}** | **{old_total_pp}pp** -> **{new_total_pp}pp** ({delta_pp}) |#**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
+        "Got it! I've unfollowed {user}."
+    ],
+    OSU_NEW_SCORE_NODATE: "**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}** | **{old_total_pp}pp** -> **{new_total_pp}pp** ({delta_pp}) |#**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
     OSU_USER_NOT_FOUND: [
         "I can't find user \"{user}\". Did you type it correctly?",
         "I can't find user \"{user}\". Did you make a typo?",
