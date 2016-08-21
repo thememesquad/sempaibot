@@ -861,18 +861,6 @@ class OsuModule extends IModule
             return profile.update_in_progress.promise;
 
         var defer = Q.defer();
-        if((new Date).getTime() - profile.last_updated < USER_UPDATE_INTERVAL)
-        {
-            setTimeout(function(){
-                defer.resolve({
-                    pp_raw: profile.pp,
-                    pp_rank: profile.rank
-                });
-            }, 1);
-            
-            return defer.promise;
-        }
-        
         profile.update_in_progress = defer;
 
         this.get_user(profile.username).then(function(profile, data){
