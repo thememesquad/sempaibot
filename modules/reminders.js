@@ -30,7 +30,7 @@ class RemindersModule extends IModule
         super();
         
         this.name = "Reminders";
-		this.description = "This module adds the possibility to send reminders to people! Cannot be disabled.";
+        this.description = "This module adds the possibility to send reminders to people! Cannot be disabled.";
         this.always_on = true;
         
         var _this = this;
@@ -83,7 +83,7 @@ class RemindersModule extends IModule
                 
                 var split = str.split(" ");
                 var name = split[1];
-                var message = "";
+                var msg = "";
                 
                 for(var i = 2;i<split.length;i++)
                 {
@@ -96,13 +96,13 @@ class RemindersModule extends IModule
                             continue;
                     }
                     
-                    if(message.length != 0)
-                        message += " ";
+                    if(msg.length != 0)
+                        msg += " ";
                         
-                    message += split[i];
+                    msg += split[i];
                 }
                 
-                return [name, message, date.ret];
+                return [name, msg, date.ret];
             },
             sample: "sempai remind __*name*__  to __*reminder message*__  at __*time*__",
             description: "Send yourself (or someone else) a reminder at a specified time! Use \"me\" to refer to yourself. The timezone is set to the timezone of your discord server.",
@@ -170,12 +170,12 @@ class RemindersModule extends IModule
             if (reminder.target.length != 0)
             {
                 var w = reminder.target;
-                for (var i = 0; i < w.length; i++)
+                for (var k = 0; k < w.length; k++)
                 {
-                    if (i !== 0)
+                    if (k !== 0)
                         who += ", ";
 
-                    who += "<@" + w[i] + ">";
+                    who += "<@" + w[k] + ">";
                 }
             }
             else
@@ -244,7 +244,7 @@ class RemindersModule extends IModule
         
         if (who)
         {
-            var tmp = who.split(',');
+            var tmp = who.split(",");
 
             for (var i = 0; i < tmp.length; i++)
             {
@@ -260,14 +260,14 @@ class RemindersModule extends IModule
                     break;
                 }
                 
-                w.push(id);
+                w.push(id.id);
             }
         }
 
         if(!valid)
             return false;
             
-        var reminder = Reminder.create({source: me, target: w, time: when.valueOf(), message: what, server: server.id})
+        var reminder = Reminder.create({source: me, target: w, time: when.valueOf(), message: what, server: server.id});
         reminder.save().catch(function(err){
             console.log(err);
         });
@@ -325,11 +325,11 @@ class RemindersModule extends IModule
         }.bind(this), 1000);
     }
     
-    on_load(server)
+    on_load()
     {
     }
     
-    on_unload(server)
+    on_unload()
     {
     }
 }
@@ -359,7 +359,7 @@ if(require.main == module)
         
         var split = str.split(" ");
         var name = split[1];
-        var message = "";
+        var msg = "";
         
         for(var i = 2;i<split.length;i++)
         {
@@ -372,13 +372,13 @@ if(require.main == module)
                     continue;
             }
             
-            if(message.length != 0)
-                message += " ";
+            if(msg.length != 0)
+                msg += " ";
                 
-            message += split[i];
+            msg += split[i];
         }
         
-        return [name, message, date.ret];
+        return [name, msg, date.ret];
     };
     
     var match_test = function(message){

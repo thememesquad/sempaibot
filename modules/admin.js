@@ -13,7 +13,7 @@ class AdminModule extends IModule
         super();
 
         this.name = "Admin";
-		this.description = "This is the permissions and roles module! Cannot be disabled.";
+        this.description = "This is the permissions and roles module! Cannot be disabled.";
         this.always_on = true;
 
         permissions.register("BLACKLIST_SERVERS", "superadmin");
@@ -25,7 +25,7 @@ class AdminModule extends IModule
         permissions.register("ASSIGN_ROLES", "admin");
 
         this.add_command({
-            match: function(message, split){
+            match: function(message){
                 if(!message.content.startsWith("enable module"))
                     return null;
                     
@@ -165,7 +165,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message, split){
+            match: function(message){
                 if(!message.content.startsWith("ignore"))
                     return null;
                     
@@ -194,7 +194,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message, split){
+            match: function(message){
                 if(!message.content.startsWith("unignore"))
                     return null;
                     
@@ -223,7 +223,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message, split){
+            match: function(message){
                 if(!message.content.startsWith("go to"))
                     return null;
                     
@@ -490,11 +490,11 @@ class AdminModule extends IModule
         this.bot = bot;
     }
 
-    on_load(server)
+    on_load()
     {
     }
 
-    on_unload(server)
+    on_unload()
     {
     }
 }

@@ -1,6 +1,6 @@
 "use strict";
 const Q = require("q");
-var Document = require('camo').Document;
+var Document = require("camo").Document;
 
 class DBRole extends Document
 {
@@ -109,7 +109,7 @@ class Role
     {
         var defer = Q.defer();
         
-        this.dbrole.save().then(function(doc){
+        this.dbrole.save().then(function(){
             defer.resolve();
         }).catch(function(err){
             defer.reject(err);
@@ -127,7 +127,7 @@ class Role
             if(doc === null)
             {
                 _this.dbrole = DBRole.create({name: _this.name, permissions: _this.permissions});
-                _this.dbrole.save().then(function(doc){
+                _this.dbrole.save().then(function(){
                     defer.resolve();
                 }).catch(function(err){
                     defer.reject(err);

@@ -8,7 +8,7 @@ var responses_normal = {
         "I'm back online! How can I be of service?",
         "I'm back online! How can I help?",
         "Hello! I'm back online! How can I be of help?",
-	],
+    ],
     NAME: [
         "Yes I'm here! What can I do for you?",
         "Yes I'm here! How can I help?",
@@ -16,36 +16,36 @@ var responses_normal = {
         "What's up <@{author}>? How can I help you?",
         "I'm here! What's up?",
         "I'm here! What's up <@{author}>?",
-	],
+    ],
     SWITCHED: [
         "You don't like Tsundere mode? :( Fine. I'll revert back to my normal response mode!",
         "Alright, let me change modes... ... ...There! I'm in my normal response mode now!",
         "Okay, I'll change back to my normal response mode!",
-	],
+    ],
     ALREADY_IN_MODE: [
         "I'm already in my normal response mode!",
         "Sempai is already in normal response mode!",
-	],
+    ],
     REGION_CHANGED: [
         "Switched from region '{old_region}' to '{new_region}'.",
         "I switched our discord region from '{old_region}' to '{new_region}'!",
-	],
+    ],
     REMIND_PAST: [
         "That time is in the past! I can't remind you of something in the past.",
         "That time is in the past! I can't remind you of something in the past. Or well, I'd need a time machine. If you happen to have one, no problem!",
         "That time is in the past! Unfortunately, Sempai is not equipped for time travel (yet!).",
         "I can't remind you of something in the past, silly!",
         "I can't remind you of something in the past.",
-	],
+    ],
     REMIND_ME: [
         "I will remind you to \"{message}\" {time}.",
         "Sempai will remind you to \"{message}\" {time}.",
         "Sempai will remind <@{author}> to \"{message}\" {time}.",
-	],
+    ],
     REMIND_OTHER: [
         "I will remind {people} to \"{message}\" {time}.",
         "Sempai will remind {people} to \"{message}\" {time}.",
-	],
+    ],
     REMINDER: "<@{author}> reminded {people}: {message}.",
     LIST_REMINDERS: "List of reminders on this server:{response}",
 
@@ -63,12 +63,12 @@ var responses_normal = {
 
     OSU_FOLLOWING: [
         "Sempai is currently following: {results}",
-        "I'm currently following: {results}",
-	],
+        "I'm currently following: {results}"
+    ],
     OSU_NOT_FOLLOWING: [
         "I'm not even following \"{user}\"!",
-        "Sempai isn't even following \"{user}\"!",
-	],
+        "Sempai isn't even following \"{user}\"!"
+    ],
     OSU_STOPPED: [
         "Okay, I have stopped following {user}.",
         "Sempai unfollowed {user}!",
@@ -77,31 +77,31 @@ var responses_normal = {
         "Sempai will no longer follow {user}.",
         "I stopped following {user}!",
         "Sempai stopped following {user}!",
-        "Got it! I've unfollowed {user}.",
-	],
-    OSU_NEW_SCORE_NODATE: "**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** ({delta_pp}) | **Rank: {rank}** | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
+        "Got it! I've unfollowed {user}."
+    ],
+    OSU_NEW_SCORE_NODATE: "**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}** | **{old_total_pp}pp** -> **{new_total_pp}pp** ({delta_pp}) | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
     OSU_USER_NOT_FOUND: [
         "I can't find user \"{user}\". Did you type it correctly?",
-		"I can't find user \"{user}\". Did you make a typo?",
-		"I can't find user \"{user}\". Are you sure you typed it correctly?",
-		"I can't find user \"{user}\". Are you sure you typed the name correctly?",
-		"I'm having trouble finding \"{user}\". Did you type it correctly?",
-		"I'm having trouble finding \"{user}\". Did you make a typo?",
-		"I'm having trouble finding \"{user}\". Are you sure you typed it correctly?",
-		"I'm having trouble finding \"{user}\". Are you sure you typed the name correctly?",
+        "I can't find user \"{user}\". Did you make a typo?",
+        "I can't find user \"{user}\". Are you sure you typed it correctly?",
+        "I can't find user \"{user}\". Are you sure you typed the name correctly?",
+        "I'm having trouble finding \"{user}\". Did you type it correctly?",
+        "I'm having trouble finding \"{user}\". Did you make a typo?",
+        "I'm having trouble finding \"{user}\". Are you sure you typed it correctly?",
+        "I'm having trouble finding \"{user}\". Are you sure you typed the name correctly?"
     ],
     OSU_ALREADY_FOLLOWING: [
         "I'm already following {user}!",
-        "Sempai is already following {user}!",
-	],
+        "Sempai is already following {user}!"
+    ],
     OSU_ADDED_FOLLOWING: [
         "I'm now following {user} on osu!",
-        "Sempai will now follow {user} on osu!",
-	],
+        "Sempai will now follow {user} on osu!"
+    ],
     OSU_CHECK: [
         "No problem! I'll check {user} on osu! for you!",
-        "No problem! Sempai will check {user} on osu! for you!",
-	],
+        "No problem! Sempai will check {user} on osu! for you!"
+    ],
     JOIN_INVALID_INVITE: "I can't find a server with the invite: \"{invite}\".",
     JOIN_ALREADY: "I am already part of \"{invite}\".",
     JOIN_FAILED: "I was not able to join the server \"{invite}\".",
@@ -118,18 +118,18 @@ var responses_normal = {
         "What did Sempai ever do to you? :(",
         ":(",
         "I don't know what I did, but I'm sorry {user}. :[",
-        "Meanie. :(",
-	],
+        "Meanie. :("
+    ],
 
     UNKNOWN_COMMAND: [
         "Sempai doesn't understand.",
-        "I... I don't understand. What do you want me to do?",
-	],
+        "I... I don't understand. What do you want me to do?"
+    ],
 
     MULTIPLE_UNKNOWN_COMMAND:[
-	    "That's not a valid command either. If you need help, please type \"sempai help me\".",
-	    "I still don't understand what you want me to do. If you require help, please type \"sempai help me\".",
-	],
+        "That's not a valid command either. If you need help, please type \"sempai help me\".",
+        "I still don't understand what you want me to do. If you require help, please type \"sempai help me\"."
+    ],
 
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
     
@@ -147,16 +147,16 @@ var responses_normal = {
     LIST_PERMISSIONS: "List of permissions:",
     INVALID_USER: "That user doesn't exist!",
     INVALID_ROLE: "That's not a valid role!",
-	INVALID_CHANNEL: "There's no channel with that name.",
+    INVALID_CHANNEL: "There's no channel with that name.",
     ROLE_ASSIGNED: "Assigned {role} to <@{user}>.",
     ROLE_ALREADY_ASSIGNED: "Already assigned {role} to <@{user}>.",
-	SETTING_UP: "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"sempai go to #channel\")",
+    SETTING_UP: "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"sempai go to #channel\")",
     OUTPUT_CHANNEL: [
-	"Okay then, <#{channel}> will be my new home channel! Hurray~! If you want to know more about what I can do, type \"sempai help me\".",
-	"All right! This is my new home channel, huh? I like it. If you want to know more about what I can do, type \"sempai help me\".",
-	],
+        "Okay then, <#{channel}> will be my new home channel! Hurray~! If you want to know more about what I can do, type \"sempai help me\".",
+        "All right! This is my new home channel, huh? I like it. If you want to know more about what I can do, type \"sempai help me\"."
+    ],
     SHOW_IGNORELIST: "Ignore list:{list}",
-	IGNORE_LIST_EMPTY: "I'm not ignoring anyone right now!",
+    IGNORE_LIST_EMPTY: "I'm not ignoring anyone right now!",
     OSU_FOLLOW_LIST_EMPTY: "I'm not following anyone on osu! right now.",
     STARTED_IGNORING: "Got it! I'll ignore <@{user}> from now on!",
     STOPPED_IGNORING: "Alright, I'll stop ignoring <@{user}>.",
@@ -165,17 +165,17 @@ var responses_normal = {
     
     CLEARED_REMINDERS: "Cleared {num} reminders.",
     INCORRECT_FORMAT: [
-	"Sorry, Sempai is a little dumb sometimes... I won't know what you mean unless you tell me in a way I can understand!\r\nThe correct format is: \"{sample}\".",
-	"I... I don't understand.\r\nPlease use this format: \"{sample}\".",
-	"Huh? ...That's not the correct format!\r\nPlease use this format: \"{sample}\".",
-	"Sorry, what do you want me to do, exactly?\r\nPlease use this format: \"{sample}\".",
-	],
+        "Sorry, Sempai is a little dumb sometimes... I won't know what you mean unless you tell me in a way I can understand!\r\nThe correct format is: \"{sample}\".",
+        "I... I don't understand.\r\nPlease use this format: \"{sample}\".",
+        "Huh? ...That's not the correct format!\r\nPlease use this format: \"{sample}\".",
+        "Sorry, what do you want me to do, exactly?\r\nPlease use this format: \"{sample}\"."
+    ],
     CHANNEL_DELETED: [
-	"You... you destroyed my home. :( All those good chat memories we had there. Gone! Where do I go now? (use the command \"sempai go to #channel\")",
-	"Did...did you just delete my home? My home channel? Who would do such a thing? Wait, am I getting an upgrade? A better channel? (use the command \"sempai go to #channel\")",
-	"Did...did you just destroy my home channel? You can't just do these things! Bots have rights too, you know! Where do I go now? (use the command \"sempai go to #channel\")",
-	"You... deleted? My home channel? My home? Why...? So am I-... am I homeless now? A homeless bot? Or are you going to give me a new home? (use the command \"sempai go to #channel\")",
-	],
+        "You... you destroyed my home. :( All those good chat memories we had there. Gone! Where do I go now? (use the command \"sempai go to #channel\")",
+        "Did...did you just delete my home? My home channel? Who would do such a thing? Wait, am I getting an upgrade? A better channel? (use the command \"sempai go to #channel\")",
+        "Did...did you just destroy my home channel? You can't just do these things! Bots have rights too, you know! Where do I go now? (use the command \"sempai go to #channel\")",
+        "You... deleted? My home channel? My home? Why...? So am I-... am I homeless now? A homeless bot? Or are you going to give me a new home? (use the command \"sempai go to #channel\")"
+    ],
     REMINDERS_LIST_EMPTY: "The reminder list is empty.",
     REMOVED_REMINDER: "Ok, I removed the reminder \"{message}\" scheduled at {time} by {who}.",
     TIMEZONE_LIST: "List of known timezones:{timezones}",
@@ -251,17 +251,17 @@ var responses_tsundere = {
         "Ooh a new osu! friend? I-It's not like I wanted more friends!",
         "Ooh a new osu! friend? Yaa~y! Uhm, I mean... I-It's not like I wanted more friends or anything!",
         "Added {user} to my osu! ~~stalk~~ follow list!",
-		"Hmpf! It's not like I wanted more friends! But I will add {user} this one time! You should feel glad!",
+        "Hmpf! It's not like I wanted more friends! But I will add {user} this one time! You should feel glad!"
     ],
     OSU_CHECK: [
         "Fine. I'll check {user} for you. But only because I have nothing else to do right now!",
         "Alright. I'll check {user}. D-don't get me wrong. It's not like I'm doing this for you or anything."
     ],
 	
-	OSU_MAX_USER_LIMIT: [
-		"It's not like I don't want more friends... But Sempai just can't handle any more right now. 50 is my maximum!",
-		"I could add more friends, but I just don't feel like it right now! 50 is enough, don't you think? Any more and Sempai's head will overload!",
-	],
+    OSU_MAX_USER_LIMIT: [
+        "It's not like I don't want more friends... But Sempai just can't handle any more right now. 50 is my maximum!",
+        "I could add more friends, but I just don't feel like it right now! 50 is enough, don't you think? Any more and Sempai's head will overload!"
+    ],
 
     JOIN_INVALID_INVITE: "I... It's not like I wanted to join \"{invite}\"",
     JOIN_ALREADY: "Baka... I'm already stalking \"{invite}\"...",
