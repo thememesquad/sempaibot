@@ -134,7 +134,7 @@ var responses_normal = {
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
     
     MY_ROLE: "Your role is {role}.",
-    MY_PERMISSIONS: "Your permissions are:",
+    MY_PERMISSIONS: "Your permissions are: {permissions}",
     NOT_ALLOWED: "You don't have permission to do that.",
     MODULE_INVALID: "That's not a valid module name.",
     MODULE_ALREADY_ENABLED: "That module is already enabled!",
@@ -181,7 +181,9 @@ var responses_normal = {
     TIMEZONE_LIST: "List of known timezones:{timezones}",
     TLDR_FAILED: "Failed to create a tldr. My tldr functionality works best with web articles.",
     TLDR: "**{title}**:\r\n\"{summary}\"\r\n**Original reduced by {percentage}%.**",
-    OSU_MAX_USER_LIMIT: "Reached the user limit of '50'."
+    OSU_MAX_USER_LIMIT: "Reached the user limit of '50'.",
+    CHANGELOG: "Hi there! I'm back online now with the following changes: \r\n{changelog}",
+    SHOW_STATISTICS: "Sempai is currently running on {num_running} servers.\r\nSempai is making an average of {num_osu_api} osu! api calls per minute.\r\nWith {num_osu_api_last} api calls in the last minute.\r\nSempai is currently tracking {num_osu} users on osu!."
 };
 
 var responses_tsundere = {
@@ -246,7 +248,7 @@ var responses_tsundere = {
     ],
 
     OSU_USER_NOT_FOUND: "Baka~! I can't find that user. Did you type the username correctly?",
-    OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {user}",
+    OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {user}!",
     OSU_ADDED_FOLLOWING: [
         "Ooh a new osu! friend? I-It's not like I wanted more friends!",
         "Ooh a new osu! friend? Yaa~y! Uhm, I mean... I-It's not like I wanted more friends or anything!",

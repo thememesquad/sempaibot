@@ -18,6 +18,7 @@ class AdminModule extends IModule
 
         permissions.register("BLACKLIST_SERVERS", "superadmin");
         permissions.register("BLACKLIST_USERS", "superadmin");
+        permissions.register("SHOW_STATISTICS", "superadmin");
         permissions.register("IGNORE_USERS", "moderator");
         permissions.register("GO_TO_CHANNEL", "moderator");
         permissions.register("MANAGE_MODULES", "admin");
@@ -26,11 +27,28 @@ class AdminModule extends IModule
 
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("enable module"))
+                if(!message.content.startsWith("show statistics"))
+                    return null;
+                
+                return [];
+            },
+            sample: "sempai show statistics",
+            description: "Shows statistics for sempai server-wide.",
+            permission: "SHOW_STATISTICS",
+            global: true,
+            
+            execute: this.handle_show_statistics
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("enable"))
                     return null;
                     
-                var mod = message.content.substr("enable module".length + 1).trim();
-                if(mod.length == 0)
+                var mod = message.content.startsWith("enable module") ? message.content.substr("enable module".length + 1) : message.content.substr("enable".length + 1);
+                mod = mod.trim();
+                
+                if(mod.length === 0)
                 {
                     message.almost = true;
                     return null;
@@ -38,7 +56,7 @@ class AdminModule extends IModule
                 
                 return [mod];
             },
-            sample: "sempai enable module __*module name*__",
+            sample: "sempai enable __*module name*__",
             description: "Enables a module for this server.",
             permission: "MANAGE_MODULES",
             global: false,
@@ -48,11 +66,13 @@ class AdminModule extends IModule
 
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("disable module"))
+                if(!message.content.startsWith("disable"))
                     return null;
                     
-                var mod = message.content.substr("disable module".length + 1).trim();
-                if(mod.length == 0)
+                var mod = message.content.startsWith("disable module") ? message.content.substr("disable module".length + 1) : message.content.substr("disable".length + 1);
+                mod = mod.trim();
+                
+                if(mod.length === 0)
                 {
                     message.almost = true;
                     return null;
@@ -60,7 +80,7 @@ class AdminModule extends IModule
                 
                 return [mod];
             },
-            sample: "sempai disable module __*module name*__",
+            sample: "sempai disable __*module name*__",
             description: "Disables the specified module for this server.",
             permission: "MANAGE_MODULES",
             global: false,
@@ -70,18 +90,41 @@ class AdminModule extends IModule
 
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("assign role"))
+                if(!message.content.startsWith("assign"))
                     return null;
                     
+                var needs = 6;
                 var split = message.content.split(" ");
-                if(split.length !== 6)
+                
+                var idx1 = 2;
+                var idx2 = 5;
+                
+                if(split[2] === "to")
+                {
+                    idx1 = 1;
+                    idx2--;
+                    
+                    needs--;
+                }
+                
+                if((needs === 5 && split.length === 4) || (needs === 6 && split.length === 5))
+                {
+                    if(needs === 5 && split.length === 4)
+                        idx2 = 3;
+                    else if(needs === 6 && split.length === 5)
+                        idx2 = 4;
+                    
+                    needs--;
+                }
+                
+                if(split.length !== needs)
                 {
                     message.almost = true;
                     return null;
                 }
                 
-                var role = split[2];
-                var user = Util.parse_id(split[5]);
+                var role = split[idx1];
+                var user = Util.parse_id(split[idx2]);
                 
                 if(user.type != "user")
                 {
@@ -91,7 +134,7 @@ class AdminModule extends IModule
                 
                 return [role.toLowerCase(), user.id.toLowerCase()];
             },
-            sample: "sempai assign role __*role*__ to user __*@user*__",
+            sample: "sempai assign __*role*__ to __*@user*__",
             description: "Assigns the specified role to the specified user.",
             permission: "ASSIGN_ROLES",
             global: false,
@@ -101,22 +144,44 @@ class AdminModule extends IModule
         
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("add permission"))
+                if(!message.content.startsWith("add"))
                     return null;
-                    
+                
+                var needs = 6;
+                var idx1 = 2;
+                var idx2 = 5;
                 var split = message.content.split(" ");
-                if(split.length !== 6)
+                
+                if(split[2] === "to")
+                {
+                    idx1 = 1;
+                    idx2--;
+                    
+                    needs--;
+                }
+                
+                if((needs === 5 && split.length === 4) || (needs === 6 && split.length === 5))
+                {
+                    if(needs === 5 && split.length === 4)
+                        idx2 = 3;
+                    else if(needs === 6 && split.length === 5)
+                        idx2 = 4;
+                    
+                    needs--;
+                }
+                
+                if(split.length !== needs)
                 {
                     message.almost = true;
                     return null;
                 }
                 
-                var permission = split[2];
-                var role = split[5];
+                var permission = split[idx1];
+                var role = split[idx2];
                 
                 return [permission.toUpperCase(), role.toLowerCase()];
             },
-            sample: "sempai add permission __*permission*__ to role __*role name*__",
+            sample: "sempai add __*permission*__ to __*role*__",
             description: "Adds the specified permission to the specified role.",
             permission: "MANAGE_PERMISSIONS",
             global: false,
@@ -126,22 +191,43 @@ class AdminModule extends IModule
 
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("remove permission"))
+                if(!message.content.startsWith("remove"))
                     return null;
-                    
+                
+                var needs = 6;
+                var idx1 = 2;
+                var idx2 = 5;
                 var split = message.content.split(" ");
-                if(split.length !== 6)
+                
+                if(split[2] === "from")
+                {
+                    idx1 = 1;
+                    idx2--;
+                    
+                    needs--;
+                }
+                
+                if((needs === 5 && split.length === 4) || (needs === 6 && split.length === 5))
+                {
+                    if(needs === 5 && split.length === 4)
+                        idx2 = 3;
+                    else if(needs === 6 && split.length === 5)
+                        idx2 = 4;
+                    
+                    needs--;
+                }
+                if(split.length !== needs)
                 {
                     message.almost = true;
                     return null;
                 }
                 
-                var permission = split[2];
-                var role = split[5];
+                var permission = split[idx1];
+                var role = split[idx2];
                 
                 return [permission.toUpperCase(), role.toLowerCase()];
             },
-            sample: "sempai remove permission __*permission*__ from role __*role*__",
+            sample: "sempai remove __*permission*__ from __*role*__",
             description: "Removes the specified permission from the specified role.",
             permission: "MANAGE_PERMISSIONS",
             global: false,
@@ -151,7 +237,8 @@ class AdminModule extends IModule
         
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("list modules"))
+                if(!message.content.startsWith("list modules") && 
+                   !message.content.startsWith("show modules"))
                     return null;
                     
                 return [];
@@ -195,10 +282,10 @@ class AdminModule extends IModule
         
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("unignore"))
+                if(!message.content.startsWith("unignore") && !message.content.startsWith("stop ignoring"))
                     return null;
                     
-                var mod = message.content.substr("unignore".length + 1).trim();
+                var mod = (message.content.startsWith("unignore")) ? message.content.substr("unignore".length + 1).trim() : message.content.substr("stop ignoring".length + 1).trim();
                 if(mod.length == 0)
                 {
                     message.almost = true;
@@ -227,15 +314,15 @@ class AdminModule extends IModule
                 if(!message.content.startsWith("go to"))
                     return null;
                     
-                var mod = message.content.substr("go to".length + 1).trim();
-                if(mod.length == 0)
+                var mod = message.content.startsWith("go to channel") ? message.content.substr("go to channel".length + 1).trim() : message.content.substr("go to".length + 1).trim();
+                if(mod.length === 0)
                 {
                     message.almost = true;
                     return null;
                 }
                 
                 var channel = Util.parse_id(mod);
-                if(channel.type != "channel")
+                if(channel.type !== "channel")
                 {
                     message.almost = true;
                     return null;
@@ -252,6 +339,39 @@ class AdminModule extends IModule
         });
     }
 
+    handle_show_statistics(message)
+    {
+        var osu_module = this.bot.get_module("osu!");
+        
+        var num_running = 0;
+        var num_osu_api = 0;
+        var num_osu_api_last = osu_module.stats.average.length === 0 ? osu_module.stats.last : osu_module.stats.average[osu_module.stats.average.length - 1];
+        var num_osu = osu_module.users.length;
+        
+        for(var i = 0;i<osu_module.stats.average.length;i++)
+        {
+            num_osu_api += osu_module.stats.average[i];
+        }
+        
+        if(osu_module.stats.average.length > 0)
+            num_osu_api /= osu_module.stats.average.length;
+        
+        for(var key in this.bot.servers)
+        {
+            num_running++;
+        }
+        
+        var msg = responses.get("SHOW_STATISTICS").format({
+            author: message.author.id,
+            num_running: num_running,
+            num_osu_api: num_osu_api,
+            num_osu_api_last: num_osu_api_last,
+            num_osu: num_osu
+        });
+        
+        this.bot.respond(message, msg);
+    }
+    
     handle_enable_module(message, name)
     {
         var module = this.bot.get_module(name);
@@ -300,8 +420,16 @@ class AdminModule extends IModule
         {
             var enabled = message.server.is_module_enabled(key);
             var always_on = this.bot.modules[key].always_on;
+            var default_on = this.bot.modules[key].default_on;
             
-            data.push({name: key, enabled: (enabled) ? "yes" : "no", flags: (always_on) ? "always_on" : ""});
+            var flags = "";
+            if(always_on)
+                flags += "always_on";
+            
+            if(default_on)
+                flags += flags.length === 0 ? "default_on" : " default_on";
+            
+            data.push({name: key, enabled: (enabled) ? "yes" : "no", flags: flags});
         }
         
         var messages = Util.generate_table(responses.get("MODULE_LIST").format({author: message.author.id}), columns, data, {name: 20, enabled: 10, flags: 15});
