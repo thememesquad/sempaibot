@@ -247,7 +247,7 @@ var responses_tsundere = {
     ],
 
     OSU_USER_NOT_FOUND: "Baka~! I can't find that user. Did you type the username correctly?",
-    OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {user}",
+    OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {user}!",
     OSU_ADDED_FOLLOWING: [
         "Ooh a new osu! friend? I-It's not like I wanted more friends!",
         "Ooh a new osu! friend? Yaa~y! Uhm, I mean... I-It's not like I wanted more friends or anything!",
