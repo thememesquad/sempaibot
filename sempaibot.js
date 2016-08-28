@@ -13,6 +13,18 @@ const config = require("./config");
 const users = require("./src/users.js");
 const permissions = require("./src/permissions.js");
 const Q = require("q");
+const Document = require("camo").Document;
+const changelog = require("./changelog.js");
+
+class ChangelogDB extends Document
+{
+    constructor()
+    {
+        super();
+
+        this.version = Number;
+    }
+}
 
 String.prototype.format = function(args) {
     return this.replace(/{(.*?)}/g, function(match, key) {
@@ -307,6 +319,36 @@ class Bot
 
             return permissions.save();
         }.bind(this)).then(function(){
+            var defer = Q.defer();
+            
+            ChangelogDB.findOne({}).then(function(doc){
+                if(doc === null)
+                {
+                    return ChangelogDB.create({version: changelog.version}).save().then(function(doc){
+                        defer.resolve(-1);
+                    }).catch(function(err){
+                        console.log(err);
+                    });
+                }
+                
+                if(doc.version !== changelog.version)
+                {
+                    var old = doc.version;
+                    doc.version = changelog.version;
+                    return doc.save().then(function(doc){
+                        defer.resolve(old);
+                    }).catch(function(err){
+                        console.log(err);
+                    });
+                }
+                
+                defer.resolve(doc.version);
+            }).catch(function(err){
+                defer.reject(err);
+            });
+            
+            return defer.promise;
+        }.bind(this)).then(function(changelog_version){
             for(var i = 0;i<this.discord.servers.length;i++)
             {
                 var server = this.discord.servers[i];
@@ -320,6 +362,21 @@ class Bot
                         if(initial && this.modules[key].default_on)
                             this.servers[server.id].enable_module(key);
                     }
+                    
+                    var msg = "";
+                    for(var i = 0;i<changelog.changelog.length;i++)
+                    {
+                        if(changelog.changelog[i][0] <= changelog_version)
+                            continue;
+                        
+                        if(msg.length !== 0)
+                            msg += "\r\n";
+
+                        msg += "- " + changelog.changelog[i][1];
+                    }
+
+                    if(msg.length !== 0)
+                        this.message(responses.get("CHANGELOG").format({changelog: msg}), this.servers[server.id]);
                 }.bind(this, this.servers[server.id]));
             }
             

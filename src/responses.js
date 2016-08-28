@@ -181,7 +181,8 @@ var responses_normal = {
     TIMEZONE_LIST: "List of known timezones:{timezones}",
     TLDR_FAILED: "Failed to create a tldr. My tldr functionality works best with web articles.",
     TLDR: "**{title}**:\r\n\"{summary}\"\r\n**Original reduced by {percentage}%.**",
-    OSU_MAX_USER_LIMIT: "Reached the user limit of '50'."
+    OSU_MAX_USER_LIMIT: "Reached the user limit of '50'.",
+    CHANGELOG: "Hi there! I'm back online now with the following changes: \r\n{changelog}"
 };
 
 var responses_tsundere = {

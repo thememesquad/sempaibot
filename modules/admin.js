@@ -86,6 +86,8 @@ class AdminModule extends IModule
                 if(split[2] === "to")
                 {
                     idx1 = 1;
+                    idx2--;
+                    
                     needs--;
                 }
                 
@@ -137,6 +139,8 @@ class AdminModule extends IModule
                 if(split[2] === "to")
                 {
                     idx1 = 1;
+                    idx2--;
+                    
                     needs--;
                 }
                 
@@ -161,7 +165,7 @@ class AdminModule extends IModule
                 
                 return [permission.toUpperCase(), role.toLowerCase()];
             },
-            sample: "sempai add __*permission*__ to __*role name*__",
+            sample: "sempai add __*permission*__ to __*role*__",
             description: "Adds the specified permission to the specified role.",
             permission: "MANAGE_PERMISSIONS",
             global: false,
@@ -182,6 +186,8 @@ class AdminModule extends IModule
                 if(split[2] === "from")
                 {
                     idx1 = 1;
+                    idx2--;
+                    
                     needs--;
                 }
                 
@@ -215,7 +221,8 @@ class AdminModule extends IModule
         
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("list modules"))
+                if(!message.content.startsWith("list modules") && 
+                   !message.content.startsWith("show modules"))
                     return null;
                     
                 return [];

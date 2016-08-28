@@ -244,7 +244,11 @@ class OsuModule extends IModule
                     "who are you following",
                     "who do you follow",
                     "list following",
-                    "show follow list"
+                    "list follows",
+                    "show follow list",
+                    "show followlist",
+                    "show following list",
+                    "show follows list"
                 ];
                 
                 for(var i = 0;i<messages.length;i++)

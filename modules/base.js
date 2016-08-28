@@ -22,12 +22,17 @@ class BaseModule extends IModule
         this.add_command({
             match: function(message){
                 var please = false;
+                var german = false;
                 
-                if(message.content.startsWith("please help me"))
+                if(message.content.startsWith("please help"))
                 {
                     please = true;
                 }
-                else if(!message.content.startsWith("help me"))
+                else if(message.content.startsWith("hilfe"))
+                {
+                    german = true;
+                }
+                else if(!message.content.startsWith("help"))
                 {
                     if(message.content.startsWith("please show help"))
                     {
@@ -39,7 +44,7 @@ class BaseModule extends IModule
                     }
                 }
                 
-                return [please];
+                return [please, german];
             },
             hide_in_help: true,
             permission: null,
@@ -91,7 +96,8 @@ class BaseModule extends IModule
                    !message.content.startsWith("show my permissions") &&
                    !message.content.startsWith("show my permission list") &&
                    !message.content.startsWith("show my permissions list") &&
-                   !message.content.startsWith("list my permissions"))
+                   !message.content.startsWith("list my permissions") &&
+                   !message.content.startsWith("show permissions"))
                     return null;
                     
                 return [];
@@ -137,7 +143,8 @@ class BaseModule extends IModule
         this.add_command({
             match: function(message){
                 if(!message.content.startsWith("show ignore list") &&
-                   !message.content.startsWith("list ignores"))
+                   !message.content.startsWith("list ignores") &&
+                   !message.content.startsWith("show ignorelist"))
                     return null;
                     
                 return [];
@@ -150,7 +157,7 @@ class BaseModule extends IModule
             execute: this.handle_show_ignorelist
         });
         
-        this.add_command({
+        /*this.add_command({
             match: function(message){
                 if(!message.content.startsWith("list timezones"))
                     return null;
@@ -170,7 +177,7 @@ class BaseModule extends IModule
             global: false,
             
             execute: this.handle_list_timezones
-        });
+        });*/
     }
 
     game_switcher()
@@ -414,6 +421,9 @@ class BaseModule extends IModule
         
         for(var key in list)
         {
+            if(key.toUpperCase() === "BLACKLIST_SERVERS" || key.toUpperCase() === "BLACKLIST_USERS")
+                continue;
+            
             var name = key;
             while(name.length != 20)
                 name += " ";
