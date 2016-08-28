@@ -231,6 +231,11 @@ class OsuModule extends IModule
         this.last_checked = -1;
         this.modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
         this.users = [];
+        this.stats = {
+            actual: [],
+            average: [],
+            last: 0
+        };
         this.servers = {};
         this.default_on = true;
 
@@ -353,6 +358,21 @@ class OsuModule extends IModule
 
             execute: this.handle_check
         });
+        
+        var last = (new Date().getTime() / 1000.0) / 60;
+        setInterval(function(){
+            var curr = (new Date().getTime() / 1000.0) / 60;
+            
+            if(Math.floor(last) !== Math.floor(curr))
+            {
+                this.stats.average.push(this.stats.last);
+                if(this.stats.average.length > 10)
+                    this.stats.average.splice(0, 1);
+                
+                this.stats.last = 0;
+                last = curr;
+            }
+        }.bind(this), 10);
     }
 
     handle_list_following(message)
@@ -569,8 +589,21 @@ class OsuModule extends IModule
         delete this.servers[server.id];
     }
 
+    log_call()
+    {
+        this.stats.last++;
+        this.stats.actual.push(Date.now());
+        for(var i = this.stats.actual.length - 1;i>=0;i--)
+        {
+            if(this.stats.actual[i] < Date.now() - (60 * 1000))
+                this.stats.actual.splice(i, 1);
+        }
+    }
+    
     api_call(method, params, first, num)
     {
+        this.log_call();
+        
         num = (num === undefined) ? 0 : num;
         
         first = (first === undefined) ? true : first;

@@ -445,6 +445,9 @@ class Bot
         if(this.is_user_blacklisted(message.user) || (message.server !== null && message.server.is_user_ignored(message.user)))
             return;
             
+        if(message.author.id === this.discord.user.id)
+            return;
+        
         if(message.author.id !== this.discord.user.id && message.server !== null)
         {
             for(key in this.modules)

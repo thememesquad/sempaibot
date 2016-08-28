@@ -182,7 +182,8 @@ var responses_normal = {
     TLDR_FAILED: "Failed to create a tldr. My tldr functionality works best with web articles.",
     TLDR: "**{title}**:\r\n\"{summary}\"\r\n**Original reduced by {percentage}%.**",
     OSU_MAX_USER_LIMIT: "Reached the user limit of '50'.",
-    CHANGELOG: "Hi there! I'm back online now with the following changes: \r\n{changelog}"
+    CHANGELOG: "Hi there! I'm back online now with the following changes: \r\n{changelog}",
+    SHOW_STATISTICS: "Sempai is currently running on {num_running} servers.\r\nSempai is making an average of {num_osu_api} osu! api calls per minute.\r\nWith {num_osu_api_last} api calls in the last minute.\r\nSempai is currently tracking {num_osu} users on osu!."
 };
 
 var responses_tsundere = {

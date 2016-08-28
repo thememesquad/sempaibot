@@ -18,12 +18,28 @@ class AdminModule extends IModule
 
         permissions.register("BLACKLIST_SERVERS", "superadmin");
         permissions.register("BLACKLIST_USERS", "superadmin");
+        permissions.register("SHOW_STATISTICS", "superadmin");
         permissions.register("IGNORE_USERS", "moderator");
         permissions.register("GO_TO_CHANNEL", "moderator");
         permissions.register("MANAGE_MODULES", "admin");
         permissions.register("MANAGE_PERMISSIONS", "admin");
         permissions.register("ASSIGN_ROLES", "admin");
 
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("show statistics"))
+                    return null;
+                
+                return [];
+            },
+            sample: "sempai show statistics",
+            description: "Shows statistics for sempai server-wide.",
+            permission: "SHOW_STATISTICS",
+            global: true,
+            
+            execute: this.handle_show_statistics
+        });
+        
         this.add_command({
             match: function(message){
                 if(!message.content.startsWith("enable"))
@@ -323,6 +339,39 @@ class AdminModule extends IModule
         });
     }
 
+    handle_show_statistics(message)
+    {
+        var osu_module = this.bot.get_module("osu!");
+        
+        var num_running = 0;
+        var num_osu_api = 0;
+        var num_osu_api_last = osu_module.stats.average.length === 0 ? osu_module.stats.last : osu_module.stats.average[osu_module.stats.average.length - 1];
+        var num_osu = osu_module.users.length;
+        
+        for(var i = 0;i<osu_module.stats.average.length;i++)
+        {
+            num_osu_api += osu_module.stats.average[i];
+        }
+        
+        if(osu_module.stats.average.length > 0)
+            num_osu_api /= osu_module.stats.average.length;
+        
+        for(var key in this.bot.servers)
+        {
+            num_running++;
+        }
+        
+        var msg = responses.get("SHOW_STATISTICS").format({
+            author: message.author.id,
+            num_running: num_running,
+            num_osu_api: num_osu_api,
+            num_osu_api_last: num_osu_api_last,
+            num_osu: num_osu
+        });
+        
+        this.bot.respond(message, msg);
+    }
+    
     handle_enable_module(message, name)
     {
         var module = this.bot.get_module(name);
