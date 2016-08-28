@@ -402,10 +402,10 @@ class Bot
             }
         }
         
-        if(message.content.indexOf("sempai") == 0 || message.content.indexOf("-") == 0)
+        if(message.content.toLowerCase().indexOf("sempai") == 0 || message.content.indexOf("-") == 0)
         {
             var msg = message.content;
-            if(msg.indexOf("sempai") == 0)
+            if(msg.toLowerCase().indexOf("sempai") == 0)
             {
                 msg = msg.substr("sempai".length + 1).replace(/\s+/g, " ").trim();
             }

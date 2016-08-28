@@ -242,7 +242,9 @@ class OsuModule extends IModule
             match: function(message){
                 var messages = [
                     "who are you following",
-                    "who do you follow"
+                    "who do you follow",
+                    "list following",
+                    "show follow list"
                 ];
                 
                 for(var i = 0;i<messages.length;i++)
@@ -297,7 +299,8 @@ class OsuModule extends IModule
             match: function(message){
                 var messages = [
                     "stop following",
-                    "stop stalking"
+                    "stop stalking",
+                    "unfollow"
                 ];
                 
                 for(var i = 0;i<messages.length;i++)

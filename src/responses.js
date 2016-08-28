@@ -134,7 +134,7 @@ var responses_normal = {
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
     
     MY_ROLE: "Your role is {role}.",
-    MY_PERMISSIONS: "Your permissions are:",
+    MY_PERMISSIONS: "Your permissions are: {permissions}",
     NOT_ALLOWED: "You don't have permission to do that.",
     MODULE_INVALID: "That's not a valid module name.",
     MODULE_ALREADY_ENABLED: "That module is already enabled!",

@@ -29,7 +29,14 @@ class BaseModule extends IModule
                 }
                 else if(!message.content.startsWith("help me"))
                 {
-                    return null;
+                    if(message.content.startsWith("please show help"))
+                    {
+                        please = true;
+                    }
+                    else if(!message.content.startsWith("show help"))
+                    {
+                        return null;
+                    }
                 }
                 
                 return [please];
@@ -80,7 +87,11 @@ class BaseModule extends IModule
         
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("what are my permissions"))
+                if(!message.content.startsWith("what are my permissions") &&
+                   !message.content.startsWith("show my permissions") &&
+                   !message.content.startsWith("show my permission list") &&
+                   !message.content.startsWith("show my permissions list") &&
+                   !message.content.startsWith("list my permissions"))
                     return null;
                     
                 return [];
@@ -125,12 +136,13 @@ class BaseModule extends IModule
         
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("show ignorelist"))
+                if(!message.content.startsWith("show ignore list") &&
+                   !message.content.startsWith("list ignores"))
                     return null;
                     
                 return [];
             },
-            sample: "sempai show ignorelist",
+            sample: "sempai show ignore list",
             description: "Shows the list of people I'm currently ignoring!",
             permission: null,
             global: false,
