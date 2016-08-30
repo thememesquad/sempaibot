@@ -519,16 +519,29 @@ class Bot
             message.content = msg;
             var split = message.content.split(" ");
             var handled = false;
+            var tmp = [];
             
             for(key in this.modules)
             {
-                if(this.modules[key].check_message(server, message, split))
+                var resp = this.modules[key].check_message(server, message, split);
+                
+                if(typeof resp === "string")
+                {
+                    tmp.push(resp);
+                }
+                else if(resp)
                 {
                     handled = true;
                     break;
                 }
             }
 
+            if(!handled && tmp.length > 0)
+            {
+                this.respond(message, responses.get("INCORRECT_FORMAT").format({author: message.author.id, sample: tmp[0]}));
+                handled = true;
+            }
+            
             if(!handled)
             {
                 if(split.length == 1)

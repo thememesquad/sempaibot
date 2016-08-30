@@ -24,6 +24,7 @@ class OsuUser extends Document
         this.pp = Number;
         this.rank = Number;
         this.last_updated = Number;
+        this.last_checked = Number;
         this.servers = [String];
         this.records = [Object];
     }
@@ -53,6 +54,7 @@ class OsuModule extends IModule
         this.pending = [];
         this.servers = {};
         this.default_on = true;
+        this.delay = 0;
 
         stats.register("osu_api_calls", 0, true);
         stats.register("osu_num_users", 0);
@@ -316,15 +318,11 @@ class OsuModule extends IModule
             var time = (new Date).getTime();
             var i;
             
-            if(time - this.last_checked >= BEST_UPDATE_INTERVAL)
+            for (i = 0; i < this.users.length; i++)
             {
-                for (i = 0; i < this.users.length; i++)
-                {
-                    var user = this.users[i];
+                var user = this.users[i];
+                if(time - user.last_checked >= BEST_UPDATE_INTERVAL)
                     this.force_check(user.username, false);
-                }
-
-                this.last_checked = time;
             }
             
             for(i in this.users)
@@ -346,12 +344,14 @@ class OsuModule extends IModule
                     records.push(docs[i].records[j]);
                 }
                 
+                var delay = (++_this.delay % 60) * 1000;
                 var user = {
                     user_id: docs[i].user_id,
                     username: docs[i].username,
                     pp: docs[i].pp,
                     rank: docs[i].rank,
-                    last_updated: docs[i].last_updated,
+                    last_updated: docs[i].last_updated + delay,
+                    last_checked: docs[i].last_checked + delay || (new Date()).getTime() + delay,
                     servers: docs[i].servers,
                     update_in_progress: null,
                     records: records,
@@ -634,8 +634,8 @@ class OsuModule extends IModule
                 }
             }
             
-            if(updated)
-                OsuUser.findOneAndUpdate({user_id: profile.user_id}, {records: profile.records}, {});
+            profile.last_checked = (new Date()).getTime();
+            OsuUser.findOneAndUpdate({user_id: profile.user_id}, {records: profile.records, last_checked: profile.last_checked}, {});
             
             profile.checking = false;
         }.bind(null, profile)).catch(function(err){
@@ -661,7 +661,7 @@ class OsuModule extends IModule
         }
 
         if(num === message.server.config.value.osu_limit)
-            return this.bot.respond(message, responses.get("OSU_MAX_USER_LIMIT").format({author: message.author.id, user: profile.username}));
+            return this.bot.respond(message, responses.get("OSU_MAX_USER_LIMIT").format({author: message.author.id, limit: message.server.config.value.osu_limit, user: profile.username}));
 
         if(profile !== null)
         {
@@ -685,8 +685,8 @@ class OsuModule extends IModule
                 return;
             }
 
-            var time = (new Date).getTime();
-            var user = {user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_updated: time, records: [], checking: false};
+            var time = (new Date).getTime() + ((++this.delay % 60) * 1000);
+            var user = {user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_checked: time, last_updated: time, records: [], checking: false};
             this.users.push(user);
 
             stats.update("osu_num_users", this.users.length);

@@ -7,7 +7,7 @@ var responses_normal = {
         "_has come online!_",
         "I'm back online! How can I be of service?",
         "I'm back online! How can I help?",
-        "Hello! I'm back online! How can I be of help?",
+        "Hello! I'm back online! How can I be of help?"
     ],
     NAME: [
         "Yes I'm here! What can I do for you?",
@@ -15,36 +15,36 @@ var responses_normal = {
         "Yes I'm here  <@{author}>! How can I help?",
         "What's up <@{author}>? How can I help you?",
         "I'm here! What's up?",
-        "I'm here! What's up <@{author}>?",
+        "I'm here! What's up <@{author}>?"
     ],
     SWITCHED: [
         "You don't like Tsundere mode? :( Fine. I'll revert back to my normal response mode!",
         "Alright, let me change modes... ... ...There! I'm in my normal response mode now!",
-        "Okay, I'll change back to my normal response mode!",
+        "Okay, I'll change back to my normal response mode!"
     ],
     ALREADY_IN_MODE: [
         "I'm already in my normal response mode!",
-        "Sempai is already in normal response mode!",
+        "Sempai is already in normal response mode!"
     ],
     REGION_CHANGED: [
         "Switched from region '{old_region}' to '{new_region}'.",
-        "I switched our discord region from '{old_region}' to '{new_region}'!",
+        "I switched our discord region from '{old_region}' to '{new_region}'!"
     ],
     REMIND_PAST: [
         "That time is in the past! I can't remind you of something in the past.",
         "That time is in the past! I can't remind you of something in the past. Or well, I'd need a time machine. If you happen to have one, no problem!",
         "That time is in the past! Unfortunately, Sempai is not equipped for time travel (yet!).",
         "I can't remind you of something in the past, silly!",
-        "I can't remind you of something in the past.",
+        "I can't remind you of something in the past."
     ],
     REMIND_ME: [
         "I will remind you to \"{message}\" {time}.",
         "Sempai will remind you to \"{message}\" {time}.",
-        "Sempai will remind <@{author}> to \"{message}\" {time}.",
+        "Sempai will remind <@{author}> to \"{message}\" {time}."
     ],
     REMIND_OTHER: [
         "I will remind {people} to \"{message}\" {time}.",
-        "Sempai will remind {people} to \"{message}\" {time}.",
+        "Sempai will remind {people} to \"{message}\" {time}."
     ],
     REMINDER: "<@{author}> reminded {people}: {message}.",
     LIST_REMINDERS: "List of reminders on this server:{response}",
@@ -177,14 +177,15 @@ var responses_normal = {
         "You... deleted? My home channel? My home? Why...? So am I-... am I homeless now? A homeless bot? Or are you going to give me a new home? (use the command \"sempai go to #channel\")"
     ],
     REMINDERS_LIST_EMPTY: "The reminder list is empty.",
-    REMOVED_REMINDER: "Ok, I removed the reminder \"{message}\" scheduled at {time} by {who}.",
     TIMEZONE_LIST: "List of known timezones:{timezones}",
     TLDR_FAILED: "Failed to create a tldr. My tldr functionality works best with web articles.",
     TLDR: "**{title}**:\r\n\"{summary}\"\r\n**Original reduced by {percentage}%.**",
-    OSU_MAX_USER_LIMIT: "Reached the user limit of '50'.",
+    OSU_MAX_USER_LIMIT: "Reached the user limit of '{limit}'.",
     CHANGELOG: "Hi there! I'm back online now with the following changes: \r\n{changelog}",
     SHOW_STATISTICS: "Here are my statistics:\r\n- I'm currently running on {num_servers} servers and track {osu_num_users} users on osu!\r\n- I have made a total of {osu_alltime} osu! api calls, of which {osu_last_month} in the current month, {osu_last_week} in the current week, {osu_last_day} in the current day and {osu_last_minute} in the current minute.\r\n- I make an average of {osu_average_month} osu! api calls per month, {osu_average_week} per week and {osu_average_day} per day.\r\n- My highest number of osu! api calls are {osu_highest_month} per month, {osu_highest_week} per week and {osu_highest_day} per day.",
-    LIST_SERVERS: "Sempai is currently running on: {results}"
+    LIST_SERVERS: "Sempai is currently running on: {results}",
+    CLEARED_REMINDER: "Alright, I removed the reminder.",
+    NO_REMINDER: "I couldn't find the reminder!"
 };
 
 var responses_tsundere = {
@@ -278,7 +279,7 @@ var responses_tsundere = {
         "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just like helping. Here is a list of my commands:\r\n",
         "Fine. I'll help. Don't misunderstand, it's not like I l-like you or anything... I just have a lot of free time. Here is a list of my commands:\r\n",
         "Alright. I'll help. You should feel grateful. Here's a list of my commands:\r\n",
-        "Not even a please? Sempai has feelings too, you know! I mean, I may be a bot... but bots can have feelings too! You seem to be clueless, so I'll help you this one time. But try asking nicely next time.\r\n",
+        "Not even a please? Sempai has feelings too, you know! I mean, I may be a bot... but bots can have feelings too! You seem to be clueless, so I'll help you this one time. But try asking nicely next time.\r\n"
     ],
     PLEASE_HELP_TOP: [
         "Eheh. :3 Okay, here is the list of my commands:\r\n",

@@ -379,29 +379,37 @@ class AdminModule extends IModule
     {
         var id = "ID";
         var name = "Name";
+        var owner = "Owner";
         
-        while(id.length < 20)
+        while(id.length < 25)
             id += " ";
         
-        while(name.length < 10)
+        while(name.length < 25)
             name += " ";
         
+        while(owner.length < 25)
+            owner += " ";
+        
         var response = "```";
-        response += id + " " + name;
+        response += id + " " + name + " " + owner;
         
         for(var key in this.bot.servers)
         {
             id = "" + key;
             name = this.bot.servers[key].server.name;
+            owner = this.bot.servers[key].server.owner.name;
             
-            while(id.length < 20)
+            while(id.length < 25)
                 id += " ";
             
-            while(name.length < 10)
+            while(name.length < 25)
                 name += " ";
             
+            while(owner.length < 25)
+                owner += " ";
+            
             response += "\r\n";
-            response += id + " " + name;
+            response += id + " " + name + " " + owner;
         }
         response += "```";
         
