@@ -183,7 +183,8 @@ var responses_normal = {
     TLDR: "**{title}**:\r\n\"{summary}\"\r\n**Original reduced by {percentage}%.**",
     OSU_MAX_USER_LIMIT: "Reached the user limit of '50'.",
     CHANGELOG: "Hi there! I'm back online now with the following changes: \r\n{changelog}",
-    SHOW_STATISTICS: "Sempai is currently running on {num_running} servers.\r\nSempai is making an average of {num_osu_api} osu! api calls per minute.\r\nWith {num_osu_api_last} api calls in the last minute.\r\nSempai is currently tracking {num_osu} users on osu!."
+    SHOW_STATISTICS: "Here are my statistics:\r\n- I'm currently running on {num_servers} servers and track {osu_num_users} users on osu!\r\n- I have made a total of {osu_alltime} osu! api calls, of which {osu_last_month} in the current month, {osu_last_week} in the current week, {osu_last_day} in the current day and {osu_last_minute} in the current minute.\r\n- I make an average of {osu_average_month} osu! api calls per month, {osu_average_week} per week and {osu_average_day} per day.\r\n- My highest number of osu! api calls are {osu_highest_month} per month, {osu_highest_week} per week and {osu_highest_day} per day.",
+    LIST_SERVERS: "Sempai is currently running on: {results}"
 };
 
 var responses_tsundere = {
