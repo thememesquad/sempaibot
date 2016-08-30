@@ -21,7 +21,6 @@ class LoadBalancer
             clearInterval(this.balancer);
             this.balancer = -1;
             
-            console.log("Shutting down balance interval...");
             return;
         }
         
@@ -61,7 +60,6 @@ class LoadBalancer
         
         if(this.balancer === -1)
         {
-            console.log("Starting up balance interval...");
             this.balancer = setInterval(this.balance.bind(this), 1);
         }
         
