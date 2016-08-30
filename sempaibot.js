@@ -9,12 +9,13 @@ const ServerData = require("./src/ServerData.js");
 const modules = require("auto-loader").load(__dirname + "/modules");
 const responses = require("./src/responses.js");
 const db = require("./src/db.js");
-const config = require("./config");
+const config = require("./config.js");
 const users = require("./src/users.js");
 const permissions = require("./src/permissions.js");
 const Q = require("q");
 const Document = require("camo").Document;
 const changelog = require("./changelog.js");
+const stats = require("./src/stats.js");
 
 class ChangelogDB extends Document
 {
@@ -54,12 +55,32 @@ class Bot
         this.discord.on("serverDeleted", this.on_server_deleted.bind(this));
         this.discord.on("disconnected", this.on_disconnected.bind(this));
         this.discord.on("error", this.on_error.bind(this));
+        
+        process.on("SIGTERM", function(){
+            this.shutdown();
+        }.bind(this));
     }
 
+    shutdown()
+    {
+        console.log("Received SIGTERM, shutting down....");
+        this.discord.destroy();
+        
+        for(var key in this.modules)
+        {
+            if(this.modules[key].on_shutdown !== undefined)
+                this.modules[key].on_shutdown();
+        }
+
+        stats.save().then(function(){
+            process.exit(0);
+        });
+    }
+    
     login()
     {
         this.discord.loginWithToken(config.token, function (error, token) {
-            if(error != null)
+            if(error !== null)
             {
                 return console.error("Discord login error: " + error);
             }
@@ -319,12 +340,13 @@ class Bot
 
             return permissions.save();
         }.bind(this)).then(function(){
+            this.print("Loading changelog", 70, false);
             var defer = Q.defer();
             
             ChangelogDB.findOne({}).then(function(doc){
                 if(doc === null)
                 {
-                    return ChangelogDB.create({version: changelog.version}).save().then(function(doc){
+                    return ChangelogDB.create({version: changelog.version}).save().then(function(){
                         defer.resolve(-1);
                     }).catch(function(err){
                         console.log(err);
@@ -335,7 +357,7 @@ class Bot
                 {
                     var old = doc.version;
                     doc.version = changelog.version;
-                    return doc.save().then(function(doc){
+                    return doc.save().then(function(){
                         defer.resolve(old);
                     }).catch(function(err){
                         console.log(err);
@@ -349,6 +371,22 @@ class Bot
             
             return defer.promise;
         }.bind(this)).then(function(changelog_version){
+            console.log("....Ok");
+            this.print("Loading stats", 70, false);
+            
+            var defer = Q.defer();
+            
+            stats.load().then(function(){
+                defer.resolve(changelog_version);
+            }).catch(function(err){
+                defer.reject(err);
+            });
+            
+            return defer.promise;
+        }.bind(this)).then(function(changelog_version){
+            console.log("....Ok");
+            stats.register("num_servers", this.discord.servers.length);
+            
             for(var i = 0;i<this.discord.servers.length;i++)
             {
                 var server = this.discord.servers[i];
@@ -393,6 +431,8 @@ class Bot
             
         console.log("Joined server '" + server.name + "'.");
         
+        stats.update("num_servers", this.discord.servers.length);
+        
         this.servers[server.id] = new ServerData(this, server);
         this.servers[server.id].load_promise.promise.then(function(server){
             for(var key in this.modules)
@@ -414,6 +454,8 @@ class Bot
             return;
             
         console.log("Left server '" + server.name + "'.");
+        
+        stats.update("num_servers", this.discord.servers.length);
         
         delete this.servers[server.id];
     }

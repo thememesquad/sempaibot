@@ -29,20 +29,28 @@ class ServerData
                     value: {
                         channel: "", 
                         modules: [],
-                        ignorelist: []
+                        ignorelist: [],
+                        osu_limit: 50
                     }
                 });
                 
                 this.config.save().then(function(){
                     this.on_load(true);
                 }.bind(this)).catch(function(err){
-                    console.log("save: " + err);
+                    console.log("save: ", err);
                     this.on_load(true);
                 }.bind(this));
             }
             else
             {
                 this.config = doc;
+                
+                var changed = false;
+                if(this.config.value.osu_limit === undefined)
+                {
+                    this.config.value.osu_limit = 50;
+                    changed = true;
+                }
                 
                 for(var i = 0;i<this.modules.length;i++)
                 {
@@ -53,7 +61,19 @@ class ServerData
                     module.on_load(this);
                 }
                 
-                this.on_load(false);
+                if(changed)
+                {
+                    this.config.save().then(function(){
+                        this.on_load(false);
+                    }.bind(this)).catch(function(err){
+                        console.log("save: ", err);
+                        this.on_load(false);
+                    });
+                }
+                else
+                {
+                    this.on_load(false);
+                }
             }
         }.bind(this)).catch(function(err){
             console.log("findOne: " + err.stack);
