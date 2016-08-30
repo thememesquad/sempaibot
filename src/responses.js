@@ -185,7 +185,10 @@ var responses_normal = {
     SHOW_STATISTICS: "Here are my statistics:\r\n- I'm currently running on {num_servers} servers and track {osu_num_users} users on osu!\r\n- I have made a total of {osu_alltime} osu! api calls, of which {osu_last_month} in the current month, {osu_last_week} in the current week, {osu_last_day} in the current day and {osu_last_minute} in the current minute.\r\n- I make an average of {osu_average_month} osu! api calls per month, {osu_average_week} per week and {osu_average_day} per day.\r\n- My highest number of osu! api calls are {osu_highest_month} per month, {osu_highest_week} per week and {osu_highest_day} per day.",
     LIST_SERVERS: "Sempai is currently running on: {results}",
     CLEARED_REMINDER: "Alright, I removed the reminder.",
-    NO_REMINDER: "I couldn't find the reminder!"
+    NO_REMINDER: "I couldn't find the reminder!",
+    OSU_SERVER_LIMIT: "This server currently has a limit of {limit} osu! users.",
+    INVALID_SERVER: "There is no server with that id!",
+    OSU_SERVER_LIMIT_CHANGED: "Changed osu! server limit to {new_limit} for server {server_name}."
 };
 
 var responses_tsundere = {

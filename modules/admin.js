@@ -380,8 +380,9 @@ class AdminModule extends IModule
         var id = "ID";
         var name = "Name";
         var owner = "Owner";
+        var limit = "Limit";
         
-        while(id.length < 25)
+        while(id.length < 10)
             id += " ";
         
         while(name.length < 25)
@@ -390,16 +391,21 @@ class AdminModule extends IModule
         while(owner.length < 25)
             owner += " ";
         
-        var response = "```";
-        response += id + " " + name + " " + owner;
+        while(limit.length < 10)
+            limit += " ";
         
-        for(var key in this.bot.servers)
+        var response = "```";
+        response += id + " " + name + " " + owner + " " + limit;
+        
+        var i = 0;
+        for(var i = 0;i<this.bot.servers_internal.length;i++)
         {
-            id = "" + key;
-            name = this.bot.servers[key].server.name;
-            owner = this.bot.servers[key].server.owner.name;
+            id = "#" + (i + 1) + ".";
+            name = this.bot.servers_internal[i].server.name;
+            owner = this.bot.servers_internal[i].server.owner.name;
+            limit = this.bot.servers_internal[i].config.value.osu_limit;
             
-            while(id.length < 25)
+            while(id.length < 10)
                 id += " ";
             
             while(name.length < 25)
@@ -408,8 +414,11 @@ class AdminModule extends IModule
             while(owner.length < 25)
                 owner += " ";
             
+            while(limit.length < 10)
+                limit += " ";
+            
             response += "\r\n";
-            response += id + " " + name + " " + owner;
+            response += id + " " + name + " " + owner + " " + limit;
         }
         response += "```";
         

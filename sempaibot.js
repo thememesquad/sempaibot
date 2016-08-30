@@ -41,6 +41,7 @@ class Bot
             autoReconnect: true
         });
         this.servers = {};
+        this.servers_internal = [];
         this.modules = {};
         this.user_blacklist = null;
         this.server_blacklist = null;
@@ -416,6 +417,7 @@ class Bot
                     if(msg.length !== 0)
                         this.message(responses.get("CHANGELOG").format({changelog: msg}), this.servers[server.id]);
                 }.bind(this, this.servers[server.id]));
+                this.servers_internal.push(this.servers[server.id]);
             }
             
             this.ready = true;
@@ -446,6 +448,7 @@ class Bot
         }.bind(this, server)).catch(function(err){
             console.log(err);
         });
+        this.servers_internal.push(this.servers[server.id]);
     }
     
     on_server_deleted(server)
@@ -457,6 +460,7 @@ class Bot
         
         stats.update("num_servers", this.discord.servers.length);
         
+        delete this.servers_internal[this.servers_internal.indexOf(this.servers[server.id])];
         delete this.servers[server.id];
     }
     
@@ -599,6 +603,23 @@ class Bot
     is_user_blacklisted(user)
     {
         return this.user_blacklist.value.blacklist.indexOf(user.user_id) !== -1;
+    }
+    
+    get_internal_server_id(server)
+    {
+        var id = this.servers_internal.indexOf(server);
+        if(id === -1)
+            return null;
+        
+        return id;
+    }
+    
+    get_server_internal(serverID)
+    {
+        if(serverID < 0 || serverID >= this.servers_internal.length)
+            return null;
+        
+        return this.servers_internal[serverID];
     }
     
     get user()

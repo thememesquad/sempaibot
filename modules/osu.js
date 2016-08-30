@@ -59,10 +59,51 @@ class OsuModule extends IModule
         stats.register("osu_api_calls", 0, true);
         stats.register("osu_num_users", 0);
         
+        permissions.register("OSU_CHANGE_LIMIT", "superadmin");
         permissions.register("OSU_FOLLOW", "moderator");
         permissions.register("OSU_UNFOLLOW", "moderator");
         permissions.register("OSU_CHECK", "moderator");
 
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("set osu limit to"))
+                    return null;
+                
+                var split = message.content.split(" ");
+                if(split.length < 6)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                var limit = parseInt(split[4]);
+                var server = parseInt(split[6]);
+                
+                return [limit, server];
+            },
+            sample: "sempai set osu limit to __*limit*__ for __*server*__",
+            description: "Changes the osu server limit",
+            permission: "OSU_CHANGE_LIMIT",
+            global: true,
+            
+            execute: this.handle_set_limit
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("what is my osu limit"))
+                    return null;
+                
+                return [];
+            },
+            sample: "sempai what is my osu limit?",
+            description: "Displays this servers osu limit",
+            permission: null,
+            global: false,
+            
+            execute: this.handle_show_limit
+        });
+        
         this.add_command({
             match: function(message){
                 var messages = [
@@ -193,6 +234,26 @@ class OsuModule extends IModule
         }.bind(this), 10);
     }
 
+    handle_set_limit(message, limit, serverID)
+    {
+        var server = this.bot.get_server_internal(serverID - 1);
+        if(server === null)
+        {
+            return this.bot.respond(message, responses.get("INVALID_SERVER").format({author: message.author.id, id: serverID}));
+        }
+        
+        var old_limit = server.config.value.osu_limit;
+        server.config.value.osu_limit = limit;
+        server.config.save().catch(function(err){console.log("error saving new config: ", err);});
+        
+        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT_CHANGED").format({author: message.author.id, old_limit: old_limit, new_limit: limit, server_name: server.server.name}));
+    }
+    
+    handle_show_limit(message)
+    {
+        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT").format({author: message.author.id, limit: message.server.config.value.osu_limit}));
+    }
+    
     handle_list_following(message)
     {
         var response = "```";
