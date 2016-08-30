@@ -9,6 +9,7 @@ const permissions = require("../src/permissions.js");
 const stats = require("../src/stats.js");
 const IModule = require("../src/IModule.js");
 const Document = require("camo").Document;
+const LoadBalancer = require("../src/loadbalancer.js");
 
 const USER_UPDATE_INTERVAL = 1200000;
 const BEST_UPDATE_INTERVAL = 60000;
@@ -54,8 +55,8 @@ class OsuModule extends IModule
         this.pending = [];
         this.servers = {};
         this.default_on = true;
-        this.delay = 0;
-
+        this.load_balancer = new LoadBalancer(10);
+        
         stats.register("osu_api_calls", 0, true);
         stats.register("osu_num_users", 0);
         
@@ -405,14 +406,13 @@ class OsuModule extends IModule
                     records.push(docs[i].records[j]);
                 }
                 
-                var delay = (++_this.delay % 60) * 1000;
                 var user = {
                     user_id: docs[i].user_id,
                     username: docs[i].username,
                     pp: docs[i].pp,
                     rank: docs[i].rank,
-                    last_updated: docs[i].last_updated + delay,
-                    last_checked: docs[i].last_checked + delay || (new Date()).getTime() + delay,
+                    last_updated: docs[i].last_updated,
+                    last_checked: docs[i].last_checked || Date.now(),
                     servers: docs[i].servers,
                     update_in_progress: null,
                     records: records,
@@ -475,49 +475,51 @@ class OsuModule extends IModule
     
     api_call(method, params, first, num)
     {
-        this.log_call();
-        
-        num = (num === undefined) ? 0 : num;
-        
-        first = (first === undefined) ? true : first;
-        var url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ? config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
-
-        for(var key in params)
-        {
-            url += "&" + key + "=" + params[key];
-        }
-
         var defer = Q.defer();
+        
+        this.load_balancer.create().then(function(method, params, first, num){
+            this.log_call();
 
-        var req = request.get(url, function(error, response, body){
-            if(error !== null)
+            num = (num === undefined) ? 0 : num;
+
+            first = (first === undefined) ? true : first;
+            var url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ? config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
+
+            for(var key in params)
             {
-                return defer.reject(error);
+                url += "&" + key + "=" + params[key];
             }
 
-            try
-            {
-                var data = JSON.parse(body);
-                if(first)
+            var req = request.get(url, function(error, response, body){
+                if(error !== null)
                 {
-                    data = data[0];
+                    return defer.reject(error);
                 }
 
-                return defer.resolve(data);
-            }
-            catch(e)
-            {
-                if(num === 4)
-                    return defer.reject(e);
-                    
-                this.api_call(method, params, first, num + 1).then(function(result){
-                    defer.resolve(result);
-                }).catch(function(err){
-                    defer.reject(err);
-                });
-            }
-        }.bind(this));
-        this.pending.push(req);
+                try
+                {
+                    var data = JSON.parse(body);
+                    if(first)
+                    {
+                        data = data[0];
+                    }
+
+                    return defer.resolve(data);
+                }
+                catch(e)
+                {
+                    if(num === 4)
+                        return defer.reject(e);
+
+                    this.api_call(method, params, first, num + 1).then(function(result){
+                        defer.resolve(result);
+                    }).catch(function(err){
+                        defer.reject(err);
+                    });
+                }
+            }.bind(this));
+            this.pending.push(req);
+        }.bind(this, method, params, first, num));
         
         return defer.promise;
     }
@@ -746,7 +748,7 @@ class OsuModule extends IModule
                 return;
             }
 
-            var time = (new Date).getTime() + ((++this.delay % 60) * 1000);
+            var time = Date.now();
             var user = {user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_checked: time, last_updated: time, records: [], checking: false};
             this.users.push(user);
 
