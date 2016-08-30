@@ -188,7 +188,17 @@ var responses_normal = {
     NO_REMINDER: "I couldn't find the reminder!",
     OSU_SERVER_LIMIT: "This server currently has a limit of {limit} osu! users.",
     INVALID_SERVER: "There is no server with that id!",
-    OSU_SERVER_LIMIT_CHANGED: "Changed osu! server limit to {new_limit} for server {server_name}."
+    OSU_SERVER_LIMIT_CHANGED: "Changed osu! server limit to {new_limit} for server {server_name}.",
+    SERVER_BLACKLISTED: "Ok, I blacklisted '{server_name}'.",
+    SERVER_WHITELISTED: "Ok, I whitelisted '{server_name}'.",
+    SERVER_ALREADY_BLACKLISTED: "{server_name} is already blacklisted!",
+    SERVER_NOT_BLACKLISTED: "{server_name} is not blacklisted!",
+    INFORM_SERVER_BLACKLISTED: "I hate to be the bearer of bad news, but it turns out that I have to start ignoring this server. This server has just been blacklisted. :frowning:",
+    INFORM_SERVER_WHITELISTED: "Good news everybody! This server has just been removed from my blacklist which means I'm open to any conversation you guys want to have with me on this server! :smiley:",
+    SERVER_BLACKLIST: "This is my current server blacklist:{response}",
+    BLACKLISTED_USER: "Ok, I blacklisted user <@{user}>.",
+    WHITELISTED_USER: "Ok, I whitelisted user <@{user}>.",
+    USER_BLACKLIST: "This is my current user blacklist:{response}"
 };
 
 var responses_tsundere = {

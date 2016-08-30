@@ -29,7 +29,7 @@ class ChangelogDB extends Document
 
 String.prototype.format = function(args) {
     return this.replace(/{(.*?)}/g, function(match, key) {
-        return typeof args[key] != "undefined" ? args[key] : match;
+        return typeof args[key] !== "undefined" ? args[key] : match;
     });
 };
 
@@ -112,6 +112,12 @@ class Bot
     {
         var defer = Q.defer();
         
+        if(this.is_server_blacklisted(server.id))
+        {
+            defer.reject("blacklisted");
+            return defer.promise;
+        }
+        
         var channel = server.channel;
         if(channel.length === 0)
         {
@@ -178,6 +184,12 @@ class Bot
     {
         var defer = Q.defer();
         
+        if(this.is_server_blacklisted(m.server.id))
+        {
+            defer.reject("blacklisted");
+            return defer.promise;
+        }
+        
         var queue = function(m, message, defer){
             this.queue.push(this.discord.stopTyping.bind(this.discord, m.channel));
             this.queue.push(this.discord.sendMessage.bind(this.discord, m.channel, message, {}, function(defer, err, message){
@@ -241,7 +253,7 @@ class Bot
 
     print(message, length, newline)
     {
-        while(message.length != length)
+        while(message.length !== length)
             message += ".";
             
         if(newline)
@@ -258,7 +270,7 @@ class Bot
         
         if(this.connected_once)
         {
-            while(this.queue.length != 0)
+            while(this.queue.length !== 0)
             {
                 this.queue[0]();
                 this.queue.splice(0, 1);
@@ -276,16 +288,16 @@ class Bot
             console.log("....Ok");
             for(var i = 0;i<docs.length;i++)
             {
-                if(docs[i].key == "mode")
+                if(docs[i].key === "mode")
                 {
-                    if(docs[i].value.value != responses.currentMode)
+                    if(docs[i].value.value !== responses.currentMode)
                         responses.setMode(docs[i].value);
                 }
-                else if(docs[i].key == "user_blacklist")
+                else if(docs[i].key === "user_blacklist")
                 {
                     this.user_blacklist = docs[i];
                 }
-                else if(docs[i].key == "server_blacklist")
+                else if(docs[i].key === "server_blacklist")
                 {
                     this.server_blacklist = docs[i];
                 }
@@ -482,10 +494,18 @@ class Bot
         var key;
         
         if(!message.channel.isPrivate)
+        {
             server = this.servers[message.channel.server.id];
+            if(server === null || server === undefined)
+                return;
+        }
             
         message.user = users.get_user(message.author, server);
         message.server = server;
+        
+        //Is the server blacklisted
+        if(this.is_server_blacklisted(server.id))
+            return;
         
         //Is the user blacklisted/ignored
         if(this.is_user_blacklisted(message.user) || (message.server !== null && message.server.is_user_ignored(message.user)))
@@ -498,7 +518,7 @@ class Bot
         {
             for(key in this.modules)
             {
-                if(!server.is_module_enabled(key) && (this.modules[key].always_on === undefined || this.modules[key].always_on == false))
+                if(!server.is_module_enabled(key) && (this.modules[key].always_on === undefined || this.modules[key].always_on === false))
                     continue;
                     
                 if(this.modules[key].on_raw_message === undefined)
@@ -508,10 +528,10 @@ class Bot
             }
         }
         
-        if(message.content.toLowerCase().indexOf("sempai") == 0 || message.content.indexOf("-") == 0)
+        if(message.content.toLowerCase().indexOf("sempai") === 0 || message.content.indexOf("-") === 0)
         {
             var msg = message.content;
-            if(msg.toLowerCase().indexOf("sempai") == 0)
+            if(msg.toLowerCase().indexOf("sempai") === 0)
             {
                 msg = msg.substr("sempai".length + 1).replace(/\s+/g, " ").trim();
             }
@@ -548,7 +568,7 @@ class Bot
             
             if(!handled)
             {
-                if(split.length == 1)
+                if(split.length === 1)
                     this.respond(message, responses.get("NAME").format({author: message.author.id}));
                 else
                     this.respond(message, responses.get("UNKNOWN_COMMAND").format({author: message.author.id}));
@@ -566,6 +586,7 @@ class Bot
     
     blacklist_server(server_id)
     {
+        this.message(responses.get("INFORM_SERVER_BLACKLISTED"), this.servers[server_id]);
         this.server_blacklist.value.blacklist.push(server_id);
         this.server_blacklist.save().catch(function(err){
             console.log(err);
@@ -597,12 +618,18 @@ class Bot
             console.log(err);
         });
         
+        this.message(responses.get("INFORM_SERVER_WHITELISTED"), this.servers[server_id]);
         return true;
     }
     
     is_user_blacklisted(user)
     {
         return this.user_blacklist.value.blacklist.indexOf(user.user_id) !== -1;
+    }
+    
+    is_server_blacklisted(server_id)
+    {
+        return this.server_blacklist.value.blacklist.indexOf(server_id) !== -1;
     }
     
     get_internal_server_id(server)

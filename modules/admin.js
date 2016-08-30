@@ -56,6 +56,124 @@ class AdminModule extends IModule
         
         this.add_command({
             match: function(message){
+                if(!message.content.startsWith("blacklist server"))
+                    return null;
+                
+                return [parseInt(message.content.split(" ")[2])];
+            },
+            sample: "sempai blacklist server __*server*__",
+            description: "Blacklists a server.",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_blacklist_server
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("whitelist server"))
+                    return null;
+                
+                return [parseInt(message.content.split(" ")[2])];
+            },
+            sample: "sempai whitelist server __*server*__",
+            description: "Whitelists a server.",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_whitelist_server
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("blacklist user"))
+                    return null;
+                
+                var mod = message.content.substr("blacklist user".length + 1).trim();
+                if(mod.length === 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                var user = Util.parse_id(mod);
+                if(user.type !== "user")
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [user.id];
+            },
+            sample: "sempai blacklist user __*@user*__",
+            description: "Blacklists an user.",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_blacklist_user
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("whitelist user"))
+                    return null;
+                
+                var mod = message.content.substr("blacklist user".length + 1).trim();
+                if(mod.length === 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                var user = Util.parse_id(mod);
+                if(user.type !== "user")
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [user.id];
+            },
+            sample: "sempai whitelist user __*@user*__",
+            description: "Whitelists an user.",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_whitelist_user
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("show user blacklist"))
+                    return null;
+                
+                return [];
+            },
+            sample: "sempai show user blacklist",
+            description: "Displays the user blacklist",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_show_user_blacklist
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("show server blacklist"))
+                    return null;
+                
+                return [];
+            },
+            sample: "sempai show server blacklist",
+            description: "Displays the server blacklist",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_show_server_blacklist
+        });
+        
+        this.add_command({
+            match: function(message){
                 if(!message.content.startsWith("enable"))
                     return null;
                     
@@ -353,6 +471,159 @@ class AdminModule extends IModule
         });
     }
 
+    handle_blacklist_server(message, serverID)
+    {
+        var server = this.bot.get_server_internal(serverID - 1);
+        
+        if(server === null)
+        {
+            return this.bot.respond(message, responses.get("INVALID_SERVER").format({author: message.author.id, id: serverID}));
+        }
+        
+        if(this.bot.is_server_blacklisted(server.id))
+            return this.bot.respond(message, responses.get("SERVER_ALREADY_BLACKLISTED").format({author: message.author.id, server_name: server.server.name}));
+        
+        this.bot.blacklist_server(server.id);
+        this.bot.respond(message, responses.get("SERVER_BLACKLISTED").format({author: message.author.id, server_name: server.server.name}));
+    }
+    
+    handle_whitelist_server(message, serverID)
+    {
+        var server = this.bot.get_server_internal(serverID - 1);
+        
+        if(server === null)
+        {
+            return this.bot.respond(message, responses.get("INVALID_SERVER").format({author: message.author.id, id: serverID}));
+        }
+        
+        if(!this.bot.is_server_blacklisted(server.id))
+            return this.bot.respond(message, responses.get("SERVER_NOT_BLACKLISTED").format({author: message.author.id, server_name: server.server.name}));
+        
+        this.bot.whitelist_server(server.id);
+        this.bot.respond(message, responses.get("SERVER_WHITELISTED").format({author: message.author.id, server_name: server.server.name}));
+    }
+    
+    handle_blacklist_user(message, user_id)
+    {
+        var user = this.get_user(user_id, message.server);
+        if(user === null)
+        {
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
+        }
+        
+        this.bot.blacklist_user(user);
+        return this.bot.respond(message, responses.get("BLACKLISTED_USER").format({author: message.author.id, user: user.user_id}));
+    }
+    
+    handle_whitelist_user(message, user_id)
+    {
+        var user = this.get_user(user_id, message.server);
+        if(user === null)
+        {
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
+        }
+        
+        this.bot.whitelist_user(user);
+        return this.bot.respond(message, responses.get("WHITELISTED_USER").format({author: message.author.id, user: user.user_id}));
+    }
+    
+    handle_show_user_blacklist(message)
+    {
+        var id = "ID";
+        var name = "Name";
+        
+        while(id.length < 25)
+            id += " ";
+        
+        while(name.length < 30)
+            name += " ";
+        
+        var response = "```";
+        response += id + " " + name;
+        
+        var num = 0;
+        for(var key in users.users)
+        {
+            if(!this.bot.is_user_blacklisted(users.users[key]))
+                continue;
+            
+            id = "" + users.users[key].user_id;
+            name = users.users[key].name;
+            
+            while(id.length < 25)
+                id += " ";
+
+            while(name.length < 30)
+                name += " ";
+            
+            response += "\r\n";
+            response += id + " " + name;
+            num++;
+        }
+        
+        if(num === 0)
+        {
+            response += "\r\n";
+            response += "User blacklist is empty.";
+        }
+        
+        response += "```";
+        
+        this.bot.respond(message, responses.get("USER_BLACKLIST").format({author: message.author.id, response: response}));
+    }
+    
+    handle_show_server_blacklist(message)
+    {
+        var id = "ID";
+        var name = "Name";
+        var owner = "Owner";
+        
+        while(id.length < 10)
+            id += " ";
+        
+        while(name.length < 20)
+            name += " ";
+        
+        while(owner.length < 20)
+            owner += " ";
+        
+        var response = "```";
+        response += id + " " + name + " " + owner;
+        
+        var num = 0;
+        for(var i = 0;i<this.bot.servers_internal.length;i++)
+        {
+            if(!this.bot.is_server_blacklisted(this.bot.servers_internal[i].id))
+                continue;
+            
+            id = "#" + (i + 1) + ".";
+            name = this.bot.servers_internal[i].server.name;
+            owner = this.bot.servers_internal[i].server.owner.name;
+            
+            while(id.length < 10)
+                id += " ";
+
+            while(name.length < 20)
+                name += " ";
+
+            while(owner.length < 20)
+                owner += " ";
+            
+            response += "\r\n";
+            response += id + " " + name + " " + owner;
+            num++;
+        }
+        
+        if(num === 0)
+        {
+            response += "\r\n";
+            response += "Server blacklist is empty.";
+        }
+        response += "```";
+        
+        this.bot.respond(message, responses.get("SERVER_BLACKLIST").format({author: message.author.id, response: response}));
+    }
+    
     handle_show_statistics(message)
     {
         var msg = responses.get("SHOW_STATISTICS").format({
@@ -400,10 +671,15 @@ class AdminModule extends IModule
         var i = 0;
         for(var i = 0;i<this.bot.servers_internal.length;i++)
         {
+            if(this.bot.is_server_blacklisted(this.bot.servers_internal[i].id))
+            {
+                continue;
+            }
+            
             id = "#" + (i + 1) + ".";
             name = this.bot.servers_internal[i].server.name;
             owner = this.bot.servers_internal[i].server.owner.name;
-            limit = this.bot.servers_internal[i].config.value.osu_limit;
+            limit = "" + this.bot.servers_internal[i].config.value.osu_limit;
             
             while(id.length < 10)
                 id += " ";
@@ -413,12 +689,12 @@ class AdminModule extends IModule
             
             while(owner.length < 25)
                 owner += " ";
-            
+
             while(limit.length < 10)
                 limit += " ";
             
             response += "\r\n";
-            response += id + " " + name + " " + owner + " " + limit;
+            response += id + " " + name + " " + owner + ((limit.length > 0) ? " " + limit : "");
         }
         response += "```";
         
