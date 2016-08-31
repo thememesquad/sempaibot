@@ -14,11 +14,11 @@ class Util
         id = id.substr(1, id.length - 2);
         switch(id.charAt(0))
         {
-            case '@':
+            case "@":
                 type = "user";
                 break;
                 
-            case '#':
+            case "#":
                 type = "channel";
                 break;
                 
@@ -27,7 +27,7 @@ class Util
         }
         
         id = id.substr(1);
-        if(id.charAt(0) == '!')
+        if(id.charAt(0) === "!")
         {
             is_alias = true;
             id = id.substr(1);
@@ -42,16 +42,17 @@ class Util
         if(base_message === null || base_message === undefined)
             return [];
             
-        if(data === null || data === undefined || data.length == 0)
+        if(data === null || data === undefined || data.length === 0)
             return [];
             
+        var key, i;
         if(columns === null || columns === undefined)
         {
             columns = {};
             
-            for(var i = 0;i<data.length;i++)
+            for(i = 0;i<data.length;i++)
             {
-                for(var key in data[i])
+                for(key in data[i])
                 {
                     columns[key] = key;
                 }
@@ -60,7 +61,7 @@ class Util
         
         var lengths = {};
         
-        for(var key in columns)
+        for(key in columns)
         {
             if(minimum_lengths !== null)
                 lengths[key] = Math.max(columns[key].length, minimum_lengths[key]);
@@ -68,22 +69,22 @@ class Util
                 lengths[key] = columns[key].length;
         }
         
-        for(var i = 0;i<data.length;i++)
+        for(i = 0;i<data.length;i++)
         {
-            for(var key in columns)
+            for(key in columns)
             {
                 lengths[key] = Math.max(data[i][key].length, lengths[key]);
             }
         }
         
-        for(var key in columns)
+        for(key in columns)
         {
             lengths[key] += 2;
         }
         
         var message = "";
         var write_headers = function(){
-            for(var key in columns)
+            for(key in columns)
             {
                 var val = columns[key];
                 while(val.length != lengths[key])
@@ -98,7 +99,7 @@ class Util
         
         var write_item = function(index){
             var tmp = "";
-            for(var key in columns)
+            for(key in columns)
             {
                 var val = data[index][key];
                 while(val.length != lengths[key])
@@ -114,7 +115,7 @@ class Util
         };
         
         var messages = [];
-        for(var i = 0;i<data.length;i++)
+        for(i = 0;i<data.length;i++)
         {
             if(message.length == 0)
             {

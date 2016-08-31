@@ -9,21 +9,14 @@
     "url": "https://github.com/RukiaXi/sempaibot.git"
   },
   "dependencies": {
-    "app-root-path": "^1.0.0",
     "auto-loader": "^0.2.0",
-    "camo": "^0.12.1",
-    "discord.js": "https://github.com/hydrabolt/discord.js.git#indev",
-    "lodash": "^4.5.1",
-    "moment": "^2.13.0",
-    "moment-timezone": "^0.5.4",
-    "mongodb": "^2.1.18",
-    "nedb": "^1.8.0",
-    "node-tldr": "^0.4.14",
+    "camo": "^0.12.2",
+    "discord.js": "^8.1.0",
+    "lodash": "^4.15.0",
+    "moment": "^2.14.1",
+    "moment-timezone": "^0.5.5",
     "q": "^1.4.1",
-    "request": "^2.69.0"
-  },
-  "optionalDependencies": {
-    "node-gd": "^1.2.0"
+    "request": "^2.74.0"
   },
   "scripts": {
     "start": "node sempaibot.js",
@@ -31,6 +24,7 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "eslint": "^3.3.1",
     "isparta": "^4.0.0",
     "mocha": "^2.4.5"
   }

@@ -1,10 +1,8 @@
 "use strict";
 
-const permissions = require("./permissions.js");
-const db = require("./db.js");
 const config = require("../config.js");
 const Q = require("q");
-const Document = require('camo').Document;
+const Document = require("camo").Document;
 
 class User extends Document
 {
@@ -73,7 +71,7 @@ class User extends Document
     {
         for(var i = 0;i<server.server.members.length;i++)
         {
-            if(server.server.members[i].id == this.user_id)
+            if(server.server.members[i].id === this.user_id)
             {
                 var details = server.server.detailsOf(server.server.members[i]);
                 if(details.nick)
@@ -92,7 +90,7 @@ class User extends Document
         {
             for(var i = 0;i<server.server.members.length;i++)
             {
-                if(server.server.members[i].id == this.user_id)
+                if(server.server.members[i].id === this.user_id)
                 {
                     member = server.server.members[i];
                     break;
@@ -155,7 +153,7 @@ class Users
     {
         if(this.users[id] !== undefined)
         {
-            if(this.users[id].name != name)
+            if(this.users[id].name !== name)
             {
                 this.users[id].name = name;
                 this.users[id].save().catch(function(err){
@@ -194,7 +192,7 @@ class Users
             {
                 for(var i = 0;i<server.server.members.length;i++)
                 {
-                    if(server.server.members[i].id == id)
+                    if(server.server.members[i].id === id)
                     {
                         return this.add_user(id, server.server.members[i].name, server);
                     }

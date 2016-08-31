@@ -6,17 +6,30 @@ process.env.TZ = "Europe/Amsterdam";
 const Discord = require("discord.js");
 const ServerData = require("./src/ServerData.js");
 
-const modules = require('auto-loader').load(__dirname + "/modules");
+const modules = require("auto-loader").load(__dirname + "/modules");
 const responses = require("./src/responses.js");
 const db = require("./src/db.js");
-const config = require("./config");
+const config = require("./config.js");
 const users = require("./src/users.js");
 const permissions = require("./src/permissions.js");
 const Q = require("q");
+const Document = require("camo").Document;
+const changelog = require("./changelog.js");
+const stats = require("./src/stats.js");
+
+class ChangelogDB extends Document
+{
+    constructor()
+    {
+        super();
+
+        this.version = Number;
+    }
+}
 
 String.prototype.format = function(args) {
     return this.replace(/{(.*?)}/g, function(match, key) {
-        return typeof args[key] != 'undefined' ? args[key] : match;
+        return typeof args[key] !== "undefined" ? args[key] : match;
     });
 };
 
@@ -28,6 +41,7 @@ class Bot
             autoReconnect: true
         });
         this.servers = {};
+        this.servers_internal = [];
         this.modules = {};
         this.user_blacklist = null;
         this.server_blacklist = null;
@@ -42,15 +56,37 @@ class Bot
         this.discord.on("serverDeleted", this.on_server_deleted.bind(this));
         this.discord.on("disconnected", this.on_disconnected.bind(this));
         this.discord.on("error", this.on_error.bind(this));
+        
+        process.on("SIGTERM", function(){
+            this.shutdown();
+        }.bind(this));
     }
 
+    shutdown()
+    {
+        console.log("Received SIGTERM, shutting down....");
+        this.discord.destroy();
+        
+        for(var key in this.modules)
+        {
+            if(this.modules[key].on_shutdown !== undefined)
+                this.modules[key].on_shutdown();
+        }
+
+        stats.save().then(function(){
+            process.exit(0);
+        });
+    }
+    
     login()
     {
         this.discord.loginWithToken(config.token, function (error, token) {
-            if(error != null)
+            if(error !== null)
             {
-                console.log("Discord login error: " + error);
+                return console.error("Discord login error: " + error);
             }
+            
+            console.log("Logged in with token '" + token + "'.");
         });
     }
 
@@ -72,27 +108,15 @@ class Bot
         }
     }
     
-    get_invite(invite)
-    {
-        var defer = Q.defer();
-        
-        //not allowed with bot users
-        
-        return defer.promise;
-    }
-    
-    join_server(inv)
-    {
-        var defer = Q.defer();
-        
-        //not allowed with bot users
-        
-        return defer.promise;
-    }
-    
     message(message, server)
     {
         var defer = Q.defer();
+        
+        if(this.is_server_blacklisted(server.id))
+        {
+            defer.reject("blacklisted");
+            return defer.promise;
+        }
         
         var channel = server.channel;
         if(channel.length === 0)
@@ -145,9 +169,9 @@ class Bot
                 return defer.resolve();
             }
             
-            this.message(messages[index], server).then(function(index, send, defer){
+            this.message(messages[index], server).then(function(index, send){
                 send(index + 1, send);
-            }.bind(this, index, send, defer)).catch(function(defer, error){
+            }.bind(this, index, send)).catch(function(defer, error){
                 defer.reject(error);
             }.bind(this, defer));
         }.bind(this, server, messages, defer);
@@ -159,6 +183,12 @@ class Bot
     respond(m, message)
     {
         var defer = Q.defer();
+        
+        if(this.is_server_blacklisted(m.server.id))
+        {
+            defer.reject("blacklisted");
+            return defer.promise;
+        }
         
         var queue = function(m, message, defer){
             this.queue.push(this.discord.stopTyping.bind(this.discord, m.channel));
@@ -205,7 +235,7 @@ class Bot
                 return defer.resolve();
             }
             
-            this.respond(message, messages[index]).then(function(index, send, defer){
+            this.respond(message, messages[index]).then(function(index, send){
                 send(index + 1, send);
             }.bind(this, index, send, defer)).catch(function(defer, error){
                 defer.reject(error);
@@ -223,7 +253,7 @@ class Bot
 
     print(message, length, newline)
     {
-        while(message.length != length)
+        while(message.length !== length)
             message += ".";
             
         if(newline)
@@ -240,7 +270,7 @@ class Bot
         
         if(this.connected_once)
         {
-            while(this.queue.length != 0)
+            while(this.queue.length !== 0)
             {
                 this.queue[0]();
                 this.queue.splice(0, 1);
@@ -251,23 +281,23 @@ class Bot
            
         this.connected_once = true;
         
-        db.load().then(function(db_type){
+        db.load().then(function(){
             this.print("Loading config from DB", 70, false);
             return db.ConfigKeyValue.find({});
         }.bind(this)).then(function(docs){
             console.log("....Ok");
             for(var i = 0;i<docs.length;i++)
             {
-                if(docs[i].key == "mode")
+                if(docs[i].key === "mode")
                 {
-                    if(docs[i].value.value != responses.currentMode)
+                    if(docs[i].value.value !== responses.currentMode)
                         responses.setMode(docs[i].value);
                 }
-                else if(docs[i].key == "user_blacklist")
+                else if(docs[i].key === "user_blacklist")
                 {
                     this.user_blacklist = docs[i];
                 }
-                else if(docs[i].key == "server_blacklist")
+                else if(docs[i].key === "server_blacklist")
                 {
                     this.server_blacklist = docs[i];
                 }
@@ -323,17 +353,83 @@ class Bot
 
             return permissions.save();
         }.bind(this)).then(function(){
+            this.print("Loading changelog", 70, false);
+            var defer = Q.defer();
+            
+            ChangelogDB.findOne({}).then(function(doc){
+                if(doc === null)
+                {
+                    return ChangelogDB.create({version: changelog.version}).save().then(function(){
+                        defer.resolve(-1);
+                    }).catch(function(err){
+                        console.log(err);
+                    });
+                }
+                
+                if(doc.version !== changelog.version)
+                {
+                    var old = doc.version;
+                    doc.version = changelog.version;
+                    return doc.save().then(function(){
+                        defer.resolve(old);
+                    }).catch(function(err){
+                        console.log(err);
+                    });
+                }
+                
+                defer.resolve(doc.version);
+            }).catch(function(err){
+                defer.reject(err);
+            });
+            
+            return defer.promise;
+        }.bind(this)).then(function(changelog_version){
+            console.log("....Ok");
+            this.print("Loading stats", 70, false);
+            
+            var defer = Q.defer();
+            
+            stats.load().then(function(){
+                defer.resolve(changelog_version);
+            }).catch(function(err){
+                defer.reject(err);
+            });
+            
+            return defer.promise;
+        }.bind(this)).then(function(changelog_version){
+            console.log("....Ok");
+            stats.register("num_servers", this.discord.servers.length);
+            
             for(var i = 0;i<this.discord.servers.length;i++)
             {
                 var server = this.discord.servers[i];
                 this.servers[server.id] = new ServerData(this, server);
-                this.servers[server.id].load_promise.promise.then(function(server){
+                this.servers[server.id].load_promise.promise.then(function(server, initial){
                     for(var key in this.modules)
                     {
                         if(this.modules[key].always_on)
                             this.servers[server.id].enable_module(key);
+                        
+                        if(initial && this.modules[key].default_on)
+                            this.servers[server.id].enable_module(key);
                     }
+                    
+                    var msg = "";
+                    for(var i = 0;i<changelog.changelog.length;i++)
+                    {
+                        if(changelog.changelog[i][0] <= changelog_version)
+                            continue;
+                        
+                        if(msg.length !== 0)
+                            msg += "\r\n";
+
+                        msg += "- " + changelog.changelog[i][1];
+                    }
+
+                    if(msg.length !== 0)
+                        this.message(responses.get("CHANGELOG").format({changelog: msg}), this.servers[server.id]);
                 }.bind(this, this.servers[server.id]));
+                this.servers_internal.push(this.servers[server.id]);
             }
             
             this.ready = true;
@@ -349,6 +445,8 @@ class Bot
             
         console.log("Joined server '" + server.name + "'.");
         
+        stats.update("num_servers", this.discord.servers.length);
+        
         this.servers[server.id] = new ServerData(this, server);
         this.servers[server.id].load_promise.promise.then(function(server){
             for(var key in this.modules)
@@ -362,6 +460,7 @@ class Bot
         }.bind(this, server)).catch(function(err){
             console.log(err);
         });
+        this.servers_internal.push(this.servers[server.id]);
     }
     
     on_server_deleted(server)
@@ -371,6 +470,9 @@ class Bot
             
         console.log("Left server '" + server.name + "'.");
         
+        stats.update("num_servers", this.discord.servers.length);
+        
+        delete this.servers_internal[this.servers_internal.indexOf(this.servers[server.id])];
         delete this.servers[server.id];
     }
     
@@ -389,21 +491,34 @@ class Bot
     handle_message(message)
     {
         var server = null;
+        var key;
+        
         if(!message.channel.isPrivate)
+        {
             server = this.servers[message.channel.server.id];
+            if(server === null || server === undefined)
+                return;
+        }
             
         message.user = users.get_user(message.author, server);
         message.server = server;
+        
+        //Is the server blacklisted
+        if(this.is_server_blacklisted(server.id))
+            return;
         
         //Is the user blacklisted/ignored
         if(this.is_user_blacklisted(message.user) || (message.server !== null && message.server.is_user_ignored(message.user)))
             return;
             
+        if(message.author.id === this.discord.user.id)
+            return;
+        
         if(message.author.id !== this.discord.user.id && message.server !== null)
         {
-            for(var key in this.modules)
+            for(key in this.modules)
             {
-                if(!server.is_module_enabled(key) && (this.modules[key].always_on === undefined || this.modules[key].always_on == false))
+                if(!server.is_module_enabled(key) && (this.modules[key].always_on === undefined || this.modules[key].always_on === false))
                     continue;
                     
                 if(this.modules[key].on_raw_message === undefined)
@@ -413,34 +528,47 @@ class Bot
             }
         }
         
-        if(message.content.indexOf("sempai") == 0 || message.content.indexOf("-") == 0)
+        if(message.content.toLowerCase().indexOf("sempai") === 0 || message.content.indexOf("-") === 0)
         {
             var msg = message.content;
-            if(msg.indexOf("sempai") == 0)
+            if(msg.toLowerCase().indexOf("sempai") === 0)
             {
-                msg = msg.substr("sempai".length + 1).replace(/\s+/g, ' ').trim();
+                msg = msg.substr("sempai".length + 1).replace(/\s+/g, " ").trim();
             }
             else
             {
-                msg = msg.substr(1).replace(/\s+/g, ' ').trim();
+                msg = msg.substr(1).replace(/\s+/g, " ").trim();
             }
             
             message.content = msg;
             var split = message.content.split(" ");
             var handled = false;
+            var tmp = [];
             
-            for(var key in this.modules)
+            for(key in this.modules)
             {
-                if(this.modules[key].check_message(server, message, split))
+                var resp = this.modules[key].check_message(server, message, split);
+                
+                if(typeof resp === "string")
+                {
+                    tmp.push(resp);
+                }
+                else if(resp)
                 {
                     handled = true;
                     break;
                 }
             }
 
+            if(!handled && tmp.length > 0)
+            {
+                this.respond(message, responses.get("INCORRECT_FORMAT").format({author: message.author.id, sample: tmp[0]}));
+                handled = true;
+            }
+            
             if(!handled)
             {
-                if(split.length == 1)
+                if(split.length === 1)
                     this.respond(message, responses.get("NAME").format({author: message.author.id}));
                 else
                     this.respond(message, responses.get("UNKNOWN_COMMAND").format({author: message.author.id}));
@@ -458,6 +586,7 @@ class Bot
     
     blacklist_server(server_id)
     {
+        this.message(responses.get("INFORM_SERVER_BLACKLISTED"), this.servers[server_id]);
         this.server_blacklist.value.blacklist.push(server_id);
         this.server_blacklist.save().catch(function(err){
             console.log(err);
@@ -489,12 +618,35 @@ class Bot
             console.log(err);
         });
         
+        this.message(responses.get("INFORM_SERVER_WHITELISTED"), this.servers[server_id]);
         return true;
     }
     
     is_user_blacklisted(user)
     {
         return this.user_blacklist.value.blacklist.indexOf(user.user_id) !== -1;
+    }
+    
+    is_server_blacklisted(server_id)
+    {
+        return this.server_blacklist.value.blacklist.indexOf(server_id) !== -1;
+    }
+    
+    get_internal_server_id(server)
+    {
+        var id = this.servers_internal.indexOf(server);
+        if(id === -1)
+            return null;
+        
+        return id;
+    }
+    
+    get_server_internal(serverID)
+    {
+        if(serverID < 0 || serverID >= this.servers_internal.length)
+            return null;
+        
+        return this.servers_internal[serverID];
     }
     
     get user()
