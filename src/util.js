@@ -42,7 +42,7 @@ class Util
         if(base_message === null || base_message === undefined)
             return [];
             
-        if(data === null || data === undefined || data.length == 0)
+        if(data === null || data === undefined || data.length === 0)
             return [];
             
         var key, i;

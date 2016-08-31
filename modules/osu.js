@@ -276,10 +276,14 @@ class OsuModule extends IModule
             
         while(pp.length < 12)
             pp += " ";
-            
-        response += rank + " " + name + " " + pp + " ";
+        
+        var header = rank + " " + name + " " + pp;
+        response += header;
+        
+        var messages = [];
         
         var num = 0;
+        var currentnum = 0;
         for(var i in users)
         {
             //Check if the server is actually following this player
@@ -303,13 +307,40 @@ class OsuModule extends IModule
             response += "#" + rank + " " + name + " " + pp + " ";
             
             num++;
+            currentnum++;
+            
+            if(response.length >= 1900)
+            {
+                response += "```";
+                messages.push(response);
+                
+                response = "```";
+                response += header;
+                
+                currentnum = 0;
+            }
         }
         response += "```";
+        
+        if(currentnum !== 0)
+        {
+            messages.push(response);
+        }
+        
+        var send = function(messages, message, i){
+            if(i >= messages.length)
+                return;
+            
+            if(i === 0)
+                this.bot.respond(message, responses.get("OSU_FOLLOWING").format({author: message.author.id, results: messages[i]})).then(send.bind(this, messages, message, i + 1));
+            else
+                this.bot.respond(message, messages[i]).then(send.bind(this, messages, message, i + 1));
+        }.bind(this);
         
         if(num === 0)
             this.bot.respond(message, responses.get("OSU_FOLLOW_LIST_EMPTY").format({author: message.author.id}));
         else
-            this.bot.respond(message, responses.get("OSU_FOLLOWING").format({author: message.author.id, results: response}));
+            send(messages, message, 0);
     }
 
     handle_follow(message, name)
