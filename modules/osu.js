@@ -632,7 +632,8 @@ class OsuModule extends IModule
                 for(i = 0;i<16;i++)
                 {
                     if((beatmap.enabled_mods & (1 << i)) > 0)
-                        beatmap.mods += ((beatmap.mods.length !== 0) ? "" : "+") + _this.modsList[i];
+                        if(i !== 6 || ((beatmap.enabled_mods & (1 << 9)) === 0))
+                            beatmap.mods += ((beatmap.mods.length !== 0) ? "" : "+") + _this.modsList[i];
                 }
 
                 var skip = false;
