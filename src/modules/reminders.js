@@ -1,13 +1,13 @@
 "use strict";
 
-const responses = require("../src/responses.js");
-const IModule = require("../src/IModule.js");
+const responses = require("../responses.js");
+const ModuleBase = require("../modulebase.js");
+const permissions = require("../permissions.js");
+const users = require("../users.js");
+const Time = require("../time.js");
+const Util = require("../util.js");
 const Document = require("camo").Document;
 const moment = require("moment");
-const permissions = require("../src/permissions.js");
-const users = require("../src/users.js");
-const Time = require("../src/time.js");
-const Util = require("../src/util.js");
 
 class Reminder extends Document
 {
@@ -23,7 +23,7 @@ class Reminder extends Document
     }
 }
 
-class RemindersModule extends IModule
+class RemindersModule extends ModuleBase
 {
     constructor()
     {

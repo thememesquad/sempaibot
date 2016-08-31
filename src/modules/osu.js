@@ -3,13 +3,14 @@
 const request = require("request");
 const Q = require("q");
 const lodash = require("lodash");
-const config = require("../config");
-const responses = require("../src/responses.js");
-const permissions = require("../src/permissions.js");
-const stats = require("../src/stats.js");
-const IModule = require("../src/IModule.js");
 const Document = require("camo").Document;
-const LoadBalancer = require("../src/loadbalancer.js");
+
+const config = require("../../config.js");
+const responses = require("../responses.js");
+const permissions = require("../permissions.js");
+const stats = require("../stats.js");
+const ModuleBase = require("../modulebase.js");
+const LoadBalancer = require("../loadbalancer.js");
 
 const USER_UPDATE_INTERVAL = 1200000;
 const BEST_UPDATE_INTERVAL = 60000;
@@ -31,7 +32,7 @@ class OsuUser extends Document
     }
 }
 
-class OsuModule extends IModule
+class OsuModule extends ModuleBase
 {
     constructor()
     {
@@ -603,8 +604,6 @@ class OsuModule extends IModule
         var _this = this;
         var topRank;
         this.get_user_best(username, 0, 50).then(function(profile, json){
-            var updated = false;
-            
             for (var j = 0; j < json.length; j++)
             {
                 var beatmap = json[j];
@@ -655,7 +654,6 @@ class OsuModule extends IModule
                 
                 if (!skip)
                 {
-                    updated = true;
                     topRank = j + 1;
 
                     if(index === -1)

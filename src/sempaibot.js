@@ -4,18 +4,18 @@ const process = require("process");
 process.env.TZ = "Europe/Amsterdam";
 
 const Discord = require("discord.js");
-const ServerData = require("./src/ServerData.js");
+const ServerData = require("./serverdata.js");
 
 const modules = require("auto-loader").load(__dirname + "/modules");
-const responses = require("./src/responses.js");
-const db = require("./src/db.js");
-const config = require("./config.js");
-const users = require("./src/users.js");
-const permissions = require("./src/permissions.js");
+const responses = require("./responses.js");
+const db = require("./db.js");
+const config = require("../config.js");
+const users = require("./users.js");
+const permissions = require("./permissions.js");
 const Q = require("q");
 const Document = require("camo").Document;
 const changelog = require("./changelog.js");
-const stats = require("./src/stats.js");
+const stats = require("./stats.js");
 
 class ChangelogDB extends Document
 {

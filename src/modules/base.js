@@ -1,13 +1,13 @@
 "use strict";
 
-const responses = require("../src/responses.js");
-const permissions = require("../src/permissions.js");
-const IModule = require("../src/IModule.js");
-const users = require("../src/users.js");
+const responses = require("../responses.js");
+const permissions = require("../permissions.js");
+const ModuleBase = require("../modulebase.js");
+const users = require("../users.js");
+const Util = require("../util.js");
 const moment = require("moment-timezone");
-const Util = require("../src/util.js");
 
-class BaseModule extends IModule
+class BaseModule extends ModuleBase
 {
     constructor()
     {

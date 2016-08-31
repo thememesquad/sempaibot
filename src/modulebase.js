@@ -2,7 +2,7 @@
 const permissions = require("./permissions.js");
 const responses = require("./responses.js");
 
-class IModule
+class ModuleBase
 {
     constructor()
     {
@@ -75,4 +75,4 @@ class IModule
     }
 }
 
-module.exports = IModule;
+module.exports = ModuleBase;

@@ -1,13 +1,13 @@
 "use strict";
 
-const IModule = require("../src/IModule.js");
-const permissions = require("../src/permissions.js");
-const responses = require("../src/responses.js");
-const users = require("../src/users.js");
-const Util = require("../src/util.js");
-const stats = require("../src/stats.js");
+const ModuleBase = require("../modulebase.js");
+const permissions = require("../permissions.js");
+const responses = require("../responses.js");
+const users = require("../users.js");
+const Util = require("../util.js");
+const stats = require("../stats.js");
 
-class AdminModule extends IModule
+class AdminModule extends ModuleBase
 {
     constructor()
     {
@@ -668,8 +668,8 @@ class AdminModule extends IModule
         var response = "```";
         response += id + " " + name + " " + owner + " " + limit;
         
-        var i = 0;
-        for(var i = 0;i<this.bot.servers_internal.length;i++)
+        var i;
+        for(i = 0;i<this.bot.servers_internal.length;i++)
         {
             if(this.bot.is_server_blacklisted(this.bot.servers_internal[i].id))
             {
