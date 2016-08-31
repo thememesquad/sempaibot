@@ -55,7 +55,7 @@ class OsuModule extends IModule
         this.pending = [];
         this.servers = {};
         this.default_on = true;
-        this.load_balancer = new LoadBalancer(10);
+        this.load_balancer = new LoadBalancer(60);
         
         stats.register("osu_api_calls", 0, true);
         stats.register("osu_num_users", 0);

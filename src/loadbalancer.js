@@ -3,13 +3,12 @@ const Q = require("q");
 
 class LoadBalancer
 {
-    constructor(max_per_second)
+    constructor(max_per_minute)
     {
-        max_per_second = max_per_second || 10;
-        
-        this.limit = max_per_second;
+        this.limit = max_per_minute;
         this.requests = [];
-        this.log = [];
+        this.old_minutes = (new Date()).getMinutes();
+        this.current = 0;
         
         this.balancer = -1;
     }
@@ -24,28 +23,20 @@ class LoadBalancer
             return;
         }
         
-        var time = Date.now();
-        var end = -1;
-        for(var i = 0;i<this.log.length;i++)
+        var time = (new Date()).getMinutes();
+        if(time !== this.old_minutes)
         {
-            if(this.log[i] < time - 1000)
-                end = i;
-            else
-                break;
+            this.current = 0;
         }
         
-        if(end !== -1)
-        {
-            this.log.splice(0, end);
-        }
-        
-        if(this.log.length === this.limit)
+        if(this.current >= this.limit)
             return;
         
         var req = this.requests[0];
         this.requests.splice(0, 1);
+        this.current++;
+        this.old_minutes = time;
         
-        this.log.push(time);
         req.resolve();
     }
     
