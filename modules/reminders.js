@@ -30,7 +30,7 @@ class RemindersModule extends IModule
         super();
         
         this.name = "Reminders";
-		this.description = "This module adds the possibility to send reminders to people! Cannot be disabled.";
+        this.description = "This module adds the possibility to send reminders to people! Cannot be disabled.";
         this.always_on = true;
         
         var _this = this;
@@ -60,7 +60,22 @@ class RemindersModule extends IModule
         });
         
         this.add_command({
-            match: match = function(message){
+            match: function(message){
+                if(!message.content.startsWith("remove reminder"))
+                    return null;
+                
+                return [parseInt(message.content.substr("remove reminder".length + 1).trim())];
+            },
+            sample: "sempai remove reminder __*id*__",
+            description: "Removes a reminder.",
+            permission: "MANAGE_REMINDERS",
+            global: false,
+            
+            execute: this.handle_remove_reminder
+        });
+        
+        this.add_command({
+            match: function(message){
                 if(!message.content.startsWith("remind"))
                     return null;
                     
@@ -83,26 +98,26 @@ class RemindersModule extends IModule
                 
                 var split = str.split(" ");
                 var name = split[1];
-                var message = "";
+                var msg = "";
                 
                 for(var i = 2;i<split.length;i++)
                 {
-                    if(i == 2 && split[i].toLowerCase() == "to")
+                    if(i === 2 && split[i].toLowerCase() === "to")
                         continue;
                         
-                    if(i == split.length - 1)
+                    if(i === split.length - 1)
                     {
                         if(keywords.indexOf(split[i].toLowerCase()) !== -1)
                             continue;
                     }
                     
-                    if(message.length != 0)
-                        message += " ";
+                    if(msg.length !== 0)
+                        msg += " ";
                         
-                    message += split[i];
+                    msg += split[i];
                 }
                 
-                return [name, message, date.ret];
+                return [name, msg, date.ret];
             },
             sample: "sempai remind __*name*__  to __*reminder message*__  at __*time*__",
             description: "Send yourself (or someone else) a reminder at a specified time! Use \"me\" to refer to yourself. The timezone is set to the timezone of your discord server.",
@@ -150,6 +165,43 @@ class RemindersModule extends IModule
         this.bot.respond(message, responses.get("CLEARED_REMINDERS").format({author: message.author.id, num: num}));
     }
     
+    handle_remove_reminder(message, id)
+    {
+        var cleared = false;
+        var j = 0;
+        for(var i = 0;i<this.reminders.length;i++)
+        {
+            var time = moment();
+            var reminder = this.reminders[i];
+            
+            if(reminder.server !== message.server.id)
+                continue;
+                
+            if(time.valueOf() > reminder.time)
+                continue;
+                
+            if(j++ === id - 1)
+            {
+                this.reminders.splice(i, 1);
+                reminder.delete().catch(function(e){
+                    console.log(e);
+                });
+                
+                cleared = true;
+                break;
+            }
+        }
+        
+        if(cleared)
+        {
+            this.bot.respond(message, responses.get("CLEARED_REMINDER").format({author: message.author.id}));
+        }
+        else
+        {
+            this.bot.respond(message, responses.get("NO_REMINDER").format({author: message.author.id, id: id}));
+        }
+    }
+    
     handle_list_reminders(message)
     {
         var response = "";
@@ -167,15 +219,15 @@ class RemindersModule extends IModule
                 continue;
                 
             var who = "";
-            if (reminder.target.length != 0)
+            if (reminder.target.length !== 0)
             {
                 var w = reminder.target;
-                for (var i = 0; i < w.length; i++)
+                for (var k = 0; k < w.length; k++)
                 {
-                    if (i !== 0)
+                    if (k !== 0)
                         who += ", ";
 
-                    who += "<@" + w[i] + ">";
+                    who += "<@" + w[k] + ">";
                 }
             }
             else
@@ -186,7 +238,7 @@ class RemindersModule extends IModule
             response += "\r\n #" + ((j++) + 1) + ". " + moment(reminder.time).calendar() + ", <@" + reminder.source + "> will remind " + who + ": '" + reminder.message + "'.";
         }
         
-        if(j == 0)
+        if(j === 0)
             return this.bot.respond(message, responses.get("REMINDERS_LIST_EMPTY").format({author: message.author.id}));
             
         return this.bot.respond(message, responses.get("LIST_REMINDERS").format({author: message.author.id, response: response}));
@@ -195,7 +247,7 @@ class RemindersModule extends IModule
     handle_remind(message, name, reminder, parsed)
     {
         var who = false;
-        if (name != "me")
+        if (name !== "me")
         {
             who = name;
         }
@@ -244,12 +296,12 @@ class RemindersModule extends IModule
         
         if (who)
         {
-            var tmp = who.split(',');
+            var tmp = who.split(",");
 
             for (var i = 0; i < tmp.length; i++)
             {
                 var id = Util.parse_id(tmp[i]);
-                if(id.type != "user")
+                if(id.type !== "user")
                 {
                     continue;
                 }
@@ -260,14 +312,14 @@ class RemindersModule extends IModule
                     break;
                 }
                 
-                w.push(id);
+                w.push(id.id);
             }
         }
 
         if(!valid)
             return false;
             
-        var reminder = Reminder.create({source: me, target: w, time: when.valueOf(), message: what, server: server.id})
+        var reminder = Reminder.create({source: me, target: w, time: when.valueOf(), message: what, server: server.id});
         reminder.save().catch(function(err){
             console.log(err);
         });
@@ -279,7 +331,7 @@ class RemindersModule extends IModule
     on_remind(index)
     {
         var reminder = this.reminders[index];
-        if (reminder.target.length != 0)
+        if (reminder.target.length !== 0)
         {
             var w = reminder.target;
             var who = "";
@@ -325,84 +377,18 @@ class RemindersModule extends IModule
         }.bind(this), 1000);
     }
     
-    on_load(server)
+    on_shutdown()
+    {
+        clearInterval(this.remind);
+    }
+    
+    on_load()
     {
     }
     
-    on_unload(server)
+    on_unload()
     {
     }
 }
 
-if(require.main == module)
-{
-    var match = function(message){
-        if(!message.content.startsWith("remind"))
-            return null;
-            
-        var parsed = Time.parse(message.content);
-        if(parsed.length === 0)
-        {
-            message.almost = true;
-            return null;
-        }
-        
-        var date = parsed[parsed.length - 1];
-        if(!date.ret[1].isValid())
-        {
-            message.almost = true;
-            return null;
-        }
-        
-        var str = message.content.substr(0, date.index).trim();
-        var keywords = ["in", "after", "on", "at"];
-        
-        var split = str.split(" ");
-        var name = split[1];
-        var message = "";
-        
-        for(var i = 2;i<split.length;i++)
-        {
-            if(i == 2 && split[i].toLowerCase() == "to")
-                continue;
-                
-            if(i == split.length - 1)
-            {
-                if(keywords.indexOf(split[i].toLowerCase()) !== -1)
-                    continue;
-            }
-            
-            if(message.length != 0)
-                message += " ";
-                
-            message += split[i];
-        }
-        
-        return [name, message, date.ret];
-    };
-    
-    var match_test = function(message){
-        var m = match(message);
-        if(m === null)
-            console.log(message.content + " -> null");
-        else
-        {
-            var msg = message.content + " -> \r\n";
-            msg += "  name: " + m[0] + "\r\n";
-            msg += "  message: " + m[1] + "\r\n";
-            msg += "  date: " + m[2][1].calendar() + "\r\n";
-            
-            console.log(msg);
-        }
-    };
-    
-    match_test({content: "remind me to test on sunday"});
-    match_test({content: "remind me to test at 19:30"});
-    match_test({content: "remind me to dhdfgh after 3 days"});
-    match_test({content: "remind me to dfhgsdfg on 14 april 2018"});
-    match_test({content: "remind me to dfhgsdfg on april 14th 2018"});
-    match_test({content: "remind me dfhgsdfg dfgh gdfh dfgh dfghdfghdf 2 years"});
-    match_test({content: "remind me dsjklfnhbskdj fhgkjs dhfkgjs dhfkjgshd fkgsh dkjfgh kj 5 april 1800"});
-}else{
-    module.exports = new RemindersModule();
-}
+module.exports = new RemindersModule();

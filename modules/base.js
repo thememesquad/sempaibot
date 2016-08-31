@@ -3,9 +3,8 @@
 const responses = require("../src/responses.js");
 const permissions = require("../src/permissions.js");
 const IModule = require("../src/IModule.js");
-const ServerData = require("../src/ServerData.js");
 const users = require("../src/users.js");
-const moment = require('moment-timezone');
+const moment = require("moment-timezone");
 const Util = require("../src/util.js");
 
 class BaseModule extends IModule
@@ -15,7 +14,7 @@ class BaseModule extends IModule
         super();
 
         this.name = "General";
-		this.description = "This is the base module! Cannot be disabled."
+        this.description = "This is the base module! Cannot be disabled.";
         this.always_on = true;
 
         permissions.register("CHANGE_PERSONALITY", "moderator");
@@ -23,17 +22,29 @@ class BaseModule extends IModule
         this.add_command({
             match: function(message){
                 var please = false;
+                var german = false;
                 
-                if(message.content.startsWith("please help me"))
+                if(message.content.startsWith("please help"))
                 {
                     please = true;
                 }
-                else if(!message.content.startsWith("help me"))
+                else if(message.content.startsWith("hilfe"))
                 {
-                    return null;
+                    german = true;
+                }
+                else if(!message.content.startsWith("help"))
+                {
+                    if(message.content.startsWith("please show help"))
+                    {
+                        please = true;
+                    }
+                    else if(!message.content.startsWith("show help"))
+                    {
+                        return null;
+                    }
                 }
                 
-                return [please];
+                return [please, german];
             },
             hide_in_help: true,
             permission: null,
@@ -81,7 +92,12 @@ class BaseModule extends IModule
         
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("what are my permissions"))
+                if(!message.content.startsWith("what are my permissions") &&
+                   !message.content.startsWith("show my permissions") &&
+                   !message.content.startsWith("show my permission list") &&
+                   !message.content.startsWith("show my permissions list") &&
+                   !message.content.startsWith("list my permissions") &&
+                   !message.content.startsWith("show permissions"))
                     return null;
                     
                 return [];
@@ -126,12 +142,14 @@ class BaseModule extends IModule
         
         this.add_command({
             match: function(message){
-                if(!message.content.startsWith("show ignorelist"))
+                if(!message.content.startsWith("show ignore list") &&
+                   !message.content.startsWith("list ignores") &&
+                   !message.content.startsWith("show ignorelist"))
                     return null;
                     
                 return [];
             },
-            sample: "sempai show ignorelist",
+            sample: "sempai show ignore list",
             description: "Shows the list of people I'm currently ignoring!",
             permission: null,
             global: false,
@@ -139,7 +157,7 @@ class BaseModule extends IModule
             execute: this.handle_show_ignorelist
         });
         
-        this.add_command({
+        /*this.add_command({
             match: function(message){
                 if(!message.content.startsWith("list timezones"))
                     return null;
@@ -159,7 +177,7 @@ class BaseModule extends IModule
             global: false,
             
             execute: this.handle_list_timezones
-        });
+        });*/
     }
 
     game_switcher()
@@ -171,8 +189,9 @@ class BaseModule extends IModule
     {
         var server = message.server;
         var tmp = [];
+        var i;
         
-        for(var i = 0;i<server.server.members.length;i++)
+        for(i = 0;i<server.server.members.length;i++)
         {
             var user = users.get_user_by_id(server.server.members[i].id, server);
             if(server.server.members[i].id === this.bot.user.user_id)
@@ -191,7 +210,7 @@ class BaseModule extends IModule
         var columns = {name: "Name", role: "Role"};
         var data = [];
         
-        for(var i = 0;i<tmp.length;i++)
+        for(i = 0;i<tmp.length;i++)
         {
             data.push({name: tmp[i].get_name_detailed(server), role: tmp[i].get_role(server)});
         }
@@ -222,7 +241,7 @@ class BaseModule extends IModule
                 if(!permissions.get_role(role).is_allowed(server, key))
                     continue;
                     
-                if(tmp.length != 0)
+                if(tmp.length !== 0)
                     tmp += " ";
                     
                 tmp += role;
@@ -249,7 +268,7 @@ class BaseModule extends IModule
         
         for(var i = 0;i<message.server.ignorelist.length;i++)
         {
-            if(i != 0)
+            if(i !== 0)
                 response += "\r\n";
                 
             response += users.get_user_by_id(message.server.ignorelist[i], message.server).get_name_detailed(message.server);
@@ -292,7 +311,7 @@ class BaseModule extends IModule
             var tmp = "";
             for(var i = 0;i<module.commands.length;i++)
             {
-                if(module.commands[i].permission != null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
+                if(module.commands[i].permission !== null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
                     continue;
                     
                 if(module.commands[i].hide_in_help === undefined || module.commands[i].hide_in_help === false)
@@ -302,7 +321,7 @@ class BaseModule extends IModule
                     if(message.server !== null && is_private)
                         continue;
                         
-                    if(module.commands[i].global == false && !enabled)
+                    if(module.commands[i].global === false && !enabled)
                         continue;
 
                     hasNonHidden = true;
@@ -380,11 +399,11 @@ class BaseModule extends IModule
     handle_my_role(message)
     {
         var role = message.user.get_role(message.server);
-        if(role == "superadmin")
+        if(role === "superadmin")
             role = "Superadmin";
-        else if(role == "admin")
+        else if(role === "admin")
             role = "Admin";
-        else if(role == "moderator")
+        else if(role === "moderator")
             role = "Moderator";
         else
             role = "Normal";
@@ -402,8 +421,11 @@ class BaseModule extends IModule
         
         for(var key in list)
         {
+            if(key.toUpperCase() === "BLACKLIST_SERVERS" || key.toUpperCase() === "BLACKLIST_USERS")
+                continue;
+            
             var name = key;
-            while(name.length != 20)
+            while(name.length !== 20)
                 name += " ";
                 
             response += "\r\n";
@@ -417,8 +439,9 @@ class BaseModule extends IModule
     
     handle_list_timezones(message, area)
     {
+        var i;
         var timezones = moment.tz.names();
-        for(var i = timezones.length - 1;i>=0;i--)
+        for(i = timezones.length - 1;i>=0;i--)
         {
             var t = timezones[i];
             if(!t.toLowerCase().startsWith(area))
@@ -440,11 +463,11 @@ class BaseModule extends IModule
             abbr += " ";
             
         response += name + abbr + "\r\n";
-        for(var i = 0;i<timezones.length;i++)
+        for(i = 0;i<timezones.length;i++)
         {
             var zone = moment.tz.zone(timezones[i]);
-            var name = zone.name;
-            var abbr = zone.abbrs[0];
+            name = zone.name;
+            abbr = zone.abbrs[0];
             
             while(name.length < 26)
                 name += " ";
@@ -461,8 +484,8 @@ class BaseModule extends IModule
                 tmp.push(response);
                 
                 response = "```";
-                var name = "Name";
-                var abbr = "Abbreviation";
+                name = "Name";
+                abbr = "Abbreviation";
                 
                 while(name.length < 26)
                     name += " ";
@@ -475,7 +498,7 @@ class BaseModule extends IModule
             }
         }
         
-        if(num != 0)
+        if(num !== 0)
         {
             response += "```";
             tmp.push(response);
@@ -483,7 +506,7 @@ class BaseModule extends IModule
         
         tmp[0] = responses.get("TIMEZONE_LIST").format({author: message.author.id, timezones: tmp[0]});
         var send = function(message, tmp, index){
-            if(index == tmp.length)
+            if(index === tmp.length)
                 return;
                 
             this.bot.respond(message, tmp[index]).then(function(){
@@ -500,11 +523,15 @@ class BaseModule extends IModule
         this.game_switcher();
     }
 
-    on_load(server)
+    on_shutdown()
+    {
+    }
+    
+    on_load()
     {
     }
 
-    on_unload(server)
+    on_unload()
     {
     }
 }
