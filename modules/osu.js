@@ -9,6 +9,7 @@ const permissions = require("../src/permissions.js");
 const stats = require("../src/stats.js");
 const IModule = require("../src/IModule.js");
 const Document = require("camo").Document;
+const LoadBalancer = require("../src/loadbalancer.js");
 
 const USER_UPDATE_INTERVAL = 1200000;
 const BEST_UPDATE_INTERVAL = 60000;
@@ -24,6 +25,7 @@ class OsuUser extends Document
         this.pp = Number;
         this.rank = Number;
         this.last_updated = Number;
+        this.last_checked = Number;
         this.servers = [String];
         this.records = [Object];
     }
@@ -53,14 +55,56 @@ class OsuModule extends IModule
         this.pending = [];
         this.servers = {};
         this.default_on = true;
-
+        this.load_balancer = new LoadBalancer(10);
+        
         stats.register("osu_api_calls", 0, true);
         stats.register("osu_num_users", 0);
         
+        permissions.register("OSU_CHANGE_LIMIT", "superadmin");
         permissions.register("OSU_FOLLOW", "moderator");
         permissions.register("OSU_UNFOLLOW", "moderator");
         permissions.register("OSU_CHECK", "moderator");
 
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("set osu limit to"))
+                    return null;
+                
+                var split = message.content.split(" ");
+                if(split.length < 6)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                var limit = parseInt(split[4]);
+                var server = parseInt(split[6]);
+                
+                return [limit, server];
+            },
+            sample: "sempai set osu limit to __*limit*__ for __*server*__",
+            description: "Changes the osu server limit",
+            permission: "OSU_CHANGE_LIMIT",
+            global: true,
+            
+            execute: this.handle_set_limit
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("what is my osu limit"))
+                    return null;
+                
+                return [];
+            },
+            sample: "sempai what is my osu limit?",
+            description: "Displays this servers osu limit",
+            permission: null,
+            global: false,
+            
+            execute: this.handle_show_limit
+        });
+        
         this.add_command({
             match: function(message){
                 var messages = [
@@ -191,6 +235,26 @@ class OsuModule extends IModule
         }.bind(this), 10);
     }
 
+    handle_set_limit(message, limit, serverID)
+    {
+        var server = this.bot.get_server_internal(serverID - 1);
+        if(server === null)
+        {
+            return this.bot.respond(message, responses.get("INVALID_SERVER").format({author: message.author.id, id: serverID}));
+        }
+        
+        var old_limit = server.config.value.osu_limit;
+        server.config.value.osu_limit = limit;
+        server.config.save().catch(function(err){console.log("error saving new config: ", err);});
+        
+        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT_CHANGED").format({author: message.author.id, old_limit: old_limit, new_limit: limit, server_name: server.server.name}));
+    }
+    
+    handle_show_limit(message)
+    {
+        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT").format({author: message.author.id, limit: message.server.config.value.osu_limit}));
+    }
+    
     handle_list_following(message)
     {
         var response = "```";
@@ -212,10 +276,14 @@ class OsuModule extends IModule
             
         while(pp.length < 12)
             pp += " ";
-            
-        response += rank + " " + name + " " + pp + " ";
+        
+        var header = rank + " " + name + " " + pp;
+        response += header;
+        
+        var messages = [];
         
         var num = 0;
+        var currentnum = 0;
         for(var i in users)
         {
             //Check if the server is actually following this player
@@ -239,13 +307,40 @@ class OsuModule extends IModule
             response += "#" + rank + " " + name + " " + pp + " ";
             
             num++;
+            currentnum++;
+            
+            if(response.length >= 1900)
+            {
+                response += "```";
+                messages.push(response);
+                
+                response = "```";
+                response += header;
+                
+                currentnum = 0;
+            }
         }
         response += "```";
+        
+        if(currentnum !== 0)
+        {
+            messages.push(response);
+        }
+        
+        var send = function(messages, message, i){
+            if(i >= messages.length)
+                return;
+            
+            if(i === 0)
+                this.bot.respond(message, responses.get("OSU_FOLLOWING").format({author: message.author.id, results: messages[i]})).then(send.bind(this, messages, message, i + 1));
+            else
+                this.bot.respond(message, messages[i]).then(send.bind(this, messages, message, i + 1));
+        }.bind(this);
         
         if(num === 0)
             this.bot.respond(message, responses.get("OSU_FOLLOW_LIST_EMPTY").format({author: message.author.id}));
         else
-            this.bot.respond(message, responses.get("OSU_FOLLOWING").format({author: message.author.id, results: response}));
+            send(messages, message, 0);
     }
 
     handle_follow(message, name)
@@ -316,15 +411,11 @@ class OsuModule extends IModule
             var time = (new Date).getTime();
             var i;
             
-            if(time - this.last_checked >= BEST_UPDATE_INTERVAL)
+            for (i = 0; i < this.users.length; i++)
             {
-                for (i = 0; i < this.users.length; i++)
-                {
-                    var user = this.users[i];
+                var user = this.users[i];
+                if(time - user.last_checked >= BEST_UPDATE_INTERVAL)
                     this.force_check(user.username, false);
-                }
-
-                this.last_checked = time;
             }
             
             for(i in this.users)
@@ -352,6 +443,7 @@ class OsuModule extends IModule
                     pp: docs[i].pp,
                     rank: docs[i].rank,
                     last_updated: docs[i].last_updated,
+                    last_checked: docs[i].last_checked || Date.now(),
                     servers: docs[i].servers,
                     update_in_progress: null,
                     records: records,
@@ -414,49 +506,51 @@ class OsuModule extends IModule
     
     api_call(method, params, first, num)
     {
-        this.log_call();
-        
-        num = (num === undefined) ? 0 : num;
-        
-        first = (first === undefined) ? true : first;
-        var url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ? config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
-
-        for(var key in params)
-        {
-            url += "&" + key + "=" + params[key];
-        }
-
         var defer = Q.defer();
+        
+        this.load_balancer.create().then(function(method, params, first, num){
+            this.log_call();
 
-        var req = request.get(url, function(error, response, body){
-            if(error !== null)
+            num = (num === undefined) ? 0 : num;
+
+            first = (first === undefined) ? true : first;
+            var url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ? config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
+
+            for(var key in params)
             {
-                return defer.reject(error);
+                url += "&" + key + "=" + params[key];
             }
 
-            try
-            {
-                var data = JSON.parse(body);
-                if(first)
+            var req = request.get(url, function(error, response, body){
+                if(error !== null)
                 {
-                    data = data[0];
+                    return defer.reject(error);
                 }
 
-                return defer.resolve(data);
-            }
-            catch(e)
-            {
-                if(num === 4)
-                    return defer.reject(e);
-                    
-                this.api_call(method, params, first, num + 1).then(function(result){
-                    defer.resolve(result);
-                }).catch(function(err){
-                    defer.reject(err);
-                });
-            }
-        }.bind(this));
-        this.pending.push(req);
+                try
+                {
+                    var data = JSON.parse(body);
+                    if(first)
+                    {
+                        data = data[0];
+                    }
+
+                    return defer.resolve(data);
+                }
+                catch(e)
+                {
+                    if(num === 4)
+                        return defer.reject(e);
+
+                    this.api_call(method, params, first, num + 1).then(function(result){
+                        defer.resolve(result);
+                    }).catch(function(err){
+                        defer.reject(err);
+                    });
+                }
+            }.bind(this));
+            this.pending.push(req);
+        }.bind(this, method, params, first, num));
         
         return defer.promise;
     }
@@ -634,8 +728,8 @@ class OsuModule extends IModule
                 }
             }
             
-            if(updated)
-                OsuUser.findOneAndUpdate({user_id: profile.user_id}, {records: profile.records}, {});
+            profile.last_checked = (new Date()).getTime();
+            OsuUser.findOneAndUpdate({user_id: profile.user_id}, {records: profile.records, last_checked: profile.last_checked}, {});
             
             profile.checking = false;
         }.bind(null, profile)).catch(function(err){
@@ -661,7 +755,7 @@ class OsuModule extends IModule
         }
 
         if(num === message.server.config.value.osu_limit)
-            return this.bot.respond(message, responses.get("OSU_MAX_USER_LIMIT").format({author: message.author.id, user: profile.username}));
+            return this.bot.respond(message, responses.get("OSU_MAX_USER_LIMIT").format({author: message.author.id, limit: message.server.config.value.osu_limit, user: profile.username}));
 
         if(profile !== null)
         {
@@ -685,8 +779,8 @@ class OsuModule extends IModule
                 return;
             }
 
-            var time = (new Date).getTime();
-            var user = {user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_updated: time, records: [], checking: false};
+            var time = Date.now();
+            var user = {user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_checked: time, last_updated: time, records: [], checking: false};
             this.users.push(user);
 
             stats.update("osu_num_users", this.users.length);

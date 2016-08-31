@@ -61,6 +61,21 @@ class RemindersModule extends IModule
         
         this.add_command({
             match: function(message){
+                if(!message.content.startsWith("remove reminder"))
+                    return null;
+                
+                return [parseInt(message.content.substr("remove reminder".length + 1).trim())];
+            },
+            sample: "sempai remove reminder __*id*__",
+            description: "Removes a reminder.",
+            permission: "MANAGE_REMINDERS",
+            global: false,
+            
+            execute: this.handle_remove_reminder
+        });
+        
+        this.add_command({
+            match: function(message){
                 if(!message.content.startsWith("remind"))
                     return null;
                     
@@ -148,6 +163,43 @@ class RemindersModule extends IModule
         }
         
         this.bot.respond(message, responses.get("CLEARED_REMINDERS").format({author: message.author.id, num: num}));
+    }
+    
+    handle_remove_reminder(message, id)
+    {
+        var cleared = false;
+        var j = 0;
+        for(var i = 0;i<this.reminders.length;i++)
+        {
+            var time = moment();
+            var reminder = this.reminders[i];
+            
+            if(reminder.server !== message.server.id)
+                continue;
+                
+            if(time.valueOf() > reminder.time)
+                continue;
+                
+            if(j++ === id - 1)
+            {
+                this.reminders.splice(i, 1);
+                reminder.delete().catch(function(e){
+                    console.log(e);
+                });
+                
+                cleared = true;
+                break;
+            }
+        }
+        
+        if(cleared)
+        {
+            this.bot.respond(message, responses.get("CLEARED_REMINDER").format({author: message.author.id}));
+        }
+        else
+        {
+            this.bot.respond(message, responses.get("NO_REMINDER").format({author: message.author.id, id: id}));
+        }
     }
     
     handle_list_reminders(message)
