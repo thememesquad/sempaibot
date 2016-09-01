@@ -1,13 +1,13 @@
 "use strict";
 
-const responses = require("../src/responses.js");
-const permissions = require("../src/permissions.js");
-const IModule = require("../src/IModule.js");
-const users = require("../src/users.js");
+const responses = require("../responses.js");
+const permissions = require("../permissions.js");
+const ModuleBase = require("../modulebase.js");
+const users = require("../users.js");
+const Util = require("../util.js");
 const moment = require("moment-timezone");
-const Util = require("../src/util.js");
 
-class BaseModule extends IModule
+class BaseModule extends ModuleBase
 {
     constructor()
     {
@@ -241,7 +241,7 @@ class BaseModule extends IModule
                 if(!permissions.get_role(role).is_allowed(server, key))
                     continue;
                     
-                if(tmp.length != 0)
+                if(tmp.length !== 0)
                     tmp += " ";
                     
                 tmp += role;
@@ -268,7 +268,7 @@ class BaseModule extends IModule
         
         for(var i = 0;i<message.server.ignorelist.length;i++)
         {
-            if(i != 0)
+            if(i !== 0)
                 response += "\r\n";
                 
             response += users.get_user_by_id(message.server.ignorelist[i], message.server).get_name_detailed(message.server);
@@ -311,7 +311,7 @@ class BaseModule extends IModule
             var tmp = "";
             for(var i = 0;i<module.commands.length;i++)
             {
-                if(module.commands[i].permission != null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
+                if(module.commands[i].permission !== null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
                     continue;
                     
                 if(module.commands[i].hide_in_help === undefined || module.commands[i].hide_in_help === false)
@@ -321,7 +321,7 @@ class BaseModule extends IModule
                     if(message.server !== null && is_private)
                         continue;
                         
-                    if(module.commands[i].global == false && !enabled)
+                    if(module.commands[i].global === false && !enabled)
                         continue;
 
                     hasNonHidden = true;
@@ -399,11 +399,11 @@ class BaseModule extends IModule
     handle_my_role(message)
     {
         var role = message.user.get_role(message.server);
-        if(role == "superadmin")
+        if(role === "superadmin")
             role = "Superadmin";
-        else if(role == "admin")
+        else if(role === "admin")
             role = "Admin";
-        else if(role == "moderator")
+        else if(role === "moderator")
             role = "Moderator";
         else
             role = "Normal";
@@ -425,7 +425,7 @@ class BaseModule extends IModule
                 continue;
             
             var name = key;
-            while(name.length != 20)
+            while(name.length !== 20)
                 name += " ";
                 
             response += "\r\n";
@@ -498,7 +498,7 @@ class BaseModule extends IModule
             }
         }
         
-        if(num != 0)
+        if(num !== 0)
         {
             response += "```";
             tmp.push(response);
@@ -506,7 +506,7 @@ class BaseModule extends IModule
         
         tmp[0] = responses.get("TIMEZONE_LIST").format({author: message.author.id, timezones: tmp[0]});
         var send = function(message, tmp, index){
-            if(index == tmp.length)
+            if(index === tmp.length)
                 return;
                 
             this.bot.respond(message, tmp[index]).then(function(){
@@ -523,6 +523,10 @@ class BaseModule extends IModule
         this.game_switcher();
     }
 
+    on_shutdown()
+    {
+    }
+    
     on_load()
     {
     }

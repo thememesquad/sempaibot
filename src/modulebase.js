@@ -2,7 +2,7 @@
 const permissions = require("./permissions.js");
 const responses = require("./responses.js");
 
-class IModule
+class ModuleBase
 {
     constructor()
     {
@@ -19,6 +19,7 @@ class IModule
 
     check_message(server, message)
     {
+        var best = null;
         for(var i = 0;i<this.commands.length;i++)
         {
             var command = this.commands[i];
@@ -43,6 +44,7 @@ class IModule
                 continue;
             }
 
+            message.almost = undefined;
             var ret = command.match(message);
             if(ret === null && message.almost === undefined)
             {
@@ -50,8 +52,11 @@ class IModule
             }
             else if(message.almost === true)
             {
-                this.bot.respond(message, responses.get("INCORRECT_FORMAT").format({author: message.author.id, sample: command.sample}));
-                return true;
+                if(command.sample === undefined)
+                    continue;
+                
+                best = command.sample;
+                continue;
             }
             
             data = [message].concat(ret);
@@ -66,8 +71,8 @@ class IModule
             return true;
         }
 
-        return false;
+        return best || false;
     }
 }
 
-module.exports = IModule;
+module.exports = ModuleBase;

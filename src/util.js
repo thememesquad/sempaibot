@@ -42,7 +42,7 @@ class Util
         if(base_message === null || base_message === undefined)
             return [];
             
-        if(data === null || data === undefined || data.length == 0)
+        if(data === null || data === undefined || data.length === 0)
             return [];
             
         var key, i;
@@ -87,7 +87,7 @@ class Util
             for(key in columns)
             {
                 var val = columns[key];
-                while(val.length != lengths[key])
+                while(val.length !== lengths[key])
                     val += " ";
                     
                 message += val;
@@ -102,7 +102,7 @@ class Util
             for(key in columns)
             {
                 var val = data[index][key];
-                while(val.length != lengths[key])
+                while(val.length !== lengths[key])
                     val += " ";
                     
                 tmp += val;
@@ -117,7 +117,7 @@ class Util
         var messages = [];
         for(i = 0;i<data.length;i++)
         {
-            if(message.length == 0)
+            if(message.length === 0)
             {
                 message = "```";
                 write_headers();
@@ -133,7 +133,7 @@ class Util
             }
         }
         
-        if(message.length != 0)
+        if(message.length !== 0)
         {
             message += "```";
             messages.push(message);

@@ -1,12 +1,13 @@
 "use strict";
 
-const IModule = require("../src/IModule.js");
-const permissions = require("../src/permissions.js");
-const responses = require("../src/responses.js");
-const users = require("../src/users.js");
-const Util = require("../src/util.js");
+const ModuleBase = require("../modulebase.js");
+const permissions = require("../permissions.js");
+const responses = require("../responses.js");
+const users = require("../users.js");
+const Util = require("../util.js");
+const stats = require("../stats.js");
 
-class AdminModule extends IModule
+class AdminModule extends ModuleBase
 {
     constructor()
     {
@@ -16,9 +17,7 @@ class AdminModule extends IModule
         this.description = "This is the permissions and roles module! Cannot be disabled.";
         this.always_on = true;
 
-        permissions.register("BLACKLIST_SERVERS", "superadmin");
-        permissions.register("BLACKLIST_USERS", "superadmin");
-        permissions.register("SHOW_STATISTICS", "superadmin");
+        permissions.register("SUPERADMIN", "superadmin");
         permissions.register("IGNORE_USERS", "moderator");
         permissions.register("GO_TO_CHANNEL", "moderator");
         permissions.register("MANAGE_MODULES", "admin");
@@ -34,10 +33,143 @@ class AdminModule extends IModule
             },
             sample: "sempai show statistics",
             description: "Shows statistics for sempai server-wide.",
-            permission: "SHOW_STATISTICS",
+            permission: "SUPERADMIN",
             global: true,
             
             execute: this.handle_show_statistics
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("list servers"))
+                    return null;
+                
+                return [];
+            },
+            sample: "sempai list servers",
+            description: "Lists all the servers sempai is currently running on.",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_list_servers
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("blacklist server"))
+                    return null;
+                
+                return [parseInt(message.content.split(" ")[2])];
+            },
+            sample: "sempai blacklist server __*server*__",
+            description: "Blacklists a server.",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_blacklist_server
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("whitelist server"))
+                    return null;
+                
+                return [parseInt(message.content.split(" ")[2])];
+            },
+            sample: "sempai whitelist server __*server*__",
+            description: "Whitelists a server.",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_whitelist_server
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("blacklist user"))
+                    return null;
+                
+                var mod = message.content.substr("blacklist user".length + 1).trim();
+                if(mod.length === 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                var user = Util.parse_id(mod);
+                if(user.type !== "user")
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [user.id];
+            },
+            sample: "sempai blacklist user __*@user*__",
+            description: "Blacklists an user.",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_blacklist_user
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("whitelist user"))
+                    return null;
+                
+                var mod = message.content.substr("blacklist user".length + 1).trim();
+                if(mod.length === 0)
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                var user = Util.parse_id(mod);
+                if(user.type !== "user")
+                {
+                    message.almost = true;
+                    return null;
+                }
+                
+                return [user.id];
+            },
+            sample: "sempai whitelist user __*@user*__",
+            description: "Whitelists an user.",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_whitelist_user
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("show user blacklist"))
+                    return null;
+                
+                return [];
+            },
+            sample: "sempai show user blacklist",
+            description: "Displays the user blacklist",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_show_user_blacklist
+        });
+        
+        this.add_command({
+            match: function(message){
+                if(!message.content.startsWith("show server blacklist"))
+                    return null;
+                
+                return [];
+            },
+            sample: "sempai show server blacklist",
+            description: "Displays the server blacklist",
+            permission: "SUPERADMIN",
+            global: true,
+            
+            execute: this.handle_show_server_blacklist
         });
         
         this.add_command({
@@ -126,7 +258,7 @@ class AdminModule extends IModule
                 var role = split[idx1];
                 var user = Util.parse_id(split[idx2]);
                 
-                if(user.type != "user")
+                if(user.type !== "user")
                 {
                     message.almost = true;
                     return null;
@@ -257,14 +389,14 @@ class AdminModule extends IModule
                     return null;
                     
                 var mod = message.content.substr("ignore".length + 1).trim();
-                if(mod.length == 0)
+                if(mod.length === 0)
                 {
                     message.almost = true;
                     return null;
                 }
                 
                 var user = Util.parse_id(mod);
-                if(user.type != "user")
+                if(user.type !== "user")
                 {
                     message.almost = true;
                     return null;
@@ -286,14 +418,14 @@ class AdminModule extends IModule
                     return null;
                     
                 var mod = (message.content.startsWith("unignore")) ? message.content.substr("unignore".length + 1).trim() : message.content.substr("stop ignoring".length + 1).trim();
-                if(mod.length == 0)
+                if(mod.length === 0)
                 {
                     message.almost = true;
                     return null;
                 }
                 
                 var user = Util.parse_id(mod);
-                if(user.type != "user")
+                if(user.type !== "user")
                 {
                     message.almost = true;
                     return null;
@@ -339,37 +471,235 @@ class AdminModule extends IModule
         });
     }
 
+    handle_blacklist_server(message, serverID)
+    {
+        var server = this.bot.get_server_internal(serverID - 1);
+        
+        if(server === null)
+        {
+            return this.bot.respond(message, responses.get("INVALID_SERVER").format({author: message.author.id, id: serverID}));
+        }
+        
+        if(this.bot.is_server_blacklisted(server.id))
+            return this.bot.respond(message, responses.get("SERVER_ALREADY_BLACKLISTED").format({author: message.author.id, server_name: server.server.name}));
+        
+        this.bot.blacklist_server(server.id);
+        this.bot.respond(message, responses.get("SERVER_BLACKLISTED").format({author: message.author.id, server_name: server.server.name}));
+    }
+    
+    handle_whitelist_server(message, serverID)
+    {
+        var server = this.bot.get_server_internal(serverID - 1);
+        
+        if(server === null)
+        {
+            return this.bot.respond(message, responses.get("INVALID_SERVER").format({author: message.author.id, id: serverID}));
+        }
+        
+        if(!this.bot.is_server_blacklisted(server.id))
+            return this.bot.respond(message, responses.get("SERVER_NOT_BLACKLISTED").format({author: message.author.id, server_name: server.server.name}));
+        
+        this.bot.whitelist_server(server.id);
+        this.bot.respond(message, responses.get("SERVER_WHITELISTED").format({author: message.author.id, server_name: server.server.name}));
+    }
+    
+    handle_blacklist_user(message, user_id)
+    {
+        var user = this.get_user(user_id, message.server);
+        if(user === null)
+        {
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
+        }
+        
+        this.bot.blacklist_user(user);
+        return this.bot.respond(message, responses.get("BLACKLISTED_USER").format({author: message.author.id, user: user.user_id}));
+    }
+    
+    handle_whitelist_user(message, user_id)
+    {
+        var user = this.get_user(user_id, message.server);
+        if(user === null)
+        {
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
+        }
+        
+        this.bot.whitelist_user(user);
+        return this.bot.respond(message, responses.get("WHITELISTED_USER").format({author: message.author.id, user: user.user_id}));
+    }
+    
+    handle_show_user_blacklist(message)
+    {
+        var id = "ID";
+        var name = "Name";
+        
+        while(id.length < 25)
+            id += " ";
+        
+        while(name.length < 30)
+            name += " ";
+        
+        var response = "```";
+        response += id + " " + name;
+        
+        var num = 0;
+        for(var key in users.users)
+        {
+            if(!this.bot.is_user_blacklisted(users.users[key]))
+                continue;
+            
+            id = "" + users.users[key].user_id;
+            name = users.users[key].name;
+            
+            while(id.length < 25)
+                id += " ";
+
+            while(name.length < 30)
+                name += " ";
+            
+            response += "\r\n";
+            response += id + " " + name;
+            num++;
+        }
+        
+        if(num === 0)
+        {
+            response += "\r\n";
+            response += "User blacklist is empty.";
+        }
+        
+        response += "```";
+        
+        this.bot.respond(message, responses.get("USER_BLACKLIST").format({author: message.author.id, response: response}));
+    }
+    
+    handle_show_server_blacklist(message)
+    {
+        var id = "ID";
+        var name = "Name";
+        var owner = "Owner";
+        
+        while(id.length < 10)
+            id += " ";
+        
+        while(name.length < 20)
+            name += " ";
+        
+        while(owner.length < 20)
+            owner += " ";
+        
+        var response = "```";
+        response += id + " " + name + " " + owner;
+        
+        var num = 0;
+        for(var i = 0;i<this.bot.servers_internal.length;i++)
+        {
+            if(!this.bot.is_server_blacklisted(this.bot.servers_internal[i].id))
+                continue;
+            
+            id = "#" + (i + 1) + ".";
+            name = this.bot.servers_internal[i].server.name;
+            owner = this.bot.servers_internal[i].server.owner.name;
+            
+            while(id.length < 10)
+                id += " ";
+
+            while(name.length < 20)
+                name += " ";
+
+            while(owner.length < 20)
+                owner += " ";
+            
+            response += "\r\n";
+            response += id + " " + name + " " + owner;
+            num++;
+        }
+        
+        if(num === 0)
+        {
+            response += "\r\n";
+            response += "Server blacklist is empty.";
+        }
+        response += "```";
+        
+        this.bot.respond(message, responses.get("SERVER_BLACKLIST").format({author: message.author.id, response: response}));
+    }
+    
     handle_show_statistics(message)
     {
-        var osu_module = this.bot.get_module("osu!");
-        
-        var num_running = 0;
-        var num_osu_api = 0;
-        var num_osu_api_last = osu_module.stats.average.length === 0 ? osu_module.stats.last : osu_module.stats.average[osu_module.stats.average.length - 1];
-        var num_osu = osu_module.users.length;
-        
-        for(var i = 0;i<osu_module.stats.average.length;i++)
-        {
-            num_osu_api += osu_module.stats.average[i];
-        }
-        
-        if(osu_module.stats.average.length > 0)
-            num_osu_api /= osu_module.stats.average.length;
-        
-        for(var key in this.bot.servers)
-        {
-            num_running++;
-        }
-        
         var msg = responses.get("SHOW_STATISTICS").format({
             author: message.author.id,
-            num_running: num_running,
-            num_osu_api: num_osu_api,
-            num_osu_api_last: num_osu_api_last,
-            num_osu: num_osu
+            num_servers: stats.get_value("num_servers"),
+            osu_num_users: stats.get_value("osu_num_users"),
+            osu_last_minute: stats.get_value("osu_api_calls"),
+            osu_average_day: stats.get_average_day_value("osu_api_calls"),
+            osu_average_week: stats.get_average_week_value("osu_api_calls"),
+            osu_average_month: stats.get_average_month_value("osu_api_calls"),
+            osu_highest_day: stats.get_highest_day_value("osu_api_calls"),
+            osu_highest_week: stats.get_highest_week_value("osu_api_calls"),
+            osu_highest_month: stats.get_highest_month_value("osu_api_calls"),
+            osu_last_day: stats.get_day_value("osu_api_calls"),
+            osu_last_week: stats.get_week_value("osu_api_calls"),
+            osu_last_month: stats.get_month_value("osu_api_calls"),
+            osu_alltime: stats.get_alltime_value("osu_api_calls"),
+            osu_api_queue: this.bot.get_module("osu!").load_balancer.numRequests
         });
         
         this.bot.respond(message, msg);
+    }
+    
+    handle_list_servers(message)
+    {
+        var id = "ID";
+        var name = "Name";
+        var owner = "Owner";
+        var limit = "Limit";
+        
+        while(id.length < 10)
+            id += " ";
+        
+        while(name.length < 25)
+            name += " ";
+        
+        while(owner.length < 25)
+            owner += " ";
+        
+        while(limit.length < 10)
+            limit += " ";
+        
+        var response = "```";
+        response += id + " " + name + " " + owner + " " + limit;
+        
+        var i;
+        for(i = 0;i<this.bot.servers_internal.length;i++)
+        {
+            if(this.bot.is_server_blacklisted(this.bot.servers_internal[i].id))
+            {
+                continue;
+            }
+            
+            id = "#" + (i + 1) + ".";
+            name = this.bot.servers_internal[i].server.name;
+            owner = this.bot.servers_internal[i].server.owner.name;
+            limit = "" + this.bot.servers_internal[i].config.value.osu_limit;
+            
+            while(id.length < 10)
+                id += " ";
+            
+            while(name.length < 25)
+                name += " ";
+            
+            while(owner.length < 25)
+                owner += " ";
+
+            while(limit.length < 10)
+                limit += " ";
+            
+            response += "\r\n";
+            response += id + " " + name + " " + owner + ((limit.length > 0) ? " " + limit : "");
+        }
+        response += "```";
+        
+        this.bot.respond(message, responses.get("LIST_SERVERS").format({author: message.author.id, results: response}));
     }
     
     handle_enable_module(message, name)
@@ -618,6 +948,10 @@ class AdminModule extends IModule
         this.bot = bot;
     }
 
+    on_shutdown()
+    {
+    }
+    
     on_load()
     {
     }
