@@ -11,7 +11,7 @@ function parse_timestring_internal(str)
     var day_func = function(target, day){
         var current = currentDate.day();
         
-        if(current == target)
+        if(current === target)
             return null;
             
         var num = 0;
@@ -122,7 +122,7 @@ function parse_timestring_internal(str)
                     }
 
                     name = "" + num;
-                    if(num == 1)
+                    if(num === 1)
                         name += " hour";
                     else
                         name += " hours";

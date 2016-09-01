@@ -3,13 +3,14 @@
 const request = require("request");
 const Q = require("q");
 const lodash = require("lodash");
-const config = require("../config");
-const responses = require("../src/responses.js");
-const permissions = require("../src/permissions.js");
-const stats = require("../src/stats.js");
-const IModule = require("../src/IModule.js");
 const Document = require("camo").Document;
-const LoadBalancer = require("../src/loadbalancer.js");
+
+const config = require("../../config.js");
+const responses = require("../responses.js");
+const permissions = require("../permissions.js");
+const stats = require("../stats.js");
+const ModuleBase = require("../modulebase.js");
+const LoadBalancer = require("../loadbalancer.js");
 
 const USER_UPDATE_INTERVAL = 1200000;
 const BEST_UPDATE_INTERVAL = 60000;
@@ -31,7 +32,7 @@ class OsuUser extends Document
     }
 }
 
-class OsuModule extends IModule
+class OsuModule extends ModuleBase
 {
     constructor()
     {
@@ -472,7 +473,7 @@ class OsuModule extends IModule
         
         for(var i = 0;i<this.pending.length;i++)
         {
-            this.pending[i].abort();
+            this.load_balancer.cancel(this.pending[i]);
         }
     }
     
@@ -507,50 +508,45 @@ class OsuModule extends IModule
     api_call(method, params, first, num)
     {
         var defer = Q.defer();
-        
-        this.load_balancer.create().then(function(method, params, first, num){
-            this.log_call();
 
-            num = (num === undefined) ? 0 : num;
+        num = (num === undefined) ? 0 : num;
 
-            first = (first === undefined) ? true : first;
-            var url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ? config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
+        first = (first === undefined) ? true : first;
+        var url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ? config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
 
-            for(var key in params)
+        for(var key in params)
+        {
+            url += "&" + key + "=" + params[key];
+        }
+            
+        this.pending.push(this.load_balancer.create(url).then(function(obj){
+            var response = obj.response;
+            var body = obj.body;
+            
+            try
             {
-                url += "&" + key + "=" + params[key];
+                var data = JSON.parse(body);
+                if(first)
+                {
+                    data = data[0];
+                }
+
+                return defer.resolve(data);
             }
+            catch(e)
+            {
+                if(num === 4)
+                    return defer.reject(e);
 
-            var req = request.get(url, function(error, response, body){
-                if(error !== null)
-                {
-                    return defer.reject(error);
-                }
-
-                try
-                {
-                    var data = JSON.parse(body);
-                    if(first)
-                    {
-                        data = data[0];
-                    }
-
-                    return defer.resolve(data);
-                }
-                catch(e)
-                {
-                    if(num === 4)
-                        return defer.reject(e);
-
-                    this.api_call(method, params, first, num + 1).then(function(result){
-                        defer.resolve(result);
-                    }).catch(function(err){
-                        defer.reject(err);
-                    });
-                }
-            }.bind(this));
-            this.pending.push(req);
-        }.bind(this, method, params, first, num));
+                this.api_call(method, params, first, num + 1).then(function(result){
+                    defer.resolve(result);
+                }).catch(function(err){
+                    defer.reject(err);
+                });
+            }
+        }.bind(this)).catch(function(err){
+            defer.reject(err);
+        }));
         
         return defer.promise;
     }
@@ -603,8 +599,6 @@ class OsuModule extends IModule
         var _this = this;
         var topRank;
         this.get_user_best(username, 0, 50).then(function(profile, json){
-            var updated = false;
-            
             for (var j = 0; j < json.length; j++)
             {
                 var beatmap = json[j];
@@ -632,7 +626,8 @@ class OsuModule extends IModule
                 for(i = 0;i<16;i++)
                 {
                     if((beatmap.enabled_mods & (1 << i)) > 0)
-                        beatmap.mods += ((beatmap.mods.length !== 0) ? "" : "+") + _this.modsList[i];
+                        if(i !== 6 || ((beatmap.enabled_mods & (1 << 9)) === 0))
+                            beatmap.mods += ((beatmap.mods.length !== 0) ? "" : "+") + _this.modsList[i];
                 }
 
                 var skip = false;
@@ -654,7 +649,6 @@ class OsuModule extends IModule
                 
                 if (!skip)
                 {
-                    updated = true;
                     topRank = j + 1;
 
                     if(index === -1)
@@ -733,7 +727,7 @@ class OsuModule extends IModule
             
             profile.checking = false;
         }.bind(null, profile)).catch(function(err){
-            console.log("get_user_best: ", err);
+            console.log("get_user_best: ", err, err.stack);
         });
     }
 

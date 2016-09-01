@@ -4,18 +4,18 @@ const process = require("process");
 process.env.TZ = "Europe/Amsterdam";
 
 const Discord = require("discord.js");
-const ServerData = require("./src/ServerData.js");
+const ServerData = require("./serverdata.js");
 
 const modules = require("auto-loader").load(__dirname + "/modules");
-const responses = require("./src/responses.js");
-const db = require("./src/db.js");
-const config = require("./config.js");
-const users = require("./src/users.js");
-const permissions = require("./src/permissions.js");
+const responses = require("./responses.js");
+const db = require("./db.js");
+const config = require("../config.js");
+const users = require("./users.js");
+const permissions = require("./permissions.js");
 const Q = require("q");
 const Document = require("camo").Document;
 const changelog = require("./changelog.js");
-const stats = require("./src/stats.js");
+const stats = require("./stats.js");
 
 class ChangelogDB extends Document
 {
@@ -35,7 +35,7 @@ String.prototype.format = function(args) {
 
 class Bot
 {
-    constructor()
+    constructor(allow_log)
     {
         this.discord = new Discord.Client({
             autoReconnect: true
@@ -49,6 +49,7 @@ class Bot
         this.connected = false;
         this.queue = [];
         this.ready = false;
+        this.allow_log = (allow_log === undefined) ? true : allow_log;
 
         this.discord.on("message", this.handle_message.bind(this));
         this.discord.on("ready", this.on_ready.bind(this));
@@ -62,9 +63,21 @@ class Bot
         }.bind(this));
     }
 
+    log()
+    {
+        if(!this.allow_log) return;
+        console.log.apply(console.log, arguments);
+    }
+    
+    write()
+    {
+        if(!this.allow_log) return;
+        process.stdout.write.apply(process.stdout, arguments);
+    }
+    
     shutdown()
     {
-        console.log("Received SIGTERM, shutting down....");
+        this.log("Received SIGTERM, shutting down....");
         this.discord.destroy();
         
         for(var key in this.modules)
@@ -86,8 +99,8 @@ class Bot
                 return console.error("Discord login error: " + error);
             }
             
-            console.log("Logged in with token '" + token + "'.");
-        });
+            this.log("Logged in with token '" + token + "'.");
+        }.bind(this));
     }
 
     set_status(status, game)
@@ -257,16 +270,16 @@ class Bot
             message += ".";
             
         if(newline)
-            console.log(message);
+            this.log(message);
         else
-            process.stdout.write(message);
+            this.write(message);
     }
     
     on_ready()
     {
         this.connected = true;
         
-        console.log("Connected to discord.");
+        this.log("Connected to discord.");
         
         if(this.connected_once)
         {
@@ -281,11 +294,11 @@ class Bot
            
         this.connected_once = true;
         
-        db.load().then(function(){
+        db.load(this).then(function(){
             this.print("Loading config from DB", 70, false);
             return db.ConfigKeyValue.find({});
         }.bind(this)).then(function(docs){
-            console.log("....Ok");
+            this.log("....Ok");
             for(var i = 0;i<docs.length;i++)
             {
                 if(docs[i].key === "mode")
@@ -322,17 +335,17 @@ class Bot
             this.print("Loading users from DB", 70, false);
             return users.load();
         }.bind(this)).then(function(){
-            console.log("....Ok");
+            this.log("....Ok");
             this.print("Loading permissions from DB", 70, false);
             return permissions.load();
         }.bind(this)).then(function(){
-            console.log("....Ok");
+            this.log("....Ok");
             for(var key in modules)
             {
                 var mod = modules[key];
                 if(mod.on_setup === undefined)
                 {
-                    console.log("Error: Module '" + key + "' is not setup correctly. missing function: on_setup");
+                    this.log("Error: Module '" + key + "' is not setup correctly. missing function: on_setup");
                     continue;
                 }
 
@@ -340,12 +353,12 @@ class Bot
                 try
                 {
                     mod.on_setup(this);
-                    console.log("....Ok");
+                    this.log("....Ok");
                 }
                 catch(e)
                 {
-                    console.log("Error:");
-                    console.log(e.stack);
+                    this.log("Error:");
+                    this.log(e.stack);
                 }
 
                 this.modules[mod.name] = mod;
@@ -362,7 +375,7 @@ class Bot
                     return ChangelogDB.create({version: changelog.version}).save().then(function(){
                         defer.resolve(-1);
                     }).catch(function(err){
-                        console.log(err);
+                        this.log(err);
                     });
                 }
                 
@@ -373,7 +386,7 @@ class Bot
                     return doc.save().then(function(){
                         defer.resolve(old);
                     }).catch(function(err){
-                        console.log(err);
+                        this.log(err);
                     });
                 }
                 
@@ -384,7 +397,7 @@ class Bot
             
             return defer.promise;
         }.bind(this)).then(function(changelog_version){
-            console.log("....Ok");
+            this.log("....Ok");
             this.print("Loading stats", 70, false);
             
             var defer = Q.defer();
@@ -397,7 +410,7 @@ class Bot
             
             return defer.promise;
         }.bind(this)).then(function(changelog_version){
-            console.log("....Ok");
+            this.log("....Ok");
             stats.register("num_servers", this.discord.servers.length);
             
             for(var i = 0;i<this.discord.servers.length;i++)
@@ -434,8 +447,8 @@ class Bot
             
             this.ready = true;
         }.bind(this)).catch(function(err){
-            console.log(err.stack);
-        });
+            this.log(err.stack);
+        }.bind(this));
     }
 
     on_server_created(server)
@@ -443,7 +456,7 @@ class Bot
         if(!this.connected || !this.ready)
             return;
             
-        console.log("Joined server '" + server.name + "'.");
+        this.log("Joined server '" + server.name + "'.");
         
         stats.update("num_servers", this.discord.servers.length);
         
@@ -458,8 +471,8 @@ class Bot
                     this.servers[server.id].enable_module(key);
             }
         }.bind(this, server)).catch(function(err){
-            console.log(err);
-        });
+            this.log(err);
+        }.bind(this));
         this.servers_internal.push(this.servers[server.id]);
     }
     
@@ -468,7 +481,7 @@ class Bot
         if(!this.connected || !this.ready)
             return;
             
-        console.log("Left server '" + server.name + "'.");
+        this.log("Left server '" + server.name + "'.");
         
         stats.update("num_servers", this.discord.servers.length);
         
@@ -480,12 +493,12 @@ class Bot
     {
         this.connected = false;
         
-        console.log("Disconnected from discord.");
+        this.log("Disconnected from discord.");
     }
     
     on_error(err)
     {
-        console.log("Discord error: " + err);
+        this.log("Discord error: " + err);
     }
     
     handle_message(message)
@@ -580,8 +593,8 @@ class Bot
     {
         this.user_blacklist.value.blacklist.push(user.user_id);
         this.user_blacklist.save().catch(function(err){
-            console.log(err);
-        });
+            this.log(err);
+        }.bind(this));
     }
     
     blacklist_server(server_id)
@@ -589,8 +602,8 @@ class Bot
         this.message(responses.get("INFORM_SERVER_BLACKLISTED"), this.servers[server_id]);
         this.server_blacklist.value.blacklist.push(server_id);
         this.server_blacklist.save().catch(function(err){
-            console.log(err);
-        });
+            this.log(err);
+        }.bind(this));
     }
     
     whitelist_user(user)
@@ -601,8 +614,8 @@ class Bot
         
         this.user_blacklist.value.blacklist.splice(idx, 1);
         this.user_blacklist.save().catch(function(err){
-            console.log(err);
-        });
+            this.log(err);
+        }.bind(this));
         
         return true;
     }
@@ -615,8 +628,8 @@ class Bot
         
         this.server_blacklist.value.blacklist.splice(idx, 1);
         this.server_blacklist.save().catch(function(err){
-            console.log(err);
-        });
+            this.log(err);
+        }.bind(this));
         
         this.message(responses.get("INFORM_SERVER_WHITELISTED"), this.servers[server_id]);
         return true;
@@ -655,5 +668,12 @@ class Bot
     }
 }
 
-var bot = new Bot();
-bot.login();
+if(require.main === module)
+{
+    var bot = new Bot();
+    bot.login();
+}
+else
+{
+    module.exports = Bot;
+}
