@@ -473,7 +473,7 @@ class OsuModule extends ModuleBase
         
         for(var i = 0;i<this.pending.length;i++)
         {
-            this.pending[i].abort();
+            this.load_balancer.cancel(this.pending[i]);
         }
     }
     
@@ -508,50 +508,45 @@ class OsuModule extends ModuleBase
     api_call(method, params, first, num)
     {
         var defer = Q.defer();
-        
-        this.load_balancer.create().then(function(method, params, first, num){
-            this.log_call();
 
-            num = (num === undefined) ? 0 : num;
+        num = (num === undefined) ? 0 : num;
 
-            first = (first === undefined) ? true : first;
-            var url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ? config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
+        first = (first === undefined) ? true : first;
+        var url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ? config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
 
-            for(var key in params)
+        for(var key in params)
+        {
+            url += "&" + key + "=" + params[key];
+        }
+            
+        this.pending.push(this.load_balancer.create(url).then(function(obj){
+            var response = obj.response;
+            var body = obj.body;
+            
+            try
             {
-                url += "&" + key + "=" + params[key];
+                var data = JSON.parse(body);
+                if(first)
+                {
+                    data = data[0];
+                }
+
+                return defer.resolve(data);
             }
+            catch(e)
+            {
+                if(num === 4)
+                    return defer.reject(e);
 
-            var req = request.get(url, function(error, response, body){
-                if(error !== null)
-                {
-                    return defer.reject(error);
-                }
-
-                try
-                {
-                    var data = JSON.parse(body);
-                    if(first)
-                    {
-                        data = data[0];
-                    }
-
-                    return defer.resolve(data);
-                }
-                catch(e)
-                {
-                    if(num === 4)
-                        return defer.reject(e);
-
-                    this.api_call(method, params, first, num + 1).then(function(result){
-                        defer.resolve(result);
-                    }).catch(function(err){
-                        defer.reject(err);
-                    });
-                }
-            }.bind(this));
-            this.pending.push(req);
-        }.bind(this, method, params, first, num));
+                this.api_call(method, params, first, num + 1).then(function(result){
+                    defer.resolve(result);
+                }).catch(function(err){
+                    defer.reject(err);
+                });
+            }
+        }.bind(this)).catch(function(err){
+            defer.reject(err);
+        }));
         
         return defer.promise;
     }
@@ -732,7 +727,7 @@ class OsuModule extends ModuleBase
             
             profile.checking = false;
         }.bind(null, profile)).catch(function(err){
-            console.log("get_user_best: ", err);
+            console.log("get_user_best: ", err, err.stack);
         });
     }
 

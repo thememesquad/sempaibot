@@ -640,7 +640,8 @@ class AdminModule extends ModuleBase
             osu_last_day: stats.get_day_value("osu_api_calls"),
             osu_last_week: stats.get_week_value("osu_api_calls"),
             osu_last_month: stats.get_month_value("osu_api_calls"),
-            osu_alltime: stats.get_alltime_value("osu_api_calls")
+            osu_alltime: stats.get_alltime_value("osu_api_calls"),
+            osu_api_queue: this.bot.get_module("osu!").load_balancer.numRequests
         });
         
         this.bot.respond(message, msg);

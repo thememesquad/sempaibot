@@ -100,7 +100,9 @@ class ServerData
                 this.bot.message(responses.get("CHANNEL_DELETED"), this);
                 this.channel = "";
             }
-        }else{
+        }
+        else
+        {
             users.assign_role(this.server.owner.id, this.server, "admin");
             this.bot.message(responses.get("SETTING_UP"), this);
         }
