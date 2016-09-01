@@ -520,6 +520,8 @@ class OsuModule extends ModuleBase
         }
             
         this.pending.push(this.load_balancer.create(url).then(function(obj){
+            this.log_call();
+            
             var response = obj.response;
             var body = obj.body;
             
