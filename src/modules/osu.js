@@ -11,9 +11,12 @@ const permissions = require("../permissions.js");
 const stats = require("../stats.js");
 const ModuleBase = require("../modulebase.js");
 const LoadBalancer = require("../loadbalancer.js");
+const util = require("../util.js");
+const moment = require("moment-timezone");
 
 const USER_UPDATE_INTERVAL = 1200000;
 const BEST_UPDATE_INTERVAL = 60000;
+const CURRENT_DB_VERSION = 2;
 
 class OsuUser extends Document
 {
@@ -29,6 +32,7 @@ class OsuUser extends Document
         this.last_checked = Number;
         this.servers = [String];
         this.records = [Object];
+        this.db_version = Number;
     }
 }
 
@@ -38,6 +42,7 @@ class OsuModule extends ModuleBase
     {
         super();
 
+        this.__OsuUser = OsuUser;
         this.name = "osu!";
         this.description = [
             "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Great if you want to fanboy about Cookiezi, or make fun of your friend for setting a new PP score with bad acc!",
@@ -49,9 +54,8 @@ class OsuModule extends ModuleBase
         this.modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
         this.users = [];
         this.stats = {
-            actual: [],
-            average: [],
-            last: 0
+            last: 0,
+            last_minute: (new Date()).getMinutes()
         };
         this.pending = [];
         this.servers = {};
@@ -222,16 +226,15 @@ class OsuModule extends ModuleBase
             execute: this.handle_check
         });
         
-        var last = (new Date()).getMinutes();
         this.api_stats = setInterval(function(){
             var curr = (new Date()).getMinutes();
             
-            if(last !== curr)
+            if(this.stats.last_minute !== curr)
             {
                 stats.update("osu_api_calls", this.stats.last);
                 
                 this.stats.last = 0;
-                last = curr;
+                this.stats.last_minute = curr;
             }
         }.bind(this), 10);
     }
@@ -258,90 +261,32 @@ class OsuModule extends ModuleBase
     
     handle_list_following(message)
     {
-        var response = "```";
-
         var users = lodash.clone(this.users);
         users.sort(function(a, b){
             return b.pp - a.pp;
         });
 
-        var rank = "Rank";
-        var name = "Name";
-        var pp = "PP";
-        
-        while(rank.length < 11)
-            rank += " ";
-            
-        while(name.length < 15)
-            name += " ";
-            
-        while(pp.length < 12)
-            pp += " ";
-        
-        var header = rank + " " + name + " " + pp;
-        response += header;
-        
-        var messages = [];
-        
-        var num = 0;
-        var currentnum = 0;
+        var data = [];
         for(var i in users)
         {
             //Check if the server is actually following this player
             if(users[i].servers.indexOf(message.server.id) === -1)
                 continue;
 
-            rank = "" + users[i].rank;
-            name = users[i].username;
-            pp = users[i].pp.toFixed(1) + "pp";
-            
-            while(rank.length < 10)
-                rank += " ";
-                
-            while(name.length < 15)
-                name += " ";
-                
-            while(pp.length < 12)
-                pp += " ";
-                
-            response += "\r\n";
-            response += "#" + rank + " " + name + " " + pp + " ";
-            
-            num++;
-            currentnum++;
-            
-            if(response.length >= 1900)
-            {
-                response += "```";
-                messages.push(response);
-                
-                response = "```";
-                response += header;
-                
-                currentnum = 0;
-            }
-        }
-        response += "```";
-        
-        if(currentnum !== 0)
-        {
-            messages.push(response);
+            data.push({
+                rank: "#" + users[i].rank,
+                name: users[i].username,
+                pp: users[i].pp.toFixed(1) + "pp"
+            });
         }
         
-        var send = function(messages, message, i){
-            if(i >= messages.length)
-                return;
-            
-            if(i === 0)
-                this.bot.respond(message, responses.get("OSU_FOLLOWING").format({author: message.author.id, results: messages[i]})).then(send.bind(this, messages, message, i + 1));
-            else
-                this.bot.respond(message, messages[i]).then(send.bind(this, messages, message, i + 1));
-        }.bind(this);
-        
-        if(num === 0)
+        if(data.length === 0)
             this.bot.respond(message, responses.get("OSU_FOLLOW_LIST_EMPTY").format({author: message.author.id}));
         else
-            send(messages, message, 0);
+        {
+            var messages = util.generate_table(responses.get("OSU_FOLLOWING").format({author: message.author.id}), {rank: "Rank", name: "Name", pp: "PP"}, data);
+            this.bot.respond_queue(message, messages);
+        }
     }
 
     handle_follow(message, name)
@@ -405,28 +350,98 @@ class OsuModule extends ModuleBase
         }
     }
 
+    get_check_interval(user, time)
+    {
+        if(user.last_record === -1)
+            return BEST_UPDATE_INTERVAL;
+        
+        var num = Math.ceil((time - user.last_record) / (60 * 1000));
+        var times = Math.min(num / 30, 5);
+        
+        //todo: add an extra case for people who haven't gotten a record in a few days.
+        
+        return times * BEST_UPDATE_INTERVAL;
+        
+        //Disabled for now since it wasn't working.
+        //return BEST_UPDATE_INTERVAL;
+    }
+    
+    get_user_update_interval(user, time)
+    {
+        if(user.last_record === -1)
+            return USER_UPDATE_INTERVAL;
+        
+        var num = Math.ceil((time - user.last_record) / (60 * 1000));
+        var times = Math.min(num / 30, 5);
+        
+        //todo: add an extra case for people who haven't gotten a record in a few days.
+        
+        return times * USER_UPDATE_INTERVAL;
+        
+        //Disabled for now since it wasn't working.
+        //return USER_UPDATE_INTERVAL;
+    }
+    
+    migrate_user(user)
+    {
+        if(user.db_version === CURRENT_DB_VERSION)
+            return;
+        
+        console.log("Migrating user '" + user.username + "' from db '" + user.db_version + "' to '" + CURRENT_DB_VERSION + "'.");
+        if(user.db_version === undefined)
+        {
+            for(var i = 0;i<user.records.length;i++)
+            {
+                var record = user.records[i];
+                
+                var tmpdate = new Date(record.date).toUTCString();
+                tmpdate = tmpdate.substr(0, tmpdate.lastIndexOf(" "));
+                record.date = new Date(tmpdate + " UTC+8").valueOf();
+                
+                user.records[i] = record;
+            }
+            
+            user.db_version = 1;
+        }
+        
+        if(user.db_version === 1)
+        {
+            for(var i = 0;i<user.records.length;i++)
+            {
+                var record = user.records[i];
+                
+                var tmpdate = new Date(record.date + (8 * 60 * 1000)).toString();
+                tmpdate = tmpdate.substr(0, tmpdate.lastIndexOf(" "));
+                tmpdate = tmpdate.substr(0, tmpdate.lastIndexOf(" "));
+                record.date = moment(new Date(tmpdate + " UTC")).subtract(8, "hours").toDate().valueOf();
+                
+                user.records[i] = record;
+            }
+            
+            user.db_version = 2;
+        }
+    }
+    
     on_setup(bot)
     {
         this.bot = bot;
         this.check = setInterval(function(){
-            var time = (new Date).getTime();
+            var time = Date.now();
             var i;
             
             for (i = 0; i < this.users.length; i++)
             {
                 var user = this.users[i];
-                if(time - user.last_checked >= BEST_UPDATE_INTERVAL)
+                if((time - user.last_checked) >= this.get_check_interval(user, time))
                     this.force_check(user.username, false);
             }
             
-            for(i in this.users)
+            for (i = 0; i < this.users.length; i++)
             {
-                if(time - this.users[i].last_updated >= USER_UPDATE_INTERVAL)
-                {
+                if((time - this.users[i].last_updated) >= this.get_user_update_interval(user, time))
                     this.update_user(this.users[i]);
-                }
             }
-        }.bind(this), 1);
+        }.bind(this), 10);
 
         var _this = this;
         OsuUser.find({}).then(function (docs) {
@@ -446,15 +461,22 @@ class OsuModule extends ModuleBase
                     last_updated: docs[i].last_updated,
                     last_checked: docs[i].last_checked || Date.now(),
                     servers: docs[i].servers,
+                    last_record: -1,
                     update_in_progress: null,
                     records: records,
-                    checking: false
+                    checking: false,
+                    db_version: docs[i].db_version
                 };
 
+                if(docs[i].db_version !== CURRENT_DB_VERSION)
+                {
+                    _this.migrate_user(user);
+                }
+                
                 _this.users.push(user);
 
                 var time = (new Date).getTime();
-                if(user.last_updated === undefined || time - user.last_updated >= USER_UPDATE_INTERVAL)
+                if(user.last_updated === undefined || time - user.last_updated >= _this.get_user_update_interval(user, time))
                 {
                     _this.update_user(user);
                 }
@@ -495,14 +517,17 @@ class OsuModule extends ModuleBase
 
     log_call()
     {
-        this.stats.last++;
-        this.stats.actual.push(Date.now());
-        
-        for(var i = this.stats.actual.length - 1;i>=0;i--)
+        var curr = (new Date()).getMinutes();
+
+        if(this.stats.last_minute !== curr)
         {
-            if(this.stats.actual[i] < Date.now() - (60 * 1000))
-                this.stats.actual.splice(i, 1);
+            stats.update("osu_api_calls", this.stats.last);
+
+            this.stats.last = 0;
+            this.stats.last_minute = curr;
         }
+        
+        this.stats.last++;
     }
     
     api_call(method, params, first, num)
@@ -634,7 +659,9 @@ class OsuModule extends ModuleBase
 
                 var skip = false;
                 var index = -1;
-                var date = (new Date(beatmap.date)).valueOf();
+                var date = moment(new Date(beatmap.date + " UTC")).subtract("8", "hours").toDate().valueOf();
+                
+                profile.last_record = Math.max(profile.last_record, date);
                 
                 for(i = 0;i<profile.records.length;i++)
                 {
@@ -725,7 +752,7 @@ class OsuModule extends ModuleBase
             }
             
             profile.last_checked = (new Date()).getTime();
-            OsuUser.findOneAndUpdate({user_id: profile.user_id}, {records: profile.records, last_checked: profile.last_checked}, {});
+            OsuUser.findOneAndUpdate({user_id: profile.user_id}, {db_version: CURRENT_DB_VERSION, records: profile.records, last_checked: profile.last_checked}, {});
             
             profile.checking = false;
         }.bind(null, profile)).catch(function(err){
@@ -776,7 +803,7 @@ class OsuModule extends ModuleBase
             }
 
             var time = Date.now();
-            var user = {user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_checked: time, last_updated: time, records: [], checking: false};
+            var user = {user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_checked: time, last_updated: time, records: [], last_record: -1, checking: false, db_version: CURRENT_DB_VERSION};
             this.users.push(user);
 
             stats.update("osu_num_users", this.users.length);
@@ -804,7 +831,7 @@ class OsuModule extends ModuleBase
         this.get_user(profile.username).then(function(profile, data){
             profile.last_updated = (new Date).getTime();
 
-            OsuUser.findOneAndUpdate({user_id: profile.user_id}, {user_id: data.user_id, pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(){
+            OsuUser.findOneAndUpdate({user_id: profile.user_id}, {db_version: CURRENT_DB_VERSION, user_id: data.user_id, pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(){
                 profile.update_in_progress.resolve(data);
                 profile.update_in_progress = null;
             }).catch(function(err){
