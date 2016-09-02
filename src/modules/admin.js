@@ -4,7 +4,7 @@ const ModuleBase = require("../modulebase.js");
 const permissions = require("../permissions.js");
 const responses = require("../responses.js");
 const users = require("../users.js");
-const Util = require("../util.js");
+const util = require("../util.js");
 const stats = require("../stats.js");
 
 class AdminModule extends ModuleBase
@@ -96,7 +96,7 @@ class AdminModule extends ModuleBase
                     return null;
                 }
                 
-                var user = Util.parse_id(mod);
+                var user = util.parse_id(mod);
                 if(user.type !== "user")
                 {
                     message.almost = true;
@@ -125,7 +125,7 @@ class AdminModule extends ModuleBase
                     return null;
                 }
                 
-                var user = Util.parse_id(mod);
+                var user = util.parse_id(mod);
                 if(user.type !== "user")
                 {
                     message.almost = true;
@@ -256,7 +256,7 @@ class AdminModule extends ModuleBase
                 }
                 
                 var role = split[idx1];
-                var user = Util.parse_id(split[idx2]);
+                var user = util.parse_id(split[idx2]);
                 
                 if(user.type !== "user")
                 {
@@ -395,7 +395,7 @@ class AdminModule extends ModuleBase
                     return null;
                 }
                 
-                var user = Util.parse_id(mod);
+                var user = util.parse_id(mod);
                 if(user.type !== "user")
                 {
                     message.almost = true;
@@ -424,7 +424,7 @@ class AdminModule extends ModuleBase
                     return null;
                 }
                 
-                var user = Util.parse_id(mod);
+                var user = util.parse_id(mod);
                 if(user.type !== "user")
                 {
                     message.almost = true;
@@ -453,7 +453,7 @@ class AdminModule extends ModuleBase
                     return null;
                 }
                 
-                var channel = Util.parse_id(mod);
+                var channel = util.parse_id(mod);
                 if(channel.type !== "channel")
                 {
                     message.almost = true;
@@ -649,57 +649,26 @@ class AdminModule extends ModuleBase
     
     handle_list_servers(message)
     {
-        var id = "ID";
-        var name = "Name";
-        var owner = "Owner";
-        var limit = "Limit";
-        
-        while(id.length < 10)
-            id += " ";
-        
-        while(name.length < 25)
-            name += " ";
-        
-        while(owner.length < 25)
-            owner += " ";
-        
-        while(limit.length < 10)
-            limit += " ";
-        
-        var response = "```";
-        response += id + " " + name + " " + owner + " " + limit;
-        
-        var i;
-        for(i = 0;i<this.bot.servers_internal.length;i++)
+        var data = [];
+        for(var i = 0;i<this.bot.servers_internal.length;i++)
         {
             if(this.bot.is_server_blacklisted(this.bot.servers_internal[i].id))
             {
                 continue;
             }
             
-            id = "#" + (i + 1) + ".";
-            name = this.bot.servers_internal[i].server.name;
-            owner = this.bot.servers_internal[i].server.owner.name;
-            limit = "" + this.bot.servers_internal[i].config.value.osu_limit;
-            
-            while(id.length < 10)
-                id += " ";
-            
-            while(name.length < 25)
-                name += " ";
-            
-            while(owner.length < 25)
-                owner += " ";
-
-            while(limit.length < 10)
-                limit += " ";
-            
-            response += "\r\n";
-            response += id + " " + name + " " + owner + ((limit.length > 0) ? " " + limit : "");
+            data.push({
+                id: "#" + (i + 1) + ".",
+                name: this.bot.servers_internal[i].server.name,
+                owner: this.bot.servers_internal[i].server.owner.name,
+                limit: "" + this.bot.servers_internal[i].config.value.osu_limit
+            });
         }
-        response += "```";
         
-        this.bot.respond(message, responses.get("LIST_SERVERS").format({author: message.author.id, results: response}));
+        console.log(data);
+        
+        var messages = util.generate_table(responses.get("LIST_SERVERS").format({author: message.author.id}), {id: "ID", name: "Name", owner: "Owner", limit: "Limit"}, data);
+        this.bot.respond_queue(message, messages);
     }
     
     handle_enable_module(message, name)
@@ -762,7 +731,7 @@ class AdminModule extends ModuleBase
             data.push({name: key, enabled: (enabled) ? "yes" : "no", flags: flags});
         }
         
-        var messages = Util.generate_table(responses.get("MODULE_LIST").format({author: message.author.id}), columns, data, {name: 20, enabled: 10, flags: 15});
+        var messages = util.generate_table(responses.get("MODULE_LIST").format({author: message.author.id}), columns, data, {name: 20, enabled: 10, flags: 15});
         this.bot.respond_queue(message, messages);
     }
     
