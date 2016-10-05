@@ -660,7 +660,7 @@ class AdminModule extends ModuleBase
             data.push({
                 id: "#" + (i + 1) + ".",
                 name: this.bot.servers_internal[i].server.name,
-                owner: this.bot.servers_internal[i].server.owner.name,
+                owner: this.bot.servers_internal[i].server.owner.nickname || this.bot.servers_internal[i].server.owner.user.username,
                 limit: "" + this.bot.servers_internal[i].config.value.osu_limit
             });
         }

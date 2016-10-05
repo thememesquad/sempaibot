@@ -11,6 +11,10 @@ class DebugModule extends ModuleBase
     {
         super();
         
+        this.name = "Debug";
+        this.description = "";
+        this.always_on = true;
+        
         permissions.register("SUPERADMIN", "superadmin");
         
         this.add_command({
@@ -48,8 +52,9 @@ class DebugModule extends ModuleBase
     {
         var osu = this.bot.get_module("osu!");
         
+        var i;
         var profile = null;
-        for(var i in osu.users)
+        for(i in osu.users)
         {
             if(osu.users[i].username.toLowerCase() === username.toLowerCase() || osu.users[i].user_id === username.toLowerCase())
             {
@@ -68,7 +73,7 @@ class DebugModule extends ModuleBase
         {
             if(Array.isArray(profile[key]))
             {
-                for(var i = 0;i<profile[key].length;i++)
+                for(i = 0;i<profile[key].length;i++)
                 {
                     if(typeof profile[key][i] === "object")
                     {
@@ -202,13 +207,17 @@ class DebugModule extends ModuleBase
         }
     }
     
-    handle_debug_db(message, splitted)
+    handle_debug_db()//message, splitted)
     {
     }
     
     on_setup(bot)
     {
         this.bot = bot;
+    }
+    
+    on_load()//server)
+    {
     }
 }
 

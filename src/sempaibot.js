@@ -93,14 +93,8 @@ class Bot
     
     login()
     {
-        this.discord.loginWithToken(config.token, function (error, token) {
-            if(error !== null)
-            {
-                return console.error("Discord login error: " + error);
-            }
-            
-            this.log("Logged in with token '" + token + "'.");
-        }.bind(this));
+        this.discord.login(config.token).then(token => this.log(`Logged in with token '${token}'.`))
+                                        .catch(err => console.error("Discord login error: ", err, err.stack));
     }
 
     set_status(status, game)
@@ -110,20 +104,15 @@ class Bot
             return this.queue.push(this.set_status.bind(this, status, game));
         }
         
-        try
-        {
-            this.discord.setStatus(status, game);
-        }
-        catch(e)
-        {
+        this.discord.user.setStatus(status, game).catch(() => {
             this.connected = false;
             this.queue.push(this.set_status.bind(this, status, game));
-        }
+        });
     }
     
     message(message, server)
     {
-        var defer = Q.defer();
+        let defer = Q.defer();
         
         if(this.is_server_blacklisted(server.id))
         {
@@ -131,21 +120,18 @@ class Bot
             return defer.promise;
         }
         
-        var channel = server.channel;
+        let channel = server.channel;
         if(channel.length === 0)
         {
-            channel = server.server.channels[0].id;
+            channel = server.server.channels.first().id;
         }
         
-        var queue = function(message, server, defer){
-            this.queue.push(this.discord.stopTyping.bind(this.discord, message.channel));
-            this.queue.push(this.discord.sendMessage.bind(this.discord, server.server.channels.get("id", channel), message, {}, function(defer, err, message){
-                if(err !== null)
-                    return defer.reject(err);
-                    
-                defer.resolve(message);
-            }.bind(this, defer)));
-        }.bind(this, message, server, defer);
+        let actual_channel = server.server.channels.find("id", channel);
+        let queue = () => {
+            this.queue.push(() => {
+                actual_channel.sendMessage(message).then(() => defer.resolve(message)).catch(err => defer.reject(err));
+            });
+        };
         
         if(!this.connected)
         {
@@ -153,21 +139,11 @@ class Bot
             return defer.promise;
         }
         
-        try
-        {
-            this.discord.stopTyping(message.channel);
-            this.discord.sendMessage(server.server.channels.get("id", channel), message, {}, function(err, message){
-                if(err !== null)
-                    return defer.reject(err);
-                    
-                defer.resolve(message);
-            });
-        }
-        catch(e)
-        {
-            this.connected = false;
-            queue();
-        }
+        actual_channel.sendMessage(message).then(() => defer.resolve(message))
+                                           .catch(err => {
+                                               this.connected = false;
+                                               queue();
+                                           });
         
         return defer.promise;
     }
@@ -195,7 +171,7 @@ class Bot
     
     respond(m, message)
     {
-        var defer = Q.defer();
+        let defer = Q.defer();
         
         if(this.is_server_blacklisted(m.server.id))
         {
@@ -203,15 +179,12 @@ class Bot
             return defer.promise;
         }
         
-        var queue = function(m, message, defer){
-            this.queue.push(this.discord.stopTyping.bind(this.discord, m.channel));
-            this.queue.push(this.discord.sendMessage.bind(this.discord, m.channel, message, {}, function(defer, err, message){
-                if(err !== null)
-                    return defer.reject(err);
-                    
-                defer.resolve(message);
-            }.bind(this, defer)));
-        }.bind(this, m, message, defer);
+        let actual_channel = m.channel;
+        let queue = () => {
+            this.queue.push(() => {
+                actual_channel.sendMessage(message).then(() => defer.resolve(message)).catch(err => defer.reject(err));
+            });
+        };
         
         if(!this.connected)
         {
@@ -219,21 +192,11 @@ class Bot
             return defer.promise;
         }
         
-        try
-        {
-            this.discord.stopTyping(m.channel);
-            this.discord.sendMessage(m.channel, message, {}, function(err, message){
-                if(err !== null)
-                    return defer.reject(err);
-                    
-                defer.resolve(message);
-            });
-        }
-        catch(e)
-        {
-            this.connected = false;
-            queue();
-        }
+        actual_channel.sendMessage(message).then(() => defer.resolve(message))
+                                           .catch(err => {
+                                               this.connected = false;
+                                               queue();
+                                           });
         
         return defer.promise;
     }
@@ -319,17 +282,13 @@ class Bot
             if(this.user_blacklist === null)
             {
                 this.user_blacklist = db.ConfigKeyValue.create({key: "user_blacklist", value: {blacklist: []}});
-                this.user_blacklist.save().catch(function(err){
-                    console.log(err);
-                });
+                this.user_blacklist.save().catch(err => console.log(err, err.stack));
             }
             
             if(this.server_blacklist === null)
             {
                 this.server_blacklist = db.ConfigKeyValue.create({key: "server_blacklist", value: {blacklist: []}});
-                this.server_blacklist.save().catch(function(err){
-                    console.log(err);
-                });
+                this.server_blacklist.save().catch(err => console.log(err, err.stack));
             }
             
             this.print("Loading users from DB", 70, false);
@@ -410,14 +369,18 @@ class Bot
             
             return defer.promise;
         }.bind(this)).then(function(changelog_version){
+            let servers = this.discord.guilds.array();
+
             this.log("....Ok");
-            stats.register("num_servers", this.discord.servers.length);
+            stats.register("num_servers", servers.length);
             
-            for(var i = 0;i<this.discord.servers.length;i++)
+            for(let i = 0;i<servers.length;i++)
             {
-                var server = this.discord.servers[i];
+                let server = servers[i];
+
                 this.servers[server.id] = new ServerData(this, server);
-                this.servers[server.id].load_promise.promise.then(function(server, initial){
+                this.servers[server.id].load_promise.promise.then(initial => {
+
                     for(var key in this.modules)
                     {
                         if(this.modules[key].always_on)
@@ -427,8 +390,8 @@ class Bot
                             this.servers[server.id].enable_module(key);
                     }
                     
-                    var msg = "";
-                    for(var i = 0;i<changelog.changelog.length;i++)
+                    let msg = "";
+                    for(let i = 0;i<changelog.changelog.length;i++)
                     {
                         if(changelog.changelog[i][0] <= changelog_version)
                             continue;
@@ -441,7 +404,7 @@ class Bot
 
                     if(msg.length !== 0)
                         this.message(responses.get("CHANGELOG").format({changelog: msg}), this.servers[server.id]);
-                }.bind(this, this.servers[server.id]));
+                });
                 this.servers_internal.push(this.servers[server.id]);
             }
             
@@ -458,7 +421,7 @@ class Bot
             
         this.log("Joined server '" + server.name + "'.");
         
-        stats.update("num_servers", this.discord.servers.length);
+        stats.update("num_servers", this.discord.guilds.array().length);
         
         this.servers[server.id] = new ServerData(this, server);
         this.servers[server.id].load_promise.promise.then(function(server){
@@ -483,7 +446,7 @@ class Bot
             
         this.log("Left server '" + server.name + "'.");
         
-        stats.update("num_servers", this.discord.servers.length);
+        stats.update("num_servers", this.discord.guilds.array().length);
         
         delete this.servers_internal[this.servers_internal.indexOf(this.servers[server.id])];
         delete this.servers[server.id];
@@ -506,13 +469,13 @@ class Bot
         var server = null;
         var key;
         
-        if(!message.channel.isPrivate)
+        if(message.channel.type !== "dm")
         {
-            server = this.servers[message.channel.server.id];
+            server = this.servers[message.channel.guild.id];
             if(server === null || server === undefined)
                 return;
         }
-            
+ 
         message.user = users.get_user(message.author, server);
         message.server = server;
         
@@ -582,9 +545,9 @@ class Bot
             if(!handled)
             {
                 if(split.length === 1)
-                    this.respond(message, responses.get("NAME").format({author: message.author.id}));
+                    this.respond(message, responses.get("NAME").format({author: message.author.id})).catch(err => console.log(err, err.stack));
                 else
-                    this.respond(message, responses.get("UNKNOWN_COMMAND").format({author: message.author.id}));
+                    this.respond(message, responses.get("UNKNOWN_COMMAND").format({author: message.author.id})).catch(err => console.log(err, err.stack));
             }
         }
     }

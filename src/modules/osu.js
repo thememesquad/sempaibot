@@ -1,7 +1,5 @@
 "use strict";
 
-const request = require("request");
-const Q = require("q");
 const lodash = require("lodash");
 const Document = require("camo").Document;
 
@@ -71,19 +69,19 @@ class OsuModule extends ModuleBase
         permissions.register("OSU_CHECK", "moderator");
 
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("set osu limit to"))
                     return null;
                 
-                var split = message.content.split(" ");
+                let split = message.content.split(" ");
                 if(split.length < 6)
                 {
                     message.almost = true;
                     return null;
                 }
                 
-                var limit = parseInt(split[4]);
-                var server = parseInt(split[6]);
+                let limit = parseInt(split[4]);
+                let server = parseInt(split[6]);
                 
                 return [limit, server];
             },
@@ -96,7 +94,7 @@ class OsuModule extends ModuleBase
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("what is my osu limit"))
                     return null;
                 
@@ -111,8 +109,8 @@ class OsuModule extends ModuleBase
         });
         
         this.add_command({
-            match: function(message){
-                var messages = [
+            match: message => {
+                let messages = [
                     "who are you following",
                     "who do you follow",
                     "list following",
@@ -123,7 +121,7 @@ class OsuModule extends ModuleBase
                     "show follows list"
                 ];
                 
-                for(var i = 0;i<messages.length;i++)
+                for(let i = 0;i<messages.length;i++)
                 {
                     if(message.content.startsWith(messages[i]))
                         return [];
@@ -140,17 +138,17 @@ class OsuModule extends ModuleBase
         });
 
         this.add_command({
-            match: function(message){
-                var messages = [
+            match: message => {
+                let messages = [
                     "follow",
                     "stalk"
                 ];
                 
-                for(var i = 0;i<messages.length;i++)
+                for(let i = 0;i<messages.length;i++)
                 {
                     if(message.content.startsWith(messages[i]))
                     {
-                        var tmp = message.content.substr(messages[i].length + 1);
+                        let tmp = message.content.substr(messages[i].length + 1);
                         if(tmp.length === 0)
                         {
                             message.almost = true;
@@ -172,18 +170,18 @@ class OsuModule extends ModuleBase
         });
 
         this.add_command({
-            match: function(message){
-                var messages = [
+            match: message => {
+                let messages = [
                     "stop following",
                     "stop stalking",
                     "unfollow"
                 ];
                 
-                for(var i = 0;i<messages.length;i++)
+                for(let i = 0;i<messages.length;i++)
                 {
                     if(message.content.startsWith(messages[i]))
                     {
-                        var tmp = message.content.substr(messages[i].length + 1);
+                        let tmp = message.content.substr(messages[i].length + 1);
                         if(tmp.length === 0)
                         {
                             message.almost = true;
@@ -205,11 +203,11 @@ class OsuModule extends ModuleBase
         });
 
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("check"))
                     return null;
                    
-                var tmp = message.content.substr("check".length + 1);
+                let tmp = message.content.substr("check".length + 1);
                 if(tmp.length === 0)
                 {
                     message.almost = true;
@@ -226,8 +224,8 @@ class OsuModule extends ModuleBase
             execute: this.handle_check
         });
         
-        this.api_stats = setInterval(function(){
-            var curr = (new Date()).getMinutes();
+        this.api_stats = setInterval(() => {
+            let curr = (new Date()).getMinutes();
             
             if(this.stats.last_minute !== curr)
             {
@@ -236,20 +234,20 @@ class OsuModule extends ModuleBase
                 this.stats.last = 0;
                 this.stats.last_minute = curr;
             }
-        }.bind(this), 10);
+        }, 10);
     }
 
     handle_set_limit(message, limit, serverID)
     {
-        var server = this.bot.get_server_internal(serverID - 1);
+        let server = this.bot.get_server_internal(serverID - 1);
         if(server === null)
         {
             return this.bot.respond(message, responses.get("INVALID_SERVER").format({author: message.author.id, id: serverID}));
         }
         
-        var old_limit = server.config.value.osu_limit;
+        let old_limit = server.config.value.osu_limit;
         server.config.value.osu_limit = limit;
-        server.config.save().catch(function(err){console.log("error saving new config: ", err);});
+        server.config.save().catch(err => console.log("error saving new config: ", err));
         
         return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT_CHANGED").format({author: message.author.id, old_limit: old_limit, new_limit: limit, server_name: server.server.name}));
     }
@@ -261,13 +259,13 @@ class OsuModule extends ModuleBase
     
     handle_list_following(message)
     {
-        var users = lodash.clone(this.users);
-        users.sort(function(a, b){
+        let users = lodash.clone(this.users);
+        users.sort((a, b) => {
             return b.pp - a.pp;
         });
 
-        var data = [];
-        for(var i in users)
+        let data = [];
+        for(let i in users)
         {
             //Check if the server is actually following this player
             if(users[i].servers.indexOf(message.server.id) === -1)
@@ -284,7 +282,7 @@ class OsuModule extends ModuleBase
             this.bot.respond(message, responses.get("OSU_FOLLOW_LIST_EMPTY").format({author: message.author.id}));
         else
         {
-            var messages = util.generate_table(responses.get("OSU_FOLLOWING").format({author: message.author.id}), {rank: "Rank", name: "Name", pp: "PP"}, data);
+            let messages = util.generate_table(responses.get("OSU_FOLLOWING").format({author: message.author.id}), {rank: "Rank", name: "Name", pp: "PP"}, data);
             this.bot.respond_queue(message, messages);
         }
     }
@@ -296,8 +294,8 @@ class OsuModule extends ModuleBase
 
     handle_unfollow(message, user)
     {
-        var i = -1;
-        for(var j in this.users)
+        let i = -1;
+        for(let j in this.users)
         {
             if(this.users[j].username.toLowerCase() === user.toLowerCase() || this.users[j].user_id === user.toLowerCase())
             {
@@ -311,7 +309,7 @@ class OsuModule extends ModuleBase
             return this.bot.respond(message, responses.get("OSU_NOT_FOLLOWING").format({author: message.author.id, user: user}));
         }
 
-        var profile = this.users[i];
+        let profile = this.users[i];
         if(profile.servers.indexOf(message.server.id) === -1)
         {
             return this.bot.respond(message, responses.get("OSU_NOT_FOLLOWING").format({author: message.author.id, user: user}));
@@ -320,7 +318,7 @@ class OsuModule extends ModuleBase
         if(profile.servers.length === 1)
         {
             this.users.splice(i, 1);
-            OsuUser.deleteOne({user_id: profile.user_id}, {}, function(){});
+            OsuUser.deleteOne({user_id: profile.user_id}, {}, () => {});
         }
         else
         {
@@ -338,9 +336,9 @@ class OsuModule extends ModuleBase
 
     on_new_record(profile, record)
     {
-        for(var i = 0;i<profile.servers.length;i++)
+        for(let i = 0;i<profile.servers.length;i++)
         {
-            var server = this.servers[profile.servers[i]];
+            let server = this.servers[profile.servers[i]];
             if(server === undefined)
             {
                 continue;
@@ -355,8 +353,8 @@ class OsuModule extends ModuleBase
         if(user.last_record === -1)
             return BEST_UPDATE_INTERVAL;
         
-        var num = Math.ceil((time - user.last_record) / (60 * 1000));
-        var times = Math.min(num / 30, 5);
+        let num = Math.ceil((time - user.last_record) / (60 * 1000));
+        let times = Math.min(num / 30, 5);
         
         //todo: add an extra case for people who haven't gotten a record in a few days.
         
@@ -371,8 +369,8 @@ class OsuModule extends ModuleBase
         if(user.last_record === -1)
             return USER_UPDATE_INTERVAL;
         
-        var num = Math.ceil((time - user.last_record) / (60 * 1000));
-        var times = Math.min(num / 30, 5);
+        let num = Math.ceil((time - user.last_record) / (60 * 1000));
+        let times = Math.min(num / 30, 5);
         
         //todo: add an extra case for people who haven't gotten a record in a few days.
         
@@ -387,14 +385,16 @@ class OsuModule extends ModuleBase
         if(user.db_version === CURRENT_DB_VERSION)
             return;
         
+        let i, record, tmpdate;
+        
         console.log("Migrating user '" + user.username + "' from db '" + user.db_version + "' to '" + CURRENT_DB_VERSION + "'.");
         if(user.db_version === undefined)
         {
-            for(var i = 0;i<user.records.length;i++)
+            for(i = 0;i<user.records.length;i++)
             {
-                var record = user.records[i];
+                record = user.records[i];
                 
-                var tmpdate = new Date(record.date).toUTCString();
+                tmpdate = new Date(record.date).toUTCString();
                 tmpdate = tmpdate.substr(0, tmpdate.lastIndexOf(" "));
                 record.date = new Date(tmpdate + " UTC+8").valueOf();
                 
@@ -406,11 +406,11 @@ class OsuModule extends ModuleBase
         
         if(user.db_version === 1)
         {
-            for(var i = 0;i<user.records.length;i++)
+            for(i = 0;i<user.records.length;i++)
             {
-                var record = user.records[i];
+                record = user.records[i];
                 
-                var tmpdate = new Date(record.date + (8 * 60 * 1000)).toString();
+                tmpdate = new Date(record.date + (8 * 60 * 1000)).toString();
                 tmpdate = tmpdate.substr(0, tmpdate.lastIndexOf(" "));
                 tmpdate = tmpdate.substr(0, tmpdate.lastIndexOf(" "));
                 record.date = moment(new Date(tmpdate + " UTC")).subtract(8, "hours").toDate().valueOf();
@@ -425,35 +425,34 @@ class OsuModule extends ModuleBase
     on_setup(bot)
     {
         this.bot = bot;
-        this.check = setInterval(function(){
-            var time = Date.now();
-            var i;
-            
-            for (i = 0; i < this.users.length; i++)
+        this.check = setInterval(() => {
+            let time = Date.now();
+            let user = null;
+
+            for (let i = 0; i < this.users.length; i++)
             {
-                var user = this.users[i];
+                user = this.users[i];
                 if((time - user.last_checked) >= this.get_check_interval(user, time))
                     this.force_check(user.username, false);
             }
             
-            for (i = 0; i < this.users.length; i++)
+            for (let i = 0; i < this.users.length; i++)
             {
                 if((time - this.users[i].last_updated) >= this.get_user_update_interval(user, time))
                     this.update_user(this.users[i]);
             }
-        }.bind(this), 10);
+        }, 10);
 
-        var _this = this;
-        OsuUser.find({}).then(function (docs) {
-            for (var i = 0; i < docs.length; i++)
+        OsuUser.find({}).then(docs => {
+            for (let i = 0; i < docs.length; i++)
             {
-                var records = [];
-                for(var j = 0;j<docs[i].records.length;j++)
+                let records = [];
+                for(let j = 0;j<docs[i].records.length;j++)
                 {
                     records.push(docs[i].records[j]);
                 }
                 
-                var user = {
+                let user = {
                     user_id: docs[i].user_id,
                     username: docs[i].username,
                     pp: docs[i].pp,
@@ -470,22 +469,20 @@ class OsuModule extends ModuleBase
 
                 if(docs[i].db_version !== CURRENT_DB_VERSION)
                 {
-                    _this.migrate_user(user);
+                    this.migrate_user(user);
                 }
                 
-                _this.users.push(user);
+                this.users.push(user);
 
-                var time = (new Date).getTime();
-                if(user.last_updated === undefined || time - user.last_updated >= _this.get_user_update_interval(user, time))
+                let time = (new Date).getTime();
+                if(user.last_updated === undefined || time - user.last_updated >= this.get_user_update_interval(user, time))
                 {
-                    _this.update_user(user);
+                    this.update_user(user);
                 }
             }
             
-            stats.update("osu_num_users", _this.users.length);
-        }).catch(function(err){
-            console.log("OsuUser.find: " + err);
-        });
+            stats.update("osu_num_users", this.users.length);
+        }).catch(err => console.log("OsuUser.find: " + err));
     }
 
     on_shutdown()
@@ -493,7 +490,7 @@ class OsuModule extends ModuleBase
         clearInterval(this.check);
         clearInterval(this.api_stats);
         
-        for(var i = 0;i<this.pending.length;i++)
+        for(let i = 0;i<this.pending.length;i++)
         {
             this.load_balancer.cancel(this.pending[i]);
         }
@@ -517,7 +514,7 @@ class OsuModule extends ModuleBase
 
     log_call()
     {
-        var curr = (new Date()).getMinutes();
+        let curr = (new Date()).getMinutes();
 
         if(this.stats.last_minute !== curr)
         {
@@ -532,50 +529,43 @@ class OsuModule extends ModuleBase
     
     api_call(method, params, first, num)
     {
-        var defer = Q.defer();
+        return new Promise((resolve, reject) => {
+            num = (num === undefined) ? 0 : num;
 
-        num = (num === undefined) ? 0 : num;
+            first = (first === undefined) ? true : first;
+            let url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ? config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
 
-        first = (first === undefined) ? true : first;
-        var url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ? config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
-
-        for(var key in params)
-        {
-            url += "&" + key + "=" + params[key];
-        }
-            
-        this.pending.push(this.load_balancer.create(url).then(function(obj){
-            this.log_call();
-            
-            var response = obj.response;
-            var body = obj.body;
-            
-            try
+            for(let key in params)
             {
-                var data = JSON.parse(body);
-                if(first)
+                url += "&" + key + "=" + params[key];
+            }
+                
+            this.pending.push(this.load_balancer.create(url).then(obj => {
+                this.log_call();
+                
+                let body = obj.body;
+                
+                try
                 {
-                    data = data[0];
+                    let data = JSON.parse(body);
+                    if(first)
+                    {
+                        data = data[0];
+                    }
+
+                    return resolve(data);
                 }
+                catch(e)
+                {
+                    if(num === 4)
+                        return reject(e);
 
-                return defer.resolve(data);
-            }
-            catch(e)
-            {
-                if(num === 4)
-                    return defer.reject(e);
-
-                this.api_call(method, params, first, num + 1).then(function(result){
-                    defer.resolve(result);
-                }).catch(function(err){
-                    defer.reject(err);
-                });
-            }
-        }.bind(this)).catch(function(err){
-            defer.reject(err);
-        }));
-        
-        return defer.promise;
+                    this.api_call(method, params, first, num + 1).then(result => {
+                        resolve(result);
+                    }).catch(err => reject(err));
+                }
+            }).catch(err => reject(err)));
+        });
     }
 
     get_user(username)
@@ -593,12 +583,15 @@ class OsuModule extends ModuleBase
         return this.api_call("get_user_best", {u: username, m: start, limit: limit}, false);
     }
 
-    force_check(username, message, no_report, force)
+    force_check(_username, _message, _no_report, _force)
     {
-        no_report = no_report || false;
+        let username = _username;
+        let message = _message || null;
+        let no_report = _no_report || false;
+        let force = _force || false;
         
-        var profile = null;
-        for(var i in this.users)
+        let profile = null;
+        for(let i in this.users)
         {
             if(this.users[i].username.toLowerCase() === username.toLowerCase() || this.users[i].user_id === username.toLowerCase())
             {
@@ -623,12 +616,11 @@ class OsuModule extends ModuleBase
         
         profile.checking = true;
 
-        var _this = this;
-        var topRank;
-        this.get_user_best(username, 0, 50).then(function(profile, json){
-            for (var j = 0; j < json.length; j++)
+        let topRank;
+        this.get_user_best(username, 0, 50).then(json => {
+            for (let j = 0; j < json.length; j++)
             {
-                var beatmap = json[j];
+                let beatmap = json[j];
                 beatmap.count50 = parseInt(beatmap.count50);
                 beatmap.count100 = parseInt(beatmap.count100);
                 beatmap.count300 = parseInt(beatmap.count300);
@@ -637,8 +629,8 @@ class OsuModule extends ModuleBase
                 beatmap.perfect = parseInt(beatmap.perfect);
                 beatmap.pp = Math.round(parseFloat(beatmap.pp));
 
-                var totalPointOfHits = beatmap.count50 * 50 + beatmap.count100 * 100 + beatmap.count300 * 300;
-                var totalNumberOfHits = beatmap.countmiss + beatmap.count50 + beatmap.count100 + beatmap.count300;
+                let totalPointOfHits = beatmap.count50 * 50 + beatmap.count100 * 100 + beatmap.count300 * 300;
+                let totalNumberOfHits = beatmap.countmiss + beatmap.count50 + beatmap.count100 + beatmap.count300;
 
                 beatmap.acc = (totalPointOfHits / (totalNumberOfHits * 300) * 100).toFixed(2);
 
@@ -649,21 +641,20 @@ class OsuModule extends ModuleBase
 
                 beatmap.mods = "";
 
-                var i;
-                for(i = 0;i<16;i++)
+                for(let i = 0;i<16;i++)
                 {
                     if((beatmap.enabled_mods & (1 << i)) > 0)
                         if(i !== 6 || ((beatmap.enabled_mods & (1 << 9)) === 0))
-                            beatmap.mods += ((beatmap.mods.length !== 0) ? "" : "+") + _this.modsList[i];
+                            beatmap.mods += ((beatmap.mods.length !== 0) ? "" : "+") + this.modsList[i];
                 }
 
-                var skip = false;
-                var index = -1;
-                var date = moment(new Date(beatmap.date + " UTC")).subtract("8", "hours").toDate().valueOf();
+                let skip = false;
+                let index = -1;
+                let date = moment(new Date(beatmap.date + " UTC")).subtract("8", "hours").toDate().valueOf();
                 
                 profile.last_record = Math.max(profile.last_record, date);
                 
-                for(i = 0;i<profile.records.length;i++)
+                for(let i = 0;i<profile.records.length;i++)
                 {
                     if(profile.records[i].beatmap_id === beatmap.beatmap_id)
                     {
@@ -691,13 +682,15 @@ class OsuModule extends ModuleBase
                     
                     if(!no_report)
                     {
-                        _this.get_beatmaps(beatmap.beatmap_id).then(function(profile, beatmap, beatmap_info){
-                            _this.update_user(profile).then(function(profile, beatmap, beatmap_info, user_data){
-                                var oldTotalpp = profile.pp;
-                                var newTotalpp = user_data.pp_raw;
-                                var deltapp = user_data.pp_raw - profile.pp;
-                                var oldRank = profile.rank;
-                                var deltaRank = user_data.pp_rank - profile.rank;
+                        this.get_beatmaps(beatmap.beatmap_id).then(_beatmap_info => {
+                            let beatmap_info = _beatmap_info;
+                            
+                            this.update_user(profile).then(user_data => {
+                                let oldTotalpp = profile.pp;
+                                let newTotalpp = user_data.pp_raw;
+                                let deltapp = user_data.pp_raw - profile.pp;
+                                let oldRank = profile.rank;
+                                let deltaRank = user_data.pp_rank - profile.rank;
 
                                 if(deltapp > 0)
                                     deltapp = "+" + deltapp.toFixed(2) + "pp";
@@ -713,14 +706,14 @@ class OsuModule extends ModuleBase
                                 else if(deltaRank < 0)
                                     deltaRank = Math.abs(deltaRank) + " gained";
 
-                                var newRank = profile.rank = parseInt(user_data.pp_rank);
+                                let newRank = profile.rank = parseInt(user_data.pp_rank);
                                 profile.pp = parseFloat(user_data.pp_raw);
 
                                 beatmap.additional = "";
                                 if (beatmap.perfect === 0)
                                     beatmap.additional = "| **" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
 
-                                var announcement = responses.get("OSU_NEW_SCORE_NODATE").format({
+                                let announcement = responses.get("OSU_NEW_SCORE_NODATE").format({
                                     user: profile.username,
                                     beatmap_id: beatmap.beatmap_id,
                                     pp: beatmap.pp,
@@ -740,13 +733,9 @@ class OsuModule extends ModuleBase
                                     delta_rank: deltaRank
                                 });
                                 
-                                _this.on_new_record(profile, announcement);
-                            }.bind(null, profile, beatmap, beatmap_info)).catch(function(err){
-                                console.log("update_user: ", err, err.stack);
-                            });
-                        }.bind(null, profile, beatmap)).catch(function(err){
-                            console.log("get_beatmaps: ", err, err.stack);
-                        });
+                                this.on_new_record(profile, announcement);
+                            }).catch(err => console.log("update_user: ", err, err.stack));
+                        }).catch(err => console.log("get_beatmaps: ", err, err.stack));
                     }
                 }
             }
@@ -755,17 +744,18 @@ class OsuModule extends ModuleBase
             OsuUser.findOneAndUpdate({user_id: profile.user_id}, {db_version: CURRENT_DB_VERSION, records: profile.records, last_checked: profile.last_checked}, {});
             
             profile.checking = false;
-        }.bind(null, profile)).catch(function(err){
-            console.log("get_user_best: ", err, err.stack);
-        });
+        }).catch(err => console.log("get_user_best: ", err, err.stack));
     }
 
-    check_user(username, message)
+    check_user(_username, _message)
     {
-        var profile = null;
-        var num = 0;
+        let username = _username;
+        let message = _message || null;
 
-        for(var i in this.users)
+        let profile = null;
+        let num = 0;
+
+        for(let i in this.users)
         {
             if(this.users[i].username.toLowerCase() === username.toLowerCase() || this.users[i].user_id === username.toLowerCase())
             {
@@ -793,7 +783,7 @@ class OsuModule extends ModuleBase
             return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING").format({author: message.author.id, user: profile.username}));
         }
 
-        this.get_user(username).then(function(username, message, json){
+        this.get_user(username).then(json => {
             if(json === undefined || json.username === undefined)
             {
                 if(message !== undefined)
@@ -802,48 +792,46 @@ class OsuModule extends ModuleBase
                 return;
             }
 
-            var time = Date.now();
-            var user = {user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_checked: time, last_updated: time, records: [], last_record: -1, checking: false, db_version: CURRENT_DB_VERSION};
+            let time = Date.now();
+            let user = {user_id: json.user_id, username: json.username, pp: Number(json.pp_raw), rank: Number(json.pp_rank), servers: [message.server.id], update_in_progress: null, last_checked: time, last_updated: time, records: [], last_record: -1, checking: false, db_version: CURRENT_DB_VERSION};
             this.users.push(user);
 
             stats.update("osu_num_users", this.users.length);
             
-            var dbuser = OsuUser.create(user);
-            dbuser.save().then(function(){
+            let dbuser = OsuUser.create(user);
+            dbuser.save().then(() => {
                 this.force_check(user.username, undefined, true);
                 this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({author: message.author.id, user: json.username}));
-            }.bind(this)).catch(function(err){
-                console.log(err.stack);
-            });
-        }.bind(this, username, message)).catch(function(err){
-            console.log("get_user: " + err.stack);
-        });
+            }).catch(err => console.log(err, err.stack));
+        }).catch(err => console.log("get_user: ", err, err.stack));
     }
 
-    update_user(profile)
+    update_user(_profile)
     {
+        let profile = _profile;
+
         if(profile.update_in_progress !== null)
-            return profile.update_in_progress.promise;
+            return profile.update_in_progress;
+        
+        let promise = new Promise((resolve, reject) => {
+            this.get_user(profile.username).then(data => {
+                profile.last_updated = (new Date).getTime();
 
-        var defer = Q.defer();
-        profile.update_in_progress = defer;
-
-        this.get_user(profile.username).then(function(profile, data){
-            profile.last_updated = (new Date).getTime();
-
-            OsuUser.findOneAndUpdate({user_id: profile.user_id}, {db_version: CURRENT_DB_VERSION, user_id: data.user_id, pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(function(){
-                profile.update_in_progress.resolve(data);
-                profile.update_in_progress = null;
-            }).catch(function(err){
-                profile.update_in_progress.reject(err);
+                OsuUser.findOneAndUpdate({user_id: profile.user_id}, {db_version: CURRENT_DB_VERSION, user_id: data.user_id, pp: parseFloat(data.pp_raw), rank: parseInt(data.pp_rank), last_updated: profile.last_updated}).then(() => {
+                    resolve(data);
+                    profile.update_in_progress = null;
+                }).catch(err => {
+                    reject(err);
+                    profile.update_in_progress = null;
+                });
+            }).catch(err => {
+                reject(err);
                 profile.update_in_progress = null;
             });
-        }.bind(this, profile)).catch(function(err){
-            profile.update_in_progress.reject(err);
-            profile.update_in_progress = null;
         });
 
-        return profile.update_in_progress.promise;
+        profile.update_in_progress = promise;
+        return profile.update_in_progress;
     }
 }
 

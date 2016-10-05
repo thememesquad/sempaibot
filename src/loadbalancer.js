@@ -1,6 +1,6 @@
 "use strict";
-const Q = require("q");
 const request = require("request");
+const Q = require("q");
 
 class LoadBalancer
 {
@@ -90,7 +90,8 @@ class LoadBalancer
         
         delete this.namedRequests[request.__baseURL];
         
-        for(var i = 0;i<this.requests.length;i++)
+        var i;
+        for(i = 0;i<this.requests.length;i++)
         {
             if(this.requests[i].url === request.__baseURL)
             {
@@ -99,7 +100,7 @@ class LoadBalancer
             }
         }
         
-        for(var i = 0;i<this.pendingRequests.length;i++)
+        for(i = 0;i<this.pendingRequests.length;i++)
         {
             if(this.pendingRequests[i].url === request.__baseURL)
             {
