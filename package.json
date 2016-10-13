@@ -18,7 +18,7 @@
     "moment": "^2.14.1",
     "moment-timezone": "^0.5.5",
     "q": "^1.4.1",
-    "request": "^2.74.0"
+    "request": "^2.69.0"
   },
   "scripts": {
     "start": "node src/sempaibot.js",
