@@ -4,12 +4,12 @@ class Util
 {
     static parse_id(id)
     {
-        var base_id = id;
+        let base_id = id;
         if(id.length < 4)
             return {type: "unknown", id: base_id, alias: false};
             
-        var type = "";
-        var is_alias = false;
+        let type = "";
+        let is_alias = false;
         
         id = id.substr(1, id.length - 2);
         switch(id.charAt(0))
@@ -44,24 +44,23 @@ class Util
             
         if(data === null || data === undefined || data.length === 0)
             return [];
-            
-        var key, i;
+        
         if(columns === null || columns === undefined)
         {
             columns = {};
             
-            for(i = 0;i<data.length;i++)
+            for(let i = 0;i<data.length;i++)
             {
-                for(key in data[i])
+                for(let key in data[i])
                 {
                     columns[key] = key;
                 }
             }
         }
         
-        var lengths = {};
+        let lengths = {};
         
-        for(key in columns)
+        for(let key in columns)
         {
             if(minimum_lengths !== null)
                 lengths[key] = Math.max(columns[key].length, minimum_lengths[key]);
@@ -69,24 +68,24 @@ class Util
                 lengths[key] = columns[key].length;
         }
         
-        for(i = 0;i<data.length;i++)
+        for(let i = 0;i<data.length;i++)
         {
-            for(key in columns)
+            for(let key in columns)
             {
                 lengths[key] = Math.max(data[i][key].length, lengths[key]);
             }
         }
         
-        for(key in columns)
+        for(let key in columns)
         {
             lengths[key] += 2;
         }
         
-        var message = "";
-        var write_headers = function(){
-            for(key in columns)
+        let message = "";
+        let write_headers = () => {
+            for(let key in columns)
             {
-                var val = columns[key];
+                let val = columns[key];
                 while(val.length !== lengths[key])
                     val += " ";
                     
@@ -97,11 +96,11 @@ class Util
             message += "\r\n";
         };
         
-        var write_item = function(index){
-            var tmp = "";
-            for(key in columns)
+        let write_item = index => {
+            let tmp = "";
+            for(let key in columns)
             {
-                var val = data[index][key];
+                let val = data[index][key];
                 while(val.length !== lengths[key])
                     val += " ";
                     
@@ -114,8 +113,8 @@ class Util
             message += tmp;
         };
         
-        var messages = [];
-        for(i = 0;i<data.length;i++)
+        let messages = [];
+        for(let i = 0;i<data.length;i++)
         {
             if(message.length === 0)
             {

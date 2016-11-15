@@ -33,19 +33,15 @@ class RemindersModule extends ModuleBase
         this.description = "This module adds the possibility to send reminders to people! Cannot be disabled.";
         this.always_on = true;
         
-        var _this = this;
         this.reminders = [];
         this.bot = null;
         
-        Reminder.find({}).then(function(docs)
-        {
-            _this.reminders = docs;
-        });
+        Reminder.find({}).then(docs => this.reminders = docs);
         
         permissions.register("MANAGE_REMINDERS", "moderator");
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("list reminders"))
                     return null;
                     
@@ -60,7 +56,7 @@ class RemindersModule extends ModuleBase
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("remove reminder"))
                     return null;
                 
@@ -75,7 +71,7 @@ class RemindersModule extends ModuleBase
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("remind"))
                     return null;
                     
@@ -128,7 +124,7 @@ class RemindersModule extends ModuleBase
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("clear reminders"))
                     return null;
                     
@@ -155,9 +151,7 @@ class RemindersModule extends ModuleBase
                 continue;
                 
             this.reminders.splice(i, 1);
-            reminder.delete().catch(function(e){
-                console.log(e);
-            });
+            reminder.delete().catch(e => console.log(e));
             
             num++;
         }
@@ -183,9 +177,7 @@ class RemindersModule extends ModuleBase
             if(j++ === id - 1)
             {
                 this.reminders.splice(i, 1);
-                reminder.delete().catch(function(e){
-                    console.log(e);
-                });
+                reminder.delete().catch(e => console.log(e));
                 
                 cleared = true;
                 break;
@@ -320,9 +312,7 @@ class RemindersModule extends ModuleBase
             return false;
             
         var reminder = Reminder.create({source: me, target: w, time: when.valueOf(), message: what, server: server.id});
-        reminder.save().catch(function(err){
-            console.log(err);
-        });
+        reminder.save().catch(err => console.log(err));
         
         this.reminders.push(reminder);
         return true;
@@ -351,16 +341,14 @@ class RemindersModule extends ModuleBase
         this.bot.message(responses.get("REMINDER").format({author: reminder.source, people: who, message: reminder.message}), this.bot.servers[reminder.server]);
         this.reminders.splice(index, 1);
         
-        reminder.delete().catch(function(err){
-            console.log(err);
-        });
+        reminder.delete().catch(err => console.log(err));
     }
     
     on_setup(bot)
     {
         this.bot = bot;
         
-        this.remind = setInterval(function () {
+        this.remind = setInterval(() => {
             var d = moment();
             var n = d.valueOf();
             
@@ -374,7 +362,7 @@ class RemindersModule extends ModuleBase
                     }
                 }
             }
-        }.bind(this), 1000);
+        }, 1000);
     }
     
     on_shutdown()

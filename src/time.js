@@ -6,15 +6,15 @@ function parse_timestring_internal(str)
 {
     str = str.toLowerCase().trim();
     
-    var currentDate = moment();
+    let currentDate = moment();
     
-    var day_func = function(target, day){
-        var current = currentDate.day();
+    let day_func = (target, day) => {
+        let current = currentDate.day();
         
         if(current === target)
             return null;
             
-        var num = 0;
+        let num = 0;
         if(current > target)
             num = ((target + 6) - current) + 1;
         else
@@ -23,7 +23,7 @@ function parse_timestring_internal(str)
         return ["on " + day, currentDate.add(num, "days")];
     };
     
-    var match = str.trim().split(" ");
+    let match = str.trim().split(" ");
     switch(match[0])
     {
         case "monday":
@@ -69,7 +69,7 @@ function parse_timestring_internal(str)
     
     if(match.length === 2)
     {
-        var num, name;
+        let num, name;
         
         switch(match[1])
         {
@@ -216,7 +216,7 @@ function parse_timestring_internal(str)
         }
     }
     
-    var tmp = moment(str, [
+    let tmp = moment(str, [
         "YYYY-MM-DD HH:mm",
         "HH:mm",
         "YYYY-MM-DD",
@@ -236,20 +236,20 @@ function parse_timestring_internal(str)
     
 function parse_timestring(str)
 {
-    var ret = [];
-    var split = str.trim().split(" ");
+    let ret = [];
+    let split = str.trim().split(" ");
     
-    var size = split.length;
+    let size = split.length;
     while(size > 1)
     {
-        var matches = [];
+        let matches = [];
                 
-        for(var i = 0;i<split.length;i++)
+        for(let i = 0;i<split.length;i++)
         {
-            var tmp = "";
-            var full = true;
+            let tmp = "";
+            let full = true;
             
-            for(var j = 0;j<size;j++)
+            for(let j = 0;j<size;j++)
             {
                 if(i + j >= split.length)
                 {
@@ -268,13 +268,13 @@ function parse_timestring(str)
                 continue;
             }
                 
-            var tmp2 = parse_timestring_internal(tmp);
+            let tmp2 = parse_timestring_internal(tmp);
             if(tmp2 === null || !tmp2[1].isValid())
             {
                 continue;
             }
             
-            var index = str.indexOf(tmp);
+            let index = str.indexOf(tmp);
             matches.push({index: index, str: tmp, ret: tmp2});
         }
         

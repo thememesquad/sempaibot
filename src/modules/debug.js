@@ -18,7 +18,7 @@ class DebugModule extends ModuleBase
         permissions.register("SUPERADMIN", "superadmin");
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("debug"))
                     return null;
                 
@@ -35,7 +35,7 @@ class DebugModule extends ModuleBase
     
     handle_debug(message)
     {
-        var splitted = message.content.split(" ");
+        let splitted = message.content.split(" ");
         switch(splitted[1])
         {
             case "osu":
@@ -50,11 +50,10 @@ class DebugModule extends ModuleBase
     
     handle_debug_osu_user(message, username)
     {
-        var osu = this.bot.get_module("osu!");
+        let osu = this.bot.get_module("osu!");
         
-        var i;
-        var profile = null;
-        for(i in osu.users)
+        let profile = null;
+        for(let i in osu.users)
         {
             if(osu.users[i].username.toLowerCase() === username.toLowerCase() || osu.users[i].user_id === username.toLowerCase())
             {
@@ -68,12 +67,12 @@ class DebugModule extends ModuleBase
         
         this.bot.respond(message, "Retrieving debug data for osu user '" + username + "'...please wait...");
         
-        var profile_data = [];
-        for(var key in profile)
+        let profile_data = [];
+        for(let key in profile)
         {
             if(Array.isArray(profile[key]))
             {
-                for(i = 0;i<profile[key].length;i++)
+                for(let i = 0;i<profile[key].length;i++)
                 {
                     if(typeof profile[key][i] === "object")
                     {
@@ -100,13 +99,12 @@ class DebugModule extends ModuleBase
             }
         }
         
-        var _this = this;
-        osu.get_user_best(username, 0, 50).then(function(profile, json){
-            var data = [];
+        osu.get_user_best(username, 0, 50).then(json => {
+            let data = [];
             
-            for (var j = 0; j < json.length; j++)
+            for (let j = 0; j < json.length; j++)
             {
-                var beatmap = json[j];
+                let beatmap = json[j];
                 beatmap.count50 = parseInt(beatmap.count50);
                 beatmap.count100 = parseInt(beatmap.count100);
                 beatmap.count300 = parseInt(beatmap.count300);
@@ -115,8 +113,8 @@ class DebugModule extends ModuleBase
                 beatmap.perfect = parseInt(beatmap.perfect);
                 beatmap.pp = Math.round(parseFloat(beatmap.pp));
 
-                var totalPointOfHits = beatmap.count50 * 50 + beatmap.count100 * 100 + beatmap.count300 * 300;
-                var totalNumberOfHits = beatmap.countmiss + beatmap.count50 + beatmap.count100 + beatmap.count300;
+                let totalPointOfHits = beatmap.count50 * 50 + beatmap.count100 * 100 + beatmap.count300 * 300;
+                let totalNumberOfHits = beatmap.countmiss + beatmap.count50 + beatmap.count100 + beatmap.count300;
 
                 beatmap.acc = (totalPointOfHits / (totalNumberOfHits * 300) * 100).toFixed(2);
 
@@ -127,19 +125,18 @@ class DebugModule extends ModuleBase
 
                 beatmap.mods = "";
 
-                var i;
-                for(i = 0;i<16;i++)
+                for(let i = 0;i<16;i++)
                 {
                     if((beatmap.enabled_mods & (1 << i)) > 0)
                         if(i !== 6 || ((beatmap.enabled_mods & (1 << 9)) === 0))
                             beatmap.mods += ((beatmap.mods.length !== 0) ? "" : "+") + osu.modsList[i];
                 }
 
-                var skip = false;
-                var index = -1;
-                var date = moment(new Date(beatmap.date + " UTC")).subtract("8", "hours").toDate().valueOf();
+                let skip = false;
+                let index = -1;
+                let date = moment(new Date(beatmap.date + " UTC")).subtract("8", "hours").toDate().valueOf();
                 
-                for(i = 0;i<profile.records.length;i++)
+                for(let i = 0;i<profile.records.length;i++)
                 {
                     if(profile.records[i].beatmap_id === beatmap.beatmap_id)
                     {
@@ -160,36 +157,43 @@ class DebugModule extends ModuleBase
                 });
             }
             
-            var messages1 = util.generate_table("Debug info:", {name: "Name", value: "Value"}, profile_data);
-            var messages2 = util.generate_table("", {rank: "Rank", id: "ID", date: "Date", skip: "Last Showed"}, data);
-            var messages = messages1.concat(messages2);
+            let messages1 = util.generate_table("Debug info:", {name: "Name", value: "Value"}, profile_data);
+            let messages2 = util.generate_table("", {rank: "Rank", id: "ID", date: "Date", skip: "Last Showed"}, data);
+            let messages = messages1.concat(messages2);
             
-            _this.bot.respond_queue(message, messages);
-        }.bind(null, profile)).catch(function(err){
+            this.bot.respond_queue(message, messages);
+        }).catch(err => {
             console.log(err, err.stack);
         });
     }
     
     handle_debug_osu_users(message)
     {
-        var osu = this.bot.get_module("osu!");
-        var data = [];
+        let osu = this.bot.get_module("osu!");
+        let data = [];
         
-        for(var i = 0;i<osu.users.length;i++)
+        for(let i = 0;i<osu.users.length;i++)
         {
             data.push({
                 name: osu.users[i].username,
                 id: "" + osu.users[i].user_id,
+                mode: osu.users[i].mode,
                 num_servers: "" + osu.users[i].servers.length,
                 check: moment(osu.users[i].last_checked).format()
             });
         }
         
-        data.sort(function(a, b){
+        data.sort((a, b) => {
             return parseInt(b.num_servers) - parseInt(a.num_servers);
         });
         
-        var messages = util.generate_table("Osu users debug info:", {name: "Name", id: "ID", num_servers: "Num. Servers", check: "Last checked"}, data);
+        let messages = util.generate_table("Osu users debug info:", {
+            name: "Name", 
+            id: "ID", 
+            mode: "Mode",
+            num_servers: "Num. Servers", 
+            check: "Last checked"
+        }, data);
         this.bot.respond_queue(message, messages);
     }
     

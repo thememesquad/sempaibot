@@ -1,6 +1,5 @@
 "use strict";
-const Q = require("q");
-var Document = require("camo").Document;
+const Document = require("camo").Document;
 
 class DBRole extends Document
 {
@@ -35,7 +34,7 @@ class Role
             this.permissions[id] = {};
             
             //use the null server permissions object as template
-            for(var key in this.permissions["null"])
+            for(let key in this.permissions["null"])
             {
                 this.permissions[id][key] = this.permissions["null"][key];
             }
@@ -48,7 +47,7 @@ class Role
         {
             this.permissions["null"][permission] = true;
             
-            for(var key in this.permissions)
+            for(let key in this.permissions)
             {
                 if(this.permissions[key][permission] === undefined)
                     this.permissions[key][permission] = true;
@@ -107,41 +106,38 @@ class Role
     
     save()
     {
-        var defer = Q.defer();
-        
-        this.dbrole.save().then(function(){
-            defer.resolve();
-        }).catch(function(err){
-            defer.reject(err);
+        return new Promise((resolve, reject) => {
+            this.dbrole.save().then(() => {
+                resolve();
+            }).catch(err => {
+                reject(err);
+            });
         });
-        
-        return defer.promise;
     }
     
     load()
     {
-        var _this = this;
-        var defer = Q.defer();
-        
-        DBRole.findOne({name: this.name}).then(function(doc){
-            if(doc === null)
-            {
-                _this.dbrole = DBRole.create({name: _this.name, permissions: _this.permissions});
-                _this.dbrole.save().then(function(){
-                    defer.resolve();
-                }).catch(function(err){
-                    defer.reject(err);
-                });
-            }else{
-                _this.dbrole = doc;
-                _this.permissions = _this.dbrole.permissions;
-                defer.resolve();
-            }
-        }).catch(function(err){
-            defer.reject(err);
+        return new Promise((resolve, reject) => {
+            DBRole.findOne({name: this.name}).then(doc => {
+                if(doc === null)
+                {
+                    this.dbrole = DBRole.create({name: this.name, permissions: this.permissions});
+                    this.dbrole.save().then(() => {
+                        resolve();
+                    }).catch(err => {
+                        reject(err);
+                    });
+                }
+                else
+                {
+                    this.dbrole = doc;
+                    this.permissions = this.dbrole.permissions;
+                    resolve();
+                }
+            }).catch(err => {
+                reject(err);
+            });
         });
-        
-        return defer.promise;
     }
 }
 
@@ -160,43 +156,36 @@ class Permissions
 
     save()
     {
-        var defer = Q.defer();
-        var _this = this;
-        
-        
-        this.roles["superadmin"].save().then(function(){
-            return _this.roles["admin"].save();
-        }).then(function(){
-            return _this.roles["moderator"].save();
-        }).then(function(){
-            return _this.roles["normal"].save();
-        }).then(function(){
-            defer.resolve();
-        }).catch(function(err){
-            defer.reject(err);
+        return new Promise((resolve, reject) => {
+            this.roles["superadmin"].save().then(() => {
+                return this.roles["admin"].save();
+            }).then(() => {
+                return this.roles["moderator"].save();
+            }).then(() => {
+                return this.roles["normal"].save();
+            }).then(() => {
+                resolve();
+            }).catch(err => {
+                reject(err);
+            });
         });
-        
-        return defer.promise;
     }
     
     load()
     {
-        var defer = Q.defer();
-        var _this = this;
-        
-        this.roles["superadmin"].load().then(function(){
-            return _this.roles["admin"].load();
-        }).then(function(){
-            return _this.roles["moderator"].load();
-        }).then(function(){
-            return _this.roles["normal"].load();
-        }).then(function(){
-            defer.resolve();
-        }).catch(function(err){
-            defer.reject(err);
+        return new Promise((resolve, reject) => {
+            this.roles["superadmin"].load().then(() => {
+                return this.roles["admin"].load();
+            }).then(() => {
+                return this.roles["moderator"].load();
+            }).then(() => {
+                return this.roles["normal"].load();
+            }).then(() => {
+                resolve();
+            }).catch(err => {
+                reject(err);
+            });
         });
-        
-        return defer.promise;
     }
     
     register(name, defaultRole)

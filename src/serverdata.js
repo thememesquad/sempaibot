@@ -3,7 +3,6 @@
 const responses = require("./responses.js");
 const db = require("./db.js");
 const users = require("./users.js");
-const Q = require("q");
 
 class ServerData
 {
@@ -13,76 +12,76 @@ class ServerData
         this.config = null;
         this.server = server;
         this.id = server.id;
-        this.load_promise = Q.defer();
 
-        for(var i = 0;i<server.members.length;i++)
+        for(let i = 0;i<server.members.length;i++)
         {
-            var member = server.members[i];
+            let member = server.members[i];
             users.add_user(member.id, member.name, this);
         }
 
-        db.ConfigKeyValue.findOne({key: this.server.id + "_config"}).then(function(doc){
-            if(doc === null)
-            {
-                this.config = db.ConfigKeyValue.create({
-                    key: this.server.id + "_config", 
-                    value: {
-                        channel: "", 
-                        modules: [],
-                        ignorelist: [],
-                        osu_limit: 50
-                    }
-                });
-                
-                this.config.save().then(function(){
-                    this.on_load(true);
-                }.bind(this)).catch(function(err){
-                    console.log("save: ", err);
-                    this.on_load(true);
-                }.bind(this));
-            }
-            else
-            {
-                this.config = doc;
-                
-                var changed = false;
-                if(this.config.value.osu_limit === undefined)
+        this.load_promise_resolve = null;
+        this.load_promise = new Promise((resolve, reject) => {
+            this.load_promise_resolve = resolve;
+
+            db.ConfigKeyValue.findOne({key: this.server.id + "_config"}).then(doc => {
+                if(doc === null)
                 {
-                    this.config.value.osu_limit = 50;
-                    changed = true;
-                }
-                
-                for(var i = 0;i<this.modules.length;i++)
-                {
-                    var module = this.bot.get_module(this.modules[i]);
-                    if(module === null)
-                        continue;
-                        
-                    module.on_load(this);
-                }
-                
-                if(changed)
-                {
-                    this.config.save().then(function(){
-                        this.on_load(false);
-                    }.bind(this)).catch(function(err){
+                    this.config = db.ConfigKeyValue.create({
+                        key: this.server.id + "_config", 
+                        value: {
+                            channel: "", 
+                            modules: [],
+                            ignorelist: [],
+                            osu_limit: 50
+                        }
+                    });
+                    
+                    this.config.save().then(() => this.on_load(true)).catch(err => {
                         console.log("save: ", err);
-                        this.on_load(false);
+                        this.on_load(true);
                     });
                 }
                 else
                 {
-                    this.on_load(false);
+                    this.config = doc;
+                    
+                    let changed = false;
+                    if(this.config.value.osu_limit === undefined)
+                    {
+                        this.config.value.osu_limit = 50;
+                        changed = true;
+                    }
+                    
+                    for(let i = 0;i<this.modules.length;i++)
+                    {
+                        let module = this.bot.get_module(this.modules[i]);
+                        if(module === null)
+                            continue;
+                            
+                        module.on_load(this);
+                    }
+                    
+                    if(changed)
+                    {
+                        this.config.save().then(() => this.on_load(false)).catch(err => {
+                            console.log("save: ", err);
+                            this.on_load(false);
+                        });
+                    }
+                    else
+                    {
+                        this.on_load(false);
+                    }
                 }
-            }
-        }.bind(this)).catch(function(err){
-            console.log("findOne: " + err.stack);
+            }).catch(err => {
+                console.log("findOne: " + err.stack);
+            });
         });
     }
 
     on_load(initial)
     {
-        this.channel_check = setInterval(function(){
+        this.channel_check = setInterval(() => {
             if(this.channel.length !== 0)
             {
                 if(this.server.channels.get("id", this.channel) === null)
@@ -91,7 +90,7 @@ class ServerData
                     this.bot.message(responses.get("CHANNEL_DELETED"), this);
                 }
             }
-        }.bind(this), 100);
+        }, 100);
         
         if(this.channel.length !== 0)
         {
@@ -107,7 +106,7 @@ class ServerData
             this.bot.message(responses.get("SETTING_UP"), this);
         }
         
-        this.load_promise.resolve(initial);
+        this.load_promise_resolve(initial);
     }
 
     enable_module(name)
@@ -115,7 +114,7 @@ class ServerData
         if(this.modules.indexOf(name) !== -1)
             return; //already enabled
 
-        var module = this.bot.get_module(name);
+        let module = this.bot.get_module(name);
         if(module === null)
             return; //no such module
 
@@ -123,7 +122,7 @@ class ServerData
         module.on_load(this);
 
         this.config.value.modules = this.modules;
-        this.config.save().catch(function(err){
+        this.config.save().catch(err => {
             console.log(err);
         });
     }
@@ -138,7 +137,7 @@ class ServerData
         if(this.modules.indexOf(name) === -1)
             return; //already enabled
 
-        var module = this.bot.get_module(name);
+        let module = this.bot.get_module(name);
         if(module === null)
             return; //no such module
 
@@ -146,7 +145,7 @@ class ServerData
         module.on_unload(this);
 
         this.config.value.modules = this.modules;
-        this.config.save().catch(function(err){
+        this.config.save().catch(err => {
             console.log(err);
         });
     }
@@ -156,7 +155,7 @@ class ServerData
         if(this.ignorelist.indexOf(user.user_id) === -1)
         {
             this.config.value.ignorelist.push(user.user_id);
-            this.config.save().catch(function(err){
+            this.config.save().catch(err => {
                 console.log(err);
             });
         }
@@ -164,11 +163,11 @@ class ServerData
     
     unignore_user(user)
     {
-        var idx = this.ignorelist.indexOf(user.user_id);
+        let idx = this.ignorelist.indexOf(user.user_id);
         if(idx !== -1)
         {
             this.config.value.ignorelist.splice(idx, 1);
-            this.config.save().catch(function(err){
+            this.config.save().catch(err => {
                 console.log(err);
             });
         }
@@ -182,7 +181,7 @@ class ServerData
     set channel(channel)
     {
         this.config.value.channel = channel;
-        this.config.save().catch(function(err){
+        this.config.save().catch(err => {
             console.log(err);
         });
     }

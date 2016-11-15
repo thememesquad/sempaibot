@@ -79,7 +79,7 @@ var responses_normal = {
         "Sempai stopped following {user}!",
         "Got it! I've unfollowed {user}."
     ],
-    OSU_NEW_SCORE_NODATE: "**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}** | **{old_total_pp}pp** -> **{new_total_pp}pp** ({delta_pp}) | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
+    OSU_NEW_SCORE: "**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}** | **{old_total_pp}pp** -> **{new_total_pp}pp** ({delta_pp}) | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
     OSU_USER_NOT_FOUND: [
         "I can't find user \"{user}\". Did you type it correctly?",
         "I can't find user \"{user}\". Did you make a typo?",
@@ -101,6 +101,43 @@ var responses_normal = {
     OSU_CHECK: [
         "No problem! I'll check {user} on osu! for you!",
         "No problem! Sempai will check {user} on osu! for you!"
+    ],
+    OSU_FOLLOWING_MODE: [
+        "Sempai is currently following on {mode}:",
+        "I'm currently following on {mode}:"
+    ],
+    OSU_STOPPED_MODE: [
+        "Okay, I have stopped following {user} on {mode}.",
+        "Sempai unfollowed {user} on {mode}!",
+        "Alright, I unfollowed {user} on {mode}!",
+        "Okay, I unfollowed {user} on {mode}!",
+        "Sempai will no longer follow {user} on {mode}.",
+        "I stopped following {user} on {mode}!",
+        "Sempai stopped following {user} on {mode}!",
+        "Got it! I've unfollowed {user} on {mode}."
+    ],
+    OSU_NEW_SCORE_MODE: "**{user}** has set a new #**{top_rank}** PP score for {mode}! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}** | **{old_total_pp}pp** -> **{new_total_pp}pp** ({delta_pp}) | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
+    OSU_USER_NOT_FOUND_MODE: [
+        "I can't find user \"{user}\" on {mode}. Did you type it correctly?",
+        "I can't find user \"{user}\" on {mode}. Did you make a typo?",
+        "I can't find user \"{user}\" on {mode}. Are you sure you typed it correctly?",
+        "I can't find user \"{user}\" on {mode}. Are you sure you typed the name correctly?",
+        "I'm having trouble finding \"{user}\" on {mode}. Did you type it correctly?",
+        "I'm having trouble finding \"{user}\" on {mode}. Did you make a typo?",
+        "I'm having trouble finding \"{user}\" on {mode}. Are you sure you typed it correctly?",
+        "I'm having trouble finding \"{user}\" on {mode}. Are you sure you typed the name correctly?"
+    ],
+    OSU_ALREADY_FOLLOWING_MODE: [
+        "I'm already following {user} on {mode}!",
+        "Sempai is already following {user} on {mode}!"
+    ],
+    OSU_ADDED_FOLLOWING_MODE: [
+        "I'm now following {user} on osu {mode}!",
+        "Sempai will now follow {user} on osu {mode}!"
+    ],
+    OSU_CHECK_MODE: [
+        "No problem! I'll check {user} on osu! for you! {mode}",
+        "No problem! Sempai will check {user} on osu! for you! {mode}"
     ],
     JOIN_INVALID_INVITE: "I can't find a server with the invite: \"{invite}\".",
     JOIN_ALREADY: "I am already part of \"{invite}\".",
@@ -253,26 +290,52 @@ var responses_tsundere = {
         "These are the people I ~~stalk~~ follow on osu!",
         "These are the people I stal--... I mean follow on osu!"
     ],
+
+    OSU_FOLLOWING_MODE: [
+        "These are the people I like on {mode}! I mean, associate with. I-it's not as if I really l-like them, or anything. Don't get any weird ideas!",
+        "These are my osu! friends on {mode}!",
+        "These are the people I ~~stalk~~ follow on osu! {mode}",
+        "These are the people I stal--... I mean follow on osu! {mode}"
+    ],
     OSU_NOT_FOLLOWING: [
         "Are you stupid? I wasn't even following {user}!",
         "Are you stupid? I wasn't even following {user} in the first place!"
+    ],
+    OSU_NOT_FOLLOWING_MODE: [
+        "Are you stupid? I wasn't even following {user} on {mode}!",
+        "Are you stupid? I wasn't even following {user} on {mode} in the first place!"
     ],
     OSU_STOPPED: [
         "Okay. I won't follow {user} anymore. I-it's not like I really liked that person or anything anyway... But maybe I'll miss {user} a little. Just a little.",
         "Okay. I won't follow {user} anymore. I-it's not like I really liked that person or anything anyway...  :'( "
     ],
+    OSU_STOPPED_MODE: [
+        "Okay. I won't follow {user} on {mode} anymore. I-it's not like I really liked that person or anything anyway... But maybe I'll miss {user} a little. Just a little.",
+        "Okay. I won't follow {user} on {mode} anymore. I-it's not like I really liked that person or anything anyway...  :'( "
+    ],
 
     OSU_USER_NOT_FOUND: "Baka~! I can't find that user. Did you type the username correctly?",
     OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {user}!",
+    OSU_ALREADY_FOLLOWING_MODE: "Baka~! I'm already following {user} on {mode}!",
     OSU_ADDED_FOLLOWING: [
         "Ooh a new osu! friend? I-It's not like I wanted more friends!",
         "Ooh a new osu! friend? Yaa~y! Uhm, I mean... I-It's not like I wanted more friends or anything!",
         "Added {user} to my osu! ~~stalk~~ follow list!",
         "Hmpf! It's not like I wanted more friends! But I will add {user} this one time! You should feel glad!"
     ],
+    OSU_ADDED_FOLLOWING_MODE: [
+        "Ooh a new osu! friend for {mode}? I-It's not like I wanted more friends!",
+        "Ooh a new osu! friend for {mode}? Yaa~y! Uhm, I mean... I-It's not like I wanted more friends or anything!",
+        "Added {user} to my osu! {mode} ~~stalk~~ follow list!",
+        "Hmpf! It's not like I wanted more friends! But I will add {user} to {mode} this one time! You should feel glad!"
+    ],
     OSU_CHECK: [
         "Fine. I'll check {user} for you. But only because I have nothing else to do right now!",
         "Alright. I'll check {user}. D-don't get me wrong. It's not like I'm doing this for you or anything."
+    ],
+    OSU_CHECK_MODE: [
+        "Fine. I'll check {user} on {mode} for you. But only because I have nothing else to do right now!",
+        "Alright. I'll check {user} on {mode}. D-don't get me wrong. It's not like I'm doing this for you or anything."
     ],
 	
     OSU_MAX_USER_LIMIT: [
@@ -326,7 +389,7 @@ var responses = {
     currentMode: false,
 
     get: function(name){
-        var tmp = responses.current[name];
+        let tmp = responses.current[name];
         if(tmp === undefined && responses.currentMode)
         {
             tmp = responses_normal[name];
@@ -336,11 +399,14 @@ var responses = {
         }
            
         if(tmp === undefined)
+        {
+            console.log("unknown response: " + name);
             return responses.get("ERROR");
-            
+        }
+
         if(Array.isArray(tmp))
         {
-            var idx = Math.floor(Math.random() * tmp.length);
+            let idx = Math.floor(Math.random() * tmp.length);
             return tmp[idx];
         }
 
@@ -357,13 +423,13 @@ var responses = {
             responses.current = responses_normal;
         }
 
-        db.ConfigKeyValue.findOneAndUpdate({key: "mode"}, {value: {value: responses.currentMode}}, {}).then(function(doc){
+        db.ConfigKeyValue.findOneAndUpdate({key: "mode"}, {value: {value: responses.currentMode}}, {}).then(doc => {
             if(doc === null)
             {
-                var dbkey = db.ConfigKeyValue.create({key: "mode", value: {value: responses.currentMode}});
+                let dbkey = db.ConfigKeyValue.create({key: "mode", value: {value: responses.currentMode}});
                 dbkey.save();
             }
-        }).catch(function(err){
+        }).catch(err => {
             console.log(err);
         });
     }

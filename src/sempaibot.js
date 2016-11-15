@@ -12,7 +12,6 @@ const db = require("./db.js");
 const config = require("../config.js");
 const users = require("./users.js");
 const permissions = require("./permissions.js");
-const Q = require("q");
 const Document = require("camo").Document;
 const changelog = require("./changelog.js");
 const stats = require("./stats.js");
@@ -28,7 +27,7 @@ class ChangelogDB extends Document
 }
 
 String.prototype.format = function(args) {
-    return this.replace(/{(.*?)}/g, function(match, key) {
+    return this.replace(/{(.*?)}/g, (match, key) => {
         return typeof args[key] !== "undefined" ? args[key] : match;
     });
 };
@@ -58,9 +57,7 @@ class Bot
         this.discord.on("disconnected", this.on_disconnected.bind(this));
         this.discord.on("error", this.on_error.bind(this));
         
-        process.on("SIGTERM", function(){
-            this.shutdown();
-        }.bind(this));
+        process.on("SIGTERM", () => this.shutdown());
     }
 
     log()
@@ -86,9 +83,7 @@ class Bot
                 this.modules[key].on_shutdown();
         }
 
-        stats.save().then(function(){
-            process.exit(0);
-        });
+        stats.save().then(() => process.exit(0));
     }
     
     login()
@@ -110,14 +105,11 @@ class Bot
         });
     }
     
-    message(message, server)
+    message_image(image, server)
     {
-        let defer = Q.defer();
-        
         if(this.is_server_blacklisted(server.id))
         {
-            defer.reject("blacklisted");
-            return defer.promise;
+            return Promise.reject("blacklisted");
         }
         
         let channel = server.channel;
@@ -127,99 +119,152 @@ class Bot
         }
         
         let actual_channel = server.server.channels.find("id", channel);
-        let queue = () => {
-            this.queue.push(() => {
-                actual_channel.sendMessage(message).then(() => defer.resolve(message)).catch(err => defer.reject(err));
+
+        return new Promise((resolve, reject) => {
+            let queue = () => {
+                this.queue.push(() => {
+                    actual_channel.sendFile(image).then(() => resolve(image)).catch(err => reject(err));
+                });
+            };
+            
+            if(!this.connected)
+            {
+                queue();
+                return;
+            }
+            
+            actual_channel.sendFile(image).then(() => resolve(image)).catch(() => {
+                this.connected = false;
+                queue();
             });
-        };
         
-        if(!this.connected)
+        });
+    }
+
+    message(message, server)
+    {
+        if(this.is_server_blacklisted(server.id))
         {
-            queue();
-            return defer.promise;
+            return Promise.reject("blacklisted");
         }
         
-        actual_channel.sendMessage(message).then(() => defer.resolve(message))
-                                           .catch(err => {
-                                               this.connected = false;
-                                               queue();
-                                           });
+        let channel = server.channel;
+        if(channel.length === 0)
+        {
+            channel = server.server.channels.first().id;
+        }
         
-        return defer.promise;
+        let actual_channel = server.server.channels.find("id", channel);
+
+        return new Promise((resolve, reject) => {
+            let queue = () => {
+                this.queue.push(() => {
+                    actual_channel.sendMessage(message).then(() => resolve(message)).catch(err => reject(err));
+                });
+            };
+            
+            if(!this.connected)
+            {
+                queue();
+                return;
+            }
+            
+            actual_channel.sendMessage(message).then(() => resolve(message)).catch(() => {
+                this.connected = false;
+                queue();
+            });
+        
+        });
     }
 
     message_queue(messages, server)
     {
-        var defer = Q.defer();
-        
-        var send = function(server, messages, defer, index, send){
-            if(index >= messages.length)
-            {
-                return defer.resolve();
-            }
+        return new Promise((resolve, reject) => {
+            let send = (index, send) => {
+                if(index >= messages.length)
+                {
+                    return resolve();
+                }
+                
+                this.message(messages[index], server).then(() => send(index + 1, send)).catch(err => reject(err));
+            };
             
-            this.message(messages[index], server).then(function(index, send){
-                send(index + 1, send);
-            }.bind(this, index, send)).catch(function(defer, error){
-                defer.reject(error);
-            }.bind(this, defer));
-        }.bind(this, server, messages, defer);
-        
-        send(0, send);
-        return defer.promise;
+            send(0, send);
+        });
     }
     
-    respond(m, message)
+    respond_image(m, image)
     {
-        let defer = Q.defer();
-        
         if(this.is_server_blacklisted(m.server.id))
         {
-            defer.reject("blacklisted");
-            return defer.promise;
+            return Promise.reject("blacklisted");
         }
         
         let actual_channel = m.channel;
-        let queue = () => {
-            this.queue.push(() => {
-                actual_channel.sendMessage(message).then(() => defer.resolve(message)).catch(err => defer.reject(err));
+
+        return new Promise((resolve, reject) => {
+            let queue = () => {
+                this.queue.push(() => {
+                    actual_channel.sendFile(image).then(() => resolve(image)).catch(err => reject(err));
+                });
+            };
+            
+            if(!this.connected)
+            {
+                queue();
+                return;
+            }
+            
+            actual_channel.sendFile(image).then(() => resolve(image)).catch(() => {
+                this.connected = false;
+                queue();
             });
-        };
-        
-        if(!this.connected)
+        });
+    }
+
+    respond(m, message)
+    {
+        if(this.is_server_blacklisted(m.server.id))
         {
-            queue();
-            return defer.promise;
+            return Promise.reject("blacklisted");
         }
         
-        actual_channel.sendMessage(message).then(() => defer.resolve(message))
-                                           .catch(err => {
-                                               this.connected = false;
-                                               queue();
-                                           });
-        
-        return defer.promise;
+        let actual_channel = m.channel;
+
+        return new Promise((resolve, reject) => {
+            let queue = () => {
+                this.queue.push(() => {
+                    actual_channel.sendMessage(message).then(() => resolve(message)).catch(err => reject(err));
+                });
+            };
+            
+            if(!this.connected)
+            {
+                queue();
+                return;
+            }
+            
+            actual_channel.sendMessage(message).then(() => resolve(message)).catch(() => {
+                this.connected = false;
+                queue();
+            });
+        });
     }
 
     respond_queue(message, messages)
     {
-        var defer = Q.defer();
-        
-        var send = function(message, messages, defer, index, send){
-            if(index >= messages.length)
-            {
-                return defer.resolve();
-            }
+        return new Promise((resolve, reject) => {
+            let send = (index, send) => {
+                if(index >= messages.length)
+                {
+                    return resolve();
+                }
+                
+                this.respond(message, messages[index]).then(() => send(index + 1, send)).catch(err => reject(err));
+            };
             
-            this.respond(message, messages[index]).then(function(index, send){
-                send(index + 1, send);
-            }.bind(this, index, send, defer)).catch(function(defer, error){
-                defer.reject(error);
-            }.bind(this, defer));
-        }.bind(this, message, messages, defer);
-        
-        send(0, send);
-        return defer.promise;
+            send(0, send);
+        });
     }
 
     get_module(name)
@@ -257,10 +302,10 @@ class Bot
            
         this.connected_once = true;
         
-        db.load(this).then(function(){
+        db.load(this).then(() => {
             this.print("Loading config from DB", 70, false);
             return db.ConfigKeyValue.find({});
-        }.bind(this)).then(function(docs){
+        }).then(docs => {
             this.log("....Ok");
             for(var i = 0;i<docs.length;i++)
             {
@@ -293,11 +338,11 @@ class Bot
             
             this.print("Loading users from DB", 70, false);
             return users.load();
-        }.bind(this)).then(function(){
+        }).then(() => {
             this.log("....Ok");
             this.print("Loading permissions from DB", 70, false);
             return permissions.load();
-        }.bind(this)).then(function(){
+        }).then(() => {
             this.log("....Ok");
             for(var key in modules)
             {
@@ -324,51 +369,49 @@ class Bot
             }
 
             return permissions.save();
-        }.bind(this)).then(function(){
+        }).then(() => {
             this.print("Loading changelog", 70, false);
-            var defer = Q.defer();
             
-            ChangelogDB.findOne({}).then(function(doc){
-                if(doc === null)
-                {
-                    return ChangelogDB.create({version: changelog.version}).save().then(function(){
-                        defer.resolve(-1);
-                    }).catch(function(err){
-                        this.log(err);
-                    });
-                }
-                
-                if(doc.version !== changelog.version)
-                {
-                    var old = doc.version;
-                    doc.version = changelog.version;
-                    return doc.save().then(function(){
-                        defer.resolve(old);
-                    }).catch(function(err){
-                        this.log(err);
-                    });
-                }
-                
-                defer.resolve(doc.version);
-            }).catch(function(err){
-                defer.reject(err);
+            return new Promise((resolve, reject) => {
+                ChangelogDB.findOne({}).then(doc => {
+                    if(doc === null)
+                    {
+                        return ChangelogDB.create({version: changelog.version}).save().then(() => {
+                            resolve(-1);
+                        }).catch(err => {
+                            this.log(err);
+                        });
+                    }
+                    
+                    if(doc.version !== changelog.version)
+                    {
+                        var old = doc.version;
+                        doc.version = changelog.version;
+
+                        return doc.save().then(() => {
+                            resolve(old);
+                        }).catch(err => {
+                            this.log(err);
+                        });
+                    }
+                    
+                    resolve(doc.version);
+                }).catch(err => {
+                    reject(err);
+                });
             });
-            
-            return defer.promise;
-        }.bind(this)).then(function(changelog_version){
+        }).then(changelog_version => {
             this.log("....Ok");
             this.print("Loading stats", 70, false);
             
-            var defer = Q.defer();
-            
-            stats.load().then(function(){
-                defer.resolve(changelog_version);
-            }).catch(function(err){
-                defer.reject(err);
+            return new Promise((resolve, reject) => {
+                stats.load().then(() => {
+                    resolve(changelog_version);
+                }).catch(err => {
+                    reject(err);
+                });
             });
-            
-            return defer.promise;
-        }.bind(this)).then(function(changelog_version){
+        }).then(changelog_version => {
             let servers = this.discord.guilds.array();
 
             this.log("....Ok");
@@ -379,7 +422,7 @@ class Bot
                 let server = servers[i];
 
                 this.servers[server.id] = new ServerData(this, server);
-                this.servers[server.id].load_promise.promise.then(initial => {
+                this.servers[server.id].load_promise.then(initial => {
 
                     for(var key in this.modules)
                     {
@@ -409,9 +452,9 @@ class Bot
             }
             
             this.ready = true;
-        }.bind(this)).catch(function(err){
+        }).catch(err => {
             this.log(err.stack);
-        }.bind(this));
+        });
     }
 
     on_server_created(server)
@@ -424,7 +467,7 @@ class Bot
         stats.update("num_servers", this.discord.guilds.array().length);
         
         this.servers[server.id] = new ServerData(this, server);
-        this.servers[server.id].load_promise.promise.then(function(server){
+        this.servers[server.id].load_promise.promise.then(() => {
             for(var key in this.modules)
             {
                 if(this.modules[key].always_on)
@@ -433,9 +476,10 @@ class Bot
                 if(this.modules[key].default_on)
                     this.servers[server.id].enable_module(key);
             }
-        }.bind(this, server)).catch(function(err){
+        }).catch(err => {
             this.log(err);
-        }.bind(this));
+        });
+
         this.servers_internal.push(this.servers[server.id]);
     }
     
@@ -555,18 +599,18 @@ class Bot
     blacklist_user(user)
     {
         this.user_blacklist.value.blacklist.push(user.user_id);
-        this.user_blacklist.save().catch(function(err){
+        this.user_blacklist.save().catch(err => {
             this.log(err);
-        }.bind(this));
+        });
     }
     
     blacklist_server(server_id)
     {
         this.message(responses.get("INFORM_SERVER_BLACKLISTED"), this.servers[server_id]);
         this.server_blacklist.value.blacklist.push(server_id);
-        this.server_blacklist.save().catch(function(err){
+        this.server_blacklist.save().catch(err => {
             this.log(err);
-        }.bind(this));
+        });
     }
     
     whitelist_user(user)
@@ -576,9 +620,9 @@ class Bot
             return false;
         
         this.user_blacklist.value.blacklist.splice(idx, 1);
-        this.user_blacklist.save().catch(function(err){
+        this.user_blacklist.save().catch(err => {
             this.log(err);
-        }.bind(this));
+        });
         
         return true;
     }
@@ -590,9 +634,9 @@ class Bot
             return false;
         
         this.server_blacklist.value.blacklist.splice(idx, 1);
-        this.server_blacklist.save().catch(function(err){
+        this.server_blacklist.save().catch(err => {
             this.log(err);
-        }.bind(this));
+        });
         
         this.message(responses.get("INFORM_SERVER_WHITELISTED"), this.servers[server_id]);
         return true;
