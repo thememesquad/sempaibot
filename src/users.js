@@ -1,7 +1,6 @@
 "use strict";
 
 const config = require("../config.js");
-const Q = require("q");
 const Document = require("camo").Document;
 
 class User extends Document
@@ -30,7 +29,7 @@ class User extends Document
             if(this.roles[server.id] === undefined || this.roles[server.id] !== "superadmin")
             {
                 this.roles[server.id] = "superadmin";
-                this.save().catch(function(err){
+                this.save().catch(err => {
                     console.log(err);
                 });
             }
@@ -41,7 +40,7 @@ class User extends Document
         if(this.roles[server.id] === undefined)
         {
             this.roles[server.id] = "normal";
-            this.save().catch(function(err){
+            this.save().catch(err => {
                 console.log(err);
             });
         }
@@ -51,7 +50,7 @@ class User extends Document
     
     get_role_id(server)
     {
-        var role = this.get_role(server);
+        let role = this.get_role(server);
         switch(role)
         {
             case "superadmin":
@@ -69,11 +68,11 @@ class User extends Document
     
     get_name(server)
     {
-        for(var i = 0;i<server.server.members.length;i++)
+        for(let i = 0;i<server.server.members.length;i++)
         {
             if(server.server.members[i].id === this.user_id)
             {
-                var details = server.server.detailsOf(server.server.members[i]);
+                let details = server.server.detailsOf(server.server.members[i]);
                 if(details.nick)
                     return details.nick;
                     
@@ -88,7 +87,7 @@ class User extends Document
     {
         if(member === undefined)
         {
-            for(var i = 0;i<server.server.members.length;i++)
+            for(let i = 0;i<server.server.members.length;i++)
             {
                 if(server.server.members[i].id === this.user_id)
                 {
@@ -101,8 +100,8 @@ class User extends Document
         if(member === undefined)
             return this.name + "#unknown";
             
-        var name = this.name;
-        var details = server.server.detailsOf(member);
+        let name = this.name;
+        let details = server.server.detailsOf(member);
         if(details.nick)
         {
             name = details.nick + " (" + this.name + "#" + member.discriminator + ")";
@@ -125,28 +124,25 @@ class Users
     
     load()
     {
-        var defer = Q.defer();
-        var _this = this;
-        
-        User.find({}).then(function(docs){
-            for(var i = 0;i<docs.length;i++)
-            {
-                var user = docs[i];
-                if(config.superadmins.indexOf(user.user_id) !== -1)
+        return new Promise((resolve, reject) => {
+            User.find({}).then(docs => {
+                for(let i = 0;i<docs.length;i++)
                 {
-                    for(var key in user.roles)
+                    let user = docs[i];
+                    if(config.superadmins.indexOf(user.user_id) !== -1)
                     {
-                        user.roles[key] = "superadmin";
+                        for(let key in user.roles)
+                        {
+                            user.roles[key] = "superadmin";
+                        }
                     }
+                    
+                    this.users[user.user_id] = user;
                 }
                 
-                _this.users[user.user_id] = user;
-            }
-            
-            defer.resolve();
+                resolve();
+            });
         });
-        
-        return defer.promise;
     }
     
     add_user(id, name, server, role)
@@ -156,7 +152,7 @@ class Users
             if(this.users[id].name !== name)
             {
                 this.users[id].name = name;
-                this.users[id].save().catch(function(err){
+                this.users[id].save().catch(err => {
                     console.log(err);
                 });
             }
@@ -169,13 +165,13 @@ class Users
         if(config.superadmins.indexOf(id) !== -1)
             role = "superadmin";
             
-        var roles = {};
+        let roles = {};
         roles[server.id] = role;
         
         console.log("Adding user '" + id + "' (" + name + ") from server '" + server.server.name + "'.");
         
-        var user = User.create({name: name, user_id: id, roles: roles});
-        user.save().catch(function(err){
+        let user = User.create({name: name, user_id: id, roles: roles});
+        user.save().catch(err => {
             console.log(err);
         });
         
@@ -185,16 +181,16 @@ class Users
     
     get_user_by_id(id, server)
     {
-        var user = this.users[id];
+        let user = this.users[id];
         if(user === undefined)
         {
             if(server !== undefined)
             {
-                for(var i = 0;i<server.server.members.length;i++)
+                for(let i = 0;i<server.server.members.length;i++)
                 {
                     if(server.server.members[i].id === id)
                     {
-                        return this.add_user(id, server.server.members[i].name, server);
+                        return this.add_user(id, server.server.members[i].user.username, server);
                     }
                 }
             }
@@ -207,10 +203,12 @@ class Users
     
     get_user(user, server)
     {
-        var ret = this.get_user_by_id(user.id, server);
+        let ret = this.get_user_by_id(user.id, server);
         if(ret === null)
-            return this.add_user(user.id, user.name, server);
-            
+        {
+            return this.add_user(user.id, user.username, server);
+        }
+
         return ret;
     }
     
@@ -220,7 +218,7 @@ class Users
             return false;
             
         this.users[id].roles[server.id] = role;
-        this.users[id].save().catch(function(err){
+        this.users[id].save().catch(err => {
             console.log(err);
         });
         

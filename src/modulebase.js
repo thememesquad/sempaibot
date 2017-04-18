@@ -19,12 +19,12 @@ class ModuleBase
 
     check_message(server, message)
     {
-        var best = null;
-        for(var i = 0;i<this.commands.length;i++)
+        let best = null;
+        for(let i = 0;i<this.commands.length;i++)
         {
-            var command = this.commands[i];
-            var data = null;
-            var is_private = this.commands[i].private !== undefined && this.commands[i].private === true;
+            let command = this.commands[i];
+            let data = null;
+            let is_private = this.commands[i].private !== undefined && this.commands[i].private === true;
             
             if(server !== null && !command.global)
             {
@@ -45,7 +45,7 @@ class ModuleBase
             }
 
             message.almost = undefined;
-            var ret = command.match(message);
+            let ret = command.match(message);
             if(ret === null && message.almost === undefined)
             {
                 continue;

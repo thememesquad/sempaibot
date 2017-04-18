@@ -1,8 +1,8 @@
 "use strict";
 
-var config = require("../config.js");
-var connect = require("camo").connect;
-var Document = require("camo").Document;
+const config = require("../config.js");
+const connect = require("camo").connect;
+const Document = require("camo").Document;
 
 class ConfigKeyValue extends Document
 {
@@ -15,43 +15,49 @@ class ConfigKeyValue extends Document
     }
 }
 
-var data = {
-    db: null,
-    ConfigKeyValue: ConfigKeyValue,
-    load: function(bot){
-        return new Promise(function(resolve, reject){
+class Database
+{
+    constructor()
+    {
+        this.db = null;
+        this.ConfigKeyValue = ConfigKeyValue;
+    }
+
+    load(bot)
+    {
+        return new Promise((resolve, reject) => {
             if(typeof config.use_mongodb === "undefined" || config.use_mongodb)
             {
                 var db_name = config.db_database || "";
-                connect("mongodb://" + config.db_username + ":" + config.db_password + "@" + config.db_host + ":" + config.db_port + "/" + db_name).then(function(db) {
+                connect("mongodb://" + config.db_username + ":" + config.db_password + "@" + config.db_host + ":" + config.db_port + "/" + db_name).then(db => {
                     bot.log("Using MongoDB as DB system.");
-                    data.db = db;
+                    this.db = db;
 
                     resolve("mongodb");
-                }).catch(function(){
-                    connect("nedb://data").then(function(db){
+                }).catch(() => {
+                    connect("nedb://data").then(db => {
                         bot.log("Using NeDB as DB system.");
-                        data.db = db;
+                        this.db = db;
 
                         resolve("nedb");
-                    }).catch(function(err){
+                    }).catch(err => {
                         reject(err);
                     });
                 });
             }
             else
             {
-                connect("nedb://data").then(function(db){
+                connect("nedb://data").then(db => {
                     bot.log("Using NeDB as DB system.");
-                    data.db = db;
+                    this.db = db;
 
                     resolve("nedb");
-                }).catch(function(err){
+                }).catch(err => {
                     reject(err);
                 });
             }
         });
     }
-};
+}
 
-module.exports = data;
+module.exports = new Database();

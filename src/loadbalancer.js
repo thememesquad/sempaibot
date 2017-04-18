@@ -1,5 +1,4 @@
 "use strict";
-const Q = require("q");
 const request = require("request");
 
 class LoadBalancer
@@ -26,7 +25,7 @@ class LoadBalancer
             return;
         }
         
-        var time = (new Date()).getMinutes();
+        let time = (new Date()).getMinutes();
         if(time !== this.old_minutes)
         {
             this.current = 0;
@@ -35,25 +34,25 @@ class LoadBalancer
         if(this.current >= this.limit)
             return;
         
-        var req = this.requests[0];
+        let req = this.requests[0];
         this.requests.splice(0, 1);
         this.current++;
         this.old_minutes = time;
         
-        request(req.url, function(request, error, response, body){
-            if(request.url !== undefined)
+        request(req.url, (error, response, body) => {
+            if(req.url !== undefined)
             {
-                delete this.namedRequests[request.url];
-                this.namedRequests[request.url] = undefined;
+                delete this.namedRequests[req.url];
+                this.namedRequests[req.url] = undefined;
             }
         
-            this.pendingRequests.splice(this.pendingRequests.indexOf(request));
+            this.pendingRequests.splice(this.pendingRequests.indexOf(req));
             
             if(error)
-                request.defer.reject(error);
+                req.reject(error);
             else
-                request.defer.resolve({response: response, body: body});
-        }.bind(this, req));
+                req.resolve({response: response, body: body});
+        });
         
         this.pendingRequests.push(req);
     }
@@ -63,45 +62,41 @@ class LoadBalancer
         if(this.namedRequests[url] !== undefined)
             return this.namedRequests[url];
         
-        var defer = Q.defer();
-        
-        this.requests.push({
-            defer: defer,
-            url: url
+        this.namedRequests[url] = new Promise((resolve, reject) => {
+            this.requests.push({
+                resolve: resolve,
+                reject: reject,
+                url: url
+            });
+
+            if(this.balancer === -1)
+            {
+                this.balancer = setInterval(this.balance.bind(this), 1);
+            }
         });
         
-        var promise = defer.promise;
-        promise.__baseRequest = defer;
-        promise.__baseURL = url;
-        
-        if(this.balancer === -1)
-        {
-            this.balancer = setInterval(this.balance.bind(this), 1);
-        }
-        
-        this.namedRequests[url] = promise;
-        return promise;
+        return this.namedRequests[url];
     }
     
     cancel(request)
     {
-        if(this.namedRequests[request.__baseURL] === undefined)
+        if(this.namedRequests[request.url] === undefined)
             return;
         
-        delete this.namedRequests[request.__baseURL];
+        delete this.namedRequests[request.url];
         
-        for(var i = 0;i<this.requests.length;i++)
+        for(let i = 0;i<this.requests.length;i++)
         {
-            if(this.requests[i].url === request.__baseURL)
+            if(this.requests[i].url === request.url)
             {
                 this.requests.splice(i, 1);
                 break;
             }
         }
         
-        for(var i = 0;i<this.pendingRequests.length;i++)
+        for(let i = 0;i<this.pendingRequests.length;i++)
         {
-            if(this.pendingRequests[i].url === request.__baseURL)
+            if(this.pendingRequests[i].url === request.url)
             {
                 this.pendingRequests[i].pending.abort();
                 this.pendingRequests.splice(i, 1);
@@ -113,10 +108,10 @@ class LoadBalancer
     close()
     {
         while(this.requests.length > 0)
-            this.cancel(this.requests[0].defer.promise);
+            this.cancel(this.requests[0]);
         
         while(this.pendingRequests.length > 0)
-            this.cancel(this.pendingRequests[0].defer.promise);
+            this.cancel(this.pendingRequests[0]);
         
         if(this.balancer !== -1)
             clearInterval(this.balancer);
