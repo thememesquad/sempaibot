@@ -4,18 +4,17 @@ const process = require("process");
 process.env.TZ = "Europe/Amsterdam";
 
 const Discord = require("discord.js");
-const ServerData = require("./src/ServerData.js");
+const ServerData = require("./serverdata.js");
 
 const modules = require("auto-loader").load(__dirname + "/modules");
-const responses = require("./src/responses.js");
-const db = require("./src/db.js");
-const config = require("./config.js");
-const users = require("./src/users.js");
-const permissions = require("./src/permissions.js");
-const Q = require("q");
+const responses = require("./responses.js");
+const db = require("./db.js");
+const config = require("../config.js");
+const users = require("./users.js");
+const permissions = require("./permissions.js");
 const Document = require("camo").Document;
 const changelog = require("./changelog.js");
-const stats = require("./src/stats.js");
+const stats = require("./stats.js");
 
 class ChangelogDB extends Document
 {
@@ -28,14 +27,14 @@ class ChangelogDB extends Document
 }
 
 String.prototype.format = function(args) {
-    return this.replace(/{(.*?)}/g, function(match, key) {
+    return this.replace(/{(.*?)}/g, (match, key) => {
         return typeof args[key] !== "undefined" ? args[key] : match;
     });
 };
 
 class Bot
 {
-    constructor()
+    constructor(allow_log)
     {
         this.discord = new Discord.Client({
             autoReconnect: true
@@ -49,6 +48,7 @@ class Bot
         this.connected = false;
         this.queue = [];
         this.ready = false;
+        this.allow_log = (allow_log === undefined) ? true : allow_log;
 
         this.discord.on("message", this.handle_message.bind(this));
         this.discord.on("ready", this.on_ready.bind(this));
@@ -57,14 +57,24 @@ class Bot
         this.discord.on("disconnected", this.on_disconnected.bind(this));
         this.discord.on("error", this.on_error.bind(this));
         
-        process.on("SIGTERM", function(){
-            this.shutdown();
-        }.bind(this));
+        process.on("SIGTERM", () => this.shutdown());
     }
 
+    log()
+    {
+        if(!this.allow_log) return;
+        console.log.apply(console.log, arguments);
+    }
+    
+    write()
+    {
+        if(!this.allow_log) return;
+        process.stdout.write.apply(process.stdout, arguments);
+    }
+    
     shutdown()
     {
-        console.log("Received SIGTERM, shutting down....");
+        this.log("Received SIGTERM, shutting down....");
         this.discord.destroy();
         
         for(var key in this.modules)
@@ -73,21 +83,13 @@ class Bot
                 this.modules[key].on_shutdown();
         }
 
-        stats.save().then(function(){
-            process.exit(0);
-        });
+        stats.save().then(() => process.exit(0));
     }
     
     login()
     {
-        this.discord.loginWithToken(config.token, function (error, token) {
-            if(error !== null)
-            {
-                return console.error("Discord login error: " + error);
-            }
-            
-            console.log("Logged in with token '" + token + "'.");
-        });
+        this.discord.login(config.token).then(token => this.log(`Logged in with token '${token}'.`))
+                                        .catch(err => console.error("Discord login error: ", err, err.stack));
     }
 
     set_status(status, game)
@@ -97,153 +99,172 @@ class Bot
             return this.queue.push(this.set_status.bind(this, status, game));
         }
         
-        try
-        {
-            this.discord.setStatus(status, game);
-        }
-        catch(e)
-        {
+        this.discord.user.setStatus(status, game).catch(() => {
             this.connected = false;
             this.queue.push(this.set_status.bind(this, status, game));
-        }
+        });
     }
     
-    message(message, server)
+    message_image(image, server)
     {
-        var defer = Q.defer();
-        
         if(this.is_server_blacklisted(server.id))
         {
-            defer.reject("blacklisted");
-            return defer.promise;
+            return Promise.reject("blacklisted");
         }
         
-        var channel = server.channel;
+        let channel = server.channel;
         if(channel.length === 0)
         {
-            channel = server.server.channels[0].id;
+            channel = server.server.channels.first().id;
         }
         
-        var queue = function(message, server, defer){
-            this.queue.push(this.discord.stopTyping.bind(this.discord, message.channel));
-            this.queue.push(this.discord.sendMessage.bind(this.discord, server.server.channels.get("id", channel), message, {}, function(defer, err, message){
-                if(err !== null)
-                    return defer.reject(err);
-                    
-                defer.resolve(message);
-            }.bind(this, defer)));
-        }.bind(this, message, server, defer);
-        
-        if(!this.connected)
-        {
-            queue();
-            return defer.promise;
-        }
-        
-        try
-        {
-            this.discord.stopTyping(message.channel);
-            this.discord.sendMessage(server.server.channels.get("id", channel), message, {}, function(err, message){
-                if(err !== null)
-                    return defer.reject(err);
-                    
-                defer.resolve(message);
+        let actual_channel = server.server.channels.find("id", channel);
+
+        return new Promise((resolve, reject) => {
+            let queue = () => {
+                this.queue.push(() => {
+                    actual_channel.sendFile(image).then(() => resolve(image)).catch(err => reject(err));
+                });
+            };
+            
+            if(!this.connected)
+            {
+                queue();
+                return;
+            }
+            
+            actual_channel.sendFile(image).then(() => resolve(image)).catch(() => {
+                this.connected = false;
+                queue();
             });
-        }
-        catch(e)
+        
+        });
+    }
+
+    message(message, server)
+    {
+        if(this.is_server_blacklisted(server.id))
         {
-            this.connected = false;
-            queue();
+            return Promise.reject("blacklisted");
         }
         
-        return defer.promise;
+        let channel = server.channel;
+        if(channel.length === 0)
+        {
+            channel = server.server.channels.first().id;
+        }
+        
+        let actual_channel = server.server.channels.find("id", channel);
+
+        return new Promise((resolve, reject) => {
+            let queue = () => {
+                this.queue.push(() => {
+                    actual_channel.sendMessage(message).then(() => resolve(message)).catch(err => reject(err));
+                });
+            };
+            
+            if(!this.connected)
+            {
+                queue();
+                return;
+            }
+            
+            actual_channel.sendMessage(message).then(() => resolve(message)).catch(() => {
+                this.connected = false;
+                queue();
+            });
+        
+        });
     }
 
     message_queue(messages, server)
     {
-        var defer = Q.defer();
-        
-        var send = function(server, messages, defer, index, send){
-            if(index >= messages.length)
-            {
-                return defer.resolve();
-            }
+        return new Promise((resolve, reject) => {
+            let send = (index, send) => {
+                if(index >= messages.length)
+                {
+                    return resolve();
+                }
+                
+                this.message(messages[index], server).then(() => send(index + 1, send)).catch(err => reject(err));
+            };
             
-            this.message(messages[index], server).then(function(index, send){
-                send(index + 1, send);
-            }.bind(this, index, send)).catch(function(defer, error){
-                defer.reject(error);
-            }.bind(this, defer));
-        }.bind(this, server, messages, defer);
-        
-        send(0, send);
-        return defer.promise;
+            send(0, send);
+        });
     }
     
-    respond(m, message)
+    respond_image(m, image)
     {
-        var defer = Q.defer();
-        
         if(this.is_server_blacklisted(m.server.id))
         {
-            defer.reject("blacklisted");
-            return defer.promise;
+            return Promise.reject("blacklisted");
         }
         
-        var queue = function(m, message, defer){
-            this.queue.push(this.discord.stopTyping.bind(this.discord, m.channel));
-            this.queue.push(this.discord.sendMessage.bind(this.discord, m.channel, message, {}, function(defer, err, message){
-                if(err !== null)
-                    return defer.reject(err);
-                    
-                defer.resolve(message);
-            }.bind(this, defer)));
-        }.bind(this, m, message, defer);
-        
-        if(!this.connected)
-        {
-            queue();
-            return defer.promise;
-        }
-        
-        try
-        {
-            this.discord.stopTyping(m.channel);
-            this.discord.sendMessage(m.channel, message, {}, function(err, message){
-                if(err !== null)
-                    return defer.reject(err);
-                    
-                defer.resolve(message);
+        let actual_channel = m.channel;
+
+        return new Promise((resolve, reject) => {
+            let queue = () => {
+                this.queue.push(() => {
+                    actual_channel.sendFile(image).then(() => resolve(image)).catch(err => reject(err));
+                });
+            };
+            
+            if(!this.connected)
+            {
+                queue();
+                return;
+            }
+            
+            actual_channel.sendFile(image).then(() => resolve(image)).catch(() => {
+                this.connected = false;
+                queue();
             });
-        }
-        catch(e)
+        });
+    }
+
+    respond(m, message)
+    {
+        if(this.is_server_blacklisted(m.server.id))
         {
-            this.connected = false;
-            queue();
+            return Promise.reject("blacklisted");
         }
         
-        return defer.promise;
+        let actual_channel = m.channel;
+
+        return new Promise((resolve, reject) => {
+            let queue = () => {
+                this.queue.push(() => {
+                    actual_channel.sendMessage(message).then(() => resolve(message)).catch(err => reject(err));
+                });
+            };
+            
+            if(!this.connected)
+            {
+                queue();
+                return;
+            }
+            
+            actual_channel.sendMessage(message).then(() => resolve(message)).catch(() => {
+                this.connected = false;
+                queue();
+            });
+        });
     }
 
     respond_queue(message, messages)
     {
-        var defer = Q.defer();
-        
-        var send = function(message, messages, defer, index, send){
-            if(index >= messages.length)
-            {
-                return defer.resolve();
-            }
+        return new Promise((resolve, reject) => {
+            let send = (index, send) => {
+                if(index >= messages.length)
+                {
+                    return resolve();
+                }
+                
+                this.respond(message, messages[index]).then(() => send(index + 1, send)).catch(err => reject(err));
+            };
             
-            this.respond(message, messages[index]).then(function(index, send){
-                send(index + 1, send);
-            }.bind(this, index, send, defer)).catch(function(defer, error){
-                defer.reject(error);
-            }.bind(this, defer));
-        }.bind(this, message, messages, defer);
-        
-        send(0, send);
-        return defer.promise;
+            send(0, send);
+        });
     }
 
     get_module(name)
@@ -257,16 +278,16 @@ class Bot
             message += ".";
             
         if(newline)
-            console.log(message);
+            this.log(message);
         else
-            process.stdout.write(message);
+            this.write(message);
     }
     
     on_ready()
     {
         this.connected = true;
         
-        console.log("Connected to discord.");
+        this.log("Connected to discord.");
         
         if(this.connected_once)
         {
@@ -281,11 +302,11 @@ class Bot
            
         this.connected_once = true;
         
-        db.load().then(function(){
+        db.load(this).then(() => {
             this.print("Loading config from DB", 70, false);
             return db.ConfigKeyValue.find({});
-        }.bind(this)).then(function(docs){
-            console.log("....Ok");
+        }).then(docs => {
+            this.log("....Ok");
             for(var i = 0;i<docs.length;i++)
             {
                 if(docs[i].key === "mode")
@@ -306,33 +327,29 @@ class Bot
             if(this.user_blacklist === null)
             {
                 this.user_blacklist = db.ConfigKeyValue.create({key: "user_blacklist", value: {blacklist: []}});
-                this.user_blacklist.save().catch(function(err){
-                    console.log(err);
-                });
+                this.user_blacklist.save().catch(err => console.log(err, err.stack));
             }
             
             if(this.server_blacklist === null)
             {
                 this.server_blacklist = db.ConfigKeyValue.create({key: "server_blacklist", value: {blacklist: []}});
-                this.server_blacklist.save().catch(function(err){
-                    console.log(err);
-                });
+                this.server_blacklist.save().catch(err => console.log(err, err.stack));
             }
             
             this.print("Loading users from DB", 70, false);
             return users.load();
-        }.bind(this)).then(function(){
-            console.log("....Ok");
+        }).then(() => {
+            this.log("....Ok");
             this.print("Loading permissions from DB", 70, false);
             return permissions.load();
-        }.bind(this)).then(function(){
-            console.log("....Ok");
+        }).then(() => {
+            this.log("....Ok");
             for(var key in modules)
             {
                 var mod = modules[key];
                 if(mod.on_setup === undefined)
                 {
-                    console.log("Error: Module '" + key + "' is not setup correctly. missing function: on_setup");
+                    this.log("Error: Module '" + key + "' is not setup correctly. missing function: on_setup");
                     continue;
                 }
 
@@ -340,71 +357,73 @@ class Bot
                 try
                 {
                     mod.on_setup(this);
-                    console.log("....Ok");
+                    this.log("....Ok");
                 }
                 catch(e)
                 {
-                    console.log("Error:");
-                    console.log(e.stack);
+                    this.log("Error:");
+                    this.log(e.stack);
                 }
 
                 this.modules[mod.name] = mod;
             }
 
             return permissions.save();
-        }.bind(this)).then(function(){
+        }).then(() => {
             this.print("Loading changelog", 70, false);
-            var defer = Q.defer();
             
-            ChangelogDB.findOne({}).then(function(doc){
-                if(doc === null)
-                {
-                    return ChangelogDB.create({version: changelog.version}).save().then(function(){
-                        defer.resolve(-1);
-                    }).catch(function(err){
-                        console.log(err);
-                    });
-                }
-                
-                if(doc.version !== changelog.version)
-                {
-                    var old = doc.version;
-                    doc.version = changelog.version;
-                    return doc.save().then(function(){
-                        defer.resolve(old);
-                    }).catch(function(err){
-                        console.log(err);
-                    });
-                }
-                
-                defer.resolve(doc.version);
-            }).catch(function(err){
-                defer.reject(err);
+            return new Promise((resolve, reject) => {
+                ChangelogDB.findOne({}).then(doc => {
+                    if(doc === null)
+                    {
+                        return ChangelogDB.create({version: changelog.version}).save().then(() => {
+                            resolve(-1);
+                        }).catch(err => {
+                            this.log(err);
+                        });
+                    }
+                    
+                    if(doc.version !== changelog.version)
+                    {
+                        var old = doc.version;
+                        doc.version = changelog.version;
+
+                        return doc.save().then(() => {
+                            resolve(old);
+                        }).catch(err => {
+                            this.log(err);
+                        });
+                    }
+                    
+                    resolve(doc.version);
+                }).catch(err => {
+                    reject(err);
+                });
             });
-            
-            return defer.promise;
-        }.bind(this)).then(function(changelog_version){
-            console.log("....Ok");
+        }).then(changelog_version => {
+            this.log("....Ok");
             this.print("Loading stats", 70, false);
             
-            var defer = Q.defer();
-            
-            stats.load().then(function(){
-                defer.resolve(changelog_version);
-            }).catch(function(err){
-                defer.reject(err);
+            return new Promise((resolve, reject) => {
+                stats.load().then(() => {
+                    resolve(changelog_version);
+                }).catch(err => {
+                    reject(err);
+                });
             });
+        }).then(changelog_version => {
+            let servers = this.discord.guilds.array();
+
+            this.log("....Ok");
+            stats.register("num_servers", servers.length);
             
-            return defer.promise;
-        }.bind(this)).then(function(changelog_version){
-            console.log("....Ok");
-            stats.register("num_servers", this.discord.servers.length);
-            
-            for(var i = 0;i<this.discord.servers.length;i++)
+            for(let i = 0;i<servers.length;i++)
             {
-                var server = this.discord.servers[i];
+                let server = servers[i];
+
                 this.servers[server.id] = new ServerData(this, server);
-                this.servers[server.id].load_promise.promise.then(function(server, initial){
+                this.servers[server.id].load_promise.then(initial => {
+
                     for(var key in this.modules)
                     {
                         if(this.modules[key].always_on)
@@ -414,8 +433,8 @@ class Bot
                             this.servers[server.id].enable_module(key);
                     }
                     
-                    var msg = "";
-                    for(var i = 0;i<changelog.changelog.length;i++)
+                    let msg = "";
+                    for(let i = 0;i<changelog.changelog.length;i++)
                     {
                         if(changelog.changelog[i][0] <= changelog_version)
                             continue;
@@ -428,13 +447,13 @@ class Bot
 
                     if(msg.length !== 0)
                         this.message(responses.get("CHANGELOG").format({changelog: msg}), this.servers[server.id]);
-                }.bind(this, this.servers[server.id]));
+                });
                 this.servers_internal.push(this.servers[server.id]);
             }
             
             this.ready = true;
-        }.bind(this)).catch(function(err){
-            console.log(err.stack);
+        }).catch(err => {
+            this.log(err.stack);
         });
     }
 
@@ -443,12 +462,12 @@ class Bot
         if(!this.connected || !this.ready)
             return;
             
-        console.log("Joined server '" + server.name + "'.");
+        this.log("Joined server '" + server.name + "'.");
         
-        stats.update("num_servers", this.discord.servers.length);
+        stats.update("num_servers", this.discord.guilds.array().length);
         
         this.servers[server.id] = new ServerData(this, server);
-        this.servers[server.id].load_promise.promise.then(function(server){
+        this.servers[server.id].load_promise.promise.then(() => {
             for(var key in this.modules)
             {
                 if(this.modules[key].always_on)
@@ -457,9 +476,10 @@ class Bot
                 if(this.modules[key].default_on)
                     this.servers[server.id].enable_module(key);
             }
-        }.bind(this, server)).catch(function(err){
-            console.log(err);
+        }).catch(err => {
+            this.log(err);
         });
+
         this.servers_internal.push(this.servers[server.id]);
     }
     
@@ -468,9 +488,9 @@ class Bot
         if(!this.connected || !this.ready)
             return;
             
-        console.log("Left server '" + server.name + "'.");
+        this.log("Left server '" + server.name + "'.");
         
-        stats.update("num_servers", this.discord.servers.length);
+        stats.update("num_servers", this.discord.guilds.array().length);
         
         delete this.servers_internal[this.servers_internal.indexOf(this.servers[server.id])];
         delete this.servers[server.id];
@@ -480,12 +500,12 @@ class Bot
     {
         this.connected = false;
         
-        console.log("Disconnected from discord.");
+        this.log("Disconnected from discord.");
     }
     
     on_error(err)
     {
-        console.log("Discord error: " + err);
+        this.log("Discord error: " + err);
     }
     
     handle_message(message)
@@ -493,13 +513,13 @@ class Bot
         var server = null;
         var key;
         
-        if(!message.channel.isPrivate)
+        if(message.channel.type !== "dm")
         {
-            server = this.servers[message.channel.server.id];
+            server = this.servers[message.channel.guild.id];
             if(server === null || server === undefined)
                 return;
         }
-            
+ 
         message.user = users.get_user(message.author, server);
         message.server = server;
         
@@ -569,9 +589,9 @@ class Bot
             if(!handled)
             {
                 if(split.length === 1)
-                    this.respond(message, responses.get("NAME").format({author: message.author.id}));
+                    this.respond(message, responses.get("NAME").format({author: message.author.id})).catch(err => console.log(err, err.stack));
                 else
-                    this.respond(message, responses.get("UNKNOWN_COMMAND").format({author: message.author.id}));
+                    this.respond(message, responses.get("UNKNOWN_COMMAND").format({author: message.author.id})).catch(err => console.log(err, err.stack));
             }
         }
     }
@@ -579,8 +599,8 @@ class Bot
     blacklist_user(user)
     {
         this.user_blacklist.value.blacklist.push(user.user_id);
-        this.user_blacklist.save().catch(function(err){
-            console.log(err);
+        this.user_blacklist.save().catch(err => {
+            this.log(err);
         });
     }
     
@@ -588,8 +608,8 @@ class Bot
     {
         this.message(responses.get("INFORM_SERVER_BLACKLISTED"), this.servers[server_id]);
         this.server_blacklist.value.blacklist.push(server_id);
-        this.server_blacklist.save().catch(function(err){
-            console.log(err);
+        this.server_blacklist.save().catch(err => {
+            this.log(err);
         });
     }
     
@@ -600,8 +620,8 @@ class Bot
             return false;
         
         this.user_blacklist.value.blacklist.splice(idx, 1);
-        this.user_blacklist.save().catch(function(err){
-            console.log(err);
+        this.user_blacklist.save().catch(err => {
+            this.log(err);
         });
         
         return true;
@@ -614,8 +634,8 @@ class Bot
             return false;
         
         this.server_blacklist.value.blacklist.splice(idx, 1);
-        this.server_blacklist.save().catch(function(err){
-            console.log(err);
+        this.server_blacklist.save().catch(err => {
+            this.log(err);
         });
         
         this.message(responses.get("INFORM_SERVER_WHITELISTED"), this.servers[server_id]);
@@ -655,5 +675,12 @@ class Bot
     }
 }
 
-var bot = new Bot();
-bot.login();
+if(require.main === module)
+{
+    var bot = new Bot();
+    bot.login();
+}
+else
+{
+    module.exports = Bot;
+}

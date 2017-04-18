@@ -1,6 +1,5 @@
 "use strict";
 
-const Q = require("q");
 const Document = require("camo").Document;
 const EmbeddedDocument = require("camo").EmbeddedDocument;
 
@@ -53,28 +52,18 @@ class StatsDB extends Document
     }
 }
 
-// This script is released to the public domain and may be used, modified and
-// distributed without restrictions. Attribution not necessary but appreciated.
-// Source: https://weeknumber.net/how-to/javascript 
-
-// Returns the ISO week of the date.
 Date.prototype.getWeek = function() {
-  var date = new Date(this.getTime());
-   date.setHours(0, 0, 0, 0);
-  // Thursday in current week decides the year.
-  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
-  // January 4 is always in week 1.
-  var week1 = new Date(date.getFullYear(), 0, 4);
-  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
-  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
-                        - 3 + (week1.getDay() + 6) % 7) / 7);
+    let date = new Date(this.getTime());
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    let week1 = new Date(date.getFullYear(), 0, 4);
+    return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
 };
 
-// Returns the four-digit year corresponding to the ISO week of the date.
 Date.prototype.getWeekYear = function() {
-  var date = new Date(this.getTime());
-  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
-  return date.getFullYear();
+    let date = new Date(this.getTime());
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    return date.getFullYear();
 };
 
 class StatsManager
@@ -87,60 +76,56 @@ class StatsManager
     
     load()
     {
-        var defer = Q.defer();
-        
-        StatsDB.findOne({}).then(function(doc){
-            if(doc !== null)
-                this.parse_db(doc);
-            
-            setInterval(function(){
-                this.save().catch(function(err){
-                    console.log("error saving stats: ", err);
-                });
-            }.bind(this), 5 * 60 * 1000); //5min
-            
-            if(doc === null)
-            {
-                this.save().then(function(doc){
-                    defer.resolve();
-                }).catch(function(err){
-                    defer.reject(err);
-                });
-            }
-            else
-            {
-                defer.resolve();
-            }
-        }.bind(this)).catch(function(err){
-            defer.reject(err);
+        return new Promise((resolve, reject) => {
+            StatsDB.findOne({}).then(doc => {
+                if(doc !== null)
+                    this.parse_db(doc);
+                
+                setInterval(() => {
+                    this.save().catch(err => {
+                        console.log("error saving stats: ", err);
+                    });
+                }, 5 * 60 * 1000); //5min
+                
+                if(doc === null)
+                {
+                    this.save().then(() => {
+                        resolve();
+                    }).catch(err => {
+                        reject(err);
+                    });
+                }
+                else
+                {
+                    resolve();
+                }
+            }).catch(err => {
+                reject(err);
+            });
         });
-        
-        return defer.promise;
     }
     
     save()
     {
-        var defer = Q.defer();
-        
-        this.update_db();
-        this.db_doc.save().then(function(){
-            defer.resolve();
-        }).catch(function(err){
-            defer.reject(err);
+        return new Promise((resolve, reject) => {
+            this.update_db();
+            this.db_doc.save().then(() => {
+                resolve();
+            }).catch(err => {
+                reject(err);
+            });
         });
-        
-        return defer.promise;
     }
     
     parse_db(doc)
     {
         this.db_doc = doc;
-        for(var i = 0;i<this.db_doc.stats.length;i++)
+        for(let i = 0;i<this.db_doc.stats.length;i++)
         {
-            var tmp = this.db_doc.stats[i];
-            var history = [];
+            let tmp = this.db_doc.stats[i];
+            let history = [];
             
-            for(var j = 0;j<tmp.history.length;j++)
+            for(let j = 0;j<tmp.history.length;j++)
             {
                 history.push({
                     time: tmp.history[j].date,
@@ -174,14 +159,14 @@ class StatsManager
     
     update_db()
     {
-        var stats = [];
+        let stats = [];
         
-        for(var key in this.stats)
+        for(let key in this.stats)
         {
-            var stat = this.stats[key];
-            var history = [];
+            let stat = this.stats[key];
+            let history = [];
             
-            for(var i = 0;i<stat.history.length;i++)
+            for(let i = 0;i<stat.history.length;i++)
             {
                 history.push(StatsHistoryDB.create({
                     date: stat.history[i].time,
@@ -272,7 +257,7 @@ class StatsManager
         if(this.stats[name] === undefined)
             return;
         
-        var prev = this.stats[name].last_update;
+        let prev = this.stats[name].last_update;
         this.stats[name].value = value;
         this.stats[name].last_update = new Date();
         
@@ -282,10 +267,10 @@ class StatsManager
         });
         
         //Now minus 1 month (30days * 24h * 60m * 60s * 1000ms)
-        var start = Date.now() - (30 * 24 * 60 * 60 * 1000);
+        let start = Date.now() - (30 * 24 * 60 * 60 * 1000);
         
-        var idx = -1;
-        for(var i = 0;i<this.stats[name].history.length;i++)
+        let idx = -1;
+        for(let i = 0;i<this.stats[name].history.length;i++)
         {
             if(this.stats[name].history[i].time < start)
                 idx = i;
@@ -306,7 +291,7 @@ class StatsManager
         if(this.stats[name] === undefined || !this.stats[name].generate_vdata)
             return;
         
-        var stat = this.stats[name];
+        let stat = this.stats[name];
         
         
         if(prev.getDate() !== stat.last_update.getDate())

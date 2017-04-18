@@ -1,13 +1,13 @@
 "use strict";
 
-const responses = require("../src/responses.js");
-const permissions = require("../src/permissions.js");
-const IModule = require("../src/IModule.js");
-const users = require("../src/users.js");
+const responses = require("../responses.js");
+const permissions = require("../permissions.js");
+const ModuleBase = require("../modulebase.js");
+const users = require("../users.js");
+const Util = require("../util.js");
 const moment = require("moment-timezone");
-const Util = require("../src/util.js");
 
-class BaseModule extends IModule
+class BaseModule extends ModuleBase
 {
     constructor()
     {
@@ -20,9 +20,9 @@ class BaseModule extends IModule
         permissions.register("CHANGE_PERSONALITY", "moderator");
 
         this.add_command({
-            match: function(message){
-                var please = false;
-                var german = false;
+            match: message => {
+                let please = false;
+                let german = false;
                 
                 if(message.content.startsWith("please help"))
                 {
@@ -54,8 +54,8 @@ class BaseModule extends IModule
         });
 
         this.add_command({
-            match: function(message){
-                var on = false;
+            match: message => {
+                let on = false;
                 
                 if(message.content.startsWith("tsundere on"))
                 {
@@ -76,7 +76,7 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("what is my role"))
                     return null;
                     
@@ -91,7 +91,7 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("what are my permissions") &&
                    !message.content.startsWith("show my permissions") &&
                    !message.content.startsWith("show my permission list") &&
@@ -111,7 +111,7 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("list roles"))
                     return null;
                     
@@ -126,7 +126,7 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("list permissions"))
                     return null;
                     
@@ -141,7 +141,7 @@ class BaseModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("show ignore list") &&
                    !message.content.startsWith("list ignores") &&
                    !message.content.startsWith("show ignorelist"))
@@ -158,11 +158,11 @@ class BaseModule extends IModule
         });
         
         /*this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("list timezones"))
                     return null;
                     
-                var area = message.content.substr("list timezones".length + 1);
+                let area = message.content.substr("list timezones".length + 1);
                 if(area.length === 0)
                 {
                     message.almost = true;
@@ -187,13 +187,12 @@ class BaseModule extends IModule
 
     handle_list_roles(message)
     {
-        var server = message.server;
-        var tmp = [];
-        var i;
+        let server = message.server;
+        let tmp = [];
         
-        for(i = 0;i<server.server.members.length;i++)
+        for(let i = 0;i<server.server.members.length;i++)
         {
-            var user = users.get_user_by_id(server.server.members[i].id, server);
+            let user = users.get_user_by_id(server.server.members[i].id, server);
             if(server.server.members[i].id === this.bot.user.user_id)
                 continue;
                 
@@ -203,40 +202,40 @@ class BaseModule extends IModule
             tmp.push(user);
         }
         
-        tmp.sort(function(a, b){
+        tmp.sort((a, b) => {
             return a.get_role_id(server) - b.get_role_id(server);
         });
         
-        var columns = {name: "Name", role: "Role"};
-        var data = [];
+        let columns = {name: "Name", role: "Role"};
+        let data = [];
         
-        for(i = 0;i<tmp.length;i++)
+        for(let i = 0;i<tmp.length;i++)
         {
             data.push({name: tmp[i].get_name_detailed(server), role: tmp[i].get_role(server)});
         }
         
-        var messages = Util.generate_table(responses.get("LIST_ROLES").format({author: message.author.id}), columns, data, {name: 30, role: 15});
+        let messages = Util.generate_table(responses.get("LIST_ROLES").format({author: message.author.id}), columns, data, {name: 30, role: 15});
         this.bot.respond_queue(message, messages);
     }
     
     handle_list_permissions(message)
     {
-        var server = message.server;
-        var admin_permissions = permissions.get_role("admin").get_permissions(server);
+        let server = message.server;
+        let admin_permissions = permissions.get_role("admin").get_permissions(server);
         
-        var columns = {permission: "Permission", roles: "Roles"};
-        var data = [];
-        var roles = ["admin", "moderator", "normal"];
+        let columns = {permission: "Permission", roles: "Roles"};
+        let data = [];
+        let roles = ["admin", "moderator", "normal"];
         
-        for(var key in admin_permissions)
+        for(let key in admin_permissions)
         {
             if(!admin_permissions[key])
                 continue;
                 
-            var tmp = "";
-            for(var i = 0;i<roles.length;i++)
+            let tmp = "";
+            for(let i = 0;i<roles.length;i++)
             {
-                var role = roles[i];
+                let role = roles[i];
                     
                 if(!permissions.get_role(role).is_allowed(server, key))
                     continue;
@@ -250,7 +249,7 @@ class BaseModule extends IModule
             data.push({permission: key.toLowerCase(), roles: tmp});
         }
         
-        data.sort(function(a, b){
+        data.sort((a, b) => {
             if(a.roles.length < b.roles.length) return -1;
             if(a.roles.length > b.roles.length) return 1;
             if(a.permission < b.permission) return -1;
@@ -258,15 +257,15 @@ class BaseModule extends IModule
             return 0;
         });
         
-        var messages = Util.generate_table(responses.get("LIST_PERMISSIONS").format({author: message.author.id}), columns, data, {permission: 20, roles: 15});
+        let messages = Util.generate_table(responses.get("LIST_PERMISSIONS").format({author: message.author.id}), columns, data, {permission: 20, roles: 15});
         this.bot.respond_queue(message, messages);
     }
     
     handle_show_ignorelist(message)
     {
-        var response = "``` ";
+        let response = "``` ";
         
-        for(var i = 0;i<message.server.ignorelist.length;i++)
+        for(let i = 0;i<message.server.ignorelist.length;i++)
         {
             if(i !== 0)
                 response += "\r\n";
@@ -284,20 +283,20 @@ class BaseModule extends IModule
 
     handle_help_me(message, please)
     {
-        var response = "";
+        let response = "";
 
         if(please)
             response = responses.get("PLEASE_HELP_TOP").format({author: message.author.id});
         else
             response = responses.get("HELP_TOP").format({author: message.author.id});
 
-        var message_queue = [];
-        var role = message.user.get_role(message.server);
-        var modules = "";
-        for(var key in this.bot.modules)
+        let message_queue = [];
+        let role = message.user.get_role(message.server);
+        let modules = "";
+        for(let key in this.bot.modules)
         {
-            var module = this.bot.modules[key];
-            var enabled = (message.server === null) ? false : message.server.is_module_enabled(module.name);
+            let module = this.bot.modules[key];
+            let enabled = (message.server === null) ? false : message.server.is_module_enabled(module.name);
             
             if(enabled)
             {
@@ -307,16 +306,16 @@ class BaseModule extends IModule
                 modules += key;
             }
 
-            var hasNonHidden = false;
-            var tmp = "";
-            for(var i = 0;i<module.commands.length;i++)
+            let hasNonHidden = false;
+            let tmp = "";
+            for(let i = 0;i<module.commands.length;i++)
             {
                 if(module.commands[i].permission !== null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
                     continue;
                     
                 if(module.commands[i].hide_in_help === undefined || module.commands[i].hide_in_help === false)
                 {
-                    var is_private = module.commands[i].private !== undefined && module.commands[i].private === true;
+                    let is_private = module.commands[i].private !== undefined && module.commands[i].private === true;
                     
                     if(message.server !== null && is_private)
                         continue;
@@ -345,7 +344,7 @@ class BaseModule extends IModule
             response += "\r\n";
         }
 
-        var add = "";
+        let add = "";
         if(message.server !== null)
             add += "**Enabled modules**: " + modules + "\r\n\r\n";
 
@@ -364,17 +363,16 @@ class BaseModule extends IModule
             message_queue.push(response + add);
         }
         
-        var send = function(queue, message, index, send)
-        {
-            if(index >= queue.length)
+        let send = (index, send) => {
+            if(index >= message_queue.length)
                 return;
                 
-            this.bot.respond(message, queue[index]).then(function(queue, message, index, send){
+            this.bot.respond(message, message_queue[index]).then(() => {
                 return send(index + 1, send);
-            }.bind(this, queue, message, index, send)).catch(function(err){
+            }).catch(err => {
                 console.log(err);
             });
-        }.bind(this, message_queue, message);
+        };
         send(0, send);
     }
 
@@ -387,7 +385,9 @@ class BaseModule extends IModule
 
             responses.setMode(true);
             this.bot.respond(message, responses.get("SWITCHED").format({author: message.author.id}));
-        }else{
+        }
+        else
+        {
             if(!responses.currentMode)
                 return this.bot.respond(message, responses.get("ALREADY_IN_MODE").format({author: message.author.id}));
 
@@ -398,7 +398,7 @@ class BaseModule extends IModule
 
     handle_my_role(message)
     {
-        var role = message.user.get_role(message.server);
+        let role = message.user.get_role(message.server);
         if(role === "superadmin")
             role = "Superadmin";
         else if(role === "admin")
@@ -413,18 +413,18 @@ class BaseModule extends IModule
     
     handle_my_permissions(message)
     {
-        var server = message.server;
-        var role = permissions.get_role(message.user.get_role(server));
-        var list = role.get_permissions(server);
+        let server = message.server;
+        let role = permissions.get_role(message.user.get_role(server));
+        let list = role.get_permissions(server);
         
-        var response = "```";
+        let response = "```";
         
-        for(var key in list)
+        for(let key in list)
         {
             if(key.toUpperCase() === "BLACKLIST_SERVERS" || key.toUpperCase() === "BLACKLIST_USERS")
                 continue;
             
-            var name = key;
+            let name = key;
             while(name.length !== 20)
                 name += " ";
                 
@@ -439,22 +439,22 @@ class BaseModule extends IModule
     
     handle_list_timezones(message, area)
     {
-        var i;
-        var timezones = moment.tz.names();
+        let i;
+        let timezones = moment.tz.names();
         for(i = timezones.length - 1;i>=0;i--)
         {
-            var t = timezones[i];
+            let t = timezones[i];
             if(!t.toLowerCase().startsWith(area))
             {
                 timezones.splice(i, 1);
             }
         }
         
-        var tmp = [];
-        var num = 0;
-        var response = "```";
-        var name = "Name";
-        var abbr = "Abbreviation";
+        let tmp = [];
+        let num = 0;
+        let response = "```";
+        let name = "Name";
+        let abbr = "Abbreviation";
         
         while(name.length < 26)
             name += " ";
@@ -465,7 +465,7 @@ class BaseModule extends IModule
         response += name + abbr + "\r\n";
         for(i = 0;i<timezones.length;i++)
         {
-            var zone = moment.tz.zone(timezones[i]);
+            let zone = moment.tz.zone(timezones[i]);
             name = zone.name;
             abbr = zone.abbrs[0];
             
@@ -505,14 +505,14 @@ class BaseModule extends IModule
         }
         
         tmp[0] = responses.get("TIMEZONE_LIST").format({author: message.author.id, timezones: tmp[0]});
-        var send = function(message, tmp, index){
+        let send = index => {
             if(index === tmp.length)
                 return;
                 
-            this.bot.respond(message, tmp[index]).then(function(){
+            this.bot.respond(message, tmp[index]).then(() => {
                 send(index + 1);
             });
-        }.bind(this, message, tmp);
+        };
         
         send(0);
     }

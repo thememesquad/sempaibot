@@ -1,13 +1,13 @@
 "use strict";
 
-const IModule = require("../src/IModule.js");
-const permissions = require("../src/permissions.js");
-const responses = require("../src/responses.js");
-const users = require("../src/users.js");
-const Util = require("../src/util.js");
-const stats = require("../src/stats.js");
+const ModuleBase = require("../modulebase.js");
+const permissions = require("../permissions.js");
+const responses = require("../responses.js");
+const users = require("../users.js");
+const util = require("../util.js");
+const stats = require("../stats.js");
 
-class AdminModule extends IModule
+class AdminModule extends ModuleBase
 {
     constructor()
     {
@@ -25,7 +25,7 @@ class AdminModule extends IModule
         permissions.register("ASSIGN_ROLES", "admin");
 
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("show statistics"))
                     return null;
                 
@@ -40,7 +40,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("list servers"))
                     return null;
                 
@@ -55,7 +55,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("blacklist server"))
                     return null;
                 
@@ -70,7 +70,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("whitelist server"))
                     return null;
                 
@@ -85,18 +85,18 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("blacklist user"))
                     return null;
                 
-                var mod = message.content.substr("blacklist user".length + 1).trim();
+                let mod = message.content.substr("blacklist user".length + 1).trim();
                 if(mod.length === 0)
                 {
                     message.almost = true;
                     return null;
                 }
                 
-                var user = Util.parse_id(mod);
+                let user = util.parse_id(mod);
                 if(user.type !== "user")
                 {
                     message.almost = true;
@@ -114,18 +114,18 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("whitelist user"))
                     return null;
                 
-                var mod = message.content.substr("blacklist user".length + 1).trim();
+                let mod = message.content.substr("blacklist user".length + 1).trim();
                 if(mod.length === 0)
                 {
                     message.almost = true;
                     return null;
                 }
                 
-                var user = Util.parse_id(mod);
+                let user = util.parse_id(mod);
                 if(user.type !== "user")
                 {
                     message.almost = true;
@@ -143,7 +143,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("show user blacklist"))
                     return null;
                 
@@ -158,7 +158,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("show server blacklist"))
                     return null;
                 
@@ -173,11 +173,11 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("enable"))
                     return null;
                     
-                var mod = message.content.startsWith("enable module") ? message.content.substr("enable module".length + 1) : message.content.substr("enable".length + 1);
+                let mod = message.content.startsWith("enable module") ? message.content.substr("enable module".length + 1) : message.content.substr("enable".length + 1);
                 mod = mod.trim();
                 
                 if(mod.length === 0)
@@ -197,11 +197,11 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("disable"))
                     return null;
                     
-                var mod = message.content.startsWith("disable module") ? message.content.substr("disable module".length + 1) : message.content.substr("disable".length + 1);
+                let mod = message.content.startsWith("disable module") ? message.content.substr("disable module".length + 1) : message.content.substr("disable".length + 1);
                 mod = mod.trim();
                 
                 if(mod.length === 0)
@@ -221,15 +221,15 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("assign"))
                     return null;
                     
-                var needs = 6;
-                var split = message.content.split(" ");
+                let needs = 6;
+                let split = message.content.split(" ");
                 
-                var idx1 = 2;
-                var idx2 = 5;
+                let idx1 = 2;
+                let idx2 = 5;
                 
                 if(split[2] === "to")
                 {
@@ -255,8 +255,8 @@ class AdminModule extends IModule
                     return null;
                 }
                 
-                var role = split[idx1];
-                var user = Util.parse_id(split[idx2]);
+                let role = split[idx1];
+                let user = util.parse_id(split[idx2]);
                 
                 if(user.type !== "user")
                 {
@@ -275,14 +275,14 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("add"))
                     return null;
                 
-                var needs = 6;
-                var idx1 = 2;
-                var idx2 = 5;
-                var split = message.content.split(" ");
+                let needs = 6;
+                let idx1 = 2;
+                let idx2 = 5;
+                let split = message.content.split(" ");
                 
                 if(split[2] === "to")
                 {
@@ -308,8 +308,8 @@ class AdminModule extends IModule
                     return null;
                 }
                 
-                var permission = split[idx1];
-                var role = split[idx2];
+                let permission = split[idx1];
+                let role = split[idx2];
                 
                 return [permission.toUpperCase(), role.toLowerCase()];
             },
@@ -322,14 +322,14 @@ class AdminModule extends IModule
         });
 
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("remove"))
                     return null;
                 
-                var needs = 6;
-                var idx1 = 2;
-                var idx2 = 5;
-                var split = message.content.split(" ");
+                let needs = 6;
+                let idx1 = 2;
+                let idx2 = 5;
+                let split = message.content.split(" ");
                 
                 if(split[2] === "from")
                 {
@@ -354,8 +354,8 @@ class AdminModule extends IModule
                     return null;
                 }
                 
-                var permission = split[idx1];
-                var role = split[idx2];
+                let permission = split[idx1];
+                let role = split[idx2];
                 
                 return [permission.toUpperCase(), role.toLowerCase()];
             },
@@ -368,7 +368,7 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("list modules") && 
                    !message.content.startsWith("show modules"))
                     return null;
@@ -384,18 +384,18 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("ignore"))
                     return null;
                     
-                var mod = message.content.substr("ignore".length + 1).trim();
+                let mod = message.content.substr("ignore".length + 1).trim();
                 if(mod.length === 0)
                 {
                     message.almost = true;
                     return null;
                 }
                 
-                var user = Util.parse_id(mod);
+                let user = util.parse_id(mod);
                 if(user.type !== "user")
                 {
                     message.almost = true;
@@ -413,18 +413,18 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("unignore") && !message.content.startsWith("stop ignoring"))
                     return null;
                     
-                var mod = (message.content.startsWith("unignore")) ? message.content.substr("unignore".length + 1).trim() : message.content.substr("stop ignoring".length + 1).trim();
+                let mod = (message.content.startsWith("unignore")) ? message.content.substr("unignore".length + 1).trim() : message.content.substr("stop ignoring".length + 1).trim();
                 if(mod.length === 0)
                 {
                     message.almost = true;
                     return null;
                 }
                 
-                var user = Util.parse_id(mod);
+                let user = util.parse_id(mod);
                 if(user.type !== "user")
                 {
                     message.almost = true;
@@ -442,18 +442,18 @@ class AdminModule extends IModule
         });
         
         this.add_command({
-            match: function(message){
+            match: message => {
                 if(!message.content.startsWith("go to"))
                     return null;
                     
-                var mod = message.content.startsWith("go to channel") ? message.content.substr("go to channel".length + 1).trim() : message.content.substr("go to".length + 1).trim();
+                let mod = message.content.startsWith("go to channel") ? message.content.substr("go to channel".length + 1).trim() : message.content.substr("go to".length + 1).trim();
                 if(mod.length === 0)
                 {
                     message.almost = true;
                     return null;
                 }
                 
-                var channel = Util.parse_id(mod);
+                let channel = util.parse_id(mod);
                 if(channel.type !== "channel")
                 {
                     message.almost = true;
@@ -473,7 +473,7 @@ class AdminModule extends IModule
 
     handle_blacklist_server(message, serverID)
     {
-        var server = this.bot.get_server_internal(serverID - 1);
+        let server = this.bot.get_server_internal(serverID - 1);
         
         if(server === null)
         {
@@ -489,7 +489,7 @@ class AdminModule extends IModule
     
     handle_whitelist_server(message, serverID)
     {
-        var server = this.bot.get_server_internal(serverID - 1);
+        let server = this.bot.get_server_internal(serverID - 1);
         
         if(server === null)
         {
@@ -505,7 +505,7 @@ class AdminModule extends IModule
     
     handle_blacklist_user(message, user_id)
     {
-        var user = this.get_user(user_id, message.server);
+        let user = this.get_user(user_id, message.server);
         if(user === null)
         {
             return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
@@ -517,7 +517,7 @@ class AdminModule extends IModule
     
     handle_whitelist_user(message, user_id)
     {
-        var user = this.get_user(user_id, message.server);
+        let user = this.get_user(user_id, message.server);
         if(user === null)
         {
             return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
@@ -529,8 +529,8 @@ class AdminModule extends IModule
     
     handle_show_user_blacklist(message)
     {
-        var id = "ID";
-        var name = "Name";
+        let id = "ID";
+        let name = "Name";
         
         while(id.length < 25)
             id += " ";
@@ -538,11 +538,11 @@ class AdminModule extends IModule
         while(name.length < 30)
             name += " ";
         
-        var response = "```";
+        let response = "```";
         response += id + " " + name;
         
-        var num = 0;
-        for(var key in users.users)
+        let num = 0;
+        for(let key in users.users)
         {
             if(!this.bot.is_user_blacklisted(users.users[key]))
                 continue;
@@ -574,9 +574,9 @@ class AdminModule extends IModule
     
     handle_show_server_blacklist(message)
     {
-        var id = "ID";
-        var name = "Name";
-        var owner = "Owner";
+        let id = "ID";
+        let name = "Name";
+        let owner = "Owner";
         
         while(id.length < 10)
             id += " ";
@@ -587,11 +587,11 @@ class AdminModule extends IModule
         while(owner.length < 20)
             owner += " ";
         
-        var response = "```";
+        let response = "```";
         response += id + " " + name + " " + owner;
         
-        var num = 0;
-        for(var i = 0;i<this.bot.servers_internal.length;i++)
+        let num = 0;
+        for(let i = 0;i<this.bot.servers_internal.length;i++)
         {
             if(!this.bot.is_server_blacklisted(this.bot.servers_internal[i].id))
                 continue;
@@ -626,7 +626,7 @@ class AdminModule extends IModule
     
     handle_show_statistics(message)
     {
-        var msg = responses.get("SHOW_STATISTICS").format({
+        let msg = responses.get("SHOW_STATISTICS").format({
             author: message.author.id,
             num_servers: stats.get_value("num_servers"),
             osu_num_users: stats.get_value("osu_num_users"),
@@ -640,7 +640,8 @@ class AdminModule extends IModule
             osu_last_day: stats.get_day_value("osu_api_calls"),
             osu_last_week: stats.get_week_value("osu_api_calls"),
             osu_last_month: stats.get_month_value("osu_api_calls"),
-            osu_alltime: stats.get_alltime_value("osu_api_calls")
+            osu_alltime: stats.get_alltime_value("osu_api_calls"),
+            osu_api_queue: this.bot.get_module("osu!").load_balancer.numRequests
         });
         
         this.bot.respond(message, msg);
@@ -648,62 +649,29 @@ class AdminModule extends IModule
     
     handle_list_servers(message)
     {
-        var id = "ID";
-        var name = "Name";
-        var owner = "Owner";
-        var limit = "Limit";
-        
-        while(id.length < 10)
-            id += " ";
-        
-        while(name.length < 25)
-            name += " ";
-        
-        while(owner.length < 25)
-            owner += " ";
-        
-        while(limit.length < 10)
-            limit += " ";
-        
-        var response = "```";
-        response += id + " " + name + " " + owner + " " + limit;
-        
-        var i = 0;
-        for(var i = 0;i<this.bot.servers_internal.length;i++)
+        let data = [];
+        for(let i = 0;i<this.bot.servers_internal.length;i++)
         {
             if(this.bot.is_server_blacklisted(this.bot.servers_internal[i].id))
             {
                 continue;
             }
             
-            id = "#" + (i + 1) + ".";
-            name = this.bot.servers_internal[i].server.name;
-            owner = this.bot.servers_internal[i].server.owner.name;
-            limit = "" + this.bot.servers_internal[i].config.value.osu_limit;
-            
-            while(id.length < 10)
-                id += " ";
-            
-            while(name.length < 25)
-                name += " ";
-            
-            while(owner.length < 25)
-                owner += " ";
-
-            while(limit.length < 10)
-                limit += " ";
-            
-            response += "\r\n";
-            response += id + " " + name + " " + owner + ((limit.length > 0) ? " " + limit : "");
+            data.push({
+                id: "#" + (i + 1) + ".",
+                name: this.bot.servers_internal[i].server.name,
+                owner: this.bot.servers_internal[i].server.owner.nickname || this.bot.servers_internal[i].server.owner.user.username,
+                limit: "" + this.bot.servers_internal[i].config.value.osu_limit
+            });
         }
-        response += "```";
         
-        this.bot.respond(message, responses.get("LIST_SERVERS").format({author: message.author.id, results: response}));
+        let messages = util.generate_table(responses.get("LIST_SERVERS").format({author: message.author.id}), {id: "ID", name: "Name", owner: "Owner", limit: "Limit"}, data);
+        this.bot.respond_queue(message, messages);
     }
     
     handle_enable_module(message, name)
     {
-        var module = this.bot.get_module(name);
+        let module = this.bot.get_module(name);
         if(module === null)
         {
             return this.bot.respond(message, responses.get("MODULE_INVALID").format({author: message.author.id, module: name}));
@@ -720,7 +688,7 @@ class AdminModule extends IModule
 
     handle_disable_module(message, name)
     {
-        var module = this.bot.get_module(name);
+        let module = this.bot.get_module(name);
         if(module === null)
         {
             return this.bot.respond(message, responses.get("MODULE_INVALID").format({author: message.author.id, module: name}));
@@ -742,16 +710,16 @@ class AdminModule extends IModule
 
     handle_list_modules(message)
     {
-        var columns = {name: "Name", enabled: "Enabled", flags: "Flags"};
-        var data = [];
+        let columns = {name: "Name", enabled: "Enabled", flags: "Flags"};
+        let data = [];
         
-        for(var key in this.bot.modules)
+        for(let key in this.bot.modules)
         {
-            var enabled = message.server.is_module_enabled(key);
-            var always_on = this.bot.modules[key].always_on;
-            var default_on = this.bot.modules[key].default_on;
+            let enabled = message.server.is_module_enabled(key);
+            let always_on = this.bot.modules[key].always_on;
+            let default_on = this.bot.modules[key].default_on;
             
-            var flags = "";
+            let flags = "";
             if(always_on)
                 flags += "always_on";
             
@@ -761,7 +729,7 @@ class AdminModule extends IModule
             data.push({name: key, enabled: (enabled) ? "yes" : "no", flags: flags});
         }
         
-        var messages = Util.generate_table(responses.get("MODULE_LIST").format({author: message.author.id}), columns, data, {name: 20, enabled: 10, flags: 15});
+        let messages = util.generate_table(responses.get("MODULE_LIST").format({author: message.author.id}), columns, data, {name: 20, enabled: 10, flags: 15});
         this.bot.respond_queue(message, messages);
     }
     
@@ -774,7 +742,7 @@ class AdminModule extends IModule
     {
         role = role.toLowerCase();
         
-        var role_id = 0;
+        let role_id = 0;
         switch(role)
         {
             case "superadmin":
@@ -793,13 +761,13 @@ class AdminModule extends IModule
                 break;
         }
         
-        var my_role = message.user.get_role_id(message.server);
+        let my_role = message.user.get_role_id(message.server);
         if(role_id < my_role)
         {
             return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
-        var user = this.get_user(user_id, message.server);
+        let user = this.get_user(user_id, message.server);
         if(user === null)
         {
             return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
@@ -823,7 +791,7 @@ class AdminModule extends IModule
         permission = permission.toUpperCase();
         role = role.toLowerCase();
         
-        var role_id = 0;
+        let role_id = 0;
         switch(role)
         {
             case "superadmin":
@@ -842,7 +810,7 @@ class AdminModule extends IModule
                 break;
         }
         
-        var my_role = message.user.get_role_id(message.server);
+        let my_role = message.user.get_role_id(message.server);
         if(role_id < my_role)
         {
             return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
@@ -862,7 +830,7 @@ class AdminModule extends IModule
         permission = permission.toUpperCase();
         role = role.toLowerCase();
         
-        var role_id = 0;
+        let role_id = 0;
         switch(role)
         {
             case "superadmin":
@@ -881,7 +849,7 @@ class AdminModule extends IModule
                 break;
         }
         
-        var my_role = message.user.get_role_id(message.server);
+        let my_role = message.user.get_role_id(message.server);
         if(role_id < my_role)
         {
             return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
@@ -898,7 +866,7 @@ class AdminModule extends IModule
     
     handle_goto_channel(message, channel)
     {
-        var id = channel;
+        let id = channel;
         if(message.server.server.channels.get("id", id) === null)
         {
             return this.bot.respond(message, responses.get("INVALID_CHANNEL").format({author: message.author.id, channel: channel}));
@@ -910,7 +878,7 @@ class AdminModule extends IModule
     
     handle_ignore_user(message, user_id)
     {
-        var user = this.get_user(user_id, message.server);
+        let user = this.get_user(user_id, message.server);
         if(user === null)
         {
             return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
@@ -927,7 +895,7 @@ class AdminModule extends IModule
     
     handle_unignore_user(message, user_id)
     {
-        var user = this.get_user(user_id, message.server);
+        let user = this.get_user(user_id, message.server);
         if(user === null)
         {
             return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));

@@ -106,5 +106,18 @@ describe("Util", () => {
             var ret = Util.generate_table("hello", {world: "!"}, data);
             ret.length.should.equal(7);
         });
+        
+        it("way too much data minimum_length", () => {
+            var data = [];
+            var num = Math.ceil((1800 - "hello world".length) / "tmp".length) * 4;
+            
+            for(var i = 0;i<num;i++)
+            {
+                data.push({world: "tmp"});
+            }
+            
+            var ret = Util.generate_table("hello", {world: "!"}, data, {world: 1});
+            ret.length.should.equal(7);
+        });
     });
 });
