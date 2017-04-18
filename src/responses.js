@@ -65,6 +65,9 @@ var responses_normal = {
         "Sempai is currently following:",
         "I'm currently following:"
     ],
+    OSU_FOLLOWING_EMPTY: [
+        "I'm not even following anyone!"
+    ],
     OSU_NOT_FOLLOWING: [
         "I'm not even following \"{user}\"!",
         "Sempai isn't even following \"{user}\"!"
@@ -163,13 +166,13 @@ var responses_normal = {
         "I... I don't understand. What do you want me to do?"
     ],
 
-    MULTIPLE_UNKNOWN_COMMAND:[
+    MULTIPLE_UNKNOWN_COMMAND: [
         "That's not a valid command either. If you need help, please type \"sempai help me\".",
         "I still don't understand what you want me to do. If you require help, please type \"sempai help me\"."
     ],
 
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
-    
+
     MY_ROLE: "Your role is {role}.",
     MY_PERMISSIONS: "Your permissions are: {permissions}",
     NOT_ALLOWED: "You don't have permission to do that.",
@@ -199,7 +202,7 @@ var responses_normal = {
     STOPPED_IGNORING: "Alright, I'll stop ignoring <@{user}>.",
     ADDED_PERMISSION: "Added permission {permission} to {role}.",
     REMOVED_PERMISSION: "Removed permission {permission} from {role}.",
-    
+
     CLEARED_REMINDERS: "Cleared {num} reminders.",
     INCORRECT_FORMAT: [
         "Sorry, Sempai is a little dumb sometimes... I won't know what you mean unless you tell me in a way I can understand!\r\nThe correct format is: \"{sample}\".",
@@ -301,6 +304,9 @@ var responses_tsundere = {
         "Are you stupid? I wasn't even following {user}!",
         "Are you stupid? I wasn't even following {user} in the first place!"
     ],
+    OSU_FOLLOWING_EMPTY: [
+        "I'm not even following anyone!"
+    ],
     OSU_NOT_FOLLOWING_MODE: [
         "Are you stupid? I wasn't even following {user} on {mode}!",
         "Are you stupid? I wasn't even following {user} on {mode} in the first place!"
@@ -337,7 +343,7 @@ var responses_tsundere = {
         "Fine. I'll check {user} on {mode} for you. But only because I have nothing else to do right now!",
         "Alright. I'll check {user} on {mode}. D-don't get me wrong. It's not like I'm doing this for you or anything."
     ],
-	
+
     OSU_MAX_USER_LIMIT: [
         "It's not like I don't want more friends... But Sempai just can't handle any more right now. 50 is my maximum!",
         "I could add more friends, but I just don't feel like it right now! 50 is enough, don't you think? Any more and Sempai's head will overload!"
@@ -363,7 +369,7 @@ var responses_tsundere = {
         "You asked me nicely! If I was keeping track, you would gain one Sempai relationship point! T-t-that doesn't mean I like you now! Don't get any weird ideas. Anyway, here is the list of my commands you asked for!:\r\n",
         "Only because you asked nicely. D-don't get me wrong, I do this for everyone if they ask nicely!  Here is the list of my commands you asked for!:\r\n"
     ],
-	
+
     SEMPAI_FUCKYOU: "I... It's not like I cared about you anyway <@{user}>! B..baka... :(",
 
     UNKNOWN_COMMAND: [
@@ -388,24 +394,21 @@ var responses = {
     current: responses_normal,
     currentMode: false,
 
-    get: function(name){
+    get: function(name) {
         let tmp = responses.current[name];
-        if(tmp === undefined && responses.currentMode)
-        {
+        if (tmp === undefined && responses.currentMode) {
             tmp = responses_normal[name];
-            
-            if(tmp !== undefined)
+
+            if (tmp !== undefined)
                 console.log("Response '" + name + "' has no tsundere version.");
         }
-           
-        if(tmp === undefined)
-        {
+
+        if (tmp === undefined) {
             console.log("unknown response: " + name);
             return responses.get("ERROR");
         }
 
-        if(Array.isArray(tmp))
-        {
+        if (Array.isArray(tmp)) {
             let idx = Math.floor(Math.random() * tmp.length);
             return tmp[idx];
         }
@@ -413,20 +416,17 @@ var responses = {
         return tmp;
     },
 
-    setMode: function(mode)
-    {
+    setMode: function(mode) {
         responses.currentMode = mode;
-        if(responses.currentMode)
-        {
+        if (responses.currentMode) {
             responses.current = responses_tsundere;
-        }else{
+        } else {
             responses.current = responses_normal;
         }
 
-        db.ConfigKeyValue.findOneAndUpdate({key: "mode"}, {value: {value: responses.currentMode}}, {}).then(doc => {
-            if(doc === null)
-            {
-                let dbkey = db.ConfigKeyValue.create({key: "mode", value: {value: responses.currentMode}});
+        db.ConfigKeyValue.findOneAndUpdate({ key: "mode" }, { value: { value: responses.currentMode } }, {}).then(doc => {
+            if (doc === null) {
+                let dbkey = db.ConfigKeyValue.create({ key: "mode", value: { value: responses.currentMode } });
                 dbkey.save();
             }
         }).catch(err => {
