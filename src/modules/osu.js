@@ -512,7 +512,6 @@ class OsuModule extends ModuleBase {
     }
 
     on_new_record(profile, record) {
-        console.log(profile);
         for (let i = 0; i < profile.servers.length; i++) {
             let server = this.servers[profile.servers[i]];
 
@@ -525,11 +524,10 @@ class OsuModule extends ModuleBase {
                 .setColor("#4ec1ff")
                 .setDescription(`**${record.map_artist} - ${record.map_title} [${record.map_diff_name}] ${record.mods}**`)
                 .addField(`Score`, `**${record.acc}%** | **${record.pp}pp** | **Rank: ${record.rank}**`, false)
-                .addField(`PP Changes`, `**${record.old_total_pp}pp** -> **${record.new_total_pp}pp** (+ ${record.delta_pp})`, true)
-                .addField(`Rank Changes`, `#**${record.old_rank}** -> #**${record.new_rank}**! (+ ${record.delta_rank})`, true)
+                .addField(`PP Changes`, `**${record.old_total_pp.toFixed(2)}pp** -> **${record.new_total_pp.toFixed(2)}pp** (+${record.delta_pp.toFixed(2)}pp)`, true)
+                .addField(`Rank Changes`, `#**${record.old_rank}** -> #**${record.new_rank}**! (${record.delta_rank} gain)`, false)
                 .addField(`Map links`, `[Map link](https://osu.ppy.sh/b/${record.beatmap_id}) | [Osu direct](osu://b/${record.beatmap_id})`, false)
-                .setTimestamp()
-                .setFooter(`This score has been tracked by Sempaibot!`, ``);
+                .addField(`\u200b`, `This score has been tracked by [Sempaibot!](http://sempai.moe) | Follow us [@sempaibot](https://twitter.com/osusempaibot)`);
 
             this.bot.embed(embed, server);
         }
@@ -709,7 +707,12 @@ class OsuModule extends ModuleBase {
             num = (num === undefined) ? 0 : num;
 
             first = (first === undefined) ? true : first;
-            let url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ? config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
+            let url = (method.startsWith("http:") ?
+                method :
+                (typeof config.osu_api_url !== "undefined") ?
+                config.osu_api_url + method :
+                "http://osu.ppy.sh/api/" + method
+            ) + "?k=" + config.osu_api;
 
             for (let key in params) {
                 url += "&" + key + "=" + params[key];
@@ -749,10 +752,10 @@ class OsuModule extends ModuleBase {
         return this.api_call("http://osu.ppy.sh/api/get_beatmaps", { b: id });
     }
 
-    get_user_best(username, mode, limit) {
+    get_user_best(id, mode, limit) {
         mode = mode || OsuMode.Standard;
 
-        return this.api_call("get_user_best", { u: username, m: mode, limit: limit }, false);
+        return this.api_call("get_user_best", { u: id, m: mode, limit: limit, type: "id" }, false);
     }
 
     calculate_accuracy(beatmap, mode) {
@@ -832,7 +835,7 @@ class OsuModule extends ModuleBase {
 
         let topRank;
         co(function*() {
-            let json = yield this.get_user_best(username, profile.mode, 50);
+            let json = yield this.get_user_best(profile.user_id, profile.mode, 50);
             for (let j = 0; j < json.length; j++) {
                 let beatmap = json[j];
                 beatmap.count50 = parseInt(beatmap.count50);
