@@ -523,10 +523,19 @@ class OsuModule extends ModuleBase {
                 .setThumbnail(`https://a.ppy.sh/${profile.user_id}_${Date.now()}.png`)
                 .setColor("#4ec1ff")
                 .setDescription(`**${record.map_artist} - ${record.map_title} [${record.map_diff_name}] ${record.mods}**`)
-                .addField(`Score`, `**${record.acc}%** | **${record.pp}pp** | **Rank: ${record.rank}**`, false)
-                .addField(`PP Changes`, `**${record.old_total_pp.toFixed(2)}pp** -> **${record.new_total_pp.toFixed(2)}pp** (+${record.delta_pp.toFixed(2)}pp)`, true)
-                .addField(`Rank Changes`, `#**${record.old_rank}** -> #**${record.new_rank}**! (${record.delta_rank} gain)`, false)
-                .addField(`Map links`, `[Map link](https://osu.ppy.sh/b/${record.beatmap_id}) | [Osu direct](osu://b/${record.beatmap_id})`, false)
+                .addField(`Score`, `**${record.acc}%** | **${record.pp}pp** | **Rank: ${record.rank}** ${record.additional}`, false);
+
+            if (record.delta_pp === 0)
+                embed.addField(`PP Changes`, `**${record.old_total_pp}pp** -> **${record.new_total_pp}pp** (no gain)`, true);
+            else
+                embed.addField(`PP Changes`, `**${record.old_total_pp}pp** -> **${record.new_total_pp}pp** (+${record.delta_pp}pp)`, true);
+
+            if (record.delta_rank === 0)
+                embed.addField(`Rank Changes`, `#**${record.old_rank}** -> #**${record.new_rank}**! (no gain)`, false)
+            else
+                embed.addField(`PP Changes`, `#**${record.old_rank}** -> #**${record.new_rank}**! (${record.delta_rank} gain)`, true);
+
+            embed.addField(`Map links`, `[Map link](https://osu.ppy.sh/b/${record.beatmap_id}) | [Osu direct](osu://b/${record.beatmap_id})`, false)
                 .addField(`\u200b`, `This score has been tracked by [Sempaibot!](http://sempai.moe) | Follow us [@sempaibot](https://twitter.com/osusempaibot)`);
 
             this.bot.embed(embed, server);
@@ -897,20 +906,6 @@ class OsuModule extends ModuleBase {
                         let oldRank = profile.rank;
                         let deltaRank = user_data.pp_rank - profile.rank;
 
-                        if (deltapp > 0)
-                            deltapp = "+" + deltapp.toFixed(2) + "pp";
-                        else if (deltapp < 0)
-                            deltapp = deltapp.toFixed(2) + "pp";
-                        else
-                            deltapp = "no gain";
-
-                        if (deltaRank === 0)
-                            deltaRank = "no gain";
-                        else if (deltaRank > 0)
-                            deltaRank += " lost";
-                        else if (deltaRank < 0)
-                            deltaRank = Math.abs(deltaRank) + " gained";
-
                         let newRank = profile.rank = parseInt(user_data.pp_rank);
                         profile.pp = parseFloat(user_data.pp_raw);
 
@@ -922,7 +917,7 @@ class OsuModule extends ModuleBase {
                             beatmap.additional = "| **" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
                         }
 
-                        let announcement = responses.get((profile.mode === OsuMode.Standard) ? "OSU_NEW_SCORE" : "OSU_NEW_SCORE_MODE").format({
+                        let announcement = {
                             user: profile.username,
                             beatmap_id: beatmap.beatmap_id,
                             pp: beatmap.pp,
@@ -941,7 +936,7 @@ class OsuModule extends ModuleBase {
                             new_rank: newRank,
                             delta_rank: deltaRank,
                             mode: OsuMode.to_string(profile.mode)
-                        });
+                        };
 
                         this.on_new_record(profile, announcement);
                     }
