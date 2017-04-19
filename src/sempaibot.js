@@ -136,7 +136,7 @@ class Bot {
             channel = server.server.channels.first().id;
         }
 
-        let actual_channel = server.server.channels.find("id", channel);
+        let actual_channel = server.server.channels.get(channel);
 
         return new Promise((resolve, reject) => {
             let queue = () => {
