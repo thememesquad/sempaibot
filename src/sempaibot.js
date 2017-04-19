@@ -170,9 +170,7 @@ class Bot {
         let actual_channel = server.server.channels.get(channel);
 
         return new Promise((resolve, reject) => {
-            let queue = () => {
-                this.queue.push(() => actual_channel.sendEmbed(message).then(() => resolve(message)).catch(err => reject(err)));
-            };
+            let queue = () => this.queue.push(() => actual_channel.sendEmbed(message).then(() => resolve(message)).catch(err => reject(err)));
 
             if (!this.connected) {
                 queue();
