@@ -12,16 +12,10 @@ const lodash = require("lodash"),
     LoadBalancer = require("../loadbalancer.js"),
     util = require("../util.js"),
     moment = require("moment-timezone"),
-    co = require("co"),
 
     USER_UPDATE_INTERVAL = 1200000,
     BEST_UPDATE_INTERVAL = 60000,
-    CURRENT_DB_VERSION = 3,
-    MOD_LIST = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
-
-function getMinutes() {
-    return (new Date()).getMinutes();
-}
+    CURRENT_DB_VERSION = 3;
 
 class OsuMode {
     static get Standard() { return 0; }
@@ -58,37 +52,6 @@ class OsuUser extends Document {
         this.db_version = Number;
         this.mode = Number;
         this.extra = [Object];
-    }
-}
-
-class OsuModuleV2 extends ModuleBase {
-    constructor() {
-        super();
-
-        this.name = "osu!";
-        this.description = [
-            "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Great if you want to fanboy about Cookiezi, or make fun of your friend for setting a new PP score with bad acc!",
-            "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Who needs /r/osugame when you have this?",
-            "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! This is like /r/osugame, but automated and with worse memes. I tried, okay.",
-            "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Just don't follow everyone on osu! because Peppy will get angry at us."
-        ];
-        this.default_on = true;
-
-        this.users = [];
-        this.stats = {
-            last: 0,
-            last_minute: getMinutes()
-        };
-        this.pending_api_calls = [];
-        this.load_balancer = new LoadBalancer(60);
-
-        stats.register("osu_api_calls", 0, true);
-        stats.register("osu_num_users", 0);
-
-        permissions.register("OSU_CHANGE_LIMIT", "superadmin");
-        permissions.register("OSU_FOLLOW", "moderator");
-        permissions.register("OSU_UNFOLLOW", "moderator");
-        permissions.register("OSU_CHECK", "moderator");
     }
 }
 
@@ -522,21 +485,22 @@ class OsuModule extends ModuleBase {
                 .setTitle(`${record.user} has set a #${record.top_rank} score!`)
                 .setThumbnail(`https://a.ppy.sh/${profile.user_id}_${Date.now()}.png`)
                 .setColor("#4ec1ff")
+                .setURL(`https://osu.ppy.sh/u/${profile.user_id}`)
                 .setDescription(`**${record.map_artist} - ${record.map_title} [${record.map_diff_name}] ${record.mods}**`)
-                .addField(`Score`, `**${record.acc}%** | **${record.pp}pp** | **Rank: ${record.rank}** ${record.additional}`, false);
+                .addField("Score", `**${record.acc}%** | **${record.pp}pp** | **Rank: ${record.rank}** ${record.additional}`, false);
 
-            if (record.delta_pp === 0)
-                embed.addField(`PP Changes`, `**${record.old_total_pp}pp** -> **${record.new_total_pp}pp** (no gain)`, true);
+            if (record.delta_pp === "0.00")
+                embed.addField("PP Changes", `**${record.old_total_pp}pp** -> **${record.new_total_pp}pp** (no gain)`, true);
             else
-                embed.addField(`PP Changes`, `**${record.old_total_pp}pp** -> **${record.new_total_pp}pp** (+${record.delta_pp}pp)`, true);
+                embed.addField("PP Changes", `**${record.old_total_pp}pp** -> **${record.new_total_pp}pp** (+${record.delta_pp}pp)`, true);
 
             if (record.delta_rank === 0)
-                embed.addField(`Rank Changes`, `#**${record.old_rank}** -> #**${record.new_rank}**! (no gain)`, false)
+                embed.addField("Rank Changes", `#**${record.old_rank}** -> #**${record.new_rank}**! (no gain)`, false);
             else
-                embed.addField(`PP Changes`, `#**${record.old_rank}** -> #**${record.new_rank}**! (${record.delta_rank} gain)`, true);
+                embed.addField("PP Changes", `#**${record.old_rank}** -> #**${record.new_rank}**! (${record.delta_rank} gain)`, true);
 
-            embed.addField(`Map links`, `[Map link](https://osu.ppy.sh/b/${record.beatmap_id}) | [Osu direct](osu://b/${record.beatmap_id})`, false)
-                .addField(`\u200b`, `This score has been tracked by [Sempaibot!](http://sempai.moe) | Follow us [@sempaibot](https://twitter.com/osusempaibot)`);
+            embed.addField("Map links", `[Map link](https://osu.ppy.sh/b/${record.beatmap_id}) | [Osu direct](osu://b/${record.beatmap_id})`, false)
+                .addField("\u200b", "This score has been tracked by [Sempaibot!](http://sempai.moe) | Follow us [@sempaibot](https://twitter.com/osusempaibot)");
 
             this.bot.embed(embed, server);
         }
@@ -823,18 +787,17 @@ class OsuModule extends ModuleBase {
         }
 
         if (message) {
-            if (profile.mode === OsuMode.Standard) {
+            if (profile.mode === OsuMode.Standard)
                 this.bot.respond(message, responses.get("OSU_CHECK").format({
                     author: message.author.id,
                     user: profile.username
                 }));
-            } else {
+            else
                 this.bot.respond(message, responses.get("OSU_CHECK_MODE").format({
                     author: message.author.id,
                     user: profile.username,
                     mode: OsuMode.to_string(profile.mode)
                 }));
-            }
         }
 
         if (!force && profile.checking)
@@ -843,8 +806,8 @@ class OsuModule extends ModuleBase {
         profile.checking = true;
 
         let topRank;
-        co(function*() {
-            let json = yield this.get_user_best(profile.user_id, profile.mode, 50);
+        let handle = async () => {
+            let json = await this.get_user_best(profile.user_id, profile.mode, 50);
             for (let j = 0; j < json.length; j++) {
                 let beatmap = json[j];
                 beatmap.count50 = parseInt(beatmap.count50);
@@ -887,67 +850,70 @@ class OsuModule extends ModuleBase {
                     }
                 }
 
-                if (!skip) {
-                    topRank = j + 1;
+                if (skip)
+                    continue;
+            
+                topRank = j + 1;
 
-                    if (index === -1) {
-                        profile.records.push({ date: date, beatmap_id: beatmap.beatmap_id });
-                    } else {
-                        profile.records[index].date = date;
-                    }
+                if (index === -1)
+                    profile.records.push({ date: date, beatmap_id: beatmap.beatmap_id });
+                else
+                    profile.records[index].date = date;
 
-                    if (!no_report) {
-                        let beatmap_info = yield this.get_beatmaps(beatmap.beatmap_id);
-                        let user_data = yield this.update_user(profile, profile.mode);
+                if(no_report)
+                    continue;
+                
+                let beatmap_info = await this.get_beatmaps(beatmap.beatmap_id);
+                let user_data = await this.update_user(profile, profile.mode);
 
-                        let oldTotalpp = parseFloat(profile.pp);
-                        let newTotalpp = parseFloat(user_data.pp_raw);
-                        let deltapp = user_data.pp_raw - profile.pp;
-                        let oldRank = profile.rank;
-                        let deltaRank = user_data.pp_rank - profile.rank;
+                let oldTotalpp = parseFloat(profile.pp);
+                let newTotalpp = parseFloat(user_data.pp_raw);
+                let deltapp = user_data.pp_raw - profile.pp;
+                let oldRank = profile.rank;
+                let deltaRank = user_data.pp_rank - profile.rank;
 
-                        let newRank = profile.rank = parseInt(user_data.pp_rank);
-                        profile.pp = parseFloat(user_data.pp_raw);
+                let newRank = profile.rank = parseInt(user_data.pp_rank);
+                profile.pp = parseFloat(user_data.pp_raw);
 
-                        beatmap.additional = "";
-                        if (beatmap.perfect === 0) {
-                            if (beatmap_info.max_combo === null)
-                                beatmap_info.max_combo = "err";
+                beatmap.additional = "";
+                if (beatmap.perfect === 0) {
+                    if (beatmap_info.max_combo === null)
+                        beatmap_info.max_combo = "err";
 
-                            beatmap.additional = "| **" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
-                        }
-
-                        let announcement = {
-                            user: profile.username,
-                            beatmap_id: beatmap.beatmap_id,
-                            pp: beatmap.pp,
-                            rank: beatmap.rank,
-                            acc: beatmap.acc,
-                            mods: beatmap.mods,
-                            map_artist: beatmap_info.artist,
-                            map_title: beatmap_info.title,
-                            map_diff_name: beatmap_info.version,
-                            additional: beatmap.additional,
-                            top_rank: topRank,
-                            old_total_pp: oldTotalpp.toFixed(2),
-                            new_total_pp: newTotalpp.toFixed(2),
-                            delta_pp: deltapp,
-                            old_rank: oldRank,
-                            new_rank: newRank,
-                            delta_rank: deltaRank,
-                            mode: OsuMode.to_string(profile.mode)
-                        };
-
-                        this.on_new_record(profile, announcement);
-                    }
+                    beatmap.additional = "| **" + beatmap.maxcombo + "/" + beatmap_info.max_combo + "** " + beatmap.countmiss + "x Miss";
                 }
+
+                let announcement = {
+                    user: profile.username,
+                    beatmap_id: beatmap.beatmap_id,
+                    pp: beatmap.pp,
+                    rank: beatmap.rank,
+                    acc: beatmap.acc,
+                    mods: beatmap.mods,
+                    map_artist: beatmap_info.artist,
+                    map_title: beatmap_info.title,
+                    map_diff_name: beatmap_info.version,
+                    additional: beatmap.additional,
+                    top_rank: topRank,
+                    old_total_pp: oldTotalpp.toFixed(2),
+                    new_total_pp: newTotalpp.toFixed(2),
+                    delta_pp: deltapp.toFixed(2),
+                    old_rank: oldRank,
+                    new_rank: newRank,
+                    delta_rank: deltaRank,
+                    mode: OsuMode.to_string(profile.mode)
+                };
+
+                this.on_new_record(profile, announcement);
             }
 
             profile.last_checked = (new Date()).getTime();
             OsuUser.findOneAndUpdate({ user_id: profile.user_id }, { db_version: CURRENT_DB_VERSION, records: profile.records, last_checked: profile.last_checked }, {});
 
             profile.checking = false;
-        }.bind(this));
+        };
+
+        handle();
     }
 
     check_user(_username, _message, mode) {

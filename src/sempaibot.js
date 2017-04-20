@@ -70,7 +70,7 @@ class Bot {
         this.log("Received SIGTERM, shutting down....");
         this.discord.destroy();
 
-        for (var key in this.modules) {
+        for (let key in this.modules) {
             if (this.modules[key].on_shutdown !== undefined)
                 this.modules[key].on_shutdown();
         }
@@ -301,7 +301,7 @@ class Bot {
             return db.ConfigKeyValue.find({});
         }).then(docs => {
             this.log("....Ok");
-            for (var i = 0; i < docs.length; i++) {
+            for (let i = 0; i < docs.length; i++) {
                 if (docs[i].key === "mode") {
                     if (docs[i].value.value !== responses.currentMode)
                         responses.setMode(docs[i].value);
@@ -330,8 +330,8 @@ class Bot {
             return permissions.load();
         }).then(() => {
             this.log("....Ok");
-            for (var key in modules) {
-                var mod = modules[key];
+            for (let key in modules) {
+                let mod = modules[key];
                 if (mod.on_setup === undefined) {
                     this.log("Error: Module '" + key + "' is not setup correctly. missing function: on_setup");
                     continue;
@@ -364,7 +364,7 @@ class Bot {
                     }
 
                     if (doc.version !== changelog.version) {
-                        var old = doc.version;
+                        let old = doc.version;
                         doc.version = changelog.version;
 
                         return doc.save().then(() => {
@@ -402,7 +402,7 @@ class Bot {
                 this.servers[server.id] = new ServerData(this, server);
                 this.servers[server.id].load_promise.then(initial => {
 
-                    for (var key in this.modules) {
+                    for (let key in this.modules) {
                         if (this.modules[key].always_on)
                             this.servers[server.id].enable_module(key);
 
@@ -443,7 +443,7 @@ class Bot {
 
         this.servers[server.id] = new ServerData(this, server);
         this.servers[server.id].load_promise.promise.then(() => {
-            for (var key in this.modules) {
+            for (let key in this.modules) {
                 if (this.modules[key].always_on)
                     this.servers[server.id].enable_module(key);
 
@@ -480,8 +480,7 @@ class Bot {
     }
 
     handle_message(message) {
-        var server = null;
-        var key;
+        let server = null;
 
         if (message.channel.type !== "dm") {
             server = this.servers[message.channel.guild.id];
@@ -504,7 +503,7 @@ class Bot {
             return;
 
         if (message.author.id !== this.discord.user.id && message.server !== null) {
-            for (key in this.modules) {
+            for (let key in this.modules) {
                 if (!server.is_module_enabled(key) && (this.modules[key].always_on === undefined || this.modules[key].always_on === false))
                     continue;
 
@@ -516,20 +515,20 @@ class Bot {
         }
 
         if (message.content.toLowerCase().indexOf("sempai") === 0 || message.content.indexOf("-") === 0) {
-            var msg = message.content;
-            if (msg.toLowerCase().indexOf("sempai") === 0) {
+            let msg = message.content;
+
+            if (msg.toLowerCase().indexOf("sempai") === 0)
                 msg = msg.substr("sempai".length + 1).replace(/\s+/g, " ").trim();
-            } else {
+            else
                 msg = msg.substr(1).replace(/\s+/g, " ").trim();
-            }
 
             message.content = msg;
-            var split = message.content.split(" ");
-            var handled = false;
-            var tmp = [];
+            let split = message.content.split(" ");
+            let handled = false;
+            let tmp = [];
 
-            for (key in this.modules) {
-                var resp = this.modules[key].check_message(server, message, split);
+            for (let key in this.modules) {
+                let resp = this.modules[key].check_message(server, message, split);
 
                 if (typeof resp === "string") {
                     tmp.push(resp);
@@ -540,15 +539,23 @@ class Bot {
             }
 
             if (!handled && tmp.length > 0) {
-                this.respond(message, responses.get("INCORRECT_FORMAT").format({ author: message.author.id, sample: tmp[0] }));
+                this.respond(message, responses.get("INCORRECT_FORMAT").format({ 
+                    author: message.author.id, 
+                    sample: tmp[0] 
+                }));
+
                 handled = true;
             }
 
             if (!handled) {
                 if (split.length === 1)
-                    this.respond(message, responses.get("NAME").format({ author: message.author.id })).catch(err => console.log(err, err.stack));
+                    this.respond(message, responses.get("NAME").format({ 
+                        author: message.author.id 
+                    })).catch(err => console.log(err, err.stack));
                 else
-                    this.respond(message, responses.get("UNKNOWN_COMMAND").format({ author: message.author.id })).catch(err => console.log(err, err.stack));
+                    this.respond(message, responses.get("UNKNOWN_COMMAND").format({ 
+                        author: message.author.id 
+                    })).catch(err => console.log(err, err.stack));
             }
         }
     }
@@ -569,7 +576,7 @@ class Bot {
     }
 
     whitelist_user(user) {
-        var idx = this.user_blacklist.value.blacklist.indexOf(user.user_id);
+        let idx = this.user_blacklist.value.blacklist.indexOf(user.user_id);
         if (idx === -1)
             return false;
 
@@ -582,7 +589,7 @@ class Bot {
     }
 
     whitelist_server(server_id) {
-        var idx = this.server_blacklist.value.blacklist.indexOf(server_id);
+        let idx = this.server_blacklist.value.blacklist.indexOf(server_id);
         if (idx === -1)
             return false;
 
@@ -604,7 +611,7 @@ class Bot {
     }
 
     get_internal_server_id(server) {
-        var id = this.servers_internal.indexOf(server);
+        let id = this.servers_internal.indexOf(server);
         if (id === -1)
             return null;
 
@@ -624,7 +631,7 @@ class Bot {
 }
 
 if (require.main === module) {
-    var bot = new Bot();
+    let bot = new Bot();
     bot.login();
 } else {
     module.exports = Bot;

@@ -3,9 +3,6 @@
 let mockery = require("mockery");
 let chai = require("chai");
 let chaiAsPromised = require("chai-as-promised");
-let Q = require("q");
-let CamoMock = require("./CamoMock.js");
-let DiscordMock = require("./DiscordMock.js");
  
 chai.use(chaiAsPromised);
 chai.should();

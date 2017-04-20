@@ -75,6 +75,7 @@ class ServerData
                 }
             }).catch(err => {
                 console.log("findOne: " + err.stack);
+                reject(err);
             });
         });
     }

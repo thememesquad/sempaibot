@@ -92,7 +92,7 @@ describe("db", () => {
         });
         
         it("basic create", () => {
-            var c = db.ConfigKeyValue.create({key: "testkey", value: "testval"});
+            let c = db.ConfigKeyValue.create({key: "testkey", value: "testval"});
             c.key.should.equal("testkey");
             c.value.should.equal("testval");
         });

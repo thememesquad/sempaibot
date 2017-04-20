@@ -1,6 +1,6 @@
 const db = require("./db.js");
 
-var responses_normal = {
+const responses_normal = {
     ONLINE: [
         "Hey guys! I'm back online!",
         "Hello! I'm back online!",
@@ -241,7 +241,7 @@ var responses_normal = {
     USER_BLACKLIST: "This is my current user blacklist:{response}"
 };
 
-var responses_tsundere = {
+const responses_tsundere = {
     NAME: [
         "I'm here! How can Sempai help you?",
         "I'm here! How can I help you?",
@@ -390,7 +390,7 @@ var responses_tsundere = {
     ]
 };
 
-var responses = {
+const responses = {
     current: responses_normal,
     currentMode: false,
 

@@ -124,24 +124,20 @@ class Users
     
     load()
     {
-        return new Promise((resolve, reject) => {
-            User.find({}).then(docs => {
-                for(let i = 0;i<docs.length;i++)
+        return User.find({}).then(docs => {
+            for(let i = 0;i<docs.length;i++)
+            {
+                let user = docs[i];
+                if(config.superadmins.indexOf(user.user_id) !== -1)
                 {
-                    let user = docs[i];
-                    if(config.superadmins.indexOf(user.user_id) !== -1)
+                    for(let key in user.roles)
                     {
-                        for(let key in user.roles)
-                        {
-                            user.roles[key] = "superadmin";
-                        }
+                        user.roles[key] = "superadmin";
                     }
-                    
-                    this.users[user.user_id] = user;
                 }
                 
-                resolve();
-            });
+                this.users[user.user_id] = user;
+            }
         });
     }
     

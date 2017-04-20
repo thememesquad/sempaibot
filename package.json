@@ -9,12 +9,9 @@
         "url": "https://github.com/thememesquad/sempaibot.git"
     },
     "dependencies": {
-        "@google/maps": "^0.1.0",
         "auto-loader": "^0.2.0",
         "camo": "^0.12.2",
-        "co": "^4.6.0",
         "discord.js": "^11.0.0",
-        "jsdom": "^9.4.5",
         "lodash": "^4.15.0",
         "moment": "^2.14.1",
         "moment-timezone": "^0.5.5",
@@ -22,7 +19,7 @@
     },
     "scripts": {
         "start": "node src/sempaibot.js",
-        "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
+        "test": "node_modules/.bin/istanbul cover node_modules/mocha/bin/_mocha",
         "lint": "node_modules/.bin/eslint src"
     },
     "devDependencies": {
@@ -31,7 +28,6 @@
         "eslint": "^3.7.0",
         "istanbul": "^0.4.5",
         "mocha": "^2.4.5",
-        "mockery": "^1.7.0",
-        "node-inspector": "^0.12.8"
+        "mockery": "^1.7.0"
     }
 }

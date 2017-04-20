@@ -3,6 +3,9 @@ module.exports = {
         "es6": true,
         "node": true
     },
+    "parserOptions": {
+        "ecmaVersion": 8
+    },
     "extends": "eslint:recommended",
     "rules": {
         "no-console": 0,
@@ -13,7 +16,7 @@ module.exports = {
         ],
         "linebreak-style": [
             "error",
-            "unix"
+            "windows"
         ],
         "quotes": [
             "error",

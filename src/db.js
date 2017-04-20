@@ -23,40 +23,34 @@ class Database
         this.ConfigKeyValue = ConfigKeyValue;
     }
 
+    connect_mongodb(bot) {
+        let db_name = config.db_database || "";
+        return connect(`mongodb://${config.db_username}:${config.db_password}@${config.db_host}:${config.db_port}/${db_name}`).then(db => {
+            bot.log("Using MongoDB as DB system.");
+            this.db = db;
+
+            return "mongodb";
+        });
+    }
+
+    connect_nedb(bot) {
+        return connect("nedb://data").then(db => {
+            bot.log("Using NeDB as DB system.");
+            this.db = db;
+
+            return "nedb";
+        });
+    }
+
     load(bot)
     {
-        return new Promise((resolve, reject) => {
-            if(typeof config.use_mongodb === "undefined" || config.use_mongodb)
-            {
-                var db_name = config.db_database || "";
-                connect("mongodb://" + config.db_username + ":" + config.db_password + "@" + config.db_host + ":" + config.db_port + "/" + db_name).then(db => {
-                    bot.log("Using MongoDB as DB system.");
-                    this.db = db;
+        if(typeof config.use_mongodb === "undefined" || config.use_mongodb) {
+            return this.connect_mongodb(bot).catch(() => {
+                return this.connect_nedb(bot);
+            });
+        }
 
-                    resolve("mongodb");
-                }).catch(() => {
-                    connect("nedb://data").then(db => {
-                        bot.log("Using NeDB as DB system.");
-                        this.db = db;
-
-                        resolve("nedb");
-                    }).catch(err => {
-                        reject(err);
-                    });
-                });
-            }
-            else
-            {
-                connect("nedb://data").then(db => {
-                    bot.log("Using NeDB as DB system.");
-                    this.db = db;
-
-                    resolve("nedb");
-                }).catch(err => {
-                    reject(err);
-                });
-            }
-        });
+        return this.connect_nedb(bot);
     }
 }
 

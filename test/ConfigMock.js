@@ -4,7 +4,7 @@ class Config
 {
     set(props)
     {
-        for(var key in props)
+        for(let key in props)
             this[key] = props[key];
     }
 }

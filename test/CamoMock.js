@@ -1,5 +1,4 @@
 "use strict";
-const Q = require("q");
 
 class Document
 {
@@ -9,37 +8,25 @@ class Document
     
     save()
     {
-        var defer = Q.defer();
-        
-        defer.resolve(this);
-        
-        return defer.promise;
+        return Promise.resolve(this);
     }
     
     static find()
     {
-        var defer = Q.defer();
-        
-        defer.resolve([]);
-        
-        return defer.promise;
+        return Promise.resolve([]);
     }
     
     static findOne()
     {
-        var defer = Q.defer();
-        
-        defer.resolve(null);
-        
-        return defer.promise;
+        return Promise.resolve(null);
     }
     
     static create(data)
     {
-        var A = new this();
+        let A = new this();
         A._schema = {};
         
-        for(var key in data)
+        for(let key in data)
         {
             A._schema[key] = A[key];
             A[key] = data[key];
@@ -61,21 +48,17 @@ class EmbeddedDocument
     }
 }
 
-var CamoMock = {
+const CamoMock = {
     Document: Document,
     EmbeddedDocument: EmbeddedDocument,
     
     connect: function(url){
-        var defer = Q.defer();
-
         if(CamoMock.failMongoDB && url.startsWith("mongodb"))
-            defer.reject();
+            return Promise.reject();
         else if(CamoMock.failNeDB && url.startsWith("nedb"))
-            defer.reject();
-        else
-            defer.resolve();
+            return Promise.reject();
 
-        return defer.promise;
+        return Promise.resolve();
     },
     
     failMongoDB: false,

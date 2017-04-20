@@ -36,15 +36,15 @@ class Server
         ];
         this.owner = this.members[0];
         
-        this.channels.get = function(prop, value){
-            for(var i = 0;i<this.length;i++)
+        this.channels.get = (prop, value) => {
+            for(let i = 0;i<this.channels.length;i++)
             {
-                if(this[i][prop] === value)
-                    return this[i];
+                if(this.channels[i][prop] === value)
+                    return this.channels[i];
             }
             
             return null;
-        }.bind(this.channels);
+        };
     }
 }
 
@@ -63,7 +63,7 @@ class Client
         this.game = "";
         this._lastID = 0;
         
-        for(var i = 0;i<Client._numServers;i++)
+        for(let i = 0;i<Client._numServers;i++)
         {
             this.servers.push(new Server("" + (1000 + i), "Mocked Server #" + (i + 1)));
             this._lastID = 1000 + i;
@@ -93,7 +93,7 @@ class Client
         if(this.events[evt] === undefined)
             return;
         
-        for(var i = 0;i<this.events[evt].length;i++)
+        for(let i = 0;i<this.events[evt].length;i++)
             this.events[evt][i].apply(null, args);
     }
     
@@ -122,7 +122,7 @@ class Client
     
     _newServer()
     {
-        var server = new Server("" + (++this._lastID), "Mocked Server #" + this._lastID);
+        let server = new Server("" + (++this._lastID), "Mocked Server #" + this._lastID);
         this.servers.push(server);
         this.fire("serverCreated", server);
         

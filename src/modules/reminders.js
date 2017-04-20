@@ -75,28 +75,28 @@ class RemindersModule extends ModuleBase
                 if(!message.content.startsWith("remind"))
                     return null;
                     
-                var parsed = Time.parse(message.content);
+                let parsed = Time.parse(message.content);
                 if(parsed.length === 0)
                 {
                     message.almost = true;
                     return null;
                 }
                 
-                var date = parsed[parsed.length - 1];
+                let date = parsed[parsed.length - 1];
                 if(!date.ret[1].isValid())
                 {
                     message.almost = true;
                     return null;
                 }
                 
-                var str = message.content.substr(0, date.index).trim();
-                var keywords = ["in", "after", "on", "at"];
+                let str = message.content.substr(0, date.index).trim();
+                let keywords = ["in", "after", "on", "at"];
                 
-                var split = str.split(" ");
-                var name = split[1];
-                var msg = "";
+                let split = str.split(" ");
+                let name = split[1];
+                let msg = "";
                 
-                for(var i = 2;i<split.length;i++)
+                for(let i = 2;i<split.length;i++)
                 {
                     if(i === 2 && split[i].toLowerCase() === "to")
                         continue;
@@ -141,11 +141,11 @@ class RemindersModule extends ModuleBase
     
     handle_clear_reminders(message)
     {
-        var num = 0;
+        let num = 0;
         
-        for(var i = this.reminders.length - 1;i>=0;i--)
+        for(let i = this.reminders.length - 1;i>=0;i--)
         {
-            var reminder = this.reminders[i];
+            let reminder = this.reminders[i];
             
             if(reminder.server !== message.server.id)
                 continue;
@@ -161,12 +161,12 @@ class RemindersModule extends ModuleBase
     
     handle_remove_reminder(message, id)
     {
-        var cleared = false;
-        var j = 0;
-        for(var i = 0;i<this.reminders.length;i++)
+        let cleared = false;
+        let j = 0;
+        for(let i = 0;i<this.reminders.length;i++)
         {
-            var time = moment();
-            var reminder = this.reminders[i];
+            let time = moment();
+            let reminder = this.reminders[i];
             
             if(reminder.server !== message.server.id)
                 continue;
@@ -196,13 +196,13 @@ class RemindersModule extends ModuleBase
     
     handle_list_reminders(message)
     {
-        var response = "";
+        let response = "";
         
-        var j = 0;
-        for(var i = 0;i<this.reminders.length;i++)
+        let j = 0;
+        for(let i = 0;i<this.reminders.length;i++)
         {
-            var time = moment();
-            var reminder = this.reminders[i];
+            let time = moment();
+            let reminder = this.reminders[i];
             
             if(reminder.server !== message.server.id)
                 continue;
@@ -210,11 +210,11 @@ class RemindersModule extends ModuleBase
             if(time.valueOf() > reminder.time)
                 continue;
                 
-            var who = "";
+            let who = "";
             if (reminder.target.length !== 0)
             {
-                var w = reminder.target;
-                for (var k = 0; k < w.length; k++)
+                let w = reminder.target;
+                for (let k = 0; k < w.length; k++)
                 {
                     if (k !== 0)
                         who += ", ";
@@ -238,15 +238,15 @@ class RemindersModule extends ModuleBase
     
     handle_remind(message, name, reminder, parsed)
     {
-        var who = false;
+        let who = false;
         if (name !== "me")
         {
             who = name;
         }
 
-        var currentDate = moment();
-        var info = reminder.trim();
-        var parsedtime = parsed[1];
+        let currentDate = moment();
+        let info = reminder.trim();
+        let parsedtime = parsed[1];
 
         if (parsedtime < currentDate) 
         {
@@ -258,11 +258,12 @@ class RemindersModule extends ModuleBase
             return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id}));
         }
 
+        let whos = "";
         if (who)
         {
-            var w = who.split(",");
-            var whos = "";
-            for (var i = 0; i < w.length; i++) 
+            let w = who.split(",");
+            whos = "";
+            for (let i = 0; i < w.length; i++) 
             {
                 if (i !== 0)
                     whos += ", ";
@@ -283,20 +284,18 @@ class RemindersModule extends ModuleBase
     
     create_reminder(me, server, who, when, what)
     {
-        var w = [];
-        var valid = true;
+        let w = [];
+        let valid = true;
         
         if (who)
         {
-            var tmp = who.split(",");
+            let tmp = who.split(",");
 
-            for (var i = 0; i < tmp.length; i++)
+            for (let i = 0; i < tmp.length; i++)
             {
-                var id = Util.parse_id(tmp[i]);
+                let id = Util.parse_id(tmp[i]);
                 if(id.type !== "user")
-                {
                     continue;
-                }
                 
                 if(users.get_user_by_id(id.id, server) === null)
                 {
@@ -311,7 +310,7 @@ class RemindersModule extends ModuleBase
         if(!valid)
             return false;
             
-        var reminder = Reminder.create({source: me, target: w, time: when.valueOf(), message: what, server: server.id});
+        let reminder = Reminder.create({source: me, target: w, time: when.valueOf(), message: what, server: server.id});
         reminder.save().catch(err => console.log(err));
         
         this.reminders.push(reminder);
@@ -320,12 +319,14 @@ class RemindersModule extends ModuleBase
     
     on_remind(index)
     {
-        var reminder = this.reminders[index];
+        let reminder = this.reminders[index];
+        let who = "";
+
         if (reminder.target.length !== 0)
         {
-            var w = reminder.target;
-            var who = "";
-            for (var i = 0; i < w.length; i++)
+            let w = reminder.target;
+            who = "";
+            for (let i = 0; i < w.length; i++)
             {
                 if (i !== 0)
                     who += ", ";
@@ -349,12 +350,12 @@ class RemindersModule extends ModuleBase
         this.bot = bot;
         
         this.remind = setInterval(() => {
-            var d = moment();
-            var n = d.valueOf();
+            let d = moment();
+            let n = d.valueOf();
             
             if (this.reminders.length > 0)
             {
-                for (var i = this.reminders.length - 1; i >= 0; i--)
+                for (let i = this.reminders.length - 1; i >= 0; i--)
                 {
                     if (this.reminders[i].time < n)
                     {
