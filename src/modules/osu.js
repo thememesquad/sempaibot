@@ -78,7 +78,7 @@ class OsuModule extends ModuleBase {
         this.default_on = true;
         this.load_balancer = new LoadBalancer(60);
 
-        stats.register("osu_api_calls", 0, true);
+        stats.register("osu_api_calls", 0);
         stats.register("osu_num_users", 0);
 
         permissions.register("OSU_CHANGE_LIMIT", "superadmin");

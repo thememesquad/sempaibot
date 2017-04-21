@@ -182,12 +182,9 @@ class Users
         {
             if(server !== undefined)
             {
-                for(let i = 0;i<server.server.members.length;i++)
-                {
-                    if(server.server.members[i].id === id)
-                    {
-                        return this.add_user(id, server.server.members[i].user.username, server);
-                    }
+                for(let user of server.server.members) {
+                    if(user[0] === id)
+                        return this.add_user(id, user[1].user.username, server);
                 }
             }
             

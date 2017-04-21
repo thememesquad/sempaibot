@@ -75,6 +75,9 @@ class Role
 
     is_allowed(server, permission)
     {
+        if(this.name === "superadmin")
+            return true;
+        
         if(server === null)
         {
             if(this.permissions["null"] === undefined)

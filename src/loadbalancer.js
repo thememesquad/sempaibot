@@ -70,9 +70,7 @@ class LoadBalancer
             });
 
             if(this.balancer === -1)
-            {
                 this.balancer = setInterval(this.balance.bind(this), 1);
-            }
         });
         
         return this.namedRequests[url];

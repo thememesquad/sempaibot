@@ -5,17 +5,17 @@ const permissions = require("../permissions.js");
 const ModuleBase = require("../modulebase.js");
 const users = require("../users.js");
 const Util = require("../util.js");
-const moment = require("moment-timezone");
 
-class BaseModule extends ModuleBase
+class CoreModule extends ModuleBase
 {
     constructor()
     {
         super();
 
-        this.name = "General";
-        this.description = "This is the base module! Cannot be disabled.";
+        this.name = "Core";
+        this.description = "This is the core module! Cannot be disabled.";
         this.always_on = true;
+        this.hidden = true;
 
         permissions.register("CHANGE_PERSONALITY", "moderator");
 
@@ -156,28 +156,6 @@ class BaseModule extends ModuleBase
             
             execute: this.handle_show_ignorelist
         });
-        
-        /*this.add_command({
-            match: message => {
-                if(!message.content.startsWith("list timezones"))
-                    return null;
-                    
-                let area = message.content.substr("list timezones".length + 1);
-                if(area.length === 0)
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                return [area.toLowerCase()];
-            },
-            sample: "sempai list timezones __*area*__",
-            description: "Lists all the timezones",
-            permission: null,
-            global: false,
-            
-            execute: this.handle_list_timezones
-        });*/
     }
 
     game_switcher()
@@ -437,86 +415,6 @@ class BaseModule extends ModuleBase
         this.bot.respond(message, responses.get("MY_PERMISSIONS").format({author: message.author.id, permissions: response}));
     }
     
-    handle_list_timezones(message, area)
-    {
-        let i;
-        let timezones = moment.tz.names();
-        for(i = timezones.length - 1;i>=0;i--)
-        {
-            let t = timezones[i];
-            if(!t.toLowerCase().startsWith(area))
-            {
-                timezones.splice(i, 1);
-            }
-        }
-        
-        let tmp = [];
-        let num = 0;
-        let response = "```";
-        let name = "Name";
-        let abbr = "Abbreviation";
-        
-        while(name.length < 26)
-            name += " ";
-            
-        while(abbr.length < 10)
-            abbr += " ";
-            
-        response += name + abbr + "\r\n";
-        for(i = 0;i<timezones.length;i++)
-        {
-            let zone = moment.tz.zone(timezones[i]);
-            name = zone.name;
-            abbr = zone.abbrs[0];
-            
-            while(name.length < 26)
-                name += " ";
-                
-            while(abbr.length < 10)
-                abbr += " ";
-                
-            num++;
-            response += name + abbr + "\r\n";
-            
-            if(response.length >= 1800)
-            {
-                response += "```";
-                tmp.push(response);
-                
-                response = "```";
-                name = "Name";
-                abbr = "Abbreviation";
-                
-                while(name.length < 26)
-                    name += " ";
-                    
-                while(abbr.length < 10)
-                    abbr += " ";
-                    
-                response += name + abbr + "\r\n";
-                num = 0;
-            }
-        }
-        
-        if(num !== 0)
-        {
-            response += "```";
-            tmp.push(response);
-        }
-        
-        tmp[0] = responses.get("TIMEZONE_LIST").format({author: message.author.id, timezones: tmp[0]});
-        let send = index => {
-            if(index === tmp.length)
-                return;
-                
-            this.bot.respond(message, tmp[index]).then(() => {
-                send(index + 1);
-            });
-        };
-        
-        send(0);
-    }
-    
     on_setup(bot)
     {
         this.bot = bot;
@@ -536,4 +434,4 @@ class BaseModule extends ModuleBase
     }
 }
 
-module.exports = new BaseModule();
+module.exports = new CoreModule();

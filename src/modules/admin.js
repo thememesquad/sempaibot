@@ -718,6 +718,10 @@ class AdminModule extends ModuleBase
             let enabled = message.server.is_module_enabled(key);
             let always_on = this.bot.modules[key].always_on;
             let default_on = this.bot.modules[key].default_on;
+            let hidden = this.bot.modules[key].hidden;
+
+            if(hidden)
+                continue;
             
             let flags = "";
             if(always_on)
