@@ -1,5 +1,6 @@
 //----- Config
 module.exports = {
+    identifiers: ["sempai ", "-"],
     token: "bot_account_login_token",
     use_mongodb: true,                //optional: defaults to true
     osu_api: "osu_api_key",

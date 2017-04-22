@@ -1,6 +1,7 @@
 "use strict";
 const permissions = require("./permissions.js");
 const responses = require("./responses.js");
+const CommandProcessor = require("./command.js");
 
 class ModuleBase
 {
@@ -9,6 +10,7 @@ class ModuleBase
         this.name = "";
         this.always_on = false;
         this.commands = [];
+        this.bot = null;
     }
 
     add_command(command)
@@ -44,22 +46,42 @@ class ModuleBase
                 continue;
             }
 
-            message.almost = undefined;
-            let ret = command.match(message);
-            if(ret === null && message.almost === undefined)
-            {
-                continue;
-            }
-            else if(message.almost === true)
-            {
-                if(command.sample === undefined)
+            if(typeof command.formats !== "undefined") {
+                message.almost = undefined;
+
+                let processor = new CommandProcessor(this.bot);
+                for(let format of command.formats)
+                    processor.add_format(format);
+                
+                let args = processor.process(message.content);
+                if(args === null)
                     continue;
                 
-                best = command.sample;
-                continue;
+                if(typeof command.defaults !== "undefined") {
+                    for(let key in command.defaults) {
+                        args[key] = args[key] || command.defaults[key];
+                    }
+                }
+
+                data = [message, args];
+            } else {
+                message.almost = undefined;
+                let ret = command.match(message);
+                if(ret === null && message.almost === undefined)
+                {
+                    continue;
+                }
+                else if(message.almost === true)
+                {
+                    if(command.sample === undefined)
+                        continue;
+                    
+                    best = command.sample;
+                    continue;
+                }
+                
+                data = [message].concat(ret);
             }
-            
-            data = [message].concat(ret);
             
             if(command.permission !== null && !permissions.is_allowed(command.permission, message.user.get_role(message.server), message.server))
             {

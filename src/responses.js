@@ -1,14 +1,6 @@
 const db = require("./db.js");
 
 const responses_normal = {
-    ONLINE: [
-        "Hey guys! I'm back online!",
-        "Hello! I'm back online!",
-        "_has come online!_",
-        "I'm back online! How can I be of service?",
-        "I'm back online! How can I help?",
-        "Hello! I'm back online! How can I be of help?"
-    ],
     NAME: [
         "Yes I'm here! What can I do for you?",
         "Yes I'm here! How can I help?",
@@ -25,10 +17,6 @@ const responses_normal = {
     ALREADY_IN_MODE: [
         "I'm already in my normal response mode!",
         "Sempai is already in normal response mode!"
-    ],
-    REGION_CHANGED: [
-        "Switched from region '{old_region}' to '{new_region}'.",
-        "I switched our discord region from '{old_region}' to '{new_region}'!"
     ],
     REMIND_PAST: [
         "That time is in the past! I can't remind you of something in the past.",
@@ -48,18 +36,6 @@ const responses_normal = {
     ],
     REMINDER: "<@{author}> reminded {people}: {message}.",
     LIST_REMINDERS: "List of reminders on this server:{response}",
-
-    ANIME_SEARCH_NO_RESULTS: "No results found for '{anime}'.",
-    ANIME_SEARCH_RESULTS: "Results for '{anime}':\r\n{results}",
-    ANIME_NEW_DOWNLOAD: "New download for show '**{show}**':\r\n**{file}**:\r\n**Magnet**: {magnet}\r\n**Seeders**: {seeders}, **Leechers**: {leechers}, **Downloads**: {downloads}, **Quality**: {quality}\r\n**Trusted**: {is_trusted}\r\n",
-    ANIME_INVALID_ID: "Can't track {id} because the id is invalid!",
-    ANIME_ALREADY_TRACKING: "I'm already tracking '**{anime}**'!",
-    ANIME_NOW_TRACKING: "Started tracking '**{anime}**'!",
-    ANIME_TRACKING_LIST_EMPTY: "I'm not tracking any anime at the moment.",
-    ANIME_TRACKING_LIST: "I'm currently tracking:\r\n{results}",
-    ANIME_TRACKING_LIST_DETAIL: "Episode download list for '**{anime}**':\r\n{results}",
-    ANIME_NOT_TRACKING: "I'm not even tracking {name}!",
-    ANIME_STOPPED_TRACKING: "Okay, I'll stop tracking {name}",
 
     OSU_FOLLOWING: [
         "Sempai is currently following:",
@@ -82,7 +58,7 @@ const responses_normal = {
         "Sempai stopped following {user}!",
         "Got it! I've unfollowed {user}."
     ],
-    OSU_NEW_SCORE: "**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}** | **{old_total_pp}pp** -> **{new_total_pp}pp** ({delta_pp}) | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
+
     OSU_USER_NOT_FOUND: [
         "I can't find user \"{user}\". Did you type it correctly?",
         "I can't find user \"{user}\". Did you make a typo?",
@@ -119,7 +95,6 @@ const responses_normal = {
         "Sempai stopped following {user} on {mode}!",
         "Got it! I've unfollowed {user} on {mode}."
     ],
-    OSU_NEW_SCORE_MODE: "**{user}** has set a new #**{top_rank}** PP score for {mode}! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}** | **{old_total_pp}pp** -> **{new_total_pp}pp** ({delta_pp}) | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
     OSU_USER_NOT_FOUND_MODE: [
         "I can't find user \"{user}\" on {mode}. Did you type it correctly?",
         "I can't find user \"{user}\" on {mode}. Did you make a typo?",
@@ -142,33 +117,16 @@ const responses_normal = {
         "No problem! I'll check {user} on osu! for you! {mode}",
         "No problem! Sempai will check {user} on osu! for you! {mode}"
     ],
-    JOIN_INVALID_INVITE: "I can't find a server with the invite: \"{invite}\".",
-    JOIN_ALREADY: "I am already part of \"{invite}\".",
-    JOIN_FAILED: "I was not able to join the server \"{invite}\".",
-    JOIN_SUCCESS: "I just joined \"{invite}\"! Thanks for allowing me to join. I made <@{admin}> the admin.",
 
     HELP_TOP: "This is the current list of commands:\r\n",
-    HELP_BOTTOM: "You could also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
+    HELP_BOTTOM: "",
 
     PLEASE_HELP_TOP: "This is the current list of commands:\r\n",
-    PLEASE_HELP_BOTTOM: "You could also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work.",
-
-    SEMPAI_FUCKYOU: [
-        "What did I do? :(",
-        "What did Sempai ever do to you? :(",
-        ":(",
-        "I don't know what I did, but I'm sorry {user}. :[",
-        "Meanie. :("
-    ],
+    PLEASE_HELP_BOTTOM: "",
 
     UNKNOWN_COMMAND: [
         "Sempai doesn't understand.",
         "I... I don't understand. What do you want me to do?"
-    ],
-
-    MULTIPLE_UNKNOWN_COMMAND: [
-        "That's not a valid command either. If you need help, please type \"sempai help me\".",
-        "I still don't understand what you want me to do. If you require help, please type \"sempai help me\"."
     ],
 
     ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
@@ -217,7 +175,6 @@ const responses_normal = {
         "You... deleted? My home channel? My home? Why...? So am I-... am I homeless now? A homeless bot? Or are you going to give me a new home? (use the command \"sempai go to #channel\")"
     ],
     REMINDERS_LIST_EMPTY: "The reminder list is empty.",
-    TIMEZONE_LIST: "List of known timezones:{timezones}",
     TLDR_FAILED: "Failed to create a tldr. My tldr functionality works best with web articles.",
     TLDR: "**{title}**:\r\n\"{summary}\"\r\n**Original reduced by {percentage}%.**",
     OSU_MAX_USER_LIMIT: "Reached the user limit of '{limit}'.",
@@ -349,11 +306,6 @@ const responses_tsundere = {
         "I could add more friends, but I just don't feel like it right now! 50 is enough, don't you think? Any more and Sempai's head will overload!"
     ],
 
-    JOIN_INVALID_INVITE: "I... It's not like I wanted to join \"{invite}\"",
-    JOIN_ALREADY: "Baka... I'm already stalking \"{invite}\"...",
-    JOIN_FAILED: "It seems like \"{invite}\" doesn't like me... It's not like I wanted to be liked!",
-    JOIN_SUCCESS: "New friends at \"{invite}\"? Yay!",
-
     HELP_TOP: [
         "What? Not even a please? Hmpf. Fine. Just this once. Here is a list of my commands:\r\n",
         "What? Not even a please? You understand it's a privilege to even be able to talk to me, right? You should feel honored! I'll do it, but ask nicely next time. Here's a list of my commands:\r\n",
@@ -369,8 +321,6 @@ const responses_tsundere = {
         "You asked me nicely! If I was keeping track, you would gain one Sempai relationship point! T-t-that doesn't mean I like you now! Don't get any weird ideas. Anyway, here is the list of my commands you asked for!:\r\n",
         "Only because you asked nicely. D-don't get me wrong, I do this for everyone if they ask nicely!  Here is the list of my commands you asked for!:\r\n"
     ],
-
-    SEMPAI_FUCKYOU: "I... It's not like I cared about you anyway <@{user}>! B..baka... :(",
 
     UNKNOWN_COMMAND: [
         "You're not making any sense to Sempai. If you ask me for help, I might just help you. If I can be bothered.",

@@ -4,7 +4,8 @@ const responses = require("../responses.js");
 const permissions = require("../permissions.js");
 const ModuleBase = require("../modulebase.js");
 const users = require("../users.js");
-const Util = require("../util.js");
+const util = require("../util.js");
+const config = require("../../config.js");
 
 class CoreModule extends ModuleBase
 {
@@ -20,32 +21,15 @@ class CoreModule extends ModuleBase
         permissions.register("CHANGE_PERSONALITY", "moderator");
 
         this.add_command({
-            match: message => {
-                let please = false;
-                let german = false;
-                
-                if(message.content.startsWith("please help"))
-                {
-                    please = true;
-                }
-                else if(message.content.startsWith("hilfe"))
-                {
-                    german = true;
-                }
-                else if(!message.content.startsWith("help"))
-                {
-                    if(message.content.startsWith("please show help"))
-                    {
-                        please = true;
-                    }
-                    else if(!message.content.startsWith("show help"))
-                    {
-                        return null;
-                    }
-                }
-                
-                return [please, german];
-            },
+            default: {please: false, german: false},
+            formats: [
+                ["please help", {please: true}],
+                ["hilfe", {german: true}],
+                ["please show help", {please: true}],
+                ["hilfe bitte", {german: true, please: true}],
+                "help",
+                "show help"
+            ],
             hide_in_help: true,
             permission: null,
             global: true,
@@ -54,20 +38,11 @@ class CoreModule extends ModuleBase
         });
 
         this.add_command({
-            match: message => {
-                let on = false;
-                
-                if(message.content.startsWith("tsundere on"))
-                {
-                    on = true;
-                }
-                else if(!message.content.startsWith("tsundere off"))
-                {
-                    return null;
-                }
-                
-                return [on];
-            },
+            default: {on: false},
+            formats: [
+                ["tsundere on", {on: true}],
+                "tsundere off"
+            ],
             hide_in_help: true,
             permission: "CHANGE_PERSONALITY",
             global: false,
@@ -76,13 +51,11 @@ class CoreModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("what is my role"))
-                    return null;
-                    
-                return [];
-            },
-            sample: "sempai what is my role?",
+            defaults: {},
+            formats: [
+                "what is my role"
+            ],
+            sample: "what is my role?",
             description: "Displays your role.",
             permission: null,
             global: false,
@@ -91,18 +64,16 @@ class CoreModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("what are my permissions") &&
-                   !message.content.startsWith("show my permissions") &&
-                   !message.content.startsWith("show my permission list") &&
-                   !message.content.startsWith("show my permissions list") &&
-                   !message.content.startsWith("list my permissions") &&
-                   !message.content.startsWith("show permissions"))
-                    return null;
-                    
-                return [];
-            },
-            sample: "sempai what are my permissions?",
+            defaults: {},
+            formats: [
+                "what are my permissions",
+                "show my permissions",
+                "show my permission list",
+                "show my permissions list",
+                "list my permissions",
+                "show permissions"
+            ],
+            sample: "what are my permissions?",
             description: "Displays your role's permissions.",
             permission: null,
             global: false,
@@ -111,13 +82,11 @@ class CoreModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("list roles"))
-                    return null;
-                    
-                return [];
-            },
-            sample: "sempai list roles",
+            defaults: {},
+            formats: [
+                "list roles"
+            ],
+            sample: "list roles",
             description: "Lists every user's role.",
             permission: null,
             global: false,
@@ -126,13 +95,11 @@ class CoreModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("list permissions"))
-                    return null;
-                    
-                return [];
-            },
-            sample: "sempai list permissions",
+            defaults: {},
+            formats: [
+                "list permissions"
+            ],
+            sample: "list permissions",
             description: "Lists the available permissions for each role.",
             permission: null,
             global: false,
@@ -141,15 +108,13 @@ class CoreModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("show ignore list") &&
-                   !message.content.startsWith("list ignores") &&
-                   !message.content.startsWith("show ignorelist"))
-                    return null;
-                    
-                return [];
-            },
-            sample: "sempai show ignore list",
+            defaults: {},
+            formats: [
+                "show ignore list",
+                "list ignores",
+                "show ignorelist"
+            ],
+            sample: "show ignore list",
             description: "Shows the list of people I'm currently ignoring!",
             permission: null,
             global: false,
@@ -158,12 +123,7 @@ class CoreModule extends ModuleBase
         });
     }
 
-    game_switcher()
-    {
-        this.bot.set_status("Online", "osu!");
-    }
-
-    handle_list_roles(message)
+    handle_list_roles(message, args)
     {
         let server = message.server;
         let tmp = [];
@@ -192,11 +152,11 @@ class CoreModule extends ModuleBase
             data.push({name: tmp[i].get_name_detailed(server), role: tmp[i].get_role(server)});
         }
         
-        let messages = Util.generate_table(responses.get("LIST_ROLES").format({author: message.author.id}), columns, data, {name: 30, role: 15});
+        let messages = util.generate_table(responses.get("LIST_ROLES").format({author: message.author.id}), columns, data, {name: 30, role: 15});
         this.bot.respond_queue(message, messages);
     }
     
-    handle_list_permissions(message)
+    handle_list_permissions(message, args)
     {
         let server = message.server;
         let admin_permissions = permissions.get_role("admin").get_permissions(server);
@@ -235,11 +195,11 @@ class CoreModule extends ModuleBase
             return 0;
         });
         
-        let messages = Util.generate_table(responses.get("LIST_PERMISSIONS").format({author: message.author.id}), columns, data, {permission: 20, roles: 15});
+        let messages = util.generate_table(responses.get("LIST_PERMISSIONS").format({author: message.author.id}), columns, data, {permission: 20, roles: 15});
         this.bot.respond_queue(message, messages);
     }
     
-    handle_show_ignorelist(message)
+    handle_show_ignorelist(message, args)
     {
         let response = "``` ";
         
@@ -259,11 +219,11 @@ class CoreModule extends ModuleBase
             this.bot.respond(message, responses.get("SHOW_IGNORELIST").format({author: message.author.id, list: response}));
     }
 
-    handle_help_me(message, please)
+    handle_help_me(message, args)
     {
         let response = "";
 
-        if(please)
+        if(args.please)
             response = responses.get("PLEASE_HELP_TOP").format({author: message.author.id});
         else
             response = responses.get("HELP_TOP").format({author: message.author.id});
@@ -303,7 +263,7 @@ class CoreModule extends ModuleBase
 
                     hasNonHidden = true;
 
-                    tmp += "**" + module.commands[i].sample + "** - " + module.commands[i].description;
+                    tmp += "**" + config.identifiers[0] + module.commands[i].sample + "** - " + module.commands[i].description;
                     tmp += "\r\n";
                 }
             }
@@ -326,7 +286,7 @@ class CoreModule extends ModuleBase
         if(message.server !== null)
             add += "**Enabled modules**: " + modules + "\r\n\r\n";
 
-        if(please)
+        if(args.please)
             add += responses.get("PLEASE_HELP_BOTTOM").format({author: message.author.id});
         else
             add += responses.get("HELP_BOTTOM").format({author: message.author.id});
@@ -341,22 +301,14 @@ class CoreModule extends ModuleBase
             message_queue.push(response + add);
         }
         
-        let send = (index, send) => {
-            if(index >= message_queue.length)
-                return;
-                
-            this.bot.respond(message, message_queue[index]).then(() => {
-                return send(index + 1, send);
-            }).catch(err => {
-                console.log(err);
-            });
-        };
-        send(0, send);
+        this.bot.respond_queue(message, message_queue).catch(err => {
+            console.log("err", err);
+        });
     }
 
-    handle_tsundere(message, on)
+    handle_tsundere(message, args)
     {
-        if(on)
+        if(args.on)
         {
             if(responses.currentMode)
                 return this.bot.respond(message, responses.get("ALREADY_IN_MODE").format({author: message.author.id}));
@@ -374,7 +326,7 @@ class CoreModule extends ModuleBase
         }
     }
 
-    handle_my_role(message)
+    handle_my_role(message, args)
     {
         let role = message.user.get_role(message.server);
         if(role === "superadmin")
@@ -389,7 +341,7 @@ class CoreModule extends ModuleBase
         this.bot.respond(message, responses.get("MY_ROLE").format({author: message.author.id, role: role}));
     }
     
-    handle_my_permissions(message)
+    handle_my_permissions(message, args)
     {
         let server = message.server;
         let role = permissions.get_role(message.user.get_role(server));
@@ -415,10 +367,9 @@ class CoreModule extends ModuleBase
         this.bot.respond(message, responses.get("MY_PERMISSIONS").format({author: message.author.id, permissions: response}));
     }
     
-    on_setup(bot)
+    on_setup()
     {
-        this.bot = bot;
-        this.game_switcher();
+        this.bot.set_status("Online", "osu!");
     }
 
     on_shutdown()

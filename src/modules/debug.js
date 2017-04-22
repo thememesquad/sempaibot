@@ -14,18 +14,14 @@ class DebugModule extends ModuleBase
         this.name = "Debug";
         this.description = "";
         this.always_on = true;
-        
-        permissions.register("SUPERADMIN", "superadmin");
+        this.hidden = true;
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("debug"))
-                    return null;
-                
-                return [];
-            },
-            sample: "",
-            description: "",
+            formats: [
+                "debug"
+            ],
+            sample: "debug ...",
+            description: "internal debug command",
             permission: "SUPERADMIN",
             global: true,
             
@@ -48,7 +44,7 @@ class DebugModule extends ModuleBase
         }
     }
     
-    handle_debug_osu_user(message, username)
+    async handle_debug_osu_user(message, username)
     {
         let osu = this.bot.get_module("osu!");
         
@@ -99,72 +95,69 @@ class DebugModule extends ModuleBase
             }
         }
         
-        osu.get_user_best(username, 0, 50).then(json => {
-            let data = [];
-            
-            for (let j = 0; j < json.length; j++)
+        let json = await osu.get_user_best(username, 0, 50);
+        let data = [];
+        
+        for (let j = 0; j < json.length; j++)
+        {
+            let beatmap = json[j];
+            beatmap.count50 = parseInt(beatmap.count50);
+            beatmap.count100 = parseInt(beatmap.count100);
+            beatmap.count300 = parseInt(beatmap.count300);
+            beatmap.countmiss = parseInt(beatmap.countmiss);
+            beatmap.enabled_mods = parseInt(beatmap.enabled_mods);
+            beatmap.perfect = parseInt(beatmap.perfect);
+            beatmap.pp = Math.round(parseFloat(beatmap.pp));
+
+            let totalPointOfHits = beatmap.count50 * 50 + beatmap.count100 * 100 + beatmap.count300 * 300;
+            let totalNumberOfHits = beatmap.countmiss + beatmap.count50 + beatmap.count100 + beatmap.count300;
+
+            beatmap.acc = (totalPointOfHits / (totalNumberOfHits * 300) * 100).toFixed(2);
+
+            if(["X", "XH"].indexOf(beatmap.rank) !== -1)
+                beatmap.rank = "SS";
+            else if(beatmap.rank === "SH")
+                beatmap.rank = "S";
+
+            beatmap.mods = "";
+
+            for(let i = 0;i<16;i++)
             {
-                let beatmap = json[j];
-                beatmap.count50 = parseInt(beatmap.count50);
-                beatmap.count100 = parseInt(beatmap.count100);
-                beatmap.count300 = parseInt(beatmap.count300);
-                beatmap.countmiss = parseInt(beatmap.countmiss);
-                beatmap.enabled_mods = parseInt(beatmap.enabled_mods);
-                beatmap.perfect = parseInt(beatmap.perfect);
-                beatmap.pp = Math.round(parseFloat(beatmap.pp));
+                if((beatmap.enabled_mods & (1 << i)) > 0)
+                    if(i !== 6 || ((beatmap.enabled_mods & (1 << 9)) === 0))
+                        beatmap.mods += ((beatmap.mods.length !== 0) ? "" : "+") + osu.modsList[i];
+            }
 
-                let totalPointOfHits = beatmap.count50 * 50 + beatmap.count100 * 100 + beatmap.count300 * 300;
-                let totalNumberOfHits = beatmap.countmiss + beatmap.count50 + beatmap.count100 + beatmap.count300;
-
-                beatmap.acc = (totalPointOfHits / (totalNumberOfHits * 300) * 100).toFixed(2);
-
-                if(["X", "XH"].indexOf(beatmap.rank) !== -1)
-                    beatmap.rank = "SS";
-                else if(beatmap.rank === "SH")
-                    beatmap.rank = "S";
-
-                beatmap.mods = "";
-
-                for(let i = 0;i<16;i++)
+            let skip = false;
+            let index = -1;
+            let date = moment(new Date(beatmap.date + " UTC")).subtract("8", "hours").toDate().valueOf();
+            
+            for(let i = 0;i<profile.records.length;i++)
+            {
+                if(profile.records[i].beatmap_id === beatmap.beatmap_id)
                 {
-                    if((beatmap.enabled_mods & (1 << i)) > 0)
-                        if(i !== 6 || ((beatmap.enabled_mods & (1 << 9)) === 0))
-                            beatmap.mods += ((beatmap.mods.length !== 0) ? "" : "+") + osu.modsList[i];
-                }
-
-                let skip = false;
-                let index = -1;
-                let date = moment(new Date(beatmap.date + " UTC")).subtract("8", "hours").toDate().valueOf();
-                
-                for(let i = 0;i<profile.records.length;i++)
-                {
-                    if(profile.records[i].beatmap_id === beatmap.beatmap_id)
+                    if(profile.records[i].date === date)
                     {
-                        if(profile.records[i].date === date)
-                        {
-                            index = i;
-                            skip = true;
-                            break;
-                        }
+                        index = i;
+                        skip = true;
+                        break;
                     }
                 }
-                
-                data.push({
-                    rank: "" + (j + 1),
-                    id: beatmap.beatmap_id,
-                    date: moment(new Date(date)).format(),
-                    skip: (skip) ? moment(new Date(profile.records[index].date)).format() : "no"
-                });
             }
             
-            let messages1 = util.generate_table("Debug info:", {name: "Name", value: "Value"}, profile_data);
-            let messages2 = util.generate_table("", {rank: "Rank", id: "ID", date: "Date", skip: "Last Showed"}, data);
-            let messages = messages1.concat(messages2);
-            
-            this.bot.respond_queue(message, messages);
-        }).catch(err => {
-            console.log(err, err.stack);
-        });
+            data.push({
+                rank: "" + (j + 1),
+                id: beatmap.beatmap_id,
+                date: moment(new Date(date)).format(),
+                skip: (skip) ? moment(new Date(profile.records[index].date)).format() : "no"
+            });
+        }
+        
+        let messages1 = util.generate_table("Debug info:", {name: "Name", value: "Value"}, profile_data);
+        let messages2 = util.generate_table("", {rank: "Rank", id: "ID", date: "Date", skip: "Last Showed"}, data);
+        let messages = messages1.concat(messages2);
+        
+        this.bot.respond_queue(message, messages);
     }
     
     handle_debug_osu_users(message)
@@ -215,9 +208,8 @@ class DebugModule extends ModuleBase
     {
     }
     
-    on_setup(bot)
+    on_setup()
     {
-        this.bot = bot;
     }
     
     on_load()//server)

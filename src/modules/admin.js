@@ -16,6 +16,7 @@ class AdminModule extends ModuleBase
         this.name = "Admin";
         this.description = "This is the permissions and roles module! Cannot be disabled.";
         this.always_on = true;
+        this.hidden = true;
 
         permissions.register("SUPERADMIN", "superadmin");
         permissions.register("IGNORE_USERS", "moderator");
@@ -25,14 +26,11 @@ class AdminModule extends ModuleBase
         permissions.register("ASSIGN_ROLES", "admin");
 
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("show statistics"))
-                    return null;
-                
-                return [];
-            },
-            sample: "sempai show statistics",
-            description: "Shows statistics for sempai server-wide.",
+            formats: [
+                "show statistics"
+            ],
+            sample: "show statistics",
+            description: "Shows statistics for me server-wide.",
             permission: "SUPERADMIN",
             global: true,
             
@@ -40,14 +38,12 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("list servers"))
-                    return null;
-                
-                return [];
-            },
-            sample: "sempai list servers",
-            description: "Lists all the servers sempai is currently running on.",
+            formats: [
+                "list servers",
+                "show servers"
+            ],
+            sample: "list servers",
+            description: "Lists all the servers I'm currently running on.",
             permission: "SUPERADMIN",
             global: true,
             
@@ -55,13 +51,10 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("blacklist server"))
-                    return null;
-                
-                return [parseInt(message.content.split(" ")[2])];
-            },
-            sample: "sempai blacklist server __*server*__",
+            formats: [
+                "blacklist server {i!server}"
+            ],
+            sample: "blacklist server __*server*__",
             description: "Blacklists a server.",
             permission: "SUPERADMIN",
             global: true,
@@ -70,13 +63,10 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("whitelist server"))
-                    return null;
-                
-                return [parseInt(message.content.split(" ")[2])];
-            },
-            sample: "sempai whitelist server __*server*__",
+            formats: [
+                "whitelist server {i!server}"
+            ],
+            sample: "whitelist server __*server*__",
             description: "Whitelists a server.",
             permission: "SUPERADMIN",
             global: true,
@@ -85,27 +75,10 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("blacklist user"))
-                    return null;
-                
-                let mod = message.content.substr("blacklist user".length + 1).trim();
-                if(mod.length === 0)
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                let user = util.parse_id(mod);
-                if(user.type !== "user")
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                return [user.id];
-            },
-            sample: "sempai blacklist user __*@user*__",
+            formats: [
+                "blacklist user {uid!user}"
+            ],
+            sample: "blacklist user __*@user*__",
             description: "Blacklists an user.",
             permission: "SUPERADMIN",
             global: true,
@@ -114,27 +87,10 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("whitelist user"))
-                    return null;
-                
-                let mod = message.content.substr("blacklist user".length + 1).trim();
-                if(mod.length === 0)
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                let user = util.parse_id(mod);
-                if(user.type !== "user")
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                return [user.id];
-            },
-            sample: "sempai whitelist user __*@user*__",
+            formats: [
+                "whitelist user {uid!user}"
+            ],
+            sample: "whitelist user __*@user*__",
             description: "Whitelists an user.",
             permission: "SUPERADMIN",
             global: true,
@@ -143,13 +99,10 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("show user blacklist"))
-                    return null;
-                
-                return [];
-            },
-            sample: "sempai show user blacklist",
+            formats: [
+                "show user blacklist"
+            ],
+            sample: "show user blacklist",
             description: "Displays the user blacklist",
             permission: "SUPERADMIN",
             global: true,
@@ -158,13 +111,10 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("show server blacklist"))
-                    return null;
-                
-                return [];
-            },
-            sample: "sempai show server blacklist",
+            formats: [
+                "show server blacklist"
+            ],
+            sample: "show server blacklist",
             description: "Displays the server blacklist",
             permission: "SUPERADMIN",
             global: true,
@@ -173,22 +123,11 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("enable"))
-                    return null;
-                    
-                let mod = message.content.startsWith("enable module") ? message.content.substr("enable module".length + 1) : message.content.substr("enable".length + 1);
-                mod = mod.trim();
-                
-                if(mod.length === 0)
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                return [mod];
-            },
-            sample: "sempai enable __*module name*__",
+            formats: [
+                "enable {module}",
+                "enable module {module}"
+            ],
+            sample: "enable __*module name*__",
             description: "Enables a module for this server.",
             permission: "MANAGE_MODULES",
             global: false,
@@ -197,22 +136,11 @@ class AdminModule extends ModuleBase
         });
 
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("disable"))
-                    return null;
-                    
-                let mod = message.content.startsWith("disable module") ? message.content.substr("disable module".length + 1) : message.content.substr("disable".length + 1);
-                mod = mod.trim();
-                
-                if(mod.length === 0)
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                return [mod];
-            },
-            sample: "sempai disable __*module name*__",
+            formats: [
+                "disable {module}",
+                "disable module {module}"
+            ],
+            sample: "disable __*module name*__",
             description: "Disables the specified module for this server.",
             permission: "MANAGE_MODULES",
             global: false,
@@ -221,52 +149,14 @@ class AdminModule extends ModuleBase
         });
 
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("assign"))
-                    return null;
-                    
-                let needs = 6;
-                let split = message.content.split(" ");
-                
-                let idx1 = 2;
-                let idx2 = 5;
-                
-                if(split[2] === "to")
-                {
-                    idx1 = 1;
-                    idx2--;
-                    
-                    needs--;
-                }
-                
-                if((needs === 5 && split.length === 4) || (needs === 6 && split.length === 5))
-                {
-                    if(needs === 5 && split.length === 4)
-                        idx2 = 3;
-                    else if(needs === 6 && split.length === 5)
-                        idx2 = 4;
-                    
-                    needs--;
-                }
-                
-                if(split.length !== needs)
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                let role = split[idx1];
-                let user = util.parse_id(split[idx2]);
-                
-                if(user.type !== "user")
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                return [role.toLowerCase(), user.id.toLowerCase()];
-            },
-            sample: "sempai assign __*role*__ to __*@user*__",
+            formats: [
+                "assign role {role} to user {uid!user}",
+                "assign {role} to user {uid!user}",
+                "assign role {role} to {uid!user}",
+                "assign {role} to {uid!user}",
+                "assign {role} {uid!user}"
+            ],
+            sample: "assign __*role*__ to __*@user*__",
             description: "Assigns the specified role to the specified user.",
             permission: "ASSIGN_ROLES",
             global: false,
@@ -275,45 +165,13 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("add"))
-                    return null;
-                
-                let needs = 6;
-                let idx1 = 2;
-                let idx2 = 5;
-                let split = message.content.split(" ");
-                
-                if(split[2] === "to")
-                {
-                    idx1 = 1;
-                    idx2--;
-                    
-                    needs--;
-                }
-                
-                if((needs === 5 && split.length === 4) || (needs === 6 && split.length === 5))
-                {
-                    if(needs === 5 && split.length === 4)
-                        idx2 = 3;
-                    else if(needs === 6 && split.length === 5)
-                        idx2 = 4;
-                    
-                    needs--;
-                }
-                
-                if(split.length !== needs)
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                let permission = split[idx1];
-                let role = split[idx2];
-                
-                return [permission.toUpperCase(), role.toLowerCase()];
-            },
-            sample: "sempai add __*permission*__ to __*role*__",
+            formats: [
+                "add permission {permission} to role {role}",
+                "add {permission} to role {role}",
+                "add permission {permission} to {role}",
+                "add {permission} {role}"
+            ],
+            sample: "add __*permission*__ to __*role*__",
             description: "Adds the specified permission to the specified role.",
             permission: "MANAGE_PERMISSIONS",
             global: false,
@@ -322,44 +180,13 @@ class AdminModule extends ModuleBase
         });
 
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("remove"))
-                    return null;
-                
-                let needs = 6;
-                let idx1 = 2;
-                let idx2 = 5;
-                let split = message.content.split(" ");
-                
-                if(split[2] === "from")
-                {
-                    idx1 = 1;
-                    idx2--;
-                    
-                    needs--;
-                }
-                
-                if((needs === 5 && split.length === 4) || (needs === 6 && split.length === 5))
-                {
-                    if(needs === 5 && split.length === 4)
-                        idx2 = 3;
-                    else if(needs === 6 && split.length === 5)
-                        idx2 = 4;
-                    
-                    needs--;
-                }
-                if(split.length !== needs)
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                let permission = split[idx1];
-                let role = split[idx2];
-                
-                return [permission.toUpperCase(), role.toLowerCase()];
-            },
-            sample: "sempai remove __*permission*__ from __*role*__",
+            formats: [
+                "remove permission {permission} from role {role}",
+                "remove {permission} from role {role}",
+                "remove permission {permission} from {role}",
+                "remove {permission} {role}"
+            ],
+            sample: "remove __*permission*__ from __*role*__",
             description: "Removes the specified permission from the specified role.",
             permission: "MANAGE_PERMISSIONS",
             global: false,
@@ -368,14 +195,11 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("list modules") && 
-                   !message.content.startsWith("show modules"))
-                    return null;
-                    
-                return [];
-            },
-            sample: "sempai list modules",
+            formats: [
+                "list modules",
+                "show modules"
+            ],
+            sample: "list modules",
             description: "Lists all available modules.",
             permission: "MANAGE_MODULES",
             global: false,
@@ -384,27 +208,11 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("ignore"))
-                    return null;
-                    
-                let mod = message.content.substr("ignore".length + 1).trim();
-                if(mod.length === 0)
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                let user = util.parse_id(mod);
-                if(user.type !== "user")
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                return [user.id];
-            },
-            sample: "sempai ignore __*@user*__",
+            formats: [
+                "ignore {uid!user}",
+                "start ignoring {uid!user}"
+            ],
+            sample: "ignore __*@user*__",
             description: "Ignores the specified user.",
             permission: "IGNORE_USERS",
             global: false,
@@ -413,27 +221,11 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("unignore") && !message.content.startsWith("stop ignoring"))
-                    return null;
-                    
-                let mod = (message.content.startsWith("unignore")) ? message.content.substr("unignore".length + 1).trim() : message.content.substr("stop ignoring".length + 1).trim();
-                if(mod.length === 0)
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                let user = util.parse_id(mod);
-                if(user.type !== "user")
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                return [user.id];
-            },
-            sample: "sempai unignore __*@user*__",
+            formats: [
+                "unignore {uid!user}",
+                "stop ignoring {uid!user}"
+            ],
+            sample: "unignore __*@user*__",
             description: "Stops ignoring the specified user.",
             permission: "IGNORE_USERS",
             global: false,
@@ -442,28 +234,11 @@ class AdminModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("go to"))
-                    return null;
-                    
-                let mod = message.content.startsWith("go to channel") ? message.content.substr("go to channel".length + 1).trim() : message.content.substr("go to".length + 1).trim();
-                if(mod.length === 0)
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                let channel = util.parse_id(mod);
-                if(channel.type !== "channel")
-                {
-                    message.almost = true;
-                    return null;
-                }
-                
-                return [channel.id];
-            },
-            sample: "sempai go to __*#channel*__",
-            description: "Tells Sempai to output to the specified channel.",
+            formats: [
+                "go to {cid!channel}"
+            ],
+            sample: "go to __*#channel*__",
+            description: "Tells me to output to the specified channel.",
             permission: "GO_TO_CHANNEL",
             global: false,
             
@@ -471,13 +246,13 @@ class AdminModule extends ModuleBase
         });
     }
 
-    handle_blacklist_server(message, serverID)
+    handle_blacklist_server(message, args)
     {
-        let server = this.bot.get_server_internal(serverID - 1);
+        let server = this.bot.get_server_internal(args.server - 1);
         
         if(server === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_SERVER").format({author: message.author.id, id: serverID}));
+            return this.bot.respond(message, responses.get("INVALID_SERVER").format({author: message.author.id, id: args.server}));
         }
         
         if(this.bot.is_server_blacklisted(server.id))
@@ -487,13 +262,13 @@ class AdminModule extends ModuleBase
         this.bot.respond(message, responses.get("SERVER_BLACKLISTED").format({author: message.author.id, server_name: server.server.name}));
     }
     
-    handle_whitelist_server(message, serverID)
+    handle_whitelist_server(message, args)
     {
-        let server = this.bot.get_server_internal(serverID - 1);
+        let server = this.bot.get_server_internal(args.server - 1);
         
         if(server === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_SERVER").format({author: message.author.id, id: serverID}));
+            return this.bot.respond(message, responses.get("INVALID_SERVER").format({author: message.author.id, id: args.server}));
         }
         
         if(!this.bot.is_server_blacklisted(server.id))
@@ -503,31 +278,31 @@ class AdminModule extends ModuleBase
         this.bot.respond(message, responses.get("SERVER_WHITELISTED").format({author: message.author.id, server_name: server.server.name}));
     }
     
-    handle_blacklist_user(message, user_id)
+    handle_blacklist_user(message, args)
     {
-        let user = this.get_user(user_id, message.server);
+        let user = this.get_user(args.user, message.server);
         if(user === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: args.user}));
         }
         
         this.bot.blacklist_user(user);
         return this.bot.respond(message, responses.get("BLACKLISTED_USER").format({author: message.author.id, user: user.user_id}));
     }
     
-    handle_whitelist_user(message, user_id)
+    handle_whitelist_user(message, args)
     {
-        let user = this.get_user(user_id, message.server);
+        let user = this.get_user(args.user, message.server);
         if(user === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: args.user}));
         }
         
         this.bot.whitelist_user(user);
         return this.bot.respond(message, responses.get("WHITELISTED_USER").format({author: message.author.id, user: user.user_id}));
     }
     
-    handle_show_user_blacklist(message)
+    handle_show_user_blacklist(message, args)
     {
         let id = "ID";
         let name = "Name";
@@ -572,7 +347,7 @@ class AdminModule extends ModuleBase
         this.bot.respond(message, responses.get("USER_BLACKLIST").format({author: message.author.id, response: response}));
     }
     
-    handle_show_server_blacklist(message)
+    handle_show_server_blacklist(message, args)
     {
         let id = "ID";
         let name = "Name";
@@ -624,7 +399,7 @@ class AdminModule extends ModuleBase
         this.bot.respond(message, responses.get("SERVER_BLACKLIST").format({author: message.author.id, response: response}));
     }
     
-    handle_show_statistics(message)
+    handle_show_statistics(message, args)
     {
         let msg = responses.get("SHOW_STATISTICS").format({
             author: message.author.id,
@@ -647,7 +422,7 @@ class AdminModule extends ModuleBase
         this.bot.respond(message, msg);
     }
     
-    handle_list_servers(message)
+    handle_list_servers(message, args)
     {
         let data = [];
         for(let i = 0;i<this.bot.servers_internal.length;i++)
@@ -669,46 +444,45 @@ class AdminModule extends ModuleBase
         this.bot.respond_queue(message, messages);
     }
     
-    handle_enable_module(message, name)
+    handle_enable_module(message, args)
     {
-        let module = this.bot.get_module(name);
-        if(module === null)
+        if(this.bot.get_module(args.module) === null)
         {
-            return this.bot.respond(message, responses.get("MODULE_INVALID").format({author: message.author.id, module: name}));
+            return this.bot.respond(message, responses.get("MODULE_INVALID").format({author: message.author.id, module: args.module}));
         }
 
-        if(message.server.is_module_enabled(name))
+        if(message.server.is_module_enabled(args.module))
         {
-            return this.bot.respond(message, responses.get("MODULE_ALREADY_ENABLED").format({author: message.author.id, module: name}));
+            return this.bot.respond(message, responses.get("MODULE_ALREADY_ENABLED").format({author: message.author.id, module: args.module}));
         }
 
-        message.server.enable_module(name);
-        return this.bot.respond(message, responses.get("MODULE_ENABLED").format({author: message.author.id, module: name}));
+        message.server.enable_module(args.module);
+        return this.bot.respond(message, responses.get("MODULE_ENABLED").format({author: message.author.id, module: args.module}));
     }
 
-    handle_disable_module(message, name)
+    handle_disable_module(message, args)
     {
-        let module = this.bot.get_module(name);
+        let module = this.bot.get_module(args.module);
         if(module === null)
         {
-            return this.bot.respond(message, responses.get("MODULE_INVALID").format({author: message.author.id, module: name}));
+            return this.bot.respond(message, responses.get("MODULE_INVALID").format({author: message.author.id, module: args.module}));
         }
 
-        if(!message.server.is_module_enabled(name))
+        if(!message.server.is_module_enabled(args.module))
         {
-            return this.bot.respond(message, responses.get("MODULE_NOT_ENABLED").format({author: message.author.id, module: name}));
+            return this.bot.respond(message, responses.get("MODULE_NOT_ENABLED").format({author: message.author.id, module: args.module}));
         }
 
         if(module.always_on)
         {
-            return this.bot.respond(message, responses.get("MODULE_ALWAYS_ON").format({author: message.author.id, module: name}));
+            return this.bot.respond(message, responses.get("MODULE_ALWAYS_ON").format({author: message.author.id, module: args.module}));
         }
 
-        message.server.disable_module(name);
-        return this.bot.respond(message, responses.get("MODULE_DISABLED").format({author: message.author.id, module: name}));
+        message.server.disable_module(args.module);
+        return this.bot.respond(message, responses.get("MODULE_DISABLED").format({author: message.author.id, module: args.module}));
     }
 
-    handle_list_modules(message)
+    handle_list_modules(message, args)
     {
         let columns = {name: "Name", enabled: "Enabled", flags: "Flags"};
         let data = [];
@@ -742,15 +516,15 @@ class AdminModule extends ModuleBase
         return users.get_user_by_id(user_id, server);
     }
     
-    handle_assign_role(message, role, user_id)
+    handle_assign_role(message, args)
     {
-        role = role.toLowerCase();
+        args.role = args.role.toLowerCase();
         
         let role_id = 0;
-        switch(role)
+        switch(args.role)
         {
             case "superadmin":
-                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
+                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: args.role}));
                 
             case "admin":
                 role_id = 1;
@@ -771,35 +545,35 @@ class AdminModule extends ModuleBase
             return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
-        let user = this.get_user(user_id, message.server);
+        let user = this.get_user(args.user, message.server);
         if(user === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: args.user}));
         }
         
-        if(user.get_role(message.server) === role)
+        if(user.get_role(message.server) === args.role)
         {
-            return this.bot.respond(message, responses.get("ROLE_ALREADY_ASSIGNED").format({author: message.author.id, role: role, user: user_id}));
+            return this.bot.respond(message, responses.get("ROLE_ALREADY_ASSIGNED").format({author: message.author.id, role: args.role, user: args.user}));
         }
         
-        if(!users.assign_role(user.user_id, message.server, role))
+        if(!users.assign_role(user.user_id, message.server, args.role))
         {
             return this.bot.respond(message, responses.get("ERROR").format({author: message.author.id}));
         }
         
-        return this.bot.respond(message, responses.get("ROLE_ASSIGNED").format({author: message.author.id, role: role, user: user_id}));
+        return this.bot.respond(message, responses.get("ROLE_ASSIGNED").format({author: message.author.id, role: role, user: args.user}));
     }
     
-    handle_add_permission(message, permission, role)
+    handle_add_permission(message, args)
     {
-        permission = permission.toUpperCase();
-        role = role.toLowerCase();
+        args.permission = args.permission.toUpperCase();
+        args.role = args.role.toLowerCase();
         
         let role_id = 0;
-        switch(role)
+        switch(args.role)
         {
             case "superadmin":
-                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
+                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: args.role}));
                 
             case "admin":
                 role_id = 1;
@@ -820,25 +594,25 @@ class AdminModule extends ModuleBase
             return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
-        if(!permissions.is_allowed(permission, message.user.get_role(message.server), message.server))
+        if(!permissions.is_allowed(args.permission, message.user.get_role(message.server), message.server))
         {
             return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
-        permissions.add(permission, role, message.server);
-        this.bot.respond(message, responses.get("ADDED_PERMISSION").format({author: message.author.id, permission: permission, role: role}));
+        permissions.add(args.permission, args.role, message.server);
+        this.bot.respond(message, responses.get("ADDED_PERMISSION").format({author: message.author.id, permission: args.permission, role: args.role}));
     }
 
-    handle_remove_permission(message, permission, role)
+    handle_remove_permission(message, args)
     {
-        permission = permission.toUpperCase();
-        role = role.toLowerCase();
+        args.permission = args.permission.toUpperCase();
+        args.role = args.role.toLowerCase();
         
         let role_id = 0;
-        switch(role)
+        switch(args.role)
         {
             case "superadmin":
-                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: role}));
+                return this.bot.respond(message, responses.get("INVALID_ROLE").format({author: message.author.id, role: args.role}));
                 
             case "admin":
                 role_id = 1;
@@ -859,33 +633,33 @@ class AdminModule extends ModuleBase
             return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
-        if(!permissions.is_allowed(permission, message.user.get_role(message.server), message.server))
+        if(!permissions.is_allowed(args.permission, message.user.get_role(message.server), message.server))
         {
             return this.bot.respond(message, responses.get("NOT_ALLOWED").format({author: message.author.id}));
         }
         
-        permissions.remove(permission, role, message.server);
-        this.bot.respond(message, responses.get("REMOVED_PERMISSION").format({author: message.author.id, permission: permission, role: role}));
+        permissions.remove(args.permission, args.role, message.server);
+        this.bot.respond(message, responses.get("REMOVED_PERMISSION").format({author: message.author.id, permission: args.permission, role: args.role}));
     }
     
-    handle_goto_channel(message, channel)
+    handle_goto_channel(message, args)
     {
-        let id = channel;
+        let id = args.channel;
         if(message.server.server.channels.get("id", id) === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_CHANNEL").format({author: message.author.id, channel: channel}));
+            return this.bot.respond(message, responses.get("INVALID_CHANNEL").format({author: message.author.id, channel: args.channel}));
         }
         
         message.server.channel = id;
         this.bot.message(responses.get("OUTPUT_CHANNEL").format({author: message.author.id, channel: id}), message.server);
     }
     
-    handle_ignore_user(message, user_id)
+    handle_ignore_user(message, args)
     {
-        let user = this.get_user(user_id, message.server);
+        let user = this.get_user(args.user, message.server);
         if(user === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: args.user}));
         }
         
         if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
@@ -897,12 +671,12 @@ class AdminModule extends ModuleBase
         return this.bot.respond(message, responses.get("STARTED_IGNORING").format({author: message.author.id, user: user.user_id}));
     }
     
-    handle_unignore_user(message, user_id)
+    handle_unignore_user(message, args)
     {
-        let user = this.get_user(user_id, message.server);
+        let user = this.get_user(args.user, message.server);
         if(user === null)
         {
-            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: user_id}));
+            return this.bot.respond(message, responses.get("INVALID_USER").format({author: message.author.id, user: args.user}));
         }
         
         if(message.user.get_role_id(message.server) >= user.get_role_id(message.server))
@@ -914,9 +688,8 @@ class AdminModule extends ModuleBase
         return this.bot.respond(message, responses.get("STOPPED_IGNORING").format({author: message.author.id, user: user.user_id}));
     }
     
-    on_setup(bot)
+    on_setup()
     {
-        this.bot = bot;
     }
 
     on_shutdown()

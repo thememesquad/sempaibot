@@ -31,12 +31,9 @@ class RemindersModule extends ModuleBase
         
         this.name = "Reminders";
         this.description = "This module adds the possibility to send reminders to people! Cannot be disabled.";
-        this.always_on = true;
+        this.default_on = true;
         
         this.reminders = [];
-        this.bot = null;
-        
-        Reminder.find({}).then(docs => this.reminders = docs);
         
         permissions.register("MANAGE_REMINDERS", "moderator");
         
@@ -47,7 +44,7 @@ class RemindersModule extends ModuleBase
                     
                 return [];
             },
-            sample: "sempai list reminders",
+            sample: "list reminders",
             description: "Lists all active reminders.",
             permission: null,
             global: false,
@@ -62,7 +59,7 @@ class RemindersModule extends ModuleBase
                 
                 return [parseInt(message.content.substr("remove reminder".length + 1).trim())];
             },
-            sample: "sempai remove reminder __*id*__",
+            sample: "remove reminder __*id*__",
             description: "Removes a reminder.",
             permission: "MANAGE_REMINDERS",
             global: false,
@@ -115,7 +112,7 @@ class RemindersModule extends ModuleBase
                 
                 return [name, msg, date.ret];
             },
-            sample: "sempai remind __*name*__  to __*reminder message*__  at __*time*__",
+            sample: "remind __*name*__  to __*reminder message*__  at __*time*__",
             description: "Send yourself (or someone else) a reminder at a specified time! Use \"me\" to refer to yourself. The timezone is set to the timezone of your discord server.",
             permission: null,
             global: false,
@@ -130,7 +127,7 @@ class RemindersModule extends ModuleBase
                     
                 return [];
             },
-            sample: "sempai clear reminders",
+            sample: "clear reminders",
             description: "Clears all the reminders for this server.",
             permission: "MANAGE_REMINDERS",
             global: false,
@@ -345,10 +342,9 @@ class RemindersModule extends ModuleBase
         reminder.delete().catch(err => console.log(err));
     }
     
-    on_setup(bot)
+    async on_setup()
     {
-        this.bot = bot;
-        
+        this.reminders = await Reminder.find({});
         this.remind = setInterval(() => {
             let d = moment();
             let n = d.valueOf();

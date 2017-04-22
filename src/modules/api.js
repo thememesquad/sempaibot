@@ -13,6 +13,7 @@ class APIModule extends ModuleBase
         this.name = "API";
         this.description = "This is the api module! Cannot be disabled.";
         this.always_on = true;
+        this.default_on = true;
         this.hidden = true;
 
         this.server = restify.createServer({
@@ -57,9 +58,8 @@ class APIModule extends ModuleBase
         return next();
     }
     
-    on_setup(bot)
+    on_setup()
     {
-        this.bot = bot;
     }
 
     on_shutdown()

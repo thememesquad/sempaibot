@@ -35,6 +35,7 @@ class Bot {
         this.discord = new Discord.Client({
             autoReconnect: true
         });
+
         this.servers = {};
         this.servers_internal = [];
         this.modules = {};
@@ -91,38 +92,6 @@ class Bot {
         this.discord.user.setStatus(status, game).catch(() => {
             this.connected = false;
             this.queue.push(this.set_status.bind(this, status, game));
-        });
-    }
-
-    message_image(image, server) {
-        if (this.is_server_blacklisted(server.id)) {
-            return Promise.reject("blacklisted");
-        }
-
-        let channel = server.channel;
-        if (channel.length === 0) {
-            channel = server.server.channels.first().id;
-        }
-
-        let actual_channel = server.server.channels.find("id", channel);
-
-        return new Promise((resolve, reject) => {
-            let queue = () => {
-                this.queue.push(() => {
-                    actual_channel.sendFile(image).then(() => resolve(image)).catch(err => reject(err));
-                });
-            };
-
-            if (!this.connected) {
-                queue();
-                return;
-            }
-
-            actual_channel.sendFile(image).then(() => resolve(image)).catch(() => {
-                this.connected = false;
-                queue();
-            });
-
         });
     }
 
@@ -186,44 +155,10 @@ class Bot {
         });
     }
 
-    message_queue(messages, server) {
-        return new Promise((resolve, reject) => {
-            let send = (index, send) => {
-                if (index >= messages.length) {
-                    return resolve();
-                }
-
-                this.message(messages[index], server).then(() => send(index + 1, send)).catch(err => reject(err));
-            };
-
-            send(0, send);
-        });
-    }
-
-    respond_image(m, image) {
-        if (this.is_server_blacklisted(m.server.id)) {
-            return Promise.reject("blacklisted");
+    async message_queue(messages, server) {
+        for(let entry of messages) {
+            await this.message(entry, server);
         }
-
-        let actual_channel = m.channel;
-
-        return new Promise((resolve, reject) => {
-            let queue = () => {
-                this.queue.push(() => {
-                    actual_channel.sendFile(image).then(() => resolve(image)).catch(err => reject(err));
-                });
-            };
-
-            if (!this.connected) {
-                queue();
-                return;
-            }
-
-            actual_channel.sendFile(image).then(() => resolve(image)).catch(() => {
-                this.connected = false;
-                queue();
-            });
-        });
     }
 
     respond(m, message) {
@@ -252,22 +187,14 @@ class Bot {
         });
     }
 
-    respond_queue(message, messages) {
-        return new Promise((resolve, reject) => {
-            let send = (index, send) => {
-                if (index >= messages.length) {
-                    return resolve();
-                }
-
-                this.respond(message, messages[index]).then(() => send(index + 1, send)).catch(err => reject(err));
-            };
-
-            send(0, send);
-        });
+    async respond_queue(message, messages) {
+        for(let entry of messages) {
+            await this.respond(message, entry);
+        }
     }
 
     get_module(name) {
-        return (this.modules[name] === undefined) ? null : this.modules[name];
+        return (this.modules[name.toLowerCase()] === undefined) ? null : this.modules[name.toLowerCase()];
     }
 
     print(message, length, newline) {
@@ -280,7 +207,7 @@ class Bot {
             this.write(message);
     }
 
-    on_ready() {
+    async on_ready() {
         this.connected = true;
 
         this.log("Connected to discord.");
@@ -296,144 +223,135 @@ class Bot {
 
         this.connected_once = true;
 
-        db.load(this).then(() => {
-            this.print("Loading config from DB", 70, false);
-            return db.ConfigKeyValue.find({});
-        }).then(docs => {
-            this.log("....Ok");
-            for (let i = 0; i < docs.length; i++) {
-                if (docs[i].key === "mode") {
-                    if (docs[i].value.value !== responses.currentMode)
-                        responses.setMode(docs[i].value);
-                } else if (docs[i].key === "user_blacklist") {
-                    this.user_blacklist = docs[i];
-                } else if (docs[i].key === "server_blacklist") {
-                    this.server_blacklist = docs[i];
+        await db.load(this);
+
+        this.print("Loading config from DB", 70, false);
+        let docs = await db.ConfigKeyValue.find({});
+        this.log("....Ok");
+    
+        for (let i = 0; i < docs.length; i++) {
+            if (docs[i].key === "mode") {
+                if (docs[i].value.value !== responses.currentMode)
+                    responses.setMode(docs[i].value);
+            } else if (docs[i].key === "user_blacklist") {
+                this.user_blacklist = docs[i];
+            } else if (docs[i].key === "server_blacklist") {
+                this.server_blacklist = docs[i];
+            }
+        }
+
+        if (this.user_blacklist === null) {
+            this.user_blacklist = db.ConfigKeyValue.create({ key: "user_blacklist", value: { blacklist: [] } });
+            this.user_blacklist.save().catch(err => console.log(err, err.stack));
+        }
+
+        if (this.server_blacklist === null) {
+            this.server_blacklist = db.ConfigKeyValue.create({ key: "server_blacklist", value: { blacklist: [] } });
+            this.server_blacklist.save().catch(err => console.log(err, err.stack));
+        }
+
+        this.print("Loading users from DB", 70, false);
+        await users.load();
+        this.log("....Ok");
+
+        this.print("Loading permissions from DB", 70, false);
+        await permissions.load();
+        this.log("....Ok");
+
+        for (let key in modules) {
+            let mod = modules[key];
+            if (mod.on_setup === undefined) {
+                this.log("Error: Module '" + key + "' is not setup correctly. missing function: on_setup");
+                continue;
+            }
+
+            this.print("Setting up module '" + key + "'", 70, false);
+            try {
+                mod.bot = this;
+                mod.on_setup();
+                this.log("....Ok");
+            } catch (e) {
+                this.log("Error:");
+                this.log(e.stack);
+            }
+
+            this.modules[mod.name.toLowerCase()] = mod;
+        }
+
+        await permissions.save();
+
+        this.print("Loading changelog", 70, false);
+        let changelog_version = await new Promise((resolve, reject) => {
+            ChangelogDB.findOne({}).then(doc => {
+                if (doc === null) {
+                    return ChangelogDB.create({ version: changelog.version }).save().then(() => {
+                        resolve(-1);
+                    }).catch(err => {
+                        this.log(err);
+                    });
                 }
-            }
 
-            if (this.user_blacklist === null) {
-                this.user_blacklist = db.ConfigKeyValue.create({ key: "user_blacklist", value: { blacklist: [] } });
-                this.user_blacklist.save().catch(err => console.log(err, err.stack));
-            }
+                if (doc.version !== changelog.version) {
+                    let old = doc.version;
+                    doc.version = changelog.version;
 
-            if (this.server_blacklist === null) {
-                this.server_blacklist = db.ConfigKeyValue.create({ key: "server_blacklist", value: { blacklist: [] } });
-                this.server_blacklist.save().catch(err => console.log(err, err.stack));
-            }
-
-            this.print("Loading users from DB", 70, false);
-            return users.load();
-        }).then(() => {
-            this.log("....Ok");
-            this.print("Loading permissions from DB", 70, false);
-            return permissions.load();
-        }).then(() => {
-            this.log("....Ok");
-            for (let key in modules) {
-                let mod = modules[key];
-                if (mod.on_setup === undefined) {
-                    this.log("Error: Module '" + key + "' is not setup correctly. missing function: on_setup");
-                    continue;
+                    return doc.save().then(() => {
+                        resolve(old);
+                    }).catch(err => {
+                        this.log(err);
+                    });
                 }
 
-                this.print("Setting up module '" + key + "'", 70, false);
-                try {
-                    mod.on_setup(this);
-                    this.log("....Ok");
-                } catch (e) {
-                    this.log("Error:");
-                    this.log(e.stack);
-                }
-
-                this.modules[mod.name] = mod;
-            }
-
-            return permissions.save();
-        }).then(() => {
-            this.print("Loading changelog", 70, false);
-
-            return new Promise((resolve, reject) => {
-                ChangelogDB.findOne({}).then(doc => {
-                    if (doc === null) {
-                        return ChangelogDB.create({ version: changelog.version }).save().then(() => {
-                            resolve(-1);
-                        }).catch(err => {
-                            this.log(err);
-                        });
-                    }
-
-                    if (doc.version !== changelog.version) {
-                        let old = doc.version;
-                        doc.version = changelog.version;
-
-                        return doc.save().then(() => {
-                            resolve(old);
-                        }).catch(err => {
-                            this.log(err);
-                        });
-                    }
-
-                    resolve(doc.version);
-                }).catch(err => {
-                    reject(err);
-                });
+                resolve(doc.version);
+            }).catch(err => {
+                reject(err);
             });
-        }).then(changelog_version => {
-            this.log("....Ok");
-            this.print("Loading stats", 70, false);
-
-            return new Promise((resolve, reject) => {
-                stats.load().then(() => {
-                    resolve(changelog_version);
-                }).catch(err => {
-                    reject(err);
-                });
-            });
-        }).then(changelog_version => {
-            let servers = this.discord.guilds.array();
-
-            this.log("....Ok");
-            stats.register("num_servers", servers.length);
-
-            for (let i = 0; i < servers.length; i++) {
-                let server = servers[i];
-
-                this.servers[server.id] = new ServerData(this, server);
-                this.servers[server.id].load_promise.then(initial => {
-
-                    for (let key in this.modules) {
-                        if (this.modules[key].always_on)
-                            this.servers[server.id].enable_module(key);
-
-                        if (initial && this.modules[key].default_on)
-                            this.servers[server.id].enable_module(key);
-                    }
-
-                    let msg = "";
-                    for (let i = 0; i < changelog.changelog.length; i++) {
-                        if (changelog.changelog[i][0] <= changelog_version)
-                            continue;
-
-                        if (msg.length !== 0)
-                            msg += "\r\n";
-
-                        msg += "- " + changelog.changelog[i][1];
-                    }
-
-                    if (msg.length !== 0)
-                        this.message(responses.get("CHANGELOG").format({ changelog: msg }), this.servers[server.id]);
-                });
-                this.servers_internal.push(this.servers[server.id]);
-            }
-
-            this.ready = true;
-        }).catch(err => {
-            this.log(err.stack);
         });
+        this.log("....Ok");
+
+        this.print("Loading stats", 70, false);
+        await stats.load();
+        this.log("....Ok");
+
+        
+        let servers = this.discord.guilds.array();
+        stats.register("num_servers", servers.length);
+
+        for (let i = 0; i < servers.length; i++) {
+            let server = servers[i];
+
+            this.servers[server.id] = new ServerData(this, server);
+            let initial = await this.servers[server.id].load_promise;
+
+            for (let key in this.modules) {
+                if (this.modules[key].always_on)
+                    this.servers[server.id].enable_module(key);
+
+                if (initial && this.modules[key].default_on)
+                    this.servers[server.id].enable_module(key);
+            }
+
+            let msg = "";
+            for (let i = 0; i < changelog.changelog.length; i++) {
+                if (changelog.changelog[i][0] <= changelog_version)
+                    continue;
+
+                if (msg.length !== 0)
+                    msg += "\r\n";
+
+                msg += "- " + changelog.changelog[i][1];
+            }
+
+            if (msg.length !== 0)
+                this.message(responses.get("CHANGELOG").format({ changelog: msg }), this.servers[server.id]);
+
+            this.servers_internal.push(this.servers[server.id]);
+        }
+
+        this.ready = true;
     }
 
-    on_server_created(server) {
+    async on_server_created(server) {
         if (!this.connected || !this.ready)
             return;
 
@@ -442,17 +360,15 @@ class Bot {
         stats.update("num_servers", this.discord.guilds.array().length);
 
         this.servers[server.id] = new ServerData(this, server);
-        this.servers[server.id].load_promise.promise.then(() => {
-            for (let key in this.modules) {
-                if (this.modules[key].always_on)
-                    this.servers[server.id].enable_module(key);
+        await this.servers[server.id].load_promise.promise;
 
-                if (this.modules[key].default_on)
-                    this.servers[server.id].enable_module(key);
-            }
-        }).catch(err => {
-            this.log(err);
-        });
+        for (let key in this.modules) {
+            if (this.modules[key].always_on)
+                this.servers[server.id].enable_module(key);
+
+            if (this.modules[key].default_on)
+                this.servers[server.id].enable_module(key);
+        }
 
         this.servers_internal.push(this.servers[server.id]);
     }
@@ -479,7 +395,49 @@ class Bot {
         this.log("Discord error: " + err);
     }
 
-    handle_message(message) {
+    async process_message(server, message, identifier) {
+        identifier = identifier.trim();
+        
+        if (message.content.toLowerCase().indexOf(identifier) === -1)
+            return false;
+
+        message.content = message.content.substr(identifier.length).replace(/\s+/g, " ").trim();
+
+        let split = message.content.split(" ");
+        let handled = false;
+        let tmp = [];
+
+        for (let key in this.modules) {
+            let resp = this.modules[key].check_message(server, message, split);
+
+            if (typeof resp === "string") {
+                tmp.push(resp);
+            } else if (resp) {
+                handled = true;
+                break;
+            }
+        }
+
+        if (!handled && tmp.length > 0) {
+            await this.respond(message, responses.get("INCORRECT_FORMAT").format({ 
+                author: message.author.id, 
+                sample: tmp[0] 
+            }));
+
+            handled = true;
+        }
+
+        if (!handled) {
+            if (split.length === 1)
+                await this.respond(message, responses.get("NAME").format({ author: message.author.id }));
+            else
+                await this.respond(message, responses.get("UNKNOWN_COMMAND").format({ author: message.author.id }));
+        }
+
+        return true;
+    }
+
+    async handle_message(message) {
         let server = null;
 
         if (message.channel.type !== "dm") {
@@ -492,113 +450,53 @@ class Bot {
         message.server = server;
 
         //Is the server blacklisted
-        if (this.is_server_blacklisted(server.id))
+        if (server !== null && this.is_server_blacklisted(server.id))
             return;
 
         //Is the user blacklisted/ignored
-        if (this.is_user_blacklisted(message.user) || (message.server !== null && message.server.is_user_ignored(message.user)))
+        if (this.is_user_blacklisted(message.user) || (server !== null && server.is_user_ignored(message.user)))
             return;
 
         if (message.author.id === this.discord.user.id)
             return;
 
-        if (message.author.id !== this.discord.user.id && message.server !== null) {
-            for (let key in this.modules) {
-                if (!server.is_module_enabled(key) && (this.modules[key].always_on === undefined || this.modules[key].always_on === false))
-                    continue;
-
-                if (this.modules[key].on_raw_message === undefined)
-                    continue;
-
-                this.modules[key].on_raw_message(message);
-            }
-        }
-
-        if (message.content.toLowerCase().indexOf("sempai") === 0 || message.content.indexOf("-") === 0) {
-            let msg = message.content;
-
-            if (msg.toLowerCase().indexOf("sempai") === 0)
-                msg = msg.substr("sempai".length + 1).replace(/\s+/g, " ").trim();
-            else
-                msg = msg.substr(1).replace(/\s+/g, " ").trim();
-
-            message.content = msg;
-            let split = message.content.split(" ");
-            let handled = false;
-            let tmp = [];
-
-            for (let key in this.modules) {
-                let resp = this.modules[key].check_message(server, message, split);
-
-                if (typeof resp === "string") {
-                    tmp.push(resp);
-                } else if (resp) {
-                    handled = true;
-                    break;
-                }
-            }
-
-            if (!handled && tmp.length > 0) {
-                this.respond(message, responses.get("INCORRECT_FORMAT").format({ 
-                    author: message.author.id, 
-                    sample: tmp[0] 
-                }));
-
-                handled = true;
-            }
-
-            if (!handled) {
-                if (split.length === 1)
-                    this.respond(message, responses.get("NAME").format({ 
-                        author: message.author.id 
-                    })).catch(err => console.log(err, err.stack));
-                else
-                    this.respond(message, responses.get("UNKNOWN_COMMAND").format({ 
-                        author: message.author.id 
-                    })).catch(err => console.log(err, err.stack));
-            }
+        for(let identifier of config.identifiers) {
+            if(await this.process_message(server, message, identifier))
+                break;
         }
     }
 
-    blacklist_user(user) {
+    async blacklist_user(user) {
         this.user_blacklist.value.blacklist.push(user.user_id);
-        this.user_blacklist.save().catch(err => {
-            this.log(err);
-        });
+        await this.user_blacklist.save();
     }
 
-    blacklist_server(server_id) {
+    async blacklist_server(server_id) {
         this.message(responses.get("INFORM_SERVER_BLACKLISTED"), this.servers[server_id]);
         this.server_blacklist.value.blacklist.push(server_id);
-        this.server_blacklist.save().catch(err => {
-            this.log(err);
-        });
+        await this.server_blacklist.save();
     }
 
-    whitelist_user(user) {
+    async whitelist_user(user) {
         let idx = this.user_blacklist.value.blacklist.indexOf(user.user_id);
         if (idx === -1)
             return false;
 
         this.user_blacklist.value.blacklist.splice(idx, 1);
-        this.user_blacklist.save().catch(err => {
-            this.log(err);
-        });
+        await this.user_blacklist.save();
 
         return true;
     }
 
-    whitelist_server(server_id) {
+    async whitelist_server(server_id) {
         let idx = this.server_blacklist.value.blacklist.indexOf(server_id);
         if (idx === -1)
             return false;
 
         this.server_blacklist.value.blacklist.splice(idx, 1);
-        this.server_blacklist.save().catch(err => {
-            this.log(err);
-        });
+        await this.server_blacklist.save();
+        await this.message(responses.get("INFORM_SERVER_WHITELISTED"), this.servers[server_id]);
 
-        this.message(responses.get("INFORM_SERVER_WHITELISTED"), this.servers[server_id]);
         return true;
     }
 
