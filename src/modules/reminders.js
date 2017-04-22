@@ -30,7 +30,7 @@ class RemindersModule extends ModuleBase
         super();
         
         this.name = "Reminders";
-        this.description = "This module adds the possibility to send reminders to people! Cannot be disabled.";
+        this.description = "This module adds the possibility to send reminders to people!";
         this.default_on = true;
         
         this.reminders = [];
@@ -74,17 +74,11 @@ class RemindersModule extends ModuleBase
                     
                 let parsed = Time.parse(message.content);
                 if(parsed.length === 0)
-                {
-                    message.almost = true;
                     return null;
-                }
                 
                 let date = parsed[parsed.length - 1];
                 if(!date.ret[1].isValid())
-                {
-                    message.almost = true;
                     return null;
-                }
                 
                 let str = message.content.substr(0, date.index).trim();
                 let keywords = ["in", "after", "on", "at"];

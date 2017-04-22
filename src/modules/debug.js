@@ -1,7 +1,6 @@
 "use strict";
 
 const ModuleBase = require("../modulebase.js");
-const permissions = require("../permissions.js");
 const util = require("../util.js");
 const moment = require("moment");
 

@@ -92,10 +92,8 @@ class OsuModule extends ModuleBase {
                     return null;
 
                 let split = message.content.split(" ");
-                if (split.length < 6) {
-                    message.almost = true;
+                if (split.length < 6)
                     return null;
-                }
 
                 let limit = parseInt(split[4]);
                 let server = parseInt(split[6]);
@@ -184,10 +182,8 @@ class OsuModule extends ModuleBase {
                 for (let i = 0; i < messages.length; i++) {
                     if (message.content.startsWith(messages[i])) {
                         let tmp = message.content.substr(messages[i].length + 1);
-                        if (tmp.length === 0) {
-                            message.almost = true;
+                        if (tmp.length === 0)
                             return null;
-                        }
 
                         let mode = OsuMode.Standard;
                         tmp = tmp.trim();
@@ -230,10 +226,8 @@ class OsuModule extends ModuleBase {
                 for (let i = 0; i < messages.length; i++) {
                     if (message.content.startsWith(messages[i])) {
                         let tmp = message.content.substr(messages[i].length + 1);
-                        if (tmp.length === 0) {
-                            message.almost = true;
+                        if (tmp.length === 0)
                             return null;
-                        }
 
                         let mode = OsuMode.Standard;
                         tmp = tmp.trim();
@@ -267,47 +261,12 @@ class OsuModule extends ModuleBase {
 
         this.add_command({
             match: message => {
-                if (!message.content.startsWith("test"))
-                    return null;
-                //"**{user}** has set a new #**{top_rank}** PP score! **{map_artist} - {map_title} [{map_diff_name}] {mods}** {additional} | **{acc}%** | **{pp}pp** | **Rank: {rank}** | **{old_total_pp}pp** -> **{new_total_pp}pp** ({delta_pp}) | #**{old_rank}** -> #**{new_rank}**! ({delta_rank})\r\nMap link: https://osu.ppy.sh/b/{beatmap_id}",
-
-                return [this.users[4], {
-                    user: "Ichiroku",
-                    top_rank: 1,
-                    map_artist: "CHiCO with HoneyWorks",
-                    map_title: "color",
-                    map_diff_name: "Waiting in the Rain",
-                    mods: "",
-                    additional: "",
-                    acc: "98.13",
-                    pp: 168,
-                    rank: "S",
-                    new_rank: 42000,
-                    old_rank: 43000,
-                    delta_rank: 1000,
-                    old_total_pp: 2852,
-                    new_total_pp: 2952,
-                    delta_pp: 100,
-                    beatmap_id: 817174
-                }];
-            },
-            sample: "stop following __*osu! username or id*__ __*optional mode*__ (standard, taiko, mania, ctb)",
-            description: "Removes the specified person from my following list for osu!",
-            permission: "OSU_UNFOLLOW",
-            global: false,
-            execute: this.handle_embed_test
-        });
-
-        this.add_command({
-            match: message => {
                 if (!message.content.startsWith("check"))
                     return null;
 
                 let tmp = message.content.substr("check".length + 1);
-                if (tmp.length === 0) {
-                    message.almost = true;
+                if (tmp.length === 0)
                     return null;
-                }
 
                 let mode = OsuMode.Standard;
                 tmp = tmp.trim();

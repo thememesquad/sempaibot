@@ -47,8 +47,6 @@ class ModuleBase
             }
 
             if(typeof command.formats !== "undefined") {
-                message.almost = undefined;
-
                 let processor = new CommandProcessor(this.bot);
                 for(let format of command.formats)
                     processor.add_format(format);
@@ -65,20 +63,9 @@ class ModuleBase
 
                 data = [message, args];
             } else {
-                message.almost = undefined;
                 let ret = command.match(message);
-                if(ret === null && message.almost === undefined)
-                {
+                if(ret === null)
                     continue;
-                }
-                else if(message.almost === true)
-                {
-                    if(command.sample === undefined)
-                        continue;
-                    
-                    best = command.sample;
-                    continue;
-                }
                 
                 data = [message].concat(ret);
             }
@@ -93,7 +80,7 @@ class ModuleBase
             return true;
         }
 
-        return best || false;
+        return false;
     }
 }
 
