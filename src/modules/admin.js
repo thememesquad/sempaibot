@@ -52,7 +52,7 @@ class AdminModule extends ModuleBase
         
         this.add_command({
             formats: [
-                "blacklist server {i!server}"
+                "blacklist server {int!server}"
             ],
             sample: "blacklist server __*server*__",
             description: "Blacklists a server.",
@@ -64,7 +64,7 @@ class AdminModule extends ModuleBase
         
         this.add_command({
             formats: [
-                "whitelist server {i!server}"
+                "whitelist server {int!server}"
             ],
             sample: "whitelist server __*server*__",
             description: "Whitelists a server.",
@@ -76,7 +76,7 @@ class AdminModule extends ModuleBase
         
         this.add_command({
             formats: [
-                "blacklist user {uid!user}"
+                "blacklist user {userid!user}"
             ],
             sample: "blacklist user __*@user*__",
             description: "Blacklists an user.",
@@ -88,7 +88,7 @@ class AdminModule extends ModuleBase
         
         this.add_command({
             formats: [
-                "whitelist user {uid!user}"
+                "whitelist user {userid!user}"
             ],
             sample: "whitelist user __*@user*__",
             description: "Whitelists an user.",
@@ -150,11 +150,11 @@ class AdminModule extends ModuleBase
 
         this.add_command({
             formats: [
-                "assign role {role} to user {uid!user}",
-                "assign {role} to user {uid!user}",
-                "assign role {role} to {uid!user}",
-                "assign {role} to {uid!user}",
-                "assign {role} {uid!user}"
+                "assign role {role} to user {userid!user}",
+                "assign {role} to user {userid!user}",
+                "assign role {role} to {userid!user}",
+                "assign {role} to {userid!user}",
+                "assign {role} {userid!user}"
             ],
             sample: "assign __*role*__ to __*@user*__",
             description: "Assigns the specified role to the specified user.",
@@ -209,8 +209,8 @@ class AdminModule extends ModuleBase
         
         this.add_command({
             formats: [
-                "ignore {uid!user}",
-                "start ignoring {uid!user}"
+                "ignore {userid!user}",
+                "start ignoring {userid!user}"
             ],
             sample: "ignore __*@user*__",
             description: "Ignores the specified user.",
@@ -222,8 +222,8 @@ class AdminModule extends ModuleBase
         
         this.add_command({
             formats: [
-                "unignore {uid!user}",
-                "stop ignoring {uid!user}"
+                "unignore {userid!user}",
+                "stop ignoring {userid!user}"
             ],
             sample: "unignore __*@user*__",
             description: "Stops ignoring the specified user.",
@@ -235,7 +235,7 @@ class AdminModule extends ModuleBase
         
         this.add_command({
             formats: [
-                "go to {cid!channel}"
+                "go to {channelid!channel}"
             ],
             sample: "go to __*#channel*__",
             description: "Tells me to output to the specified channel.",

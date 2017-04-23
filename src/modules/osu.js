@@ -12,6 +12,7 @@ const lodash = require("lodash"),
     LoadBalancer = require("../loadbalancer.js"),
     util = require("../util.js"),
     moment = require("moment-timezone"),
+    CommandProcessor = require("../command.js"),
 
     USER_UPDATE_INTERVAL = 1200000,
     BEST_UPDATE_INTERVAL = 60000,
@@ -86,20 +87,25 @@ class OsuModule extends ModuleBase {
         permissions.register("OSU_UNFOLLOW", "moderator");
         permissions.register("OSU_CHECK", "moderator");
 
+        CommandProcessor.add_custom_type("osumode", msg => {
+            let tmp = msg.toLowerCase();
+            if (tmp.endsWith("standard")) {
+                return OsuMode.Standard;
+            } else if (tmp.endsWith("taiko")) {
+                return OsuMode.Taiko;
+            } else if (tmp.endsWith("mania")) {
+                return OsuMode.Mania;
+            } else if (tmp.endsWith("ctb")) {
+                return OsuMode.CatchTheBeat;
+            }
+
+            return OsuMode.Standard;
+        });
+
         this.add_command({
-            match: message => {
-                if (!message.content.startsWith("set osu limit to"))
-                    return null;
-
-                let split = message.content.split(" ");
-                if (split.length < 6)
-                    return null;
-
-                let limit = parseInt(split[4]);
-                let server = parseInt(split[6]);
-
-                return [limit, server];
-            },
+            formats: [
+                "set osu limit to {int!limit} for {int!server}"
+            ],
             sample: "set osu limit to __*limit*__ for __*server*__",
             description: "Changes the osu server limit",
             permission: "OSU_CHANGE_LIMIT",
@@ -109,13 +115,11 @@ class OsuModule extends ModuleBase {
         });
 
         this.add_command({
-            match: message => {
-                if (!message.content.startsWith("what is my osu limit"))
-                    return null;
-
-                return [];
-            },
-            sample: "what is my osu limit?",
+            formats: [
+                "what is my osu limit",
+                "osu limit"
+            ],
+            sample: "what is my osu limit",
             description: "Displays this servers osu limit",
             permission: null,
             global: false,
@@ -124,47 +128,18 @@ class OsuModule extends ModuleBase {
         });
 
         this.add_command({
-            match: message => {
-                let messages = [
-                    "who are you following",
-                    "who do you follow",
-                    "list following",
-                    "list follows",
-                    "show follow list",
-                    "show followlist",
-                    "show following list",
-                    "show follows list"
-                ];
-
-                for (let i = 0; i < messages.length; i++) {
-                    if (message.content.startsWith(messages[i])) {
-                        let tmp = message.content.substr(messages[i].length + 1);
-                        let mode = OsuMode.Standard;
-
-                        if (tmp.length !== 0) {
-                            tmp = tmp.trim();
-                            if (tmp.toLowerCase().endsWith("standard")) {
-                                mode = OsuMode.Standard;
-                                tmp = tmp.substr(0, tmp.lastIndexOf("standard"));
-                            } else if (tmp.toLowerCase().endsWith("taiko")) {
-                                mode = OsuMode.Taiko;
-                                tmp = tmp.substr(0, tmp.lastIndexOf("taiko"));
-                            } else if (tmp.toLowerCase().endsWith("mania")) {
-                                mode = OsuMode.Mania;
-                                tmp = tmp.substr(0, tmp.lastIndexOf("mania"));
-                            } else if (tmp.toLowerCase().endsWith("ctb")) {
-                                mode = OsuMode.CatchTheBeat;
-                                tmp = tmp.substr(0, tmp.lastIndexOf("ctb"));
-                            }
-                        }
-
-                        return [mode];
-                    }
-                }
-
-                return null;
-            },
-            sample: "who are you following __*optional mode*__ (standard, taiko, mania, ctb)",
+            defaults: {mode: OsuMode.Standard},
+            formats: [
+                "who are you following <in {osumode!mode}>",
+                "who do you follow <in {osumode!mode}>",
+                "list following <in {osumode!mode}>",
+                "list follows <in {osumode!mode}>",
+                "show follow list <in {osumode!mode}>",
+                "show followlist <in {osumode!mode}>",
+                "show following list <in {osumode!mode}>",
+                "show follows list <in {osumode!mode}>",
+            ],
+            sample: "who are you following in __*optional mode*__ (standard, taiko, mania, ctb)",
             description: "Lists all the people I'm following on osu!",
             permission: null,
             global: false,
@@ -173,41 +148,12 @@ class OsuModule extends ModuleBase {
         });
 
         this.add_command({
-            match: message => {
-                let messages = [
-                    "follow",
-                    "stalk"
-                ];
-
-                for (let i = 0; i < messages.length; i++) {
-                    if (message.content.startsWith(messages[i])) {
-                        let tmp = message.content.substr(messages[i].length + 1);
-                        if (tmp.length === 0)
-                            return null;
-
-                        let mode = OsuMode.Standard;
-                        tmp = tmp.trim();
-                        if (tmp.toLowerCase().endsWith("standard")) {
-                            mode = OsuMode.Standard;
-                            tmp = tmp.substr(0, tmp.lastIndexOf("standard"));
-                        } else if (tmp.toLowerCase().endsWith("taiko")) {
-                            mode = OsuMode.Taiko;
-                            tmp = tmp.substr(0, tmp.lastIndexOf("taiko"));
-                        } else if (tmp.toLowerCase().endsWith("mania")) {
-                            mode = OsuMode.Mania;
-                            tmp = tmp.substr(0, tmp.lastIndexOf("mania"));
-                        } else if (tmp.toLowerCase().endsWith("ctb")) {
-                            mode = OsuMode.CatchTheBeat;
-                            tmp = tmp.substr(0, tmp.lastIndexOf("ctb"));
-                        }
-
-                        return [tmp.trim(), mode];
-                    }
-                }
-
-                return null;
-            },
-            sample: "follow __*osu! username or id*__ __*optional mode*__ (standard, taiko, mania, ctb)",
+            defaults: { mode: OsuMode.Standard },
+            formats: [
+                "follow {user} <in {osumode!mode}>",
+                "stalk {user} <in {osumode!mode}>",
+            ],
+            sample: "follow __*osu! username*__ in __*optional mode*__ (standard, taiko, mania, ctb)",
             description: "Adds the specified person to my following list for osu!",
             permission: "OSU_FOLLOW",
             global: false,
@@ -216,82 +162,18 @@ class OsuModule extends ModuleBase {
         });
 
         this.add_command({
-            match: message => {
-                let messages = [
-                    "stop following",
-                    "stop stalking",
-                    "unfollow"
-                ];
-
-                for (let i = 0; i < messages.length; i++) {
-                    if (message.content.startsWith(messages[i])) {
-                        let tmp = message.content.substr(messages[i].length + 1);
-                        if (tmp.length === 0)
-                            return null;
-
-                        let mode = OsuMode.Standard;
-                        tmp = tmp.trim();
-                        if (tmp.toLowercase().endsWith("standard")) {
-                            mode = OsuMode.Standard;
-                            tmp = tmp.substr(0, tmp.lastIndexOf("standard"));
-                        } else if (tmp.toLowerCase().endsWith("taiko")) {
-                            mode = OsuMode.Taiko;
-                            tmp = tmp.substr(0, tmp.lastIndexOf("taiko"));
-                        } else if (tmp.toLowerCase().endsWith("mania")) {
-                            mode = OsuMode.Mania;
-                            tmp = tmp.substr(0, tmp.lastIndexOf("mania"));
-                        } else if (tmp.toLowerCase().endsWith("ctb")) {
-                            mode = OsuMode.CatchTheBeat;
-                            tmp = tmp.substr(0, tmp.lastIndexOf("ctb"));
-                        }
-
-                        return [tmp.trim(), mode];
-                    }
-                }
-
-                return null;
-            },
-            sample: "stop following __*osu! username or id*__ __*optional mode*__ (standard, taiko, mania, ctb)",
+            defaults: { mode: OsuMode.Standard },
+            formats: [
+                "stop following {user} <in {osumode!mode}>",
+                "stop stalking {user} <in {osumode!mode}>",
+                "unfollow {user} <in {osumode!mode}>",
+            ],
+            sample: "stop following __*osu! username*__ in __*optional mode*__ (standard, taiko, mania, ctb)",
             description: "Removes the specified person from my following list for osu!",
             permission: "OSU_UNFOLLOW",
             global: false,
 
             execute: this.handle_unfollow
-        });
-
-        this.add_command({
-            match: message => {
-                if (!message.content.startsWith("check"))
-                    return null;
-
-                let tmp = message.content.substr("check".length + 1);
-                if (tmp.length === 0)
-                    return null;
-
-                let mode = OsuMode.Standard;
-                tmp = tmp.trim();
-                if (tmp.toLowerCase().endsWith("standard")) {
-                    mode = OsuMode.Standard;
-                    tmp = tmp.substr(0, tmp.lastIndexOf("standard"));
-                } else if (tmp.toLowerCase().endsWith("taiko")) {
-                    mode = OsuMode.Taiko;
-                    tmp = tmp.substr(0, tmp.lastIndexOf("taiko"));
-                } else if (tmp.toLowerCase().endsWith("mania")) {
-                    mode = OsuMode.Mania;
-                    tmp = tmp.substr(0, tmp.lastIndexOf("mania"));
-                } else if (tmp.toLowerCase().endsWith("ctb")) {
-                    mode = OsuMode.CatchTheBeat;
-                    tmp = tmp.substr(0, tmp.lastIndexOf("ctb"));
-                }
-
-                return [tmp.trim(), mode];
-            },
-            sample: "check __*osu! username or id*__ __*optional mode*__ (standard, taiko, mania, ctb)",
-            description: "Forces me to check the specified person for scores that I may have somehow missed.",
-            permission: "OSU_CHECK",
-            global: false,
-
-            execute: this.handle_check
         });
 
         this.api_stats = setInterval(() => {
@@ -306,28 +188,35 @@ class OsuModule extends ModuleBase {
         }, 10);
     }
 
-    handle_embed_test(message, profile, record) {
-        this.on_new_record(profile, record);
-    }
-
-    handle_set_limit(message, limit, serverID) {
-        let server = this.bot.get_server_internal(serverID - 1);
+    handle_set_limit(message, args) {
+        let server = this.bot.get_server_internal(args.server - 1);
         if (server === null) {
-            return this.bot.respond(message, responses.get("INVALID_SERVER").format({ author: message.author.id, id: serverID }));
+            return this.bot.respond(message, responses.get("INVALID_SERVER").format({ 
+                author: message.author.id, 
+                id: args.server 
+            }));
         }
 
         let old_limit = server.config.value.osu_limit;
-        server.config.value.osu_limit = limit;
+        server.config.value.osu_limit = args.limit;
         server.config.save().catch(err => console.log("error saving new config: ", err));
 
-        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT_CHANGED").format({ author: message.author.id, old_limit: old_limit, new_limit: limit, server_name: server.server.name }));
+        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT_CHANGED").format({ 
+            author: message.author.id, 
+            old_limit: old_limit, 
+            new_limit: args.limit, 
+            server_name: server.server.name 
+        }));
     }
 
-    handle_show_limit(message) {
-        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT").format({ author: message.author.id, limit: message.server.config.value.osu_limit }));
+    handle_show_limit(message, args) {
+        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT").format({ 
+            author: message.author.id, 
+            limit: message.server.config.value.osu_limit 
+        }));
     }
 
-    handle_list_following(message, mode) {
+    handle_list_following(message, args) {
         if (this.users.length === 0)
             return this.bot.respond(message, responses.get("OSU_FOLLOWING_EMPTY"));
 
@@ -342,7 +231,7 @@ class OsuModule extends ModuleBase {
             if (users[i].servers.indexOf(message.server.id) === -1)
                 continue;
 
-            if (users[i].mode !== mode)
+            if (users[i].mode !== args.mode)
                 continue;
 
             data.push({
@@ -353,10 +242,14 @@ class OsuModule extends ModuleBase {
         }
 
         if (data.length === 0) {
-            this.bot.respond(message, responses.get("OSU_FOLLOW_LIST_EMPTY").format({ author: message.author.id }));
+            this.bot.respond(message, responses.get("OSU_FOLLOW_LIST_EMPTY").format({ 
+                author: message.author.id 
+            }));
         } else {
-            if (mode === OsuMode.Standard) {
-                let messages = util.generate_table(responses.get("OSU_FOLLOWING").format({ author: message.author.id }), {
+            if (args.mode === OsuMode.Standard) {
+                let messages = util.generate_table(responses.get("OSU_FOLLOWING").format({ 
+                    author: message.author.id 
+                }), {
                     rank: "Rank",
                     name: "Name",
                     pp: "PP"
@@ -365,7 +258,7 @@ class OsuModule extends ModuleBase {
             } else {
                 let messages = util.generate_table(responses.get("OSU_FOLLOWING_MODE").format({
                     author: message.author.id,
-                    mode: OsuMode.to_string(mode)
+                    mode: OsuMode.to_string(args.mode)
                 }), {
                     rank: "Rank",
                     name: "Name",
@@ -376,16 +269,130 @@ class OsuModule extends ModuleBase {
         }
     }
 
-    handle_follow(message, name, mode) {
-        this.check_user(name, message, mode);
+    async handle_follow(message, args) {
+        let username = args.user;
+
+        let profile = null;
+        let num = 0;
+
+        for (let i in this.users) {
+            let user = this.users[i];
+            if (user.username.toLowerCase() === username.toLowerCase() || user.user_id === username.toLowerCase()) {
+                if (this.users[i].mode === args.mode) {
+                    profile = this.users[i];
+                }
+            }
+
+            if (this.users[i].servers.indexOf(message.server.id) !== -1)
+                num++;
+        }
+
+        if (profile !== null) {
+            if (profile.servers.indexOf(message.server.id) === -1) {
+                profile.servers.push(message.server.id);
+                OsuUser.findOneAndUpdate({ user_id: profile.user_id }, { servers: profile.servers }, {});
+
+                if (args.mode === OsuMode.Standard) {
+                    return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({
+                        author: message.author.id,
+                        user: profile.username
+                    }));
+                } else {
+                    return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING_MODE").format({
+                        author: message.author.id,
+                        user: profile.username,
+                        mode: OsuMode.to_string(args.mode)
+                    }));
+                }
+            }
+
+            if (args.mode === OsuMode.Standard) {
+                return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING").format({
+                    author: message.author.id,
+                    user: profile.username
+                }));
+            } else {
+                return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING_MODE").format({
+                    author: message.author.id,
+                    user: profile.username,
+                    mode: OsuMode.to_string(args.mode)
+                }));
+            }
+        }
+
+        if (num === message.server.config.value.osu_limit) {
+            return this.bot.respond(message, responses.get("OSU_MAX_USER_LIMIT").format({
+                author: message.author.id,
+                limit: message.server.config.value.osu_limit,
+                user: profile.username
+            }));
+        }
+
+        let json = await this.get_user(username, args.mode);
+        if (json === undefined || json.username === undefined) {
+            if (message !== undefined) {
+                if (args.mode === OsuMode.Standard) {
+                    this.bot.respond(message, responses.get("OSU_USER_NOT_FOUND").format({
+                        author: message.author.id,
+                        user: username
+                    }));
+                } else {
+                    this.bot.respond(message, responses.get("OSU_USER_NOT_FOUND_MODE").format({
+                        author: message.author.id,
+                        user: username,
+                        mode: args.mode
+                    }));
+                }
+            }
+
+            return;
+        }
+
+        let time = Date.now();
+        let user = {
+            user_id: json.user_id,
+            username: json.username,
+            pp: Number(json.pp_raw),
+            rank: Number(json.pp_rank),
+            servers: [message.server.id],
+            update_in_progress: null,
+            last_checked: time,
+            last_updated: time,
+            records: [],
+            last_record: -1,
+            checking: false,
+            db_version: CURRENT_DB_VERSION,
+            mode: args.mode,
+            extra: json
+        };
+        this.users.push(user);
+
+        stats.update("osu_num_users", this.users.length);
+
+        await OsuUser.create(user).save();
+
+        this.force_check(user.username, null, true, false, args.mode);
+
+        if (args.mode === OsuMode.Standard) {
+            this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({
+                author: message.author.id,
+                user: json.username
+            }));
+        } else {
+            this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING_MODE").format({
+                author: message.author.id,
+                user: json.username,
+                mode: OsuMode.to_string(args.mode)
+            }));
+        }
     }
 
-    handle_unfollow(message, user, mode) {
+    handle_unfollow(message, args) {
         let i = -1;
         for (let j in this.users) {
             let user = this.users[j];
-            if (user.username.toLowerCase() === user.toLowerCase() || user.user_id === user.toLowerCase()) {
-                if (this.users[j].mode === mode) {
+            if (user.username.toLowerCase() === args.user.toLowerCase() || user.user_id === args.user.toLowerCase()) {
+                if (this.users[j].mode === args.mode) {
                     i = j;
                     break;
                 }
@@ -395,7 +402,7 @@ class OsuModule extends ModuleBase {
         if (i === -1) {
             return this.bot.respond(message, responses.get("OSU_NOT_FOLLOWING").format({
                 author: message.author.id,
-                user: user
+                user: args.user
             }));
         }
 
@@ -403,7 +410,7 @@ class OsuModule extends ModuleBase {
         if (profile.servers.indexOf(message.server.id) === -1) {
             return this.bot.respond(message, responses.get("OSU_NOT_FOLLOWING").format({
                 author: message.author.id,
-                user: user
+                user: args.user
             }));
         }
 
@@ -415,7 +422,7 @@ class OsuModule extends ModuleBase {
             OsuUser.findOneAndUpdate({ user_id: profile.user_id }, { servers: profile.servers }, {});
         }
 
-        if (mode === OsuMode.Standard) {
+        if (args.mode === OsuMode.Standard) {
             this.bot.respond(message, responses.get("OSU_STOPPED").format({
                 author: message.author.id,
                 user: profile.username
@@ -424,13 +431,9 @@ class OsuModule extends ModuleBase {
             this.bot.respond(message, responses.get("OSU_STOPPED_MODE").format({
                 author: message.author.id,
                 user: profile.username,
-                mode: OsuMode.to_string(mode)
+                mode: OsuMode.to_string(args.mode)
             }));
         }
-    }
-
-    handle_check(message, user, mode) {
-        this.force_check(user, message, false, false, mode);
     }
 
     on_new_record(profile, record) {
@@ -619,19 +622,6 @@ class OsuModule extends ModuleBase {
         delete this.servers[server.id];
     }
 
-    log_call() {
-        let curr = (new Date()).getMinutes();
-
-        if (this.stats.last_minute !== curr) {
-            stats.update("osu_api_calls", this.stats.last);
-
-            this.stats.last = 0;
-            this.stats.last_minute = curr;
-        }
-
-        this.stats.last++;
-    }
-
     async api_call(method, params, first, num) {
         num = (num === undefined) ? 0 : num;
 
@@ -646,7 +636,7 @@ class OsuModule extends ModuleBase {
         this.pending.push(tmp);
         
         let obj = await tmp;
-        this.log_call();
+        stats.update("osu_api_calls", 1);
 
         let body = obj.body;
 
@@ -661,24 +651,33 @@ class OsuModule extends ModuleBase {
             if (num === 4)
                 throw e;
 
-            return await this.api_call(method, params, first, num + 1);;
+            return await this.api_call(method, params, first, num + 1);
         }
     }
 
     get_user(username, mode) {
         mode = mode || OsuMode.Standard;
 
-        return this.api_call("get_user", { u: username, m: mode });
+        return this.api_call("get_user", { 
+            u: username, m: mode 
+        });
     }
 
     get_beatmaps(id) {
-        return this.api_call("http://osu.ppy.sh/api/get_beatmaps", { b: id });
+        return this.api_call("http://osu.ppy.sh/api/get_beatmaps", { 
+            b: id 
+        });
     }
 
     get_user_best(id, mode, limit) {
         mode = mode || OsuMode.Standard;
 
-        return this.api_call("get_user_best", { u: id, m: mode, limit: limit, type: "id" }, false);
+        return this.api_call("get_user_best", { 
+            u: id, 
+            m: mode, 
+            limit: limit, 
+            type: "id" 
+        }, false);
     }
 
     calculate_accuracy(beatmap, mode) {
@@ -864,125 +863,6 @@ class OsuModule extends ModuleBase {
         };
 
         handle();
-    }
-
-    async check_user(_username, _message, mode) {
-        let username = _username;
-        let message = _message || null;
-
-        let profile = null;
-        let num = 0;
-
-        for (let i in this.users) {
-            let user = this.users[i];
-            if (user.username.toLowerCase() === username.toLowerCase() || user.user_id === username.toLowerCase()) {
-                if (this.users[i].mode === mode) {
-                    profile = this.users[i];
-                }
-            }
-
-            if (this.users[i].servers.indexOf(message.server.id) !== -1)
-                num++;
-        }
-
-        if (profile !== null) {
-            if (profile.servers.indexOf(message.server.id) === -1) {
-                profile.servers.push(message.server.id);
-                OsuUser.findOneAndUpdate({ user_id: profile.user_id }, { servers: profile.servers }, {});
-
-                if (mode === OsuMode.Standard) {
-                    return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({
-                        author: message.author.id,
-                        user: profile.username
-                    }));
-                } else {
-                    return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING_MODE").format({
-                        author: message.author.id,
-                        user: profile.username,
-                        mode: OsuMode.to_string(mode)
-                    }));
-                }
-            }
-
-            if (mode === OsuMode.Standard) {
-                return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING").format({
-                    author: message.author.id,
-                    user: profile.username
-                }));
-            } else {
-                return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING_MODE").format({
-                    author: message.author.id,
-                    user: profile.username,
-                    mode: OsuMode.to_string(mode)
-                }));
-            }
-        }
-
-        if (num === message.server.config.value.osu_limit) {
-            return this.bot.respond(message, responses.get("OSU_MAX_USER_LIMIT").format({
-                author: message.author.id,
-                limit: message.server.config.value.osu_limit,
-                user: profile.username
-            }));
-        }
-
-        let json = await this.get_user(username, mode);
-        if (json === undefined || json.username === undefined) {
-            if (message !== undefined) {
-                if (mode === OsuMode.Standard) {
-                    this.bot.respond(message, responses.get("OSU_USER_NOT_FOUND").format({
-                        author: message.author.id,
-                        user: username
-                    }));
-                } else {
-                    this.bot.respond(message, responses.get("OSU_USER_NOT_FOUND_MODE").format({
-                        author: message.author.id,
-                        user: username,
-                        mode: mode
-                    }));
-                }
-            }
-
-            return;
-        }
-
-        let time = Date.now();
-        let user = {
-            user_id: json.user_id,
-            username: json.username,
-            pp: Number(json.pp_raw),
-            rank: Number(json.pp_rank),
-            servers: [message.server.id],
-            update_in_progress: null,
-            last_checked: time,
-            last_updated: time,
-            records: [],
-            last_record: -1,
-            checking: false,
-            db_version: CURRENT_DB_VERSION,
-            mode: mode,
-            extra: json
-        };
-        this.users.push(user);
-
-        stats.update("osu_num_users", this.users.length);
-
-        await OsuUser.create(user).save();
-
-        this.force_check(user.username, null, true, false, mode);
-
-        if (mode === OsuMode.Standard) {
-            this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({
-                author: message.author.id,
-                user: json.username
-            }));
-        } else {
-            this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING_MODE").format({
-                author: message.author.id,
-                user: json.username,
-                mode: OsuMode.to_string(mode)
-            }));
-        }
     }
 
     update_user(_profile) {

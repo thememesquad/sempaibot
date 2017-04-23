@@ -1,5 +1,53 @@
-const users = require("./users.js");
 const util = require("./util.js");
+
+function create_regex(format) {
+    format = format.toLowerCase().trim();
+    format = format.replace(/</g, "(?:");
+    format = format.replace(/>/g, ")?");
+
+    let splitter = /^(.*?)\{(.*?)\}/;
+
+    let whitespaceRegex = /\S+/g;
+    let regex = "^";
+    let num = 0;
+    let vars = {};
+
+    while(format.length > 0) {
+        let split = format.match(splitter);
+        if(split === null) {
+            let tmp = format.match(whitespaceRegex);
+
+            for(let i = 0;i<tmp.length;i++) {
+                if(i === tmp.length - 1)
+                    regex += `${tmp[i]}\\s*`;
+                else
+                    regex += `${tmp[i]}\\s*`;
+            }
+
+            break;
+        }
+
+        let tmp = split[1].match(whitespaceRegex);
+        let variable = split[2];
+
+        if(tmp !== null) {
+            for(let i = 0;i<tmp.length;i++) {
+                regex += `${tmp[i]}\\s*`;
+            }
+        }
+    
+        regex += "(.*?)\\s*";
+        format = format.substr(split[0].length).trim();
+
+        vars[variable] = ++num;
+    }
+    regex += "$";
+
+    return {
+        regex: new RegExp(regex),
+        variables: vars
+    };
+}
 
 class CommandProcessor {
     constructor(bot) {
@@ -13,98 +61,80 @@ class CommandProcessor {
     add_format(format) {
         if(Array.isArray(format)) {
             return this.formats.push({
-                format: format[0].toLowerCase().match(this.regex),
+                format: create_regex(format[0]),
                 variables: format.length > 1 ? format[1] : {}
             });
         }
 
         this.formats.push({
-            format: format.toLowerCase().match(this.regex),
+            format: create_regex(format),
             variables: {}
         });
     }
 
     format(type, msg) {
-        switch(type) {
-            case "n":
-                return parseFloat(msg);
+        if(typeof CommandProcessor.type_parsers[type] !== "undefined")
+            return CommandProcessor.type_parsers[type](msg);
 
-            case "i":
-                return parseInt(msg);
-
-            case "id":
-                return util.parse_id(msg);
-
-            case "cid":
-                {
-                    let id = util.parse_id(msg);
-                    if(id.type !== "channel")
-                        return null;
-                    
-                    return id.id;
-                }
-
-            case "uid":
-                {
-                    let id = util.parse_id(msg);
-                    if(id.type !== "user")
-                        return null;
-                    
-                    return id.id;
-                }
-            
-            default:
-                console.log("unknown type: ", type);
-        }
+        console.log("unknown type: ", type);
 
         return msg;
     }
 
     process(message) {
-        let splitted = message.toLowerCase().match(this.regex);
-        if(splitted === null)
-            splitted = [splitted];
-        
         let matches = [];
 
         for(let entry of this.formats) {
-            let match = true;
-            let args = {};
+            let match = message.toLowerCase().trim().match(entry.format.regex);
 
-            for(let i = 0;i<splitted.length;i++) {
-                if(i >= entry.format.length)
-                    break;
-                
-                let tmp = entry.format[i].match(this.variableRegex);
-                if(tmp !== null) {
-                    let tmp2 = tmp[1].match(this.typeRegex);
-                    if(tmp2 === null)
-                        args[tmp[1]] = splitted[i];
+            if(match !== null) {
+                let args = {};
+
+                for(let key in entry.format.variables) {
+                    let tmp = key.match(this.typeRegex);
+                    if(tmp === null)
+                        args[key] = match[entry.format.variables[key]];
                     else {
-                        args[tmp2[2]] = this.format(tmp2[1], splitted[i]);
-                        if(args[tmp2[2]] === null) {
+                        args[tmp[2]] = this.format(tmp[1], match[entry.format.variables[key]] || "");
+                        if(args[tmp[2]] === null) {
                             match = false;
                             break;
                         }
                     }
-                } else {
-                    if(splitted[i] !== entry.format[i]) {
-                        match = false;
-                        break;
-                    }
                 }
-            }
 
-            if(match)
                 matches.push([entry.format, Object.assign({}, entry.variables, args)]);
+            }
         }
 
         if(matches.length === 0)
             return null;
 
-        let best = matches.reduce((prev, curr) => Math.abs(curr[0].length - splitted.length) < Math.abs(prev[0].length - splitted.length) ? curr : prev);
-        return best[1];
+        return matches[0][1];
     }
 }
+
+CommandProcessor.type_parsers = {};
+CommandProcessor.add_custom_type = (type, func) => {
+    CommandProcessor.type_parsers[type] = func;
+};
+
+CommandProcessor.add_custom_type("float", msg => { return parseFloat(msg); });
+CommandProcessor.add_custom_type("int", msg => { return parseInt(msg); });
+CommandProcessor.add_custom_type("id", msg => { return util.parse_id(msg); });
+CommandProcessor.add_custom_type("channelid", msg => {
+    let id = util.parse_id(msg);
+    if(id.type !== "channel")
+        return null;
+    
+    return id.id;
+});
+CommandProcessor.add_custom_type("userid", msg => {
+    let id = util.parse_id(msg);
+    if(id.type !== "user")
+        return null;
+    
+    return id.id;
+});
 
 module.exports = CommandProcessor;

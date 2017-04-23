@@ -38,12 +38,9 @@ class RemindersModule extends ModuleBase
         permissions.register("MANAGE_REMINDERS", "moderator");
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("list reminders"))
-                    return null;
-                    
-                return [];
-            },
+            formats: [
+                "list reminders"
+            ],
             sample: "list reminders",
             description: "Lists all active reminders.",
             permission: null,
@@ -53,12 +50,9 @@ class RemindersModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("remove reminder"))
-                    return null;
-                
-                return [parseInt(message.content.substr("remove reminder".length + 1).trim())];
-            },
+            formats: [
+                "remove reminder {int!reminder}"
+            ],
             sample: "remove reminder __*id*__",
             description: "Removes a reminder.",
             permission: "MANAGE_REMINDERS",
@@ -115,12 +109,9 @@ class RemindersModule extends ModuleBase
         });
         
         this.add_command({
-            match: message => {
-                if(!message.content.startsWith("clear reminders"))
-                    return null;
-                    
-                return [];
-            },
+            formats: [
+                "clear reminders"
+            ],
             sample: "clear reminders",
             description: "Clears all the reminders for this server.",
             permission: "MANAGE_REMINDERS",
