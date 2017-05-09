@@ -626,7 +626,7 @@ class OsuModule extends ModuleBase {
         num = (num === undefined) ? 0 : num;
 
         first = (first === undefined) ? true : first;
-        let url = (method.startsWith("http:") ? method : (typeof config.osu_api_url !== "undefined") ?config.osu_api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu_api;
+        let url = (method.startsWith("http:") ? method : (typeof config.osu.api_url !== "undefined") ?config.osu.api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu.api_key;
 
         for (let key in params) {
             url += "&" + key + "=" + params[key];

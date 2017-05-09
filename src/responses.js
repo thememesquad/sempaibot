@@ -195,7 +195,11 @@ const responses_normal = {
     SERVER_BLACKLIST: "This is my current server blacklist:{response}",
     BLACKLISTED_USER: "Ok, I blacklisted user <@{user}>.",
     WHITELISTED_USER: "Ok, I whitelisted user <@{user}>.",
-    USER_BLACKLIST: "This is my current user blacklist:{response}"
+    USER_BLACKLIST: "This is my current user blacklist:{response}",
+
+    VOICE_ALREADY_REGISTERED: "You have already registered for voice!",
+    VOICE_REGISTRATION_ALREADY_STARTED: "There is already an authentication underway!",
+    VOICE_REGISTRATION_URL: "Starting authentication, please go to {url} and sign-in."
 };
 
 const responses_tsundere = {

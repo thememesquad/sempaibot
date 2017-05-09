@@ -30,7 +30,7 @@ class ModuleBase
             
             if(server !== null && !command.global)
             {
-                if(!server.is_module_enabled(this.name))
+                if(!this.always_on && !server.is_module_enabled(this.name))
                 {
                     //module is not enabled for this server and this is a local command
                     continue;
