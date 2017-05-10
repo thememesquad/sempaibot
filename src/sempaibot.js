@@ -10,7 +10,8 @@ const ServerData = require("./serverdata.js"),
     Document = require("camo").Document,
     changelog = require("./changelog.js"),
     stats = require("./stats.js"),
-    DiscordAPI = require("./discord.api.js");
+    DiscordAPI = require("./discord.api.js"),
+    ModuleBase = require("./modulebase.js");
 
 class ChangelogDB extends Document {
     constructor() {
@@ -166,6 +167,8 @@ class Bot {
 
         for (let key in modules) {
             let mod = modules[key];
+            if(!(mod instanceof ModuleBase))
+                continue;
             
             await this.print_status(`Setting up module '${key}'`, async () => {
                 mod.bot = this;

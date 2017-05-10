@@ -1,11 +1,8 @@
 const path = require("path"),
     grpc = require("grpc"),
     config = require("../../config.js"),
-    embedded = grpc.load({
-        root: path.resolve(__dirname, "../proto"), 
-        file: "embedded_assistant.proto"
-    }).google.assistant.embedded.v1alpha1,
-    GoogleAuth = require("google-auth-library"),
+    EmbeddedAssistantClient = require("./google/assistant/embedded/v1alpha1/embedded_assistant_grpc_pb").EmbeddedAssistantClient,
+    embedded = require("./google/assistant/embedded/v1alpha1/embedded_assistant_pb"),
     streamBuffers = require("stream-buffers"),
     google = require("googleapis"),
     OAuth2 = google.auth.OAuth2,
@@ -13,7 +10,8 @@ const path = require("path"),
     ModuleBase = require("../modulebase.js"),
     Document = require("camo").Document,
     responses = require("../responses.js"),
-    url = require("url");
+    url = require("url"),
+    Bromise = require("bluebird");
 
 class AssistantToken extends Document {
     constructor() {
@@ -21,7 +19,7 @@ class AssistantToken extends Document {
 
         this.user_id = String;
         this.access_token = String;
-        this.remember_token = String;
+        this.refresh_token = String;
         this.token_type = String;
         this.expiry_date = Number;
     }
@@ -167,16 +165,26 @@ class VoiceModule extends ModuleBase{
                         this.conversation[user.id].write(this.generate_setup_request(16000));
 
                         let buffers = [];
-                        this.conversation[user.id].on("data", (response) => { 
-                            console.log(response);
+                        this.conversation[user.id].on("data", (response) => {
+                            console.log(response.status);
 
-                            if(response.event_type === "END_OF_UTTERANCE") {
-                                this.conversation[user.id].end();
-                                return;
+                            if(response.hasEventType()) {
+                                if(response.event_type === "END_OF_UTTERANCE") {
+                                    this.conversation[user.id].end();
+                                    return;
+                                }
                             }
                             
-                            if(response.audio_out !== null) {
+                            if(response.hasAudioOut()) {
                                 buffers.push(response.audio_out.audio_data);
+                            }
+
+                            if(response.hasResult()) {
+                                console.log(response.result);
+                            }
+
+                            if(response.hasError()) {
+                                console.log(response.error);
                             }
                         });
 
@@ -204,7 +212,6 @@ class VoiceModule extends ModuleBase{
                         this.conversation[user.id].write(this.generate_audio_request(this.convert_to_linear16(data)));
                     });
                 } else if(!speaking && this.audio_stream[user.id] !== undefined) {
-                    //todo: delete stream
                     delete this.audio_stream[user.id];
                 }
             } catch(err) {
@@ -250,19 +257,24 @@ class VoiceModule extends ModuleBase{
                 config.voice.client_secret,
                 "http://" + config.voice.redirect_ip + ":8000/oauthcallback"
             );
-
+            this.oauth[user.id].refreshAccessToken = Bromise.promisify(this.oauth[user.id].refreshAccessToken, {context: this.oauth[user.id]});
             this.oauth[user.id].setCredentials(this.tokens[user.id]);
+
+            if(this.tokens[user.id].expiry_date < Date.now()) {
+                let tokens = await this.oauth[user.id].refreshAccessToken();
+                this.tokens[user.id].access_token = tokens.access_token;
+                this.tokens[user.id].refresh_token = tokens.refresh_token;
+                this.tokens[user.id].token_type = tokens.token_type;
+                this.tokens[user.id].expiry_date = tokens.expiry_date;
+                await this.tokens[user.id].save();
+            }
         }
 
         let ssl_credentials = grpc.credentials.createSsl();
-        let call_credentials = grpc.credentials.createFromMetadataGenerator((auth_context, callback) => {
-            let metadata = new grpc.Metadata();
-            metadata.add("authorization", this.oauth[user.id].credentials.token_type + " " + this.oauth[user.id].credentials.access_token);
-            callback(null, metadata);
-        });
+        let call_credentials = grpc.credentials.createFromGoogleCredential(this.oauth[user.id]);
         let combined_credentials = grpc.credentials.combineChannelCredentials(ssl_credentials, call_credentials);
 
-        return new embedded.EmbeddedAssistant("embeddedassistant.googleapis.com", combined_credentials);
+        return new EmbeddedAssistantClient("embeddedassistant.googleapis.com", combined_credentials);
     }
 
     convert_to_linear16(buffer) {
@@ -283,31 +295,36 @@ class VoiceModule extends ModuleBase{
     }
 
     generate_setup_request(sample_rate) {
-        let audioInConfig = new embedded.AudioInConfig({
-            encoding: embedded.AudioInConfig.Encoding.LINEAR16,
-            sample_rate_hertz: sample_rate
-        });
+        const audioInConfig = new embedded.AudioInConfig();
+        audioInConfig.setEncoding(embedded.AudioInConfig.Encoding.LINEAR16);
+        audioInConfig.setSampleRateHertz(sample_rate);
 
-        let audioOutConfig = new embedded.AudioOutConfig({
-            encoding: embedded.AudioOutConfig.Encoding.OPUS_IN_OGG,
-            sample_rate_hertz: sample_rate,
-            volume_percentage: 50
-        });
+        const audioOutConfig = new embedded.AudioOutConfig();
+        audioOutConfig.setSampleRateHertz(sample_rate);
+        audioOutConfig.setEncoding(embedded.AudioOutConfig.Encoding.LINEAR16);
+        audioOutConfig.setVolumePercentage(80);
 
-        let config = new embedded.ConverseConfig({
-            audio_in_config: audioInConfig,
-            audio_out_config: audioOutConfig
-        });
+        const converseConfig = new embedded.ConverseConfig();
+        converseConfig.setAudioInConfig(audioInConfig);
+        converseConfig.setAudioOutConfig(audioOutConfig);
 
-        return new embedded.ConverseRequest({
-            config: config
-        });
+        /*if (this.currentConversationState) {
+            const converseState = new embedded.ConverseState();
+            converseState.setConversationState(this.currentConversationState);
+            converseConfig.setConverseState(converseState);
+        }*/
+
+        const converseRequest = new embedded.ConverseRequest();
+        converseRequest.setConfig(converseConfig);
+
+        return converseRequest;
     }
 
     generate_audio_request(data) {
-        return new embedded.ConverseRequest({
-            audio_in: data
-        });
+        const converseRequest = new embedded.ConverseRequest();
+        converseRequest.setAudioIn(data);
+
+        return converseRequest;
     }
 }
 
