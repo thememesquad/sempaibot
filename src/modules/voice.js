@@ -25,6 +25,51 @@ class AssistantToken extends Document {
     }
 }
 
+class VoiceRecorder {
+    constructor(conversation, mod) {
+        this.conversation = conversation;
+        this.module = mod;
+        this.interval = setInterval(this.send_data.bind(this), 100);
+        this.last = Date.now();
+        this.buffer = new Buffer(0);
+        this.actual = new Buffer(0);
+    }
+
+    send_data() {
+        let delta_samples = Math.floor(((Date.now() - this.last) / 1000.0) * this.sample_rate);
+        this.last = Date.now();
+
+        if(delta_samples > 0) {
+            let empty = Buffer.alloc(delta_samples);
+            this.buffer = Buffer.concat([this.buffer, empty]);
+        }
+
+        this.conversation.write(this.module.generate_audio_request(this.buffer));
+        this.actual = Buffer.concat([this.actual, this.buffer]);
+        this.buffer = new Buffer(0);
+    }
+
+    push_samples(data) {
+        let delta_samples = Math.floor(((Date.now() - this.last) / 1000.0) * this.sample_rate);
+        this.last = Date.now();
+
+        if(delta_samples > 0) {
+            let empty = Buffer.alloc(delta_samples);
+            this.buffer = Buffer.concat([this.buffer, empty, Buffer.from(data)]);
+        } else {
+            this.buffer = Buffer.concat([this.buffer, Buffer.from(data)]);
+        }
+    }
+
+    stop() {
+        clearInterval(this.interval);
+    }
+
+    get sample_rate() {
+        return 16000;
+    }
+}
+
 class VoiceModule extends ModuleBase{
     constructor() {
         super();
@@ -42,6 +87,7 @@ class VoiceModule extends ModuleBase{
         this.audio_data = {};
         this.audio_stream = {};
         this.conversation = {};
+        this.recorders = {};
 
         this.add_command({
             formats: [
@@ -166,25 +212,43 @@ class VoiceModule extends ModuleBase{
 
                         let buffers = [];
                         this.conversation[user.id].on("data", (response) => {
-                            console.log(response.status);
-
                             if(response.hasEventType()) {
-                                if(response.event_type === "END_OF_UTTERANCE") {
+                                console.log("eventtype", response.getEventType());
+
+                                if(response.getEventType() === 1) {
+                                    console.log("Conversation ended.");
+
+                                    this.recorders[user.id].stop();
+                                    delete this.recorders[user.id];
+
                                     this.conversation[user.id].end();
                                     return;
                                 }
                             }
                             
                             if(response.hasAudioOut()) {
-                                buffers.push(response.audio_out.audio_data);
+                                buffers.push("audiodata", response.getAudioOut().getAudioData());
                             }
 
                             if(response.hasResult()) {
-                                console.log(response.result);
+                                let result = response.getResult();
+                                let spoken_request = result.getSpokenRequestText();
+                                let spoken_response = result.getSpokenResponseText();
+                                let state = result.getConversationState();
+                                let mode = result.getMicrophoneMode();
+                                let volume = result.getVolumePercentage();
+
+                                console.log("result", {
+                                    spoken_request: spoken_request,
+                                    spoken_response: spoken_response,
+                                    //state: state,
+                                    mode: mode,
+                                    volume: volume
+                                });
                             }
 
                             if(response.hasError()) {
-                                console.log(response.error);
+                                console.log("error", response.getError());
                             }
                         });
 
@@ -205,11 +269,14 @@ class VoiceModule extends ModuleBase{
                         this.conversation[user.id].on("error", (err) => {
                             console.log("error", err);
                         });
+
+                        this.recorders[user.id] = new VoiceRecorder(this.conversation[user.id], this);
                     }
 
                     this.audio_stream[user.id] = this.receivers[message.server.id].createPCMStream(user);
                     this.audio_stream[user.id].on("data", (data) => {
-                        this.conversation[user.id].write(this.generate_audio_request(this.convert_to_linear16(data)));
+                        if(this.recorders[user.id] !== undefined)
+                            this.recorders[user.id].push_samples(this.convert_to_linear16(data));
                     });
                 } else if(!speaking && this.audio_stream[user.id] !== undefined) {
                     delete this.audio_stream[user.id];
