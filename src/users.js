@@ -161,11 +161,16 @@ class Users
         if(config.superadmins.indexOf(id) !== -1)
             role = "superadmin";
             
+        let server_id = server !== null ? server.id : -1;
         let roles = {};
-        roles[server.id] = role;
+        roles[server_id] = role;
         
-        console.log("Adding user '" + id + "' (" + name + ") from server '" + server.server.name + "'.");
-        
+        if(server !== null) {
+            console.log("Adding user '" + id + "' (" + name + ") from server '" + server.server.name + "'.");
+        } else {
+            console.log("Adding user '" + id + "' (" + name + ")");
+        }
+
         let user = User.create({name: name, user_id: id, roles: roles});
         user.save().catch(err => {
             console.log(err);
@@ -180,7 +185,7 @@ class Users
         let user = this.users[id];
         if(user === undefined)
         {
-            if(server !== undefined)
+            if(server !== undefined && server !== null)
             {
                 for(let user of server.server.members) {
                     if(user[0] === id)

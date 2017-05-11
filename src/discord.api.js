@@ -48,7 +48,7 @@ class DiscordAPI {
         return new Promise((resolve, reject) => {
             let queue = () => {
                 this.queue.push(() => {
-                    actual_channel.sendMessage(message).then(() => resolve(message)).catch(err => reject(err));
+                    actual_channel.send(message).then(() => resolve(message)).catch(err => reject(err));
                 });
             };
 
@@ -57,7 +57,7 @@ class DiscordAPI {
                 return;
             }
 
-            actual_channel.sendMessage(message).then(() => resolve(message)).catch(() => {
+            actual_channel.send(message).then(() => resolve(message)).catch(() => {
                 this.connected = false;
                 queue();
             });
@@ -100,7 +100,7 @@ class DiscordAPI {
     }
 
     respond(m, message) {
-        if (this.bot.is_server_blacklisted(m.server.id)) {
+        if (m.server !== null && this.bot.is_server_blacklisted(m.server.id)) {
             return Promise.reject("blacklisted");
         }
 
@@ -109,7 +109,7 @@ class DiscordAPI {
         return new Promise((resolve, reject) => {
             let queue = () => {
                 this.queue.push(() => {
-                    actual_channel.sendMessage(message).then(() => resolve(message)).catch(err => reject(err));
+                    actual_channel.send(message).then(() => resolve(message)).catch(err => reject(err));
                 });
             };
 
@@ -118,7 +118,7 @@ class DiscordAPI {
                 return;
             }
 
-            actual_channel.sendMessage(message).then(() => resolve(message)).catch(() => {
+            actual_channel.send(message).then(() => resolve(message)).catch(() => {
                 this.connected = false;
                 queue();
             });

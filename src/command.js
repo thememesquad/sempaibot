@@ -1,7 +1,7 @@
 const util = require("./util.js");
 
 function create_regex(format) {
-    format = format.toLowerCase().trim();
+    format = format.trim();
     format = format.replace(/</g, "(?:");
     format = format.replace(/>/g, ")?");
 
@@ -44,7 +44,7 @@ function create_regex(format) {
     regex += "$";
 
     return {
-        regex: new RegExp(regex),
+        regex: new RegExp(regex, "i"),
         variables: vars
     };
 }
@@ -52,9 +52,9 @@ function create_regex(format) {
 class CommandProcessor {
     constructor(bot) {
         this.formats = [];
-        this.regex = /\S+/g;
-        this.variableRegex = /^\{(.*)\}/;
-        this.typeRegex = /^(.*)!(.*)/;
+        this.regex = /\S+/gi;
+        this.variableRegex = /^\{(.*)\}/i;
+        this.typeRegex = /^(.*)!(.*)/i;
         this.bot = bot;
     }
 
@@ -85,7 +85,7 @@ class CommandProcessor {
         let matches = [];
 
         for(let entry of this.formats) {
-            let match = message.toLowerCase().trim().match(entry.format.regex);
+            let match = message.trim().match(entry.format.regex);
 
             if(match !== null) {
                 let args = {};

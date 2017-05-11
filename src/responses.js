@@ -199,7 +199,10 @@ const responses_normal = {
 
     VOICE_ALREADY_REGISTERED: "You have already registered for voice!",
     VOICE_REGISTRATION_ALREADY_STARTED: "There is already an authentication underway!",
-    VOICE_REGISTRATION_URL: "Starting authentication, please go to {url} and sign-in."
+    VOICE_REGISTRATION_NOT_STARTED: "You haven't started an authentication flow yet!",
+    VOICE_REGISTRATION_ERROR: "We encountered an error while authenticating: {error}",
+    VOICE_REGISTRATION_URL: "Starting authentication, please go to {url} and sign-in. When you're done, please whisper me the command 'sempai register __**code**__' to complete the authentication.",
+    VOICE_REGISTRATION_COMPLETE: "Authentication complete!"
 };
 
 const responses_tsundere = {
