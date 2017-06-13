@@ -487,6 +487,8 @@ class Bot {
             server = this.servers[message.channel.guild.id];
             if (server === null || server === undefined)
                 return;
+        } else {
+            return;
         }
 
         message.user = users.get_user(message.author, server);
