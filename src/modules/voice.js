@@ -8,20 +8,9 @@ const grpc = require("grpc"),
     Document = require("camo").Document,
     responses = require("../responses.js"),
     Bromise = require("bluebird"),
-    snowboy = require("snowboy"),
     ffmpeg = require("fluent-ffmpeg"),
     stream = require("stream"),
     fs = require("fs");
-
-const Detector = snowboy.Detector;
-const Models = snowboy.Models;
-
-const models = new Models();
-models.add({
-    file: "resources/sempai.pmdl",
-    sensitivity: "0.5",
-    hotwords : "sempai"
-});
 
 class AssistantToken extends Document {
     constructor() {
@@ -93,6 +82,7 @@ class VoiceModule extends ModuleBase{
         this.description = "Google Assistant Integration";
         this.hidden = true;
         this.always_on = true;
+        this.disabled = typeof config.voice === "undefined";
 
         this.tokens = {};
         this.oauth = {};
@@ -146,9 +136,13 @@ class VoiceModule extends ModuleBase{
 
             execute: this.handle_stop_listening
         });
+
+        this.voice_setup = false;
     }
 
-    handle_register(message, args) {
+    handle_register(message) {
+        this.setup_voice();
+
         if(this.tokens[message.author.id] !== undefined) {
             return this.bot.respond(message, responses.get("VOICE_ALREADY_REGISTERED").format({
                 author: message.author.id
@@ -180,6 +174,8 @@ class VoiceModule extends ModuleBase{
     }
 
     handle_register_code(message, args) {
+        this.setup_voice();
+
         if(this.oauth[message.author.id] === undefined) {
             return this.bot.respond(message, responses.get("VOICE_REGISTRATION_NOT_STARTED").format({
                 author: message.author.id
@@ -207,7 +203,9 @@ class VoiceModule extends ModuleBase{
         });
     }
 
-    async handle_start_listening(message, args) {
+    async handle_start_listening(message) {
+        this.setup_voice();
+
         if(this.connections[message.server.id] !== undefined) {
             //already listening on server
         }
@@ -234,13 +232,13 @@ class VoiceModule extends ModuleBase{
 
                 if(speaking) {
                     this.audio_stream[user.id] = this.receivers[message.server.id].createPCMStream(user);
-                    this.detectors[user.id] = new Detector({
+                    this.detectors[user.id] = new this.Detector({
                         resource: "resources/common.res",
-                        models: models,
+                        models: this.models,
                         audioGain: 1.0
                     });
 
-                    this.detectors[user.id].on("hotword", (index, hotword, buffer) => {
+                    this.detectors[user.id].on("hotword", () => {
                         if(this.conversation[user.id] === undefined) {
                             this.conversation[user.id] = this.services[user.id].converse();
                             this.conversation[user.id].write(this.generate_setup_request(16000));
@@ -316,7 +314,7 @@ class VoiceModule extends ModuleBase{
                     });
 
                     let customStream = new stream.Writable();
-                    customStream._write = function(userid, chunk, encoding, done) {
+                    customStream._write = function(userid, chunk) {
                         if(this.recorders[userid] !== undefined)
                             this.recorders[userid].push_samples(chunk);
                         
@@ -345,11 +343,13 @@ class VoiceModule extends ModuleBase{
         });
     }
 
-    async handle_stop_listening(message, args) {
+    async handle_stop_listening(message) {
+        this.setup_voice();
         this.connections[message.server.id].leave();
     }
     
     async on_setup() {
+        this.setup_voice();
         let tokens = await AssistantToken.find({});
         for(let i = 0;i<tokens.length;i++) {
             this.tokens[tokens[i].user_id] = tokens[i];
@@ -360,11 +360,11 @@ class VoiceModule extends ModuleBase{
 
     }
 
-    async on_load(server) {
+    async on_load() {
 
     }
 
-    async on_unload(server) {
+    async on_unload() {
 
     }
 
@@ -446,6 +446,24 @@ class VoiceModule extends ModuleBase{
         converseRequest.setAudioIn(data);
 
         return converseRequest;
+    }
+
+    setup_voice() {
+        if(this.voice_setup)
+            return;
+
+        this.snowboy = require("snowboy");
+        this.Detector = this.snowboy.Detector;
+        this.Models = this.snowboy.Models;
+
+        this.models = new this.Models();
+        this.models.add({
+            file: "resources/sempai.pmdl",
+            sensitivity: "0.5",
+            hotwords : "sempai"
+        });
+
+        this.voice_setup = true;
     }
 }
 

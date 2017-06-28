@@ -58,6 +58,9 @@ class ServerData
                         if(module === null)
                             continue;
                             
+                        if(module.disabled)
+                            continue;
+                        
                         module.on_load(this);
                     }
                     
@@ -119,6 +122,9 @@ class ServerData
         if(module === null)
             return; //no such module
 
+        if(module.disabled)
+            return;
+        
         this.modules.push(name);
         module.on_load(this);
 
@@ -142,6 +148,9 @@ class ServerData
         if(module === null)
             return; //no such module
 
+        if(module.disabled)
+            return;
+        
         this.modules.splice(this.modules.indexOf(name), 1);
         module.on_unload(this);
 

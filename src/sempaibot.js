@@ -170,12 +170,20 @@ class Bot {
             if(!(mod instanceof ModuleBase))
                 continue;
             
-            await this.print_status(`Setting up module '${key}'`, async () => {
+            if(mod.disabled)
+                continue;
+            
+            let result = await this.print_status(`Setting up module '${key}'`, async () => {
                 mod.bot = this;
                 if(mod.on_setup !== undefined)
                     await mod.on_setup();
+
+                return true;
             });
 
+            if(result === null)
+                continue;
+            
             this.modules[mod.name.toLowerCase()] = mod;
         }
 
@@ -255,6 +263,9 @@ class Bot {
         let tmp = [];
 
         for (let key in this.modules) {
+            if(this.modules[key].disabled)
+                continue;
+            
             let resp = this.modules[key].check_message(server, message, split);
 
             if (typeof resp === "string") {

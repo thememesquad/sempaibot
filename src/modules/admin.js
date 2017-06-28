@@ -399,23 +399,23 @@ class AdminModule extends ModuleBase
         this.bot.respond(message, responses.get("SERVER_BLACKLIST").format({author: message.author.id, response: response}));
     }
     
-    handle_show_statistics(message, args)
+    handle_show_statistics(message)
     {
         let msg = responses.get("SHOW_STATISTICS").format({
             author: message.author.id,
-            num_servers: stats.get_value("num_servers"),
-            osu_num_users: stats.get_value("osu_num_users"),
-            osu_last_minute: stats.get_value("osu_api_calls"),
-            osu_average_day: stats.get_average_day_value("osu_api_calls"),
-            osu_average_week: stats.get_average_week_value("osu_api_calls"),
-            osu_average_month: stats.get_average_month_value("osu_api_calls"),
-            osu_highest_day: stats.get_highest_day_value("osu_api_calls"),
-            osu_highest_week: stats.get_highest_week_value("osu_api_calls"),
-            osu_highest_month: stats.get_highest_month_value("osu_api_calls"),
-            osu_last_day: stats.get_day_value("osu_api_calls"),
-            osu_last_week: stats.get_week_value("osu_api_calls"),
-            osu_last_month: stats.get_month_value("osu_api_calls"),
-            osu_alltime: stats.get_alltime_value("osu_api_calls"),
+            num_servers: 0,//stats.get_value("num_servers"),
+            osu_num_users: 0,//stats.get_value("osu_num_users"),
+            osu_last_minute: 0,//stats.get_value("osu_api_calls"),
+            osu_average_day: 0,//stats.get_average_day_value("osu_api_calls"),
+            osu_average_week: 0,//stats.get_average_week_value("osu_api_calls"),
+            osu_average_month: 0,//stats.get_average_month_value("osu_api_calls"),
+            osu_highest_day: 0,//stats.get_highest_day_value("osu_api_calls"),
+            osu_highest_week: 0,//stats.get_highest_week_value("osu_api_calls"),
+            osu_highest_month: 0,//stats.get_highest_month_value("osu_api_calls"),
+            osu_last_day: 0,//stats.get_day_value("osu_api_calls"),
+            osu_last_week: 0,//stats.get_week_value("osu_api_calls"),
+            osu_last_month: 0,//stats.get_month_value("osu_api_calls"),
+            osu_alltime: 0,//stats.get_alltime_value("osu_api_calls"),
             osu_api_queue: this.bot.get_module("osu!").load_balancer.numRequests
         });
         

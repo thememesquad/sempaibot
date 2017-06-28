@@ -27,7 +27,10 @@ class CoreModule extends ModuleBase
                 ["hilfe", {german: true}],
                 ["please show help", {please: true}],
                 ["hilfe bitte", {german: true, please: true}],
+                ["help me please", {please: true}],
+                ["please help me", {please: true}],
                 "help",
+                "help me",
                 "show help"
             ],
             hide_in_help: true,
