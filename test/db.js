@@ -1,5 +1,3 @@
-"use strict";
-
 require("./Setup.js");
 let CamoMock = require("./CamoMock.js");
 let config = require("../config.js");
@@ -16,10 +14,10 @@ describe("db", () => {
             db_port: "testport",
             db_name: "testname"
         });
-        
-        return db.load({log: function(){}}).should.eventually.equal("mongodb");
+
+        return db.load({ log: function () { } }).should.eventually.equal("mongodb");
     });
-    
+
     it("mongodb no database set", () => {
         config.set({
             use_mongodb: true,
@@ -30,10 +28,10 @@ describe("db", () => {
             db_port: "testport",
             db_name: "testname"
         });
-        
-        return db.load({log: function(){}}).should.eventually.equal("mongodb");
+
+        return db.load({ log: function () { } }).should.eventually.equal("mongodb");
     });
-    
+
     it("mongodb fail", () => {
         config.set({
             use_mongodb: true,
@@ -44,11 +42,11 @@ describe("db", () => {
             db_port: "testport",
             db_name: "testname"
         });
-        
+
         CamoMock.failMongoDB = true;
-        return db.load({log: function(){}}).should.eventually.equal("nedb");
+        return db.load({ log: function () { } }).should.eventually.equal("nedb");
     });
-    
+
     it("mongodb nedb fail", () => {
         config.set({
             use_mongodb: true,
@@ -59,40 +57,40 @@ describe("db", () => {
             db_port: "testport",
             db_name: "testname"
         });
-        
+
         CamoMock.failMongoDB = true;
         CamoMock.failNeDB = true;
-        
-        return db.load({log: function(){}}).should.be.rejected;
+
+        return db.load({ log: function () { } }).should.be.rejected;
     });
-    
+
     it("nedb", () => {
         config.set({
             use_mongodb: false
         });
-        
+
         CamoMock.failMongoDB = false;
         CamoMock.failNeDB = false;
-        return db.load({log: function(){}}).should.eventually.equal("nedb");
+        return db.load({ log: function () { } }).should.eventually.equal("nedb");
     });
-    
+
     it("nedb fail", () => {
         config.set({
             use_mongodb: false
         });
-        
+
         CamoMock.failMongoDB = false;
         CamoMock.failNeDB = true;
-        return db.load({log: function(){}}).should.be.rejected;
+        return db.load({ log: function () { } }).should.be.rejected;
     });
-    
+
     describe("ConfigKeyValue", () => {
         it("basic find", () => {
             return db.ConfigKeyValue.find({}).should.eventually.have.property("length");
         });
-        
+
         it("basic create", () => {
-            let c = db.ConfigKeyValue.create({key: "testkey", value: "testval"});
+            let c = db.ConfigKeyValue.create({ key: "testkey", value: "testval" });
             c.key.should.equal("testkey");
             c.value.should.equal("testval");
         });

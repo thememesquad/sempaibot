@@ -12,13 +12,13 @@ function create_regex(format) {
     let num = 0;
     let vars = {};
 
-    while(format.length > 0) {
+    while (format.length > 0) {
         let split = format.match(splitter);
-        if(split === null) {
+        if (split === null) {
             let tmp = format.match(whitespaceRegex);
 
-            for(let i = 0;i<tmp.length;i++) {
-                if(i === tmp.length - 1)
+            for (let i = 0; i < tmp.length; i++) {
+                if (i === tmp.length - 1)
                     regex += `${tmp[i]}\\s*`;
                 else
                     regex += `${tmp[i]}\\s*`;
@@ -30,12 +30,12 @@ function create_regex(format) {
         let tmp = split[1].match(whitespaceRegex);
         let variable = split[2];
 
-        if(tmp !== null) {
-            for(let i = 0;i<tmp.length;i++) {
+        if (tmp !== null) {
+            for (let i = 0; i < tmp.length; i++) {
                 regex += `${tmp[i]}\\s*`;
             }
         }
-    
+
         regex += "(.*?)\\s*";
         format = format.substr(split[0].length).trim();
 
@@ -59,7 +59,7 @@ class CommandProcessor {
     }
 
     add_format(format) {
-        if(Array.isArray(format)) {
+        if (Array.isArray(format)) {
             return this.formats.push({
                 format: create_regex(format[0]),
                 variables: format.length > 1 ? format[1] : {}
@@ -73,7 +73,7 @@ class CommandProcessor {
     }
 
     format(type, msg) {
-        if(typeof CommandProcessor.type_parsers[type] !== "undefined")
+        if (typeof CommandProcessor.type_parsers[type] !== "undefined")
             return CommandProcessor.type_parsers[type](msg);
 
         console.log("unknown type: ", type);
@@ -84,19 +84,19 @@ class CommandProcessor {
     process(message) {
         let matches = [];
 
-        for(let entry of this.formats) {
+        for (let entry of this.formats) {
             let match = message.trim().match(entry.format.regex);
 
-            if(match !== null) {
+            if (match !== null) {
                 let args = {};
 
-                for(let key in entry.format.variables) {
+                for (let key in entry.format.variables) {
                     let tmp = key.match(this.typeRegex);
-                    if(tmp === null)
+                    if (tmp === null)
                         args[key] = match[entry.format.variables[key]];
                     else {
                         args[tmp[2]] = this.format(tmp[1], match[entry.format.variables[key]] || "");
-                        if(args[tmp[2]] === null) {
+                        if (args[tmp[2]] === null) {
                             match = false;
                             break;
                         }
@@ -107,7 +107,7 @@ class CommandProcessor {
             }
         }
 
-        if(matches.length === 0)
+        if (matches.length === 0)
             return null;
 
         return matches[0][1];
@@ -124,16 +124,16 @@ CommandProcessor.add_custom_type("int", msg => { return parseInt(msg); });
 CommandProcessor.add_custom_type("id", msg => { return util.parse_id(msg); });
 CommandProcessor.add_custom_type("channelid", msg => {
     let id = util.parse_id(msg);
-    if(id.type !== "channel")
+    if (id.type !== "channel")
         return null;
-    
+
     return id.id;
 });
 CommandProcessor.add_custom_type("userid", msg => {
     let id = util.parse_id(msg);
-    if(id.type !== "user")
+    if (id.type !== "user")
         return null;
-    
+
     return id.id;
 });
 

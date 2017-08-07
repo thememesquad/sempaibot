@@ -1,7 +1,4 @@
-"use strict";
-
 const Document = require("camo").Document;
-const is = require("./is.js");
 
 const timestamps = [
     60000, //1min
@@ -13,12 +10,10 @@ const timestamps = [
     2592000000, //30days
 ];
 
-class CounterDB extends Document
-{
-    constructor()
-    {
+class CounterDB extends Document {
+    constructor() {
         super();
-        
+
         this.name = String;
         this.deltaTime = Number;
         this.currentTime = Number;
@@ -67,7 +62,7 @@ class Counter {
 
     refresh() {
         let current = Date.now();
-        while(current - this._currentTime >= this._delta) {
+        while (current - this._currentTime >= this._delta) {
             this._highest = Math.max(this._highest, this._current);
             this._lowest = Math.min(this._lowest, this._current);
             this._average = (this._average + this._current) / 2.0;
@@ -100,15 +95,12 @@ class Counter {
     }
 }
 
-class StatsManager
-{
-    constructor()
-    {
+class StatsManager {
+    constructor() {
         this.stats = {};
     }
-    
-    load()
-    {
+
+    load() {
         return CounterDB.find({}).then(docs => {
             this.process_database(docs);
 
@@ -119,31 +111,26 @@ class StatsManager
             }, 5 * 60 * 1000); //5min
         });
     }
-    
-    save()
-    {
+
+    save() {
         let all = [];
 
-        for(let key in this.stats) {
+        for (let key in this.stats)
             all.push(this.stats[key].document.save());
-        }
 
         return Promise.all(all);
     }
-    
-    process_database(docs)
-    {
-        for(let i = 0;i<docs.length;i++) {
+
+    process_database(docs) {
+        for (let i = 0; i < docs.length; i++)
             this.stats[docs[i].name + "_" + docs[i].deltaTime] = new Counter(docs[i].name, docs[i].deltaTime, docs[i].currentTime, docs[i]);
-        }
     }
-    
-    register(name, value)
-    {
-        if(is.defined(this.stats[name + "_" + timestamps[0]]))
+
+    register(name, value) {
+        if (typeof this.stats[name + "_" + timestamps[0]] !== "undefined")
             return;
 
-        for(let delta of timestamps) {
+        for (let delta of timestamps) {
             var date = new Date();  //or use any other date
             var rounded = new Date(Math.round(date.getTime() / delta) * delta);
 
@@ -151,19 +138,17 @@ class StatsManager
             this.stats[name + "_" + delta].update(value);
         }
     }
-    
-    update(name, value)
-    {
-        if(is.undefined(this.stats[name + "_" + timestamps[0]]))
+
+    update(name, value) {
+        if (typeof this.stats[name + "_" + timestamps[0]] === "undefined")
             return;
-        
-        for(let delta of timestamps) {
+
+        for (let delta of timestamps)
             this.stats[name + "_" + delta].update(value);
-        }
     }
 
     get(name, delta) {
-        if(is.undefined(this.stats[name + "_" + delta]))
+        if (typeof this.stats[name + "_" + delta] === "undefined")
             return null;
 
         this.stats[name + "_" + delta].refresh();

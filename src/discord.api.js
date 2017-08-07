@@ -1,7 +1,5 @@
 const config = require("../config.js"),
-    Discord = require("discord.js"),
-    stats = require("./stats.js"),
-    ServerData = require("./serverdata.js");
+    Discord = require("discord.js");
 
 class DiscordAPI {
     constructor(bot) {
@@ -94,7 +92,7 @@ class DiscordAPI {
     }
 
     async message_queue(messages, server) {
-        for(let entry of messages) {
+        for (let entry of messages) {
             await this.message(entry, server);
         }
     }
@@ -126,7 +124,7 @@ class DiscordAPI {
     }
 
     async respond_queue(message, messages) {
-        for(let entry of messages) {
+        for (let entry of messages) {
             await this.respond(message, entry);
         }
     }
@@ -135,7 +133,7 @@ class DiscordAPI {
         try {
             await this.discord.login(config.discord.token);
             this.bot.log(`logged in with token '${config.discord.token}'.`);
-        } catch(err) {
+        } catch (err) {
             this.bot.error("discord login error:", err, err.stack);
         }
     }

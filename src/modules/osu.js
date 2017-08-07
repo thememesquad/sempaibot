@@ -1,5 +1,3 @@
-"use strict";
-
 const lodash = require("lodash"),
     Document = require("camo").Document,
     Discord = require("discord.js"),
@@ -128,7 +126,7 @@ class OsuModule extends ModuleBase {
         });
 
         this.add_command({
-            defaults: {mode: OsuMode.Standard},
+            defaults: { mode: OsuMode.Standard },
             formats: [
                 "who are you following <in {osumode!mode}>",
                 "who do you follow <in {osumode!mode}>",
@@ -191,9 +189,9 @@ class OsuModule extends ModuleBase {
     handle_set_limit(message, args) {
         let server = this.bot.get_server_internal(args.server - 1);
         if (server === null) {
-            return this.bot.respond(message, responses.get("INVALID_SERVER").format({ 
-                author: message.author.id, 
-                id: args.server 
+            return this.bot.respond(message, responses.get("INVALID_SERVER").format({
+                author: message.author.id,
+                id: args.server
             }));
         }
 
@@ -201,18 +199,18 @@ class OsuModule extends ModuleBase {
         server.config.value.osu_limit = args.limit;
         server.config.save().catch(err => console.log("error saving new config: ", err));
 
-        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT_CHANGED").format({ 
-            author: message.author.id, 
-            old_limit: old_limit, 
-            new_limit: args.limit, 
-            server_name: server.server.name 
+        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT_CHANGED").format({
+            author: message.author.id,
+            old_limit: old_limit,
+            new_limit: args.limit,
+            server_name: server.server.name
         }));
     }
 
-    handle_show_limit(message, args) {
-        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT").format({ 
-            author: message.author.id, 
-            limit: message.server.config.value.osu_limit 
+    handle_show_limit(message) {
+        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT").format({
+            author: message.author.id,
+            limit: message.server.config.value.osu_limit
         }));
     }
 
@@ -242,28 +240,28 @@ class OsuModule extends ModuleBase {
         }
 
         if (data.length === 0) {
-            this.bot.respond(message, responses.get("OSU_FOLLOW_LIST_EMPTY").format({ 
-                author: message.author.id 
+            this.bot.respond(message, responses.get("OSU_FOLLOW_LIST_EMPTY").format({
+                author: message.author.id
             }));
         } else {
             if (args.mode === OsuMode.Standard) {
-                let messages = util.generate_table(responses.get("OSU_FOLLOWING").format({ 
-                    author: message.author.id 
+                let messages = util.generate_table(responses.get("OSU_FOLLOWING").format({
+                    author: message.author.id
                 }), {
-                    rank: "Rank",
-                    name: "Name",
-                    pp: "PP"
-                }, data);
+                        rank: "Rank",
+                        name: "Name",
+                        pp: "PP"
+                    }, data);
                 this.bot.respond_queue(message, messages);
             } else {
                 let messages = util.generate_table(responses.get("OSU_FOLLOWING_MODE").format({
                     author: message.author.id,
                     mode: OsuMode.to_string(args.mode)
                 }), {
-                    rank: "Rank",
-                    name: "Name",
-                    pp: "PP"
-                }, data);
+                        rank: "Rank",
+                        name: "Name",
+                        pp: "PP"
+                    }, data);
                 this.bot.respond_queue(message, messages);
             }
         }
@@ -416,7 +414,7 @@ class OsuModule extends ModuleBase {
 
         if (profile.servers.length === 1) {
             this.users.splice(i, 1);
-            OsuUser.deleteOne({ user_id: profile.user_id }, {}, () => {});
+            OsuUser.deleteOne({ user_id: profile.user_id }, {}, () => { });
         } else {
             profile.servers.splice(profile.servers.indexOf(message.server.id), 1);
             OsuUser.findOneAndUpdate({ user_id: profile.user_id }, { servers: profile.servers }, {});
@@ -626,7 +624,7 @@ class OsuModule extends ModuleBase {
         num = (num === undefined) ? 0 : num;
 
         first = (first === undefined) ? true : first;
-        let url = (method.startsWith("http:") ? method : (typeof config.osu.api_url !== "undefined") ?config.osu.api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu.api_key;
+        let url = (method.startsWith("http:") ? method : (typeof config.osu.api_url !== "undefined") ? config.osu.api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu.api_key;
 
         for (let key in params) {
             url += "&" + key + "=" + params[key];
@@ -634,7 +632,7 @@ class OsuModule extends ModuleBase {
 
         let tmp = this.load_balancer.create(url);
         this.pending.push(tmp);
-        
+
         let obj = await tmp;
         stats.update("osu_api_calls", 1);
 
@@ -658,25 +656,25 @@ class OsuModule extends ModuleBase {
     get_user(username, mode) {
         mode = mode || OsuMode.Standard;
 
-        return this.api_call("get_user", { 
-            u: username, m: mode 
+        return this.api_call("get_user", {
+            u: username, m: mode
         });
     }
 
     get_beatmaps(id) {
-        return this.api_call("http://osu.ppy.sh/api/get_beatmaps", { 
-            b: id 
+        return this.api_call("http://osu.ppy.sh/api/get_beatmaps", {
+            b: id
         });
     }
 
     get_user_best(id, mode, limit) {
         mode = mode || OsuMode.Standard;
 
-        return this.api_call("get_user_best", { 
-            u: id, 
-            m: mode, 
-            limit: limit, 
-            type: "id" 
+        return this.api_call("get_user_best", {
+            u: id,
+            m: mode,
+            limit: limit,
+            type: "id"
         }, false);
     }
 
@@ -801,7 +799,7 @@ class OsuModule extends ModuleBase {
 
                 if (skip)
                     continue;
-            
+
                 topRank = j + 1;
 
                 if (index === -1)
@@ -809,9 +807,9 @@ class OsuModule extends ModuleBase {
                 else
                     profile.records[index].date = date;
 
-                if(no_report)
+                if (no_report)
                     continue;
-                
+
                 let beatmap_info = await this.get_beatmaps(beatmap.beatmap_id);
                 let user_data = await this.update_user(profile, profile.mode);
 
@@ -884,10 +882,10 @@ class OsuModule extends ModuleBase {
                     last_updated: profile.last_updated,
                     extra: data
                 });
-                    
+
                 profile.update_in_progress = null;
                 return data;
-            }catch(err) {
+            } catch (err) {
                 profile.update_in_progress = null;
                 throw err;
             }

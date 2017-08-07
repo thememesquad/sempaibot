@@ -1,27 +1,19 @@
-"use strict";
-
-class Channel
-{
-    constructor()
-    {
+class Channel {
+    constructor() {
         this.id = "3000";
         this.name = "Mocked Channel #1";
     }
 }
 
-class User
-{
-    constructor(id, name)
-    {
+class User {
+    constructor(id, name) {
         this.id = id;
         this.name = name;
     }
 }
 
-class Server
-{
-    constructor()
-    {
+class Server {
+    constructor() {
         this.id = "1000";
         this.name = "Mocked Server #1";
         this.members = [
@@ -35,139 +27,120 @@ class Server
             new Channel()
         ];
         this.owner = this.members[0];
-        
+
         this.channels.get = (prop, value) => {
-            for(let i = 0;i<this.channels.length;i++)
-            {
-                if(this.channels[i][prop] === value)
+            for (let i = 0; i < this.channels.length; i++) {
+                if (this.channels[i][prop] === value)
                     return this.channels[i];
             }
-            
+
             return null;
         };
     }
 }
 
-class Message
-{
+class Message {
 }
 
-class Client
-{
-    constructor()
-    {
+class Client {
+    constructor() {
         this.events = {};
         this.servers = [];
         this.status = "";
         this.messages = [];
         this.game = "";
         this._lastID = 0;
-        
-        for(let i = 0;i<Client._numServers;i++)
-        {
+
+        for (let i = 0; i < Client._numServers; i++) {
             this.servers.push(new Server("" + (1000 + i), "Mocked Server #" + (i + 1)));
             this._lastID = 1000 + i;
         }
-        
+
         Client._instance = this;
     }
-    
-    on(evt, callback)
-    {
-        if(this.events[evt] === undefined)
+
+    on(evt, callback) {
+        if (this.events[evt] === undefined)
             this.events[evt] = [];
-        
+
         this.events[evt].push(callback);
     }
-    
-    loginWithToken(token, callback)
-    {
+
+    loginWithToken(token, callback) {
         this.fire("ready");
         callback(null, token);
     }
-    
-    fire(evt, args)
-    {
+
+    fire(evt, args) {
         args = args || [];
-        
-        if(this.events[evt] === undefined)
+
+        if (this.events[evt] === undefined)
             return;
-        
-        for(let i = 0;i<this.events[evt].length;i++)
+
+        for (let i = 0; i < this.events[evt].length; i++)
             this.events[evt][i].apply(null, args);
     }
-    
-    stopTyping(channel)
-    {
+
+    stopTyping(channel) {
     }
-    
-    sendMessage(channel, message, flags, callback)
-    {
+
+    sendMessage(channel, message, flags, callback) {
         this.messages.push({
             channel: channel,
             message: message,
             flags: flags
         });
-        
-        setTimeout(function(){
+
+        setTimeout(function () {
             callback(null, {});
         }, 10);
     }
-    
-    setStatus(status, game)
-    {
+
+    setStatus(status, game) {
         this.status = status;
         this.game = game;
     }
-    
-    _newServer()
-    {
+
+    _newServer() {
         let server = new Server("" + (++this._lastID), "Mocked Server #" + this._lastID);
         this.servers.push(server);
         this.fire("serverCreated", server);
-        
+
         return server.id;
     }
-    
-    _removeServer(id)
-    {
+
+    _removeServer(id) {
     }
-    
-    _readdServer(id)
-    {
+
+    _readdServer(id) {
     }
-    
-    static get numServers()
-    {
+
+    static get numServers() {
         return Client._numServers;
     }
-    
-    static set numServers(num)
-    {
+
+    static set numServers(num) {
         Client._numServers = num;
     }
-    
-    static newServer()
-    {
-        if(Client._instance === null)
+
+    static newServer() {
+        if (Client._instance === null)
             Client.numServers++;
         else
             return Client._instance._newServer();
-        
+
         return "" + (1000 + (Client.numServers - 1));
     }
-    
-    static removeServer(id)
-    {
-        if(Client._instance === null)
+
+    static removeServer(id) {
+        if (Client._instance === null)
             Client.numServers--;
         else
             Client._instance._removeServer(id);
     }
-    
-    static readdServer(id)
-    {
-        if(Client._instance === null)
+
+    static readdServer(id) {
+        if (Client._instance === null)
             Client.numServers++;
         else
             Client._instance._readdServer(id);

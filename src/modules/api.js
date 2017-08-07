@@ -1,13 +1,9 @@
-"use strict";
+const ModuleBase = require("../modulebase.js"),
+    restify = require("restify"),
+    stats = require("../stats.js");
 
-const ModuleBase = require("../modulebase.js");
-const restify = require("restify");
-const stats = require("../stats.js");
-
-class APIModule extends ModuleBase
-{
-    constructor()
-    {
+class APIModule extends ModuleBase {
+    constructor() {
         super();
 
         this.name = "API";
@@ -31,14 +27,14 @@ class APIModule extends ModuleBase
             //api activated
         });
     }
-    
+
     register_routes() {
         this.server.get("/stats/:name/:time", (req, res, next) => this.handle_stats_request(req, res, next));
     }
 
     handle_stats_request(req, res, next) {
         let counter = stats.get(req.params.name, parseInt(req.params.time));
-        if(counter === null)
+        if (counter === null)
             return res.send({
                 current: 0,
                 average: 0,
@@ -46,7 +42,7 @@ class APIModule extends ModuleBase
                 lowest: 0,
                 found: false
             });
-        
+
         res.send({
             current: counter.current,
             average: counter.average,
@@ -57,21 +53,17 @@ class APIModule extends ModuleBase
 
         return next();
     }
-    
-    on_setup()
-    {
+
+    on_setup() {
     }
 
-    on_shutdown()
-    {
-    }
-    
-    on_load()
-    {
+    on_shutdown() {
     }
 
-    on_unload()
-    {
+    on_load() {
+    }
+
+    on_unload() {
     }
 }
 

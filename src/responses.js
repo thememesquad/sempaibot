@@ -18,25 +18,6 @@ const responses_normal = {
         "I'm already in my normal response mode!",
         "Sempai is already in normal response mode!"
     ],
-    REMIND_PAST: [
-        "That time is in the past! I can't remind you of something in the past.",
-        "That time is in the past! I can't remind you of something in the past. Or well, I'd need a time machine. If you happen to have one, no problem!",
-        "That time is in the past! Unfortunately, Sempai is not equipped for time travel (yet!).",
-        "I can't remind you of something in the past, silly!",
-        "I can't remind you of something in the past."
-    ],
-    REMIND_ME: [
-        "I will remind you to \"{message}\" {time}.",
-        "Sempai will remind you to \"{message}\" {time}.",
-        "Sempai will remind <@{author}> to \"{message}\" {time}."
-    ],
-    REMIND_OTHER: [
-        "I will remind {people} to \"{message}\" {time}.",
-        "Sempai will remind {people} to \"{message}\" {time}."
-    ],
-    REMINDER: "<@{author}> reminded {people}: {message}.",
-    LIST_REMINDERS: "List of reminders on this server:{response}",
-
     OSU_FOLLOWING: [
         "Sempai is currently following:",
         "I'm currently following:"
@@ -58,7 +39,6 @@ const responses_normal = {
         "Sempai stopped following {user}!",
         "Got it! I've unfollowed {user}."
     ],
-
     OSU_USER_NOT_FOUND: [
         "I can't find user \"{user}\". Did you type it correctly?",
         "I can't find user \"{user}\". Did you make a typo?",
@@ -117,7 +97,6 @@ const responses_normal = {
         "No problem! I'll check {user} on osu! for you! {mode}",
         "No problem! Sempai will check {user} on osu! for you! {mode}"
     ],
-
     HELP_TOP: "This is the current list of commands:\r\n",
     HELP_BOTTOM: "",
 
@@ -195,14 +174,7 @@ const responses_normal = {
     SERVER_BLACKLIST: "This is my current server blacklist:{response}",
     BLACKLISTED_USER: "Ok, I blacklisted user <@{user}>.",
     WHITELISTED_USER: "Ok, I whitelisted user <@{user}>.",
-    USER_BLACKLIST: "This is my current user blacklist:{response}",
-
-    VOICE_ALREADY_REGISTERED: "You have already registered for voice!",
-    VOICE_REGISTRATION_ALREADY_STARTED: "There is already an authentication underway!",
-    VOICE_REGISTRATION_NOT_STARTED: "You haven't started an authentication flow yet!",
-    VOICE_REGISTRATION_ERROR: "We encountered an error while authenticating: {error}",
-    VOICE_REGISTRATION_URL: "Starting authentication, please go to {url} and sign-in. When you're done, please whisper me the command 'sempai register __**code**__' to complete the authentication.",
-    VOICE_REGISTRATION_COMPLETE: "Authentication complete!"
+    USER_BLACKLIST: "This is my current user blacklist:{response}"
 };
 
 const responses_tsundere = {
@@ -234,21 +206,6 @@ const responses_tsundere = {
         "Are you dumb? I'm already in tsundere mode. If you don't recognize what mode I'm in why even switch? Hmpf!",
         "Tsundere on? Baka~. It's already on!",
         "Tsundere on? Are you dumb, <@{author}>? It's already on!"
-    ],
-
-    REMIND_PAST: [
-        "Uhmm... Are you dumb? That time is in the past!",
-        "Baka~! That time is in the past."
-    ],
-    REMIND_ME: [
-        "Sempai will help you remember! If I can be bothered.",
-        "Sempai will try to remind <@{author}>!",
-        "Maybe I'll remind <@{author}>. Just this one time!"
-    ],
-    REMIND_OTHER: [
-        "Sempai will help {people} remember! If I can be bothered.",
-        "Sempai will try to remind {people}!",
-        "Maybe I'll remind {people}. Just this one time!"
     ],
 
     OSU_FOLLOWING: [
@@ -351,7 +308,7 @@ const responses = {
     current: responses_normal,
     currentMode: false,
 
-    get: function(name) {
+    get: function (name) {
         let tmp = responses.current[name];
         if (tmp === undefined && responses.currentMode) {
             tmp = responses_normal[name];
@@ -373,7 +330,7 @@ const responses = {
         return tmp;
     },
 
-    setMode: function(mode) {
+    setMode: function (mode) {
         responses.currentMode = mode;
         if (responses.currentMode) {
             responses.current = responses_tsundere;

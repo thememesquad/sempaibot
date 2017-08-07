@@ -1,5 +1,6 @@
 process.env.TZ = "Europe/Amsterdam";
 
+//return connect(`mongodb://${config.db_username}:${config.db_password}@${config.db_host}:${config.db_port}/${db_name}`);
 const ServerData = require("./serverdata.js"),
     modules = require("auto-loader").load(__dirname + "/modules"),
     responses = require("./responses.js"),
@@ -21,7 +22,7 @@ class ChangelogDB extends Document {
     }
 }
 
-String.prototype.format = function(args) {
+String.prototype.format = function (args) {
     return this.replace(/{(.*?)}/g, (match, key) => {
         return typeof args[key] !== "undefined" ? args[key] : match;
     });
@@ -95,12 +96,12 @@ class Bot {
             this.log("....Ok");
 
             return tmp;
-        } catch(err) {
+        } catch (err) {
             this.error("error:", err, err.stack);
             return null;
         }
     }
-    
+
     async set_status(status, game) {
         return await this.api.set_status(status, game);
     }
@@ -139,16 +140,16 @@ class Bot {
 
         if (this.user_blacklist === null) {
             this.user_blacklist = db.ConfigKeyValue.create({
-                key: "user_blacklist", 
-                value: { blacklist: [] } 
+                key: "user_blacklist",
+                value: { blacklist: [] }
             });
 
             await this.user_blacklist.save();
         }
 
         if (this.server_blacklist === null) {
-            this.server_blacklist = db.ConfigKeyValue.create({ 
-                key: "server_blacklist", 
+            this.server_blacklist = db.ConfigKeyValue.create({
+                key: "server_blacklist",
                 value: { blacklist: [] }
             });
 
@@ -167,23 +168,23 @@ class Bot {
 
         for (let key in modules) {
             let mod = modules[key];
-            if(!(mod instanceof ModuleBase))
+            if (!(mod instanceof ModuleBase))
                 continue;
-            
-            if(mod.disabled)
+
+            if (mod.disabled)
                 continue;
-            
+
             let result = await this.print_status(`Setting up module '${key}'`, async () => {
                 mod.bot = this;
-                if(mod.on_setup !== undefined)
+                if (mod.on_setup !== undefined)
                     await mod.on_setup();
 
                 return true;
             });
 
-            if(result === null)
+            if (result === null)
                 continue;
-            
+
             this.modules[mod.name.toLowerCase()] = mod;
         }
 
@@ -191,12 +192,12 @@ class Bot {
 
         let changelog_version = await this.print_status("Loading changelog", async () => {
             let doc = await ChangelogDB.findOne({});
-            if(doc === null) {
+            if (doc === null) {
                 await ChangelogDB.create({ version: changelog.version }).save();
                 return changelog.version;
             }
 
-            if(doc.version !== changelog.version) {
+            if (doc.version !== changelog.version) {
                 let old = doc.version;
                 doc.version = changelog.version;
 
@@ -240,8 +241,8 @@ class Bot {
             }
 
             if (msg.length !== 0)
-                this.message(responses.get("CHANGELOG").format({ 
-                    changelog: msg 
+                this.message(responses.get("CHANGELOG").format({
+                    changelog: msg
                 }), this.servers[server.id]);
 
             this.servers_internal.push(this.servers[server.id]);
@@ -252,7 +253,7 @@ class Bot {
 
     async process_message(server, message, identifier) {
         identifier = identifier.trim();
-        
+
         if (message.content.toLowerCase().indexOf(identifier) === -1)
             return false;
 
@@ -263,9 +264,9 @@ class Bot {
         let tmp = [];
 
         for (let key in this.modules) {
-            if(this.modules[key].disabled)
+            if (this.modules[key].disabled)
                 continue;
-            
+
             let resp = this.modules[key].check_message(server, message, split);
 
             if (typeof resp === "string") {
@@ -277,9 +278,9 @@ class Bot {
         }
 
         if (!handled && tmp.length > 0) {
-            await this.respond(message, responses.get("INCORRECT_FORMAT").format({ 
-                author: message.author.id, 
-                sample: tmp[0] 
+            await this.respond(message, responses.get("INCORRECT_FORMAT").format({
+                author: message.author.id,
+                sample: tmp[0]
             }));
 
             handled = true;
@@ -318,8 +319,8 @@ class Bot {
         if (message.author.id === this.api.user.id)
             return;
 
-        for(let identifier of config.identifiers) {
-            if(await this.process_message(server, message, identifier))
+        for (let identifier of config.identifiers) {
+            if (await this.process_message(server, message, identifier))
                 break;
         }
     }
