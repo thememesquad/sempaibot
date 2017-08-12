@@ -1,23 +1,23 @@
-const responses = require("../responses.js"),
-    permissions = require("../permissions.js"),
-    ModuleBase = require("../modulebase.js"),
-    users = require("../users.js"),
-    util = require("../util.js"),
-    config = require("../../config.js");
+import { Responses, ResponseType } from "../responses";
+import { Permissions } from "../permissions";
+import { Users } from "../users";
+import { Config } from "../../config";
+import { GenerateTable, StringFormat } from "../util";
+import { ModuleBase, MessageInterface } from "../modulebase";
 
-class CoreModule extends ModuleBase {
+export class CoreModule extends ModuleBase {
     constructor() {
         super();
 
-        this.name = "Core";
-        this.description = "This is the core module! Cannot be disabled.";
-        this.always_on = true;
-        this.hidden = true;
+        this._name = "Core";
+        this._description = "This is the core module! Cannot be disabled.";
+        this._alwaysOn = true;
+        this._hidden = true;
 
-        permissions.register("CHANGE_PERSONALITY", "moderator");
+        this._permissions.register("CHANGE_PERSONALITY", "moderator");
 
         this.add_command({
-            default: { please: false, german: false },
+            defaults: { please: false, german: false },
             formats: [
                 ["please help", { please: true }],
                 ["hilfe", { german: true }],
@@ -29,7 +29,7 @@ class CoreModule extends ModuleBase {
                 "help me",
                 "show help"
             ],
-            hide_in_help: true,
+            hideInHelp: true,
             permission: null,
             global: true,
 
@@ -37,12 +37,12 @@ class CoreModule extends ModuleBase {
         });
 
         this.add_command({
-            default: { on: false },
+            defaults: { on: false },
             formats: [
                 ["tsundere on", { on: true }],
                 "tsundere off"
             ],
-            hide_in_help: true,
+            hideInHelp: true,
             permission: "CHANGE_PERSONALITY",
             global: false,
 
@@ -120,18 +120,32 @@ class CoreModule extends ModuleBase {
 
             execute: this.handle_show_ignorelist
         });
+
+        this.add_command({
+            formats: [
+                "go to {channelid!channel}"
+            ],
+            sample: "go to __*#channel*__",
+            description: "Tells me to output to the specified channel.",
+            permission: "GO_TO_CHANNEL",
+            global: false,
+
+            execute: this.handle_goto_channel
+        });
     }
 
-    handle_list_roles(message, args) {
+    handle_list_roles(message: MessageInterface, args: { [key: string]: any }) {
         let server = message.server;
         let tmp = [];
 
-        for (let i = 0; i < server.server.members.length; i++) {
-            let user = users.get_user_by_id(server.server.members[i].id, server);
-            if (server.server.members[i].id === this.bot.user.user_id)
+        for (let key of server._server.members.keyArray()) {
+            let member = server._server.members.get(key);
+            let user = Users.getUser(member.user, server);
+
+            if (member.id === this._bot.user._userID)
                 continue;
 
-            if (user.get_role_id(server) === 0)
+            if (user.getRoleId(server) === 0)
                 continue;
 
             tmp.push(user);
@@ -148,13 +162,13 @@ class CoreModule extends ModuleBase {
             data.push({ name: tmp[i].get_name_detailed(server), role: tmp[i].get_role(server) });
         }
 
-        let messages = util.generate_table(responses.get("LIST_ROLES").format({ author: message.author.id }), columns, data, { name: 30, role: 15 });
-        this.bot.respond_queue(message, messages);
+        let messages = GenerateTable(StringFormat(Responses.get("LIST_ROLES"), { author: message.author.id }), columns, data, { name: 30, role: 15 });
+        this._bot.respondQueue(message, messages);
     }
 
-    handle_list_permissions(message, args) {
+    handle_list_permissions(message: MessageInterface, args: { [key: string]: any }) {
         let server = message.server;
-        let admin_permissions = permissions.get_role("admin").get_permissions(server);
+        let admin_permissions = this._permissions.getRole("admin").getPermissions(server);
 
         let columns = { permission: "Permission", roles: "Roles" };
         let data = [];
@@ -168,7 +182,7 @@ class CoreModule extends ModuleBase {
             for (let i = 0; i < roles.length; i++) {
                 let role = roles[i];
 
-                if (!permissions.get_role(role).is_allowed(server, key))
+                if (!this._permissions.getRole(role).isAllowed(server, key))
                     continue;
 
                 if (tmp.length !== 0)
@@ -188,42 +202,42 @@ class CoreModule extends ModuleBase {
             return 0;
         });
 
-        let messages = util.generate_table(responses.get("LIST_PERMISSIONS").format({ author: message.author.id }), columns, data, { permission: 20, roles: 15 });
-        this.bot.respond_queue(message, messages);
+        let messages = GenerateTable(StringFormat(Responses.get("LIST_PERMISSIONS"), { author: message.author.id }), columns, data, { permission: 20, roles: 15 });
+        this._bot.respondQueue(message, messages);
     }
 
-    handle_show_ignorelist(message, args) {
+    handle_show_ignorelist(message: MessageInterface, args: { [key: string]: any }) {
         let response = "``` ";
 
-        for (let i = 0; i < message.server.ignorelist.length; i++) {
+        for (let i = 0; i < message.server.ignoreList.length; i++) {
             if (i !== 0)
                 response += "\r\n";
 
-            response += users.get_user_by_id(message.server.ignorelist[i], message.server).get_name_detailed(message.server);
+            response += Users.getUser(message.server.ignoreList[i], message.server).getDetailedName(message.server);
         }
 
         response += "```";
 
-        if (message.server.ignorelist.length === 0)
-            this.bot.respond(message, responses.get("IGNORE_LIST_EMPTY").format({ author: message.author.id }));
+        if (message.server.ignoreList.length === 0)
+            this._bot.respond(message, StringFormat(Responses.get("IGNORE_LIST_EMPTY"), { author: message.author.id }));
         else
-            this.bot.respond(message, responses.get("SHOW_IGNORELIST").format({ author: message.author.id, list: response }));
+            this._bot.respond(message, StringFormat(Responses.get("SHOW_IGNORELIST"), { author: message.author.id, list: response }));
     }
 
-    handle_help_me(message, args) {
+    handle_help_me(message: MessageInterface, args: { [key: string]: any }) {
         let response = "";
 
         if (args.please)
-            response = responses.get("PLEASE_HELP_TOP").format({ author: message.author.id });
+            response = StringFormat(Responses.get("PLEASE_HELP_TOP"), { author: message.author.id });
         else
-            response = responses.get("HELP_TOP").format({ author: message.author.id });
+            response = StringFormat(Responses.get("HELP_TOP"), { author: message.author.id });
 
         let message_queue = [];
-        let role = message.user.get_role(message.server);
+        let role = message.user.getRole(message.server);
         let modules = "";
-        for (let key in this.bot.modules) {
-            let module = this.bot.modules[key];
-            let enabled = (message.server === null) ? false : message.server.is_module_enabled(module.name);
+        for (let key in this._bot.modules) {
+            let module = this._bot.modules[key];
+            let enabled = (message.server === null) ? false : message.server.isModuleEnabled(module.name);
 
             if (enabled) {
                 if (modules.length !== 0)
@@ -235,10 +249,10 @@ class CoreModule extends ModuleBase {
             let hasNonHidden = false;
             let tmp = "";
             for (let i = 0; i < module.commands.length; i++) {
-                if (module.commands[i].permission !== null && !permissions.is_allowed(module.commands[i].permission, role, message.server))
+                if (module.commands[i].permission !== null && !this._permissions.isAllowed(module.commands[i].permission, role, message.server))
                     continue;
 
-                if (module.commands[i].hide_in_help === undefined || module.commands[i].hide_in_help === false) {
+                if (module.commands[i].hideInHelp === undefined || module.commands[i].hideInHelp === false) {
                     let is_private = module.commands[i].private !== undefined && module.commands[i].private === true;
 
                     if (message.server !== null && is_private)
@@ -249,7 +263,7 @@ class CoreModule extends ModuleBase {
 
                     hasNonHidden = true;
 
-                    tmp += "**" + config.identifiers[0] + module.commands[i].sample + "** - " + module.commands[i].description;
+                    tmp += "**" + Config.identifiers[0] + module.commands[i].sample + "** - " + module.commands[i].description;
                     tmp += "\r\n";
                 }
             }
@@ -272,9 +286,9 @@ class CoreModule extends ModuleBase {
             add += "**Enabled modules**: " + modules + "\r\n\r\n";
 
         if (args.please)
-            add += responses.get("PLEASE_HELP_BOTTOM").format({ author: message.author.id });
+            add += StringFormat(Responses.get("PLEASE_HELP_BOTTOM"), { author: message.author.id });
         else
-            add += responses.get("HELP_BOTTOM").format({ author: message.author.id });
+            add += StringFormat(Responses.get("HELP_BOTTOM"), { author: message.author.id });
 
         if (response.length + add.length >= 1900) {
             message_queue.push(response);
@@ -284,30 +298,30 @@ class CoreModule extends ModuleBase {
             message_queue.push(response + add);
         }
 
-        this.bot.respond_queue(message, message_queue).catch(err => {
+        this._bot.respondQueue(message, message_queue).catch(err => {
             console.log("err", err);
         });
     }
 
-    handle_tsundere(message, args) {
+    handle_tsundere(message: MessageInterface, args: { [key: string]: any }) {
         if (args.on) {
-            if (responses.currentMode)
-                return this.bot.respond(message, responses.get("ALREADY_IN_MODE").format({ author: message.author.id }));
+            if (Responses.currentMode)
+                return this._bot.respond(message, StringFormat(Responses.get("ALREADY_IN_MODE"), { author: message.author.id }));
 
-            responses.setMode(true);
-            this.bot.respond(message, responses.get("SWITCHED").format({ author: message.author.id }));
+            Responses.setMode(ResponseType.Tsundere);
+            this._bot.respond(message, StringFormat(Responses.get("SWITCHED"), { author: message.author.id }));
         }
         else {
-            if (!responses.currentMode)
-                return this.bot.respond(message, responses.get("ALREADY_IN_MODE").format({ author: message.author.id }));
+            if (!Responses.currentMode)
+                return this._bot.respond(message, StringFormat(Responses.get("ALREADY_IN_MODE"), { author: message.author.id }));
 
-            responses.setMode(false);
-            this.bot.respond(message, responses.get("SWITCHED").format({ author: message.author.id }));
+            Responses.setMode(ResponseType.Normal);
+            this._bot.respond(message, StringFormat(Responses.get("SWITCHED"), { author: message.author.id }));
         }
     }
 
-    handle_my_role(message, args) {
-        let role = message.user.get_role(message.server);
+    handle_my_role(message: MessageInterface, args: { [key: string]: any }) {
+        let role = message.user.getRole(message.server);
         if (role === "superadmin")
             role = "Superadmin";
         else if (role === "admin")
@@ -317,13 +331,13 @@ class CoreModule extends ModuleBase {
         else
             role = "Normal";
 
-        this.bot.respond(message, responses.get("MY_ROLE").format({ author: message.author.id, role: role }));
+        this._bot.respond(message, StringFormat(Responses.get("MY_ROLE"), { author: message.author.id, role: role }));
     }
 
-    handle_my_permissions(message, args) {
+    handle_my_permissions(message: MessageInterface, args: { [key: string]: any }) {
         let server = message.server;
-        let role = permissions.get_role(message.user.get_role(server));
-        let list = role.get_permissions(server);
+        let role = this._permissions.getRole(message.user.getRole(server));
+        let list = role.getPermissions(server);
 
         let response = "```";
 
@@ -341,21 +355,19 @@ class CoreModule extends ModuleBase {
         }
         response += "```";
 
-        this.bot.respond(message, responses.get("MY_PERMISSIONS").format({ author: message.author.id, permissions: response }));
+        this._bot.respond(message, StringFormat(Responses.get("MY_PERMISSIONS"), { author: message.author.id, permissions: response }));
     }
 
-    on_setup() {
-        this.bot.set_status("Online", "osu!");
+    handle_goto_channel(message: MessageInterface, args: { [key: string]: any }) {
+        let id = args.channel;
+        if (message.server._server.channels.get(id) === null)
+            return this._bot.respond(message, StringFormat(Responses.get("INVALID_CHANNEL"), { author: message.author.id, channel: args.channel }));
+
+        message.server.channel = id;
+        this._bot.message(StringFormat(Responses.get("OUTPUT_CHANNEL"), { author: message.author.id, channel: id }), message.server);
     }
 
-    on_shutdown() {
-    }
-
-    on_load() {
-    }
-
-    on_unload() {
+    onSetup() {
+        this._bot.setStatus("Online");
     }
 }
-
-module.exports = new CoreModule();

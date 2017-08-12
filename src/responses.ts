@@ -1,6 +1,4 @@
-const db = require("./db.js");
-
-const responses_normal = {
+const ResponsesNormal: { [key: string]: Array<string> } = {
     NAME: [
         "Yes I'm here! What can I do for you?",
         "Yes I'm here! How can I help?",
@@ -97,50 +95,108 @@ const responses_normal = {
         "No problem! I'll check {user} on osu! for you! {mode}",
         "No problem! Sempai will check {user} on osu! for you! {mode}"
     ],
-    HELP_TOP: "This is the current list of commands:\r\n",
-    HELP_BOTTOM: "",
+    HELP_TOP: [
+        "This is the current list of commands:\r\n"
+    ],
+    HELP_BOTTOM: [
+        ""
+    ],
 
-    PLEASE_HELP_TOP: "This is the current list of commands:\r\n",
-    PLEASE_HELP_BOTTOM: "",
+    PLEASE_HELP_TOP: [
+        "This is the current list of commands:\r\n"
+    ],
+    PLEASE_HELP_BOTTOM: [
+        ""
+    ],
 
     UNKNOWN_COMMAND: [
         "Sempai doesn't understand.",
         "I... I don't understand. What do you want me to do?"
     ],
 
-    ERROR: "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/",
+    ERROR: [
+        "Error, error, error! If you see this message, please consider contacting the developers on github here: https://github.com/thememesquad/sempaibot/"
+    ],
 
-    MY_ROLE: "Your role is {role}.",
-    MY_PERMISSIONS: "Your permissions are: {permissions}",
-    NOT_ALLOWED: "You don't have permission to do that.",
-    MODULE_INVALID: "That's not a valid module name.",
-    MODULE_ALREADY_ENABLED: "That module is already enabled!",
-    MODULE_NOT_ENABLED: "That module is already disabled!",
-    MODULE_ENABLED: "{module} module is now enabled!",
-    MODULE_DISABLED: "{module} module is now disabled.",
-    MODULE_ALWAYS_ON: "The {module} module can't be disabled.",
-    MODULE_LIST: "List of modules:",
-    LIST_ROLES: "List of roles:",
-    LIST_PERMISSIONS: "List of permissions:",
-    INVALID_USER: "That user doesn't exist!",
-    INVALID_ROLE: "That's not a valid role!",
-    INVALID_CHANNEL: "There's no channel with that name.",
-    ROLE_ASSIGNED: "Assigned {role} to <@{user}>.",
-    ROLE_ALREADY_ASSIGNED: "Already assigned {role} to <@{user}>.",
-    SETTING_UP: "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"sempai go to #channel\")",
+    MY_ROLE: [
+        "Your role is {role}."
+    ],
+    MY_PERMISSIONS: [
+        "Your permissions are: {permissions}"
+    ],
+    NOT_ALLOWED: [
+        "You don't have permission to do that."
+    ],
+    MODULE_INVALID: [
+        "That's not a valid module name."
+    ],
+    MODULE_ALREADY_ENABLED: [
+        "That module is already enabled!"
+    ],
+    MODULE_NOT_ENABLED: [
+        "That module is already disabled!"
+    ],
+    MODULE_ENABLED: [
+        "{module} module is now enabled!"
+    ],
+    MODULE_DISABLED: [
+        "{module} module is now disabled."
+    ],
+    MODULE_ALWAYS_ON: [
+        "The {module} module can't be disabled."
+    ],
+    MODULE_LIST: [
+        "List of modules:"
+    ],
+    LIST_ROLES: [
+        "List of roles:"
+    ],
+    LIST_PERMISSIONS: [
+        "List of permissions:"
+    ],
+    INVALID_USER: [
+        "That user doesn't exist!"
+    ],
+    INVALID_ROLE: [
+        "That's not a valid role!"
+    ],
+    INVALID_CHANNEL: [
+        "There's no channel with that name."
+    ],
+    ROLE_ASSIGNED: [
+        "Assigned {role} to <@{user}>."
+    ],
+    ROLE_ALREADY_ASSIGNED: [
+        "Already assigned {role} to <@{user}>."
+    ],
+    SETTING_UP: [
+        "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"sempai go to #channel\")"
+    ],
     OUTPUT_CHANNEL: [
         "Okay then, <#{channel}> will be my new home channel! Hurray~! If you want to know more about what I can do, type \"sempai help me\".",
         "All right! This is my new home channel, huh? I like it. If you want to know more about what I can do, type \"sempai help me\"."
     ],
-    SHOW_IGNORELIST: "Ignore list:{list}",
-    IGNORE_LIST_EMPTY: "I'm not ignoring anyone right now!",
-    OSU_FOLLOW_LIST_EMPTY: "I'm not following anyone on osu! right now.",
-    STARTED_IGNORING: "Got it! I'll ignore <@{user}> from now on!",
-    STOPPED_IGNORING: "Alright, I'll stop ignoring <@{user}>.",
-    ADDED_PERMISSION: "Added permission {permission} to {role}.",
-    REMOVED_PERMISSION: "Removed permission {permission} from {role}.",
-
-    CLEARED_REMINDERS: "Cleared {num} reminders.",
+    SHOW_IGNORELIST: [
+        "Ignore list:{list}"
+    ],
+    IGNORE_LIST_EMPTY: [
+        "I'm not ignoring anyone right now!"
+    ],
+    OSU_FOLLOW_LIST_EMPTY: [
+        "I'm not following anyone on osu! right now."
+    ],
+    STARTED_IGNORING: [
+        "Got it! I'll ignore <@{user}> from now on!"
+    ],
+    STOPPED_IGNORING: [
+        "Alright, I'll stop ignoring <@{user}>."
+    ],
+    ADDED_PERMISSION: [
+        "Added permission {permission} to {role}."
+    ],
+    REMOVED_PERMISSION: [
+        "Removed permission {permission} from {role}."
+    ],
     INCORRECT_FORMAT: [
         "Sorry, Sempai is a little dumb sometimes... I won't know what you mean unless you tell me in a way I can understand!\r\nThe correct format is: \"{sample}\".",
         "I... I don't understand.\r\nPlease use this format: \"{sample}\".",
@@ -153,31 +209,57 @@ const responses_normal = {
         "Did...did you just destroy my home channel? You can't just do these things! Bots have rights too, you know! Where do I go now? (use the command \"sempai go to #channel\")",
         "You... deleted? My home channel? My home? Why...? So am I-... am I homeless now? A homeless bot? Or are you going to give me a new home? (use the command \"sempai go to #channel\")"
     ],
-    REMINDERS_LIST_EMPTY: "The reminder list is empty.",
-    TLDR_FAILED: "Failed to create a tldr. My tldr functionality works best with web articles.",
-    TLDR: "**{title}**:\r\n\"{summary}\"\r\n**Original reduced by {percentage}%.**",
-    OSU_MAX_USER_LIMIT: "Reached the user limit of '{limit}'.",
-    CHANGELOG: "Hi there! I'm back online now with the following changes: \r\n{changelog}",
-    SHOW_STATISTICS: "Here are my statistics:\r\n- I'm currently running on {num_servers} servers and track {osu_num_users} users on osu!\r\n- I have made a total of {osu_alltime} osu! api calls, of which {osu_last_month} in the current month, {osu_last_week} in the current week, {osu_last_day} in the current day and {osu_last_minute} in the current minute.\r\n- I make an average of {osu_average_month} osu! api calls per month, {osu_average_week} per week and {osu_average_day} per day.\r\n- My highest number of osu! api calls are {osu_highest_month} per month, {osu_highest_week} per week and {osu_highest_day} per day.\r\n- There are currently {osu_api_queue} requests waiting.",
-    LIST_SERVERS: "Sempai is currently running on:",
-    CLEARED_REMINDER: "Alright, I removed the reminder.",
-    NO_REMINDER: "I couldn't find the reminder!",
-    OSU_SERVER_LIMIT: "This server currently has a limit of {limit} osu! users.",
-    INVALID_SERVER: "There is no server with that id!",
-    OSU_SERVER_LIMIT_CHANGED: "Changed osu! server limit to {new_limit} for server {server_name}.",
-    SERVER_BLACKLISTED: "Ok, I blacklisted '{server_name}'.",
-    SERVER_WHITELISTED: "Ok, I whitelisted '{server_name}'.",
-    SERVER_ALREADY_BLACKLISTED: "{server_name} is already blacklisted!",
-    SERVER_NOT_BLACKLISTED: "{server_name} is not blacklisted!",
-    INFORM_SERVER_BLACKLISTED: "I hate to be the bearer of bad news, but it turns out that I have to start ignoring this server. This server has just been blacklisted. :frowning:",
-    INFORM_SERVER_WHITELISTED: "Good news everybody! This server has just been removed from my blacklist which means I'm open to any conversation you guys want to have with me on this server! :smiley:",
-    SERVER_BLACKLIST: "This is my current server blacklist:{response}",
-    BLACKLISTED_USER: "Ok, I blacklisted user <@{user}>.",
-    WHITELISTED_USER: "Ok, I whitelisted user <@{user}>.",
-    USER_BLACKLIST: "This is my current user blacklist:{response}"
+    OSU_MAX_USER_LIMIT: [
+        "Reached the user limit of '{limit}'."
+    ],
+    SHOW_STATISTICS: [
+        "Here are my statistics:\r\n- I'm currently running on {num_servers} servers and track {osu_num_users} users on osu!\r\n- I have made a total of {osu_alltime} osu! api calls, of which {osu_last_month} in the current month, {osu_last_week} in the current week, {osu_last_day} in the current day and {osu_last_minute} in the current minute.\r\n- I make an average of {osu_average_month} osu! api calls per month, {osu_average_week} per week and {osu_average_day} per day.\r\n- My highest number of osu! api calls are {osu_highest_month} per month, {osu_highest_week} per week and {osu_highest_day} per day.\r\n- There are currently {osu_api_queue} requests waiting."
+    ],
+    LIST_SERVERS: [
+        "Sempai is currently running on:"
+    ],
+    OSU_SERVER_LIMIT: [
+        "This server currently has a limit of {limit} osu! users."
+    ],
+    INVALID_SERVER: [
+        "There is no server with that id!"
+    ],
+    OSU_SERVER_LIMIT_CHANGED: [
+        "Changed osu! server limit to {new_limit} for server {server_name}."
+    ],
+    SERVER_BLACKLISTED: [
+        "Ok, I blacklisted '{server_name}'."
+    ],
+    SERVER_WHITELISTED: [
+        "Ok, I whitelisted '{server_name}'."
+    ],
+    SERVER_ALREADY_BLACKLISTED: [
+        "{server_name} is already blacklisted!"
+    ],
+    SERVER_NOT_BLACKLISTED: [
+        "{server_name} is not blacklisted!"
+    ],
+    INFORM_SERVER_BLACKLISTED: [
+        "I hate to be the bearer of bad news, but it turns out that I have to start ignoring this server. This server has just been blacklisted. :frowning:"
+    ],
+    INFORM_SERVER_WHITELISTED: [
+        "Good news everybody! This server has just been removed from my blacklist which means I'm open to any conversation you guys want to have with me on this server! :smiley:"
+    ],
+    SERVER_BLACKLIST: [
+        "This is my current server blacklist:{response}"
+    ],
+    BLACKLISTED_USER: [
+        "Ok, I blacklisted user <@{user}>."
+    ],
+    WHITELISTED_USER: [
+        "Ok, I whitelisted user <@{user}>."
+    ],
+    USER_BLACKLIST: [
+        "This is my current user blacklist:{response}"
+    ]
 };
 
-const responses_tsundere = {
+const ResponsesTsundere: { [key: string]: Array<string> } = {
     NAME: [
         "I'm here! How can Sempai help you?",
         "I'm here! How can I help you?",
@@ -241,9 +323,15 @@ const responses_tsundere = {
         "Okay. I won't follow {user} on {mode} anymore. I-it's not like I really liked that person or anything anyway...  :'( "
     ],
 
-    OSU_USER_NOT_FOUND: "Baka~! I can't find that user. Did you type the username correctly?",
-    OSU_ALREADY_FOLLOWING: "Baka~! I'm already following {user}!",
-    OSU_ALREADY_FOLLOWING_MODE: "Baka~! I'm already following {user} on {mode}!",
+    OSU_USER_NOT_FOUND: [
+        "Baka~! I can't find that user. Did you type the username correctly?"
+    ],
+    OSU_ALREADY_FOLLOWING: [
+        "Baka~! I'm already following {user}!"
+    ],
+    OSU_ALREADY_FOLLOWING_MODE: [
+        "Baka~! I'm already following {user} on {mode}!"
+    ],
     OSU_ADDED_FOLLOWING: [
         "Ooh a new osu! friend? I-It's not like I wanted more friends!",
         "Ooh a new osu! friend? Yaa~y! Uhm, I mean... I-It's not like I wanted more friends or anything!",
@@ -304,14 +392,19 @@ const responses_tsundere = {
     ]
 };
 
-const responses = {
-    current: responses_normal,
-    currentMode: false,
+export enum ResponseType {
+    Normal = 1,
+    Tsundere
+};
 
-    get: function (name) {
-        let tmp = responses.current[name];
-        if (tmp === undefined && responses.currentMode) {
-            tmp = responses_normal[name];
+export class Responses {
+    static current: { [key: string]: Array<string> } = ResponsesNormal;
+    static currentMode: ResponseType = ResponseType.Normal;
+
+    static get(name: string): string {
+        let tmp = this.current[name];
+        if (tmp === undefined && this.currentMode !== ResponseType.Normal) {
+            tmp = ResponsesNormal[name];
 
             if (tmp !== undefined)
                 console.log("Response '" + name + "' has no tsundere version.");
@@ -319,25 +412,29 @@ const responses = {
 
         if (tmp === undefined) {
             console.log("unknown response: " + name);
-            return responses.get("ERROR");
+            return this.get("ERROR");
         }
 
-        if (Array.isArray(tmp)) {
-            let idx = Math.floor(Math.random() * tmp.length);
-            return tmp[idx];
+        let idx = Math.floor(Math.random() * tmp.length);
+        return tmp[idx];
+    }
+
+    static setMode(mode: ResponseType): void {
+        if (this.currentMode === mode)
+            return;
+
+        this.currentMode = mode;
+        switch (this.currentMode) {
+            case ResponseType.Normal:
+                this.current = ResponsesNormal;
+                break;
+
+            case ResponseType.Tsundere:
+                this.current = ResponsesTsundere;
+                break;
         }
 
-        return tmp;
-    },
-
-    setMode: function (mode) {
-        responses.currentMode = mode;
-        if (responses.currentMode) {
-            responses.current = responses_tsundere;
-        } else {
-            responses.current = responses_normal;
-        }
-
+        /*
         db.ConfigKeyValue.findOneAndUpdate({ key: "mode" }, { value: { value: responses.currentMode } }, {}).then(doc => {
             if (doc === null) {
                 let dbkey = db.ConfigKeyValue.create({ key: "mode", value: { value: responses.currentMode } });
@@ -346,7 +443,6 @@ const responses = {
         }).catch(err => {
             console.log(err);
         });
+        */
     }
-};
-
-module.exports = responses;
+}

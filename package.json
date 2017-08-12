@@ -9,6 +9,7 @@
     "url": "https://github.com/thememesquad/sempaibot.git"
   },
   "dependencies": {
+    "@types/node": "^8.0.20",
     "auto-loader": "^0.2.0",
     "bufferutil": "^3.0.2",
     "discord.js": "^11.1.0",
@@ -20,13 +21,17 @@
     "node-opus": "^0.2.6",
     "opusscript": "^0.0.3",
     "pg": "^7.1.0",
+    "pg-hstore": "^2.3.2",
+    "reflect-metadata": "^0.1.10",
     "request": "^2.81.0",
     "restify": "^4.3.1",
     "sodium": "^2.0.1",
+    "sqlite3": "^3.1.9",
+    "typeorm": "0.1.0-alpha.34",
     "uws": "^0.14.5"
   },
   "scripts": {
-    "start": "node src/sempaibot.js",
+    "start": "node build/sempaibot.js",
     "test": "node_modules/.bin/istanbul cover node_modules/mocha/bin/_mocha",
     "lint": "node_modules/.bin/eslint src"
   },

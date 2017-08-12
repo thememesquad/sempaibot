@@ -1,5 +1,3 @@
-const Document = require("camo").Document;
-
 const timestamps = [
     60000, //1min
     600000, //10min
@@ -10,7 +8,7 @@ const timestamps = [
     2592000000, //30days
 ];
 
-class CounterDB extends Document {
+/*class CounterDB extends Document {
     constructor() {
         super();
 
@@ -23,9 +21,18 @@ class CounterDB extends Document {
         this.highest = Number;
         this.lowest = Number;
     }
-}
+}*/
 
 class Counter {
+    _name: string;
+    _delta: number;
+    _currentTime: number;
+    
+    _current: number;
+    _average: number;
+    _highest: number;
+    _lowest: number;
+
     constructor(name, delta, start, document) {
         this._name = name;
         this._currentTime = start;
@@ -36,7 +43,7 @@ class Counter {
         this._highest = Number.MIN_VALUE;
         this._lowest = Number.MAX_VALUE;
 
-        this.document = document || CounterDB.create({
+        /*this.document = document || CounterDB.create({
             name: this._name,
             deltaTime: this._delta,
             currentTime: this._currentTime,
@@ -45,7 +52,7 @@ class Counter {
             average: this._average,
             highest: this._highest,
             lowest: this._lowest
-        });
+        });*/
     }
 
     update(num) {
@@ -55,9 +62,9 @@ class Counter {
         this._highest = Math.max(this._highest, this._current);
         this._lowest = Math.min(this._lowest, this._current);
 
-        this.document.highest = this._highest;
-        this.document.lowest = this._lowest;
-        this.document.current = this._current;
+        //this.document.highest = this._highest;
+        //this.document.lowest = this._lowest;
+        //this.document.current = this._current;
     }
 
     refresh() {
@@ -71,11 +78,11 @@ class Counter {
             this._currentTime += this._delta;
         }
 
-        this.document.highest = this._highest;
+        /*this.document.highest = this._highest;
         this.document.lowest = this._lowest;
         this.document.average = this._average;
         this.document.current = this._current;
-        this.document.currentTime = this._currentTime;
+        this.document.currentTime = this._currentTime;*/
     }
 
     get current() {
@@ -95,39 +102,35 @@ class Counter {
     }
 }
 
-class StatsManager {
-    constructor() {
-        this.stats = {};
-    }
-
-    load() {
-        return CounterDB.find({}).then(docs => {
-            this.process_database(docs);
+export class StatsManager {
+    static load() {
+        /*return CounterDB.find({}).then(docs => {
+            this.processDatabase(docs);
 
             setInterval(() => {
                 this.save().catch(err => {
                     console.log("error saving stats: ", err);
                 });
             }, 5 * 60 * 1000); //5min
-        });
+        });*/
     }
 
-    save() {
+    static save() {
         let all = [];
 
-        for (let key in this.stats)
-            all.push(this.stats[key].document.save());
+        /*for (let key in this.stats)
+            all.push(this.stats[key].document.save());*/
 
         return Promise.all(all);
     }
 
-    process_database(docs) {
-        for (let i = 0; i < docs.length; i++)
-            this.stats[docs[i].name + "_" + docs[i].deltaTime] = new Counter(docs[i].name, docs[i].deltaTime, docs[i].currentTime, docs[i]);
+    static processDatabase(docs) {
+        //for (let i = 0; i < docs.length; i++)
+        //    this.stats[docs[i].name + "_" + docs[i].deltaTime] = new Counter(docs[i].name, docs[i].deltaTime, docs[i].currentTime, docs[i]);
     }
 
-    register(name, value) {
-        if (typeof this.stats[name + "_" + timestamps[0]] !== "undefined")
+    static register(name, value) {
+        /*if (typeof this.stats[name + "_" + timestamps[0]] !== "undefined")
             return;
 
         for (let delta of timestamps) {
@@ -136,24 +139,23 @@ class StatsManager {
 
             this.stats[name + "_" + delta] = new Counter(name, delta, rounded.valueOf());
             this.stats[name + "_" + delta].update(value);
-        }
+        }*/
     }
 
-    update(name, value) {
-        if (typeof this.stats[name + "_" + timestamps[0]] === "undefined")
-            return;
+    static update(name, value) {
+        //if (typeof this.stats[name + "_" + timestamps[0]] === "undefined")
+        //    return;
 
-        for (let delta of timestamps)
-            this.stats[name + "_" + delta].update(value);
+        //for (let delta of timestamps)
+        //    this.stats[name + "_" + delta].update(value);
     }
 
-    get(name, delta) {
-        if (typeof this.stats[name + "_" + delta] === "undefined")
+    static get(name, delta) {
+        /*if (typeof this.stats[name + "_" + delta] === "undefined")
             return null;
 
         this.stats[name + "_" + delta].refresh();
-        return this.stats[name + "_" + delta];
+        return this.stats[name + "_" + delta];*/
+        return 0;
     }
 }
-
-module.exports = new StatsManager();

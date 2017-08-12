@@ -1,11 +1,16 @@
-const moment = require("moment");
+import * as moment from "moment";
 
-function parse_timestring_internal(str) {
+interface TimeObject {
+    base: string;
+    time: moment.Moment;
+}
+
+function ParseTimeInternal(str): TimeObject {
     str = str.toLowerCase().trim();
 
     let currentDate = moment();
 
-    let day_func = (target, day) => {
+    let day_func = (target, day:string) => {
         let current = currentDate.day();
 
         if (current === target)
@@ -17,50 +22,40 @@ function parse_timestring_internal(str) {
         else
             num = target - current;
 
-        return ["on " + day, currentDate.add(num, "days")];
+        let base = "on " + day;
+        let time = currentDate.add(num, "days");
+
+        return { base, time };
     };
 
     let match = str.trim().split(" ");
     switch (match[0]) {
         case "monday":
-            {
-                return day_func(1, "monday");
-            }
+            return day_func(1, "monday");
 
         case "tuesday":
-            {
-                return day_func(2, "tuesday");
-            }
+            return day_func(2, "tuesday");
 
         case "wednesday":
-            {
-                return day_func(3, "wednesday");
-            }
+            return day_func(3, "wednesday");
 
         case "thursday":
-            {
-                return day_func(4, "thursday");
-            }
+            return day_func(4, "thursday");
 
         case "friday":
-            {
-                return day_func(5, "friday");
-            }
+            return day_func(5, "friday");
 
         case "saturday":
-            {
-                return day_func(6, "saturday");
-            }
+            return day_func(6, "saturday");
 
         case "sunday":
-            {
-                return day_func(0, "sunday");
-            }
+            return day_func(0, "sunday");
 
         case "tomorrow":
-            {
-                return ["tomorrow", currentDate.add(1, "day")];
-            }
+            let base = "tomorrow";
+            let time = currentDate.add(1, "day");
+
+            return { base, time };
     }
 
     if (match.length === 2) {
@@ -82,7 +77,10 @@ function parse_timestring_internal(str) {
                     else
                         name += " seconds";
 
-                    return ["in " + name, moment(currentDate.getTime() + (num * 1000))];
+                    let base = "in " + name;
+                    let time = moment(currentDate.unix() + (num * 1000));
+
+                    return { base, time };
                 }
 
             case "minute":
@@ -100,7 +98,10 @@ function parse_timestring_internal(str) {
                     else
                         name += " minutes";
 
-                    return ["in " + name, currentDate.add(num, "minutes")];
+                    let base = "in " + name;
+                    let time = currentDate.add(num, "minutes");
+
+                    return { base, time };
                 }
 
             case "hour":
@@ -118,7 +119,10 @@ function parse_timestring_internal(str) {
                     else
                         name += " hours";
 
-                    return ["in " + name, currentDate.add(num, "hours")];
+                    let base = "in " + name;
+                    let time = currentDate.add(num, "hours");
+
+                    return { base, time };
                 }
 
             case "day":
@@ -136,7 +140,10 @@ function parse_timestring_internal(str) {
                     else
                         name += " days";
 
-                    return ["in " + name, currentDate.add(num, "days")];
+                    let base = "in " + name;
+                    let time = currentDate.add(num, "days");
+
+                    return { base, time };
                 }
 
             case "week":
@@ -161,7 +168,10 @@ function parse_timestring_internal(str) {
                     else
                         name += " weeks";
 
-                    return ["in " + name, currentDate.add(num, "weeks")];
+                    let base = "in " + name;
+                    let time = currentDate.add(num, "weeks");
+
+                    return { base, time };
                 }
 
             case "month":
@@ -179,7 +189,10 @@ function parse_timestring_internal(str) {
                     else
                         name += " months";
 
-                    return ["in " + name, currentDate.add(num, "months")];
+                    let base = "in " + name;
+                    let time = currentDate.add(num, "months");
+
+                    return { base, time };
                 }
 
             case "year":
@@ -197,12 +210,15 @@ function parse_timestring_internal(str) {
                     else
                         name += " years";
 
-                    return ["in " + name, currentDate.add(num, "years")];
+                    let base = "in " + name;
+                    let time = currentDate.add(num, "years");
+
+                    return { base, time };
                 }
         }
     }
 
-    let tmp = moment(str, [
+    let time = moment(str, [
         "YYYY-MM-DD HH:mm",
         "HH:mm",
         "YYYY-MM-DD",
@@ -216,11 +232,12 @@ function parse_timestring_internal(str) {
         "YYYY MMMM D",
         "YYYY MMMM Do"
     ], true);
+    let base = time.calendar();
 
-    return [tmp.calendar(), tmp];
+    return { base, time };
 }
 
-function parse_timestring(str) {
+export function ParseTime(str) {
     let ret = [];
     let split = str.trim().split(" ");
 
@@ -248,7 +265,7 @@ function parse_timestring(str) {
                 continue;
             }
 
-            let tmp2 = parse_timestring_internal(tmp);
+            let tmp2 = ParseTimeInternal(tmp);
             if (tmp2 === null || !tmp2[1].isValid()) {
                 continue;
             }
@@ -263,7 +280,3 @@ function parse_timestring(str) {
 
     return ret;
 }
-
-module.exports = {
-    parse: parse_timestring
-};

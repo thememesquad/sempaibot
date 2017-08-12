@@ -227,18 +227,6 @@ class AdminModule extends ModuleBase {
 
             execute: this.handle_unignore_user
         });
-
-        this.add_command({
-            formats: [
-                "go to {channelid!channel}"
-            ],
-            sample: "go to __*#channel*__",
-            description: "Tells me to output to the specified channel.",
-            permission: "GO_TO_CHANNEL",
-            global: false,
-
-            execute: this.handle_goto_channel
-        });
     }
 
     handle_blacklist_server(message, args) {
@@ -593,16 +581,6 @@ class AdminModule extends ModuleBase {
 
         permissions.remove(args.permission, args.role, message.server);
         this.bot.respond(message, responses.get("REMOVED_PERMISSION").format({ author: message.author.id, permission: args.permission, role: args.role }));
-    }
-
-    handle_goto_channel(message, args) {
-        let id = args.channel;
-        if (message.server.server.channels.get("id", id) === null) {
-            return this.bot.respond(message, responses.get("INVALID_CHANNEL").format({ author: message.author.id, channel: args.channel }));
-        }
-
-        message.server.channel = id;
-        this.bot.message(responses.get("OUTPUT_CHANNEL").format({ author: message.author.id, channel: id }), message.server);
     }
 
     handle_ignore_user(message, args) {

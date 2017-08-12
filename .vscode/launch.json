@@ -4,21 +4,22 @@
             "name": "Launch",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceRoot}/src/sempaibot.js",
+            "program": "${workspaceRoot}/src/bot.ts",
             "stopOnEntry": false,
             "args": [],
             "cwd": "${workspaceRoot}",
-            "preLaunchTask": null,
+            "preLaunchTask": "compile",
             "runtimeExecutable": null,
+            "protocol": "inspector",
             "runtimeArgs": [
                 "--nolazy"
             ],
             "env": {
                 "NODE_ENV": "development",
             },
-            "externalConsole": false,
-            "sourceMaps": false,
-            "outDir": null
+            "console": "integratedTerminal",
+            "sourceMaps": true,
+            "outFiles": ["${workspaceRoot}/build/bot.js"]
         },
         {
             "name": "Attach",

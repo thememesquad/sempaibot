@@ -9,4 +9,5 @@
 /data
 /coverage
 /coverage
-/src/modules/house.js
+/build
+/data.sqlite
