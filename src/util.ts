@@ -1,4 +1,4 @@
-export function StringFormat(str, args: { [key: string]: string }) {
+export function StringFormat(str, args: { [key: string]: any }) {
     return str.replace(/{(.*?)}/g, (match, key) => {
         return typeof args[key] !== "undefined" ? args[key] : match;
     });

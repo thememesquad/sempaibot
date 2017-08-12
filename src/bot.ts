@@ -348,18 +348,18 @@ export class Bot implements BotBase {
         delete this._servers[server.id];
     }
 
-    async blacklistUser(user) {
+    async blacklistUser(user: User) {
         //this.user_blacklist.value.blacklist.push(user.user_id);
         //await this.user_blacklist.save();
     }
 
-    async blacklistServer(server_id) {
+    async blacklistServer(server_id: string) {
         this.message(Responses.get("INFORM_SERVER_BLACKLISTED"), this._servers[server_id]);
         //this.server_blacklist.value.blacklist.push(server_id);
         //await this.server_blacklist.save();
     }
 
-    async whitelistUser(user) {
+    async whitelistUser(user: User) {
         /*let idx = this.user_blacklist.value.blacklist.indexOf(user.user_id);
         if (idx === -1)
             return false;
@@ -370,7 +370,7 @@ export class Bot implements BotBase {
         return true;
     }
 
-    async whitelistServer(server_id) {
+    async whitelistServer(server_id: string) {
         /*let idx = this.server_blacklist.value.blacklist.indexOf(server_id);
         if (idx === -1)
             return false;
@@ -382,17 +382,17 @@ export class Bot implements BotBase {
         return true;
     }
 
-    isUserBlacklisted(user) {
+    isUserBlacklisted(user: User): boolean {
         //return this.user_blacklist.value.blacklist.indexOf(user.user_id) !== -1;
         return false;
     }
 
-    isServerBlacklisted(server_id) {
+    isServerBlacklisted(server_id: string) {
         //return this.server_blacklist.value.blacklist.indexOf(server_id) !== -1;
         return false;
     }
 
-    getInternalServerId(server) {
+    getInternalServerId(server): number {
         let id = this._serversInternal.indexOf(server);
         if (id === -1)
             return null;
@@ -400,7 +400,7 @@ export class Bot implements BotBase {
         return id;
     }
 
-    getInternalServer(serverID) {
+    getInternalServer(serverID): Server {
         if (serverID < 0 || serverID >= this._serversInternal.length)
             return null;
 
@@ -413,6 +413,10 @@ export class Bot implements BotBase {
 
     get modules(): { [key: string]: ModuleBase } {
         return this._modules;
+    }
+
+    get internalServers(): Array<Server> {
+        return this._serversInternal;
     }
 }
 

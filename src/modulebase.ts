@@ -122,6 +122,10 @@ export class ModuleBase {
         return this._defaultOn;
     }
 
+    get hidden(): boolean {
+        return this._hidden;
+    }
+
     onSetup() { }
     onLoad(server: Server) { }
     onUnload(server: Server) { }

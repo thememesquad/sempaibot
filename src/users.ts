@@ -211,4 +211,8 @@ export class Users {
 
         return true;
     }
+
+    static get users() {
+        return Users._users;
+    }
 }
