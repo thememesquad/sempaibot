@@ -1,11 +1,11 @@
 import * as request from "request";
 
-interface ResponseInterface {
+export interface ResponseInterface {
     response: string;
     body: any;
 }
 
-interface RequestInterface {
+export interface RequestInterface {
     url: string;
 
     resolve: (result: ResponseInterface) => void;

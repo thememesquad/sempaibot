@@ -4,6 +4,7 @@ interface DiscordConfigInterface {
 
 interface OsuConfigInterface {
     apikey: string;
+    apiurl: string;
 }
 
 interface ConfigInterface {

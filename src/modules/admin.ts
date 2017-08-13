@@ -19,7 +19,7 @@ export class AdminModule extends ModuleBase {
         this._permissions.register("MANAGE_PERMISSIONS", "admin");
         this._permissions.register("ASSIGN_ROLES", "admin");
 
-        this.addCommand({
+        /*this.addCommand({
             formats: [
                 "show statistics"
             ],
@@ -28,7 +28,7 @@ export class AdminModule extends ModuleBase {
             permission: "SUPERADMIN",
             global: true,
 
-            execute: this.handle_show_statistics
+            execute: this.onShowStatistics
         });
 
         this.addCommand({
@@ -41,7 +41,7 @@ export class AdminModule extends ModuleBase {
             permission: "SUPERADMIN",
             global: true,
 
-            execute: this.handle_list_servers
+            execute: this.onListServers
         });
 
         this.addCommand({
@@ -53,7 +53,7 @@ export class AdminModule extends ModuleBase {
             permission: "SUPERADMIN",
             global: true,
 
-            execute: this.handle_blacklist_server
+            execute: this.onServerBlacklist
         });
 
         this.addCommand({
@@ -65,7 +65,7 @@ export class AdminModule extends ModuleBase {
             permission: "SUPERADMIN",
             global: true,
 
-            execute: this.handle_whitelist_server
+            execute: this.onServerWhitelist
         });
 
         this.addCommand({
@@ -77,7 +77,7 @@ export class AdminModule extends ModuleBase {
             permission: "SUPERADMIN",
             global: true,
 
-            execute: this.handle_blacklist_user
+            execute: this.onUserBlacklist
         });
 
         this.addCommand({
@@ -89,7 +89,7 @@ export class AdminModule extends ModuleBase {
             permission: "SUPERADMIN",
             global: true,
 
-            execute: this.handle_whitelist_user
+            execute: this.onUserWhitelist
         });
 
         this.addCommand({
@@ -101,7 +101,7 @@ export class AdminModule extends ModuleBase {
             permission: "SUPERADMIN",
             global: true,
 
-            execute: this.handle_show_user_blacklist
+            execute: this.onShowUserBlacklist
         });
 
         this.addCommand({
@@ -113,7 +113,7 @@ export class AdminModule extends ModuleBase {
             permission: "SUPERADMIN",
             global: true,
 
-            execute: this.handle_show_server_blacklist
+            execute: this.onShowServerBlacklist
         });
 
         this.addCommand({
@@ -126,7 +126,7 @@ export class AdminModule extends ModuleBase {
             permission: "MANAGE_MODULES",
             global: false,
 
-            execute: this.handle_enable_module
+            execute: this.onEnableModule
         });
 
         this.addCommand({
@@ -139,7 +139,7 @@ export class AdminModule extends ModuleBase {
             permission: "MANAGE_MODULES",
             global: false,
 
-            execute: this.handle_disable_module
+            execute: this.onDisableModule
         });
 
         this.addCommand({
@@ -155,7 +155,7 @@ export class AdminModule extends ModuleBase {
             permission: "ASSIGN_ROLES",
             global: false,
 
-            execute: this.handle_assign_role
+            execute: this.onAssignRole
         });
 
         this.addCommand({
@@ -170,7 +170,7 @@ export class AdminModule extends ModuleBase {
             permission: "MANAGE_PERMISSIONS",
             global: false,
 
-            execute: this.handle_add_permission
+            execute: this.onAddPermission
         });
 
         this.addCommand({
@@ -185,7 +185,7 @@ export class AdminModule extends ModuleBase {
             permission: "MANAGE_PERMISSIONS",
             global: false,
 
-            execute: this.handle_remove_permission
+            execute: this.onRemovePermission
         });
 
         this.addCommand({
@@ -198,7 +198,7 @@ export class AdminModule extends ModuleBase {
             permission: "MANAGE_MODULES",
             global: false,
 
-            execute: this.handle_list_modules
+            execute: this.onListModules
         });
 
         this.addCommand({
@@ -211,7 +211,7 @@ export class AdminModule extends ModuleBase {
             permission: "IGNORE_USERS",
             global: false,
 
-            execute: this.handle_ignore_user
+            execute: this.onIgnoreUser
         });
 
         this.addCommand({
@@ -224,11 +224,11 @@ export class AdminModule extends ModuleBase {
             permission: "IGNORE_USERS",
             global: false,
 
-            execute: this.handle_unignore_user
-        });
+            execute: this.onUnignoreUser
+        });*/
     }
 
-    handle_blacklist_server(message: MessageInterface, args: { [key: string]: any }) {
+    onServerBlacklist(message: MessageInterface, args: { [key: string]: any }) {
         let server = this._bot.getInternalServer(args.server - 1);
 
         if (server === null)
@@ -241,7 +241,7 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("SERVER_BLACKLISTED"), { author: message.author.id, server_name: server._server.name }));
     }
 
-    handle_whitelist_server(message: MessageInterface, args: { [key: string]: any }) {
+    onServerWhitelist(message: MessageInterface, args: { [key: string]: any }) {
         let server = this._bot.getInternalServer(args.server - 1);
 
         if (server === null)
@@ -254,7 +254,7 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("SERVER_WHITELISTED"), { author: message.author.id, server_name: server._server.name }));
     }
 
-    handle_blacklist_user(message: MessageInterface, args: { [key: string]: any }) {
+    onUserBlacklist(message: MessageInterface, args: { [key: string]: any }) {
         let user = Users.getUser(args.user, message.server);
         if (user === null)
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_USER"), { author: message.author.id, user: args.user }));
@@ -263,7 +263,7 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("BLACKLISTED_USER"), { author: message.author.id, user: user._userID }));
     }
 
-    handle_whitelist_user(message: MessageInterface, args: { [key: string]: any }) {
+    onUserWhitelist(message: MessageInterface, args: { [key: string]: any }) {
         let user = Users.getUser(args.user, message.server);
         if (user === null)
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_USER"), { author: message.author.id, user: args.user }));
@@ -272,7 +272,7 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("WHITELISTED_USER"), { author: message.author.id, user: user._userID }));
     }
 
-    handle_show_user_blacklist(message: MessageInterface, args: { [key: string]: any }) {
+    onShowUserBlacklist(message: MessageInterface, args: { [key: string]: any }) {
         let id = "ID";
         let name = "Name";
 
@@ -314,7 +314,7 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("USER_BLACKLIST"), { author: message.author.id, response: response }));
     }
 
-    handle_show_server_blacklist(message: MessageInterface, args: { [key: string]: any }) {
+    onShowServerBlacklist(message: MessageInterface, args: { [key: string]: any }) {
         let id = "ID";
         let name = "Name";
         let owner = "Owner";
@@ -363,7 +363,7 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("SERVER_BLACKLIST"), { author: message.author.id, response: response }));
     }
 
-    handle_show_statistics(message: MessageInterface, args: { [key: string]: any }) {
+    onShowStatistics(message: MessageInterface, args: { [key: string]: any }) {
         let msg = StringFormat(Responses.get("SHOW_STATISTICS"), {
             author: message.author.id,
             num_servers: 0,//stats.get_value("num_servers"),
@@ -385,7 +385,7 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, msg);
     }
 
-    handle_list_servers(message: MessageInterface, args: { [key: string]: any }) {
+    onListServers(message: MessageInterface, args: { [key: string]: any }) {
         let data = [];
         for (let i = 0; i < this._bot.internalServers.length; i++) {
             if (this._bot.isServerBlacklisted(this._bot.internalServers[i].id)) {
@@ -404,7 +404,7 @@ export class AdminModule extends ModuleBase {
         this._bot.respondQueue(message, messages);
     }
 
-    handle_enable_module(message: MessageInterface, args: { [key: string]: any }) {
+    onEnableModule(message: MessageInterface, args: { [key: string]: any }) {
         if (this._bot.getModule(args.module) === null) {
             return this._bot.respond(message, StringFormat(Responses.get("MODULE_INVALID"), { author: message.author.id, module: args.module }));
         }
@@ -417,7 +417,7 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("MODULE_ENABLED"), { author: message.author.id, module: args.module }));
     }
 
-    handle_disable_module(message: MessageInterface, args: { [key: string]: any }) {
+    onDisableModule(message: MessageInterface, args: { [key: string]: any }) {
         let module = this._bot.getModule(args.module);
         if (module === null) {
             return this._bot.respond(message, StringFormat(Responses.get("MODULE_INVALID"), { author: message.author.id, module: args.module }));
@@ -435,7 +435,7 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("MODULE_DISABLED"), { author: message.author.id, module: args.module }));
     }
 
-    handle_list_modules(message: MessageInterface, args: { [key: string]: any }) {
+    onListModules(message: MessageInterface, args: { [key: string]: any }) {
         let columns = { name: "Name", enabled: "Enabled", flags: "Flags" };
         let data = [];
 
@@ -462,7 +462,7 @@ export class AdminModule extends ModuleBase {
         this._bot.respondQueue(message, messages);
     }
 
-    handle_assign_role(message: MessageInterface, args: { [key: string]: any }) {
+    onAssignRole(message: MessageInterface, args: { [key: string]: any }) {
         args.role = args.role.toLowerCase();
 
         let role_id = 0;
@@ -504,7 +504,7 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("ROLE_ASSIGNED"), { author: message.author.id, role: args.role, user: args.user }));
     }
 
-    handle_add_permission(message: MessageInterface, args: { [key: string]: any }) {
+    onAddPermission(message: MessageInterface, args: { [key: string]: any }) {
         args.permission = args.permission.toUpperCase();
         args.role = args.role.toLowerCase();
 
@@ -539,7 +539,7 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("ADDED_PERMISSION"), { author: message.author.id, permission: args.permission, role: args.role }));
     }
 
-    handle_remove_permission(message: MessageInterface, args: { [key: string]: any }) {
+    onRemovePermission(message: MessageInterface, args: { [key: string]: any }) {
         args.permission = args.permission.toUpperCase();
         args.role = args.role.toLowerCase();
 
@@ -574,7 +574,7 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("REMOVED_PERMISSION"), { author: message.author.id, permission: args.permission, role: args.role }));
     }
 
-    handle_ignore_user(message: MessageInterface, args: { [key: string]: any }) {
+    onIgnoreUser(message: MessageInterface, args: { [key: string]: any }) {
         let user = Users.getUserById(args.user, message.server);
         if (user === null) {
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_USER"), { author: message.author.id, user: args.user }));
@@ -588,7 +588,7 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("STARTED_IGNORING"), { author: message.author.id, user: user._userID }));
     }
 
-    handle_unignore_user(message: MessageInterface, args: { [key: string]: any }) {
+    onUnignoreUser(message: MessageInterface, args: { [key: string]: any }) {
         let user = Users.getUserById(args.user, message.server);
         if (user === null) {
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_USER"), { author: message.author.id, user: args.user }));

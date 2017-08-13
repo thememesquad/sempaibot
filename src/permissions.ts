@@ -19,10 +19,10 @@ class DBRole {
 }
 
 export class Role {
-    _dbrole: DBRole;
-    _name: string;
-    _options: RoleOptions;
-    _permissions: { [key: string]: { [key: string]: boolean } };
+    private _dbrole: DBRole;
+    private _name: string;
+    private _options: RoleOptions;
+    private _permissions: { [key: string]: { [key: string]: boolean } };
 
     constructor(name, options?: RoleOptions) {
         options = options || {};

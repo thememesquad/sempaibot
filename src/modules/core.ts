@@ -3,7 +3,7 @@ import { Permissions } from "../permissions";
 import { Users } from "../users";
 import { Config } from "../../config";
 import { GenerateTable, StringFormat } from "../util";
-import { ModuleBase, MessageInterface } from "../modulebase";
+import { ModuleBase, MessageInterface, Command, CommandDescription, CommandSample, CommandPermission, CommandOptions } from "../modulebase";
 
 export class CoreModule extends ModuleBase {
     constructor() {
@@ -16,38 +16,7 @@ export class CoreModule extends ModuleBase {
 
         this._permissions.register("CHANGE_PERSONALITY", "moderator");
 
-        this.addCommand({
-            defaults: { please: false, german: false },
-            formats: [
-                ["please help", { please: true }],
-                ["hilfe", { german: true }],
-                ["please show help", { please: true }],
-                ["hilfe bitte", { german: true, please: true }],
-                ["help me please", { please: true }],
-                ["please help me", { please: true }],
-                "help",
-                "help me",
-                "show help"
-            ],
-            hideInHelp: true,
-            permission: null,
-            global: true,
-
-            execute: this.handle_help_me
-        });
-
-        this.addCommand({
-            formats: [
-                "set response mode to {responsetype!type}",
-                "use {responsetype!type}",
-                "use {responsetype!type} mode"
-            ],
-            permission: "CHANGE_PERSONALITY",
-            global: false,
-
-            execute: this.handle_response_mode
-        });
-
+        /*
         this.addCommand({
             defaults: {},
             formats: [
@@ -118,19 +87,7 @@ export class CoreModule extends ModuleBase {
             global: false,
 
             execute: this.handle_show_ignorelist
-        });
-
-        this.addCommand({
-            formats: [
-                "go to {channelid!channel}"
-            ],
-            sample: "go to __*#channel*__",
-            description: "Tells me to output to the specified channel.",
-            permission: "GO_TO_CHANNEL",
-            global: false,
-
-            execute: this.handle_goto_channel
-        });
+        });*/
     }
 
     handle_list_roles(message: MessageInterface, args: { [key: string]: any }) {
@@ -223,7 +180,19 @@ export class CoreModule extends ModuleBase {
             this._bot.respond(message, StringFormat(Responses.get("SHOW_IGNORELIST"), { author: message.author.id, list: response }));
     }
 
-    handle_help_me(message: MessageInterface, args: { [key: string]: any }) {
+
+    @Command(["please help", { please: true }], CommandOptions.HideInHelp | CommandOptions.Global)
+    @Command(["hilfe", { german: true }])
+    @Command(["please show help", { please: true }])
+    @Command(["hilfe bitte", { german: true, please: true }])
+    @Command(["help me please", { please: true }])
+    @Command(["please help me", { please: true }])
+    @Command("help")
+    @Command("help me")
+    @Command("show help")
+    @Command(["助けて", { japanese: true }])
+    @Command(["助けてください", { japanese: true, please: true }])
+    private onHelp(message: MessageInterface, args: { [key: string]: any }) {
         let response = "";
 
         if (args.please)
@@ -247,22 +216,24 @@ export class CoreModule extends ModuleBase {
 
             let hasNonHidden = false;
             let tmp = "";
-            for (let i = 0; i < module.commands.length; i++) {
-                if (module.commands[i].permission !== null && !this._permissions.isAllowed(module.commands[i].permission, role, message.server))
+            for (let key in module.commands) {
+                let command = module.commands[key];
+
+                if (command.permission !== null && !this._permissions.isAllowed(command.permission as string, role, message.server))
                     continue;
 
-                if (module.commands[i].hideInHelp === undefined || module.commands[i].hideInHelp === false) {
-                    let is_private = module.commands[i].private !== undefined && module.commands[i].private === true;
+                if (command.hideInHelp === undefined || command.hideInHelp === false) {
+                    let is_private = command.private !== undefined && command.private === true;
 
                     if (message.server !== null && is_private)
                         continue;
 
-                    if (module.commands[i].global === false && !enabled)
+                    if (command.global === false && !enabled)
                         continue;
 
                     hasNonHidden = true;
 
-                    tmp += "**" + Config.identifiers[0] + module.commands[i].sample + "** - " + module.commands[i].description;
+                    tmp += "**" + Config.identifiers[0] + command.sample + "** - " + command.description;
                     tmp += "\r\n";
                 }
             }
@@ -302,7 +273,14 @@ export class CoreModule extends ModuleBase {
         });
     }
 
-    handle_response_mode(message: MessageInterface, args: { [key: string]: any }) {
+
+    @Command("set response mode to {responsetype!type}")
+    @Command("use {responsetype!type}")
+    @Command("use {responsetype!type} mode")
+    @CommandDescription("Change my personality to Normal or Tsundere")
+    @CommandSample("set response mode to __*tsundere*__")
+    @CommandPermission("CHANGE_PERSONALITY")
+    onResponseMode(message: MessageInterface, args: { [key: string]: any }) {
         if (args.type === null) {
             //unknown response mode
         }
@@ -318,7 +296,10 @@ export class CoreModule extends ModuleBase {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
-    handle_my_role(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("what is my role")
+    @CommandSample("what is my role?")
+    @CommandDescription("Displays your role.")
+    private onMyRole(message: MessageInterface, args: { [key: string]: any }) {
         let role = CoreModule._jsUcfirst(message.user.getRole(message.server).toLowerCase());
         this._bot.respond(message, StringFormat(Responses.get("MY_ROLE"), { author: message.author.id, role: role }));
     }
@@ -347,7 +328,11 @@ export class CoreModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("MY_PERMISSIONS"), { author: message.author.id, permissions: response }));
     }
 
-    handle_goto_channel(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("go to {channelid!channel}")
+    @CommandDescription("Tells me to output to the specified channel.")
+    @CommandSample("go to __*#channel*__")
+    @CommandPermission("GO_TO_CHANNEL")
+    private onGotoChannel(message: MessageInterface, args: { [key: string]: any }) {
         let id = args.channel;
         if (message.server._server.channels.get(id) === null)
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_CHANNEL"), { author: message.author.id, channel: args.channel }));

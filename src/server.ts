@@ -159,6 +159,10 @@ export class Server {
         return this.ignoreList.indexOf(user._userID) !== -1;
     }
 
+    async saveConfig(): Promise<void> {
+        await DB.connection.manager.save(this._config);
+    }
+
     set channel(channel: string) {
         this._config.value.channel = channel;
         DB.connection.manager.save(this._config);
@@ -178,5 +182,9 @@ export class Server {
 
     get id(): Snowflake {
         return this._id;
+    }
+
+    get config(): ConfigKeyValueModel {
+        return this._config;
     }
 }

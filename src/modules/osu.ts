@@ -1,91 +1,76 @@
-const lodash = require("lodash"),
-    Document = require("camo").Document,
-    Discord = require("discord.js"),
+import { ModuleBase, MessageInterface } from "../modulebase";
+import { OsuUserModel } from "../model/osuuser";
+import { User } from "../users";
+import { Server } from "../server";
+import { LoadBalancer, ResponseInterface } from "../loadbalancer";
+import { StatsManager } from "../stats";
+import { CommandProcessor } from "../command";
+import { Responses } from "../responses";
+import { StringFormat, GenerateTable } from "../util";
+import { Config } from "../../config";
+import { RichEmbed } from "discord.js";
+import * as moment from "moment";
+import * as lodash from "lodash";
 
-    config = require("../../config.js"),
-    responses = require("../responses.js"),
-    permissions = require("../permissions.js"),
-    stats = require("../stats.js"),
-    ModuleBase = require("../modulebase.js"),
-    LoadBalancer = require("../loadbalancer.js"),
-    util = require("../util.js"),
-    moment = require("moment-timezone"),
-    CommandProcessor = require("../command.js"),
+const USER_UPDATE_INTERVAL = 1200000,
+      BEST_UPDATE_INTERVAL = 60000,
+      CURRENT_DB_VERSION = 1;
 
-    USER_UPDATE_INTERVAL = 1200000,
-    BEST_UPDATE_INTERVAL = 60000,
-    CURRENT_DB_VERSION = 3;
+enum OsuMode {
+    Standard,
+    Taiko,
+    CatchTheBeat,
+    Mania
+};
 
-class OsuMode {
-    static get Standard() { return 0; }
-    static get Taiko() { return 1; }
-    static get CatchTheBeat() { return 2; }
-    static get Mania() { return 3; }
+interface OsuUserInterface {
+    userId: string;
+    username: string;
+    pp: number;
+    rank: number;
+    lastUpdated: number;
+    lastChecked: number;
+    mode: number;
 
-    static to_string(m) {
-        if (m === OsuMode.Standard)
-            return "standard";
-        else if (m === OsuMode.Taiko)
-            return "taiko";
-        else if (m === OsuMode.CatchTheBeat)
-            return "catch the beat";
-        else if (m === OsuMode.Mania)
-            return "osu!mania";
-
-        return "standard";
-    }
+    servers: Array<string>;
+    records: { [key: string]: any };
+    extra: { [key: string]: any };
 }
 
-class OsuUser extends Document {
+export class OsuModule extends ModuleBase {
+    private static _modsList: Array<string> = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
+    private _lastChecked: number;
+    private _users: Array<OsuUserInterface>;
+    private _servers: { [key: string]: Server };
+    private _loadBalancer: LoadBalancer;
+    private _pending: Array<Promise<ResponseInterface>>;
+
     constructor() {
         super();
 
-        this.user_id = String;
-        this.username = String;
-        this.pp = Number;
-        this.rank = Number;
-        this.last_updated = Number;
-        this.last_checked = Number;
-        this.servers = [String];
-        this.records = [Object];
-        this.db_version = Number;
-        this.mode = Number;
-        this.extra = [Object];
-    }
-}
-
-class OsuModule extends ModuleBase {
-    constructor() {
-        super();
-
-        this.name = "osu!";
-        this.description = [
+        this._name = "osu!";
+        this._description = [
             "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Great if you want to fanboy about Cookiezi, or make fun of your friend for setting a new PP score with bad acc!",
             "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Who needs /r/osugame when you have this?",
             "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! This is like /r/osugame, but automated and with worse memes. I tried, okay.",
             "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Just don't follow everyone on osu! because Peppy will get angry at us."
         ];
-        this.last_checked = -1;
-        this.modsList = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
-        this.users = [];
-        this.stats = {
-            last: 0,
-            last_minute: (new Date()).getMinutes()
-        };
-        this.pending = [];
-        this.servers = {};
-        this.default_on = true;
-        this.load_balancer = new LoadBalancer(60);
+        this._lastChecked = -1;
+        this._users = [];
+        this._servers = {};
+        this._defaultOn = true;
+        this._loadBalancer = new LoadBalancer(60);
+        this._pending = [];
 
-        stats.register("osu_api_calls", 0);
-        stats.register("osu_num_users", 0);
+        StatsManager.register("osu_api_calls", 0);
+        StatsManager.register("osu_num_users", 0);
 
-        permissions.register("OSU_CHANGE_LIMIT", "superadmin");
-        permissions.register("OSU_FOLLOW", "moderator");
-        permissions.register("OSU_UNFOLLOW", "moderator");
-        permissions.register("OSU_CHECK", "moderator");
+        this._permissions.register("OSU_CHANGE_LIMIT", "superadmin");
+        this._permissions.register("OSU_FOLLOW", "moderator");
+        this._permissions.register("OSU_UNFOLLOW", "moderator");
+        this._permissions.register("OSU_CHECK", "moderator");
 
-        CommandProcessor.add_custom_type("osumode", msg => {
+        CommandProcessor.addCustomType("osumode", msg => {
             let tmp = msg.toLowerCase();
             if (tmp.endsWith("standard")) {
                 return OsuMode.Standard;
@@ -100,7 +85,7 @@ class OsuModule extends ModuleBase {
             return OsuMode.Standard;
         });
 
-        this.add_command({
+        /*this.addCommand({
             formats: [
                 "set osu limit to {int!limit} for {int!server}"
             ],
@@ -109,10 +94,10 @@ class OsuModule extends ModuleBase {
             permission: "OSU_CHANGE_LIMIT",
             global: true,
 
-            execute: this.handle_set_limit
+            execute: this.onSetLimit
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "what is my osu limit",
                 "osu limit"
@@ -122,10 +107,10 @@ class OsuModule extends ModuleBase {
             permission: null,
             global: false,
 
-            execute: this.handle_show_limit
+            execute: this.onShowLimit
         });
 
-        this.add_command({
+        this.addCommand({
             defaults: { mode: OsuMode.Standard },
             formats: [
                 "who are you following <in {osumode!mode}>",
@@ -142,10 +127,10 @@ class OsuModule extends ModuleBase {
             permission: null,
             global: false,
 
-            execute: this.handle_list_following
+            execute: this.onListFollowing
         });
 
-        this.add_command({
+        this.addCommand({
             defaults: { mode: OsuMode.Standard },
             formats: [
                 "follow {user} <in {osumode!mode}>",
@@ -156,10 +141,10 @@ class OsuModule extends ModuleBase {
             permission: "OSU_FOLLOW",
             global: false,
 
-            execute: this.handle_follow
+            execute: this.onFollow
         });
 
-        this.add_command({
+        this.addCommand({
             defaults: { mode: OsuMode.Standard },
             formats: [
                 "stop following {user} <in {osumode!mode}>",
@@ -171,10 +156,10 @@ class OsuModule extends ModuleBase {
             permission: "OSU_UNFOLLOW",
             global: false,
 
-            execute: this.handle_unfollow
-        });
+            execute: this.onUnfollow
+        });*/
 
-        this.api_stats = setInterval(() => {
+        /*this.api_stats = setInterval(() => {
             let curr = (new Date()).getMinutes();
 
             if (this.stats.last_minute !== curr) {
@@ -183,13 +168,13 @@ class OsuModule extends ModuleBase {
                 this.stats.last = 0;
                 this.stats.last_minute = curr;
             }
-        }, 10);
+        }, 10);*/
     }
 
-    handle_set_limit(message, args) {
-        let server = this.bot.get_server_internal(args.server - 1);
+    async onSetLimit(message: MessageInterface, args: { [key: string]: any }) {
+        let server = this._bot.getInternalServer(args.server - 1);
         if (server === null) {
-            return this.bot.respond(message, responses.get("INVALID_SERVER").format({
+            return this._bot.respond(message, StringFormat(Responses.get("INVALID_SERVER"), {
                 author: message.author.id,
                 id: args.server
             }));
@@ -197,28 +182,28 @@ class OsuModule extends ModuleBase {
 
         let old_limit = server.config.value.osu_limit;
         server.config.value.osu_limit = args.limit;
-        server.config.save().catch(err => console.log("error saving new config: ", err));
+        await server.saveConfig();
 
-        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT_CHANGED").format({
+        return this._bot.respond(message, StringFormat(Responses.get("OSU_SERVER_LIMIT_CHANGED"), {
             author: message.author.id,
             old_limit: old_limit,
             new_limit: args.limit,
-            server_name: server.server.name
+            server_name: server._server.name
         }));
     }
 
-    handle_show_limit(message) {
-        return this.bot.respond(message, responses.get("OSU_SERVER_LIMIT").format({
+    onShowLimit(message: MessageInterface, args: { [key: string]: any }) {
+        return this._bot.respond(message, StringFormat(Responses.get("OSU_SERVER_LIMIT"), {
             author: message.author.id,
             limit: message.server.config.value.osu_limit
         }));
     }
 
-    handle_list_following(message, args) {
-        if (this.users.length === 0)
-            return this.bot.respond(message, responses.get("OSU_FOLLOWING_EMPTY"));
+    onListFollowing(message: MessageInterface, args: { [key: string]: any }) {
+        if (this._users.length === 0)
+            return this._bot.respond(message, Responses.get("OSU_FOLLOWING_EMPTY"));
 
-        let users = lodash.clone(this.users);
+        let users = lodash.clone(this._users);
         users.sort((a, b) => {
             return b.pp - a.pp;
         });
@@ -240,102 +225,102 @@ class OsuModule extends ModuleBase {
         }
 
         if (data.length === 0) {
-            this.bot.respond(message, responses.get("OSU_FOLLOW_LIST_EMPTY").format({
+            this._bot.respond(message, StringFormat(Responses.get("OSU_FOLLOW_LIST_EMPTY"), {
                 author: message.author.id
             }));
         } else {
             if (args.mode === OsuMode.Standard) {
-                let messages = util.generate_table(responses.get("OSU_FOLLOWING").format({
+                let messages = GenerateTable(StringFormat(Responses.get("OSU_FOLLOWING"), {
                     author: message.author.id
                 }), {
                         rank: "Rank",
                         name: "Name",
                         pp: "PP"
                     }, data);
-                this.bot.respond_queue(message, messages);
+                this._bot.respondQueue(message, messages);
             } else {
-                let messages = util.generate_table(responses.get("OSU_FOLLOWING_MODE").format({
+                let messages = GenerateTable(StringFormat(Responses.get("OSU_FOLLOWING_MODE"), {
                     author: message.author.id,
-                    mode: OsuMode.to_string(args.mode)
+                    mode: (args.mode as OsuMode).toString()
                 }), {
                         rank: "Rank",
                         name: "Name",
                         pp: "PP"
                     }, data);
-                this.bot.respond_queue(message, messages);
+                this._bot.respondQueue(message, messages);
             }
         }
     }
 
-    async handle_follow(message, args) {
+    async onFollow(message: MessageInterface, args: { [key: string]: any }) {
         let username = args.user;
 
         let profile = null;
         let num = 0;
 
-        for (let i in this.users) {
-            let user = this.users[i];
-            if (user.username.toLowerCase() === username.toLowerCase() || user.user_id === username.toLowerCase()) {
-                if (this.users[i].mode === args.mode) {
-                    profile = this.users[i];
+        for (let i in this._users) {
+            let user = this._users[i];
+            if (user.username.toLowerCase() === username.toLowerCase() || user.userId === username.toLowerCase()) {
+                if (this._users[i].mode === args.mode) {
+                    profile = this._users[i];
                 }
             }
 
-            if (this.users[i].servers.indexOf(message.server.id) !== -1)
+            if (this._users[i].servers.indexOf(message.server.id) !== -1)
                 num++;
         }
 
         if (profile !== null) {
             if (profile.servers.indexOf(message.server.id) === -1) {
                 profile.servers.push(message.server.id);
-                OsuUser.findOneAndUpdate({ user_id: profile.user_id }, { servers: profile.servers }, {});
+                //OsuUser.findOneAndUpdate({ user_id: profile.user_id }, { servers: profile.servers }, {});
 
                 if (args.mode === OsuMode.Standard) {
-                    return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({
+                    return this._bot.respond(message, StringFormat(Responses.get("OSU_ADDED_FOLLOWING"), {
                         author: message.author.id,
                         user: profile.username
                     }));
                 } else {
-                    return this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING_MODE").format({
+                    return this._bot.respond(message, StringFormat(Responses.get("OSU_ADDED_FOLLOWING_MODE"), {
                         author: message.author.id,
                         user: profile.username,
-                        mode: OsuMode.to_string(args.mode)
+                        mode: (args.mode as OsuMode).toString()
                     }));
                 }
             }
 
             if (args.mode === OsuMode.Standard) {
-                return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING").format({
+                return this._bot.respond(message, StringFormat(Responses.get("OSU_ALREADY_FOLLOWING"), {
                     author: message.author.id,
                     user: profile.username
                 }));
             } else {
-                return this.bot.respond(message, responses.get("OSU_ALREADY_FOLLOWING_MODE").format({
+                return this._bot.respond(message, StringFormat(Responses.get("OSU_ALREADY_FOLLOWING_MODE"), {
                     author: message.author.id,
                     user: profile.username,
-                    mode: OsuMode.to_string(args.mode)
+                    mode: (args.mode as OsuMode).toString()
                 }));
             }
         }
 
         if (num === message.server.config.value.osu_limit) {
-            return this.bot.respond(message, responses.get("OSU_MAX_USER_LIMIT").format({
+            return this._bot.respond(message, StringFormat(Responses.get("OSU_MAX_USER_LIMIT"), {
                 author: message.author.id,
                 limit: message.server.config.value.osu_limit,
                 user: profile.username
             }));
         }
 
-        let json = await this.get_user(username, args.mode);
+        let json = await this.getUser(username, args.mode);
         if (json === undefined || json.username === undefined) {
             if (message !== undefined) {
                 if (args.mode === OsuMode.Standard) {
-                    this.bot.respond(message, responses.get("OSU_USER_NOT_FOUND").format({
+                    this._bot.respond(message, StringFormat(Responses.get("OSU_USER_NOT_FOUND"), {
                         author: message.author.id,
                         user: username
                     }));
                 } else {
-                    this.bot.respond(message, responses.get("OSU_USER_NOT_FOUND_MODE").format({
+                    this._bot.respond(message, StringFormat(Responses.get("OSU_USER_NOT_FOUND_MODE"), {
                         author: message.author.id,
                         user: username,
                         mode: args.mode
@@ -348,100 +333,100 @@ class OsuModule extends ModuleBase {
 
         let time = Date.now();
         let user = {
-            user_id: json.user_id,
+            userId: json.user_id,
             username: json.username,
             pp: Number(json.pp_raw),
             rank: Number(json.pp_rank),
             servers: [message.server.id],
             update_in_progress: null,
-            last_checked: time,
-            last_updated: time,
+            lastChecked: time,
+            lastUpdated: time,
             records: [],
-            last_record: -1,
+            lastRecord: -1,
             checking: false,
             db_version: CURRENT_DB_VERSION,
             mode: args.mode,
             extra: json
         };
-        this.users.push(user);
+        this._users.push(user);
 
-        stats.update("osu_num_users", this.users.length);
+        StatsManager.update("osu_num_users", this._users.length);
 
-        await OsuUser.create(user).save();
+        //await OsuUser.create(user).save();
 
-        this.force_check(user.username, null, true, false, args.mode);
+        this.forceCheck(user.username, null, true, false, args.mode);
 
         if (args.mode === OsuMode.Standard) {
-            this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING").format({
+            this._bot.respond(message, StringFormat(Responses.get("OSU_ADDED_FOLLOWING"), {
                 author: message.author.id,
                 user: json.username
             }));
         } else {
-            this.bot.respond(message, responses.get("OSU_ADDED_FOLLOWING_MODE").format({
+            this._bot.respond(message, StringFormat(Responses.get("OSU_ADDED_FOLLOWING_MODE"), {
                 author: message.author.id,
                 user: json.username,
-                mode: OsuMode.to_string(args.mode)
+                mode: (args.mode as OsuMode).toString()
             }));
         }
     }
 
-    handle_unfollow(message, args) {
-        let i = -1;
-        for (let j in this.users) {
-            let user = this.users[j];
-            if (user.username.toLowerCase() === args.user.toLowerCase() || user.user_id === args.user.toLowerCase()) {
-                if (this.users[j].mode === args.mode) {
+    onUnfollow(message: MessageInterface, args: { [key: string]: any }) {
+        let i = null;
+        for (let j in this._users) {
+            let user = this._users[j];
+            if (user.username.toLowerCase() === args.user.toLowerCase() || user.userId === args.user.toLowerCase()) {
+                if (this._users[j].mode === args.mode) {
                     i = j;
                     break;
                 }
             }
         }
 
-        if (i === -1) {
-            return this.bot.respond(message, responses.get("OSU_NOT_FOLLOWING").format({
+        if (i === null) {
+            return this._bot.respond(message, StringFormat(Responses.get("OSU_NOT_FOLLOWING"), {
                 author: message.author.id,
                 user: args.user
             }));
         }
 
-        let profile = this.users[i];
+        let profile = this._users[i];
         if (profile.servers.indexOf(message.server.id) === -1) {
-            return this.bot.respond(message, responses.get("OSU_NOT_FOLLOWING").format({
+            return this._bot.respond(message, StringFormat(Responses.get("OSU_NOT_FOLLOWING"), {
                 author: message.author.id,
                 user: args.user
             }));
         }
 
         if (profile.servers.length === 1) {
-            this.users.splice(i, 1);
-            OsuUser.deleteOne({ user_id: profile.user_id }, {}, () => { });
+            this._users.splice(i, 1);
+            //OsuUser.deleteOne({ user_id: profile.userId }, {}, () => { });
         } else {
             profile.servers.splice(profile.servers.indexOf(message.server.id), 1);
-            OsuUser.findOneAndUpdate({ user_id: profile.user_id }, { servers: profile.servers }, {});
+            //OsuUser.findOneAndUpdate({ user_id: profile.userId }, { servers: profile.servers }, {});
         }
 
         if (args.mode === OsuMode.Standard) {
-            this.bot.respond(message, responses.get("OSU_STOPPED").format({
+            this._bot.respond(message, StringFormat(Responses.get("OSU_STOPPED"), {
                 author: message.author.id,
                 user: profile.username
             }));
         } else {
-            this.bot.respond(message, responses.get("OSU_STOPPED_MODE").format({
+            this._bot.respond(message, StringFormat(Responses.get("OSU_STOPPED_MODE"), {
                 author: message.author.id,
                 user: profile.username,
-                mode: OsuMode.to_string(args.mode)
+                mode: (args.mode as OsuMode).toString()
             }));
         }
     }
 
-    on_new_record(profile, record) {
+    onNewRecord(profile, record) {
         for (let i = 0; i < profile.servers.length; i++) {
-            let server = this.servers[profile.servers[i]];
+            let server = this._servers[profile.servers[i]];
 
             if (server === undefined)
                 continue;
 
-            let embed = new Discord.RichEmbed()
+            let embed = new RichEmbed()
                 .setTitle(`${record.user} has set a #${record.top_rank} score!`)
                 .setThumbnail(`https://a.ppy.sh/${profile.user_id}_${Date.now()}.png`)
                 .setColor("#4ec1ff")
@@ -462,11 +447,11 @@ class OsuModule extends ModuleBase {
             embed.addField("Map links", `[Map link](https://osu.ppy.sh/b/${record.beatmap_id}) | [Osu direct](osu://b/${record.beatmap_id})`, false)
                 .addField("\u200b", "This score has been tracked by [Sempaibot!](http://sempai.moe) | Follow us [@sempaibot](https://twitter.com/osusempaibot)");
 
-            this.bot.embed(embed, server);
+            this._bot.embed(embed, server);
         }
     }
 
-    get_check_interval(user, time) {
+    getCheckInterval(user, time) {
         if (user.last_record === -1)
             return BEST_UPDATE_INTERVAL;
 
@@ -481,7 +466,7 @@ class OsuModule extends ModuleBase {
         //return BEST_UPDATE_INTERVAL;
     }
 
-    get_user_update_interval(user, time) {
+    getUserUpdateInterval(user, time) {
         if (user.last_record === -1)
             return USER_UPDATE_INTERVAL;
 
@@ -496,69 +481,24 @@ class OsuModule extends ModuleBase {
         //return USER_UPDATE_INTERVAL;
     }
 
-    migrate_user(user) {
-        if (user.db_version === CURRENT_DB_VERSION)
-            return;
-
-        let i, record, tmpdate;
-
-        console.log("Migrating user '" + user.username + "' from db '" + user.db_version + "' to '" + CURRENT_DB_VERSION + "'.");
-
-        if (user.db_version === undefined) {
-            for (i = 0; i < user.records.length; i++) {
-                record = user.records[i];
-
-                tmpdate = new Date(record.date).toUTCString();
-                tmpdate = tmpdate.substr(0, tmpdate.lastIndexOf(" "));
-                record.date = new Date(tmpdate + " UTC+8").valueOf();
-
-                user.records[i] = record;
-            }
-
-            user.db_version = 1;
-        }
-
-        if (user.db_version === 1) {
-            for (i = 0; i < user.records.length; i++) {
-                record = user.records[i];
-
-                tmpdate = new Date(record.date + (8 * 60 * 1000)).toString();
-                tmpdate = tmpdate.substr(0, tmpdate.lastIndexOf(" "));
-                tmpdate = tmpdate.substr(0, tmpdate.lastIndexOf(" "));
-                record.date = moment(new Date(tmpdate + " UTC")).subtract(8, "hours").toDate().valueOf();
-
-                user.records[i] = record;
-            }
-
-            user.db_version = 2;
-        }
-
-        if (user.db_version === 2) {
-            user.mode = OsuMode.Standard;
-            user.extra = {};
-
-            user.db_version = 3;
-        }
-    }
-
-    async on_setup() {
-        this.check = setInterval(() => {
+    async onSetup() {
+        /*this._check = setInterval(() => {
             let time = Date.now();
             let user = null;
 
-            for (let i = 0; i < this.users.length; i++) {
-                user = this.users[i];
+            for (let i = 0; i < this._users.length; i++) {
+                user = this._users[i];
                 if ((time - user.last_checked) >= this.get_check_interval(user, time))
                     this.force_check(user.username, null, false, false, user.mode);
             }
 
-            for (let i = 0; i < this.users.length; i++) {
-                if ((time - this.users[i].last_updated) >= this.get_user_update_interval(user, time))
-                    this.update_user(this.users[i]);
+            for (let i = 0; i < this._users.length; i++) {
+                if ((time - this._users[i].lastUpdated) >= this.get_user_update_interval(user, time))
+                    this.update_user(this._users[i]);
             }
-        }, 10);
+        }, 10);*/
 
-        let docs = await OsuUser.find({});
+        let docs = [];//await OsuUser.find({});
         for (let i = 0; i < docs.length; i++) {
             let records = [];
             for (let j = 0; j < docs[i].records.length; j++) {
@@ -566,75 +506,68 @@ class OsuModule extends ModuleBase {
             }
 
             let user = {
-                user_id: docs[i].user_id,
+                userId: docs[i].user_id,
                 username: docs[i].username,
                 pp: docs[i].pp,
                 rank: docs[i].rank,
-                last_updated: docs[i].last_updated,
-                last_checked: docs[i].last_checked || Date.now(),
+                lastUpdated: docs[i].last_updated,
+                lastChecked: docs[i].last_checked || Date.now(),
                 servers: docs[i].servers,
                 last_record: -1,
                 update_in_progress: null,
                 records: records,
                 checking: false,
-                db_version: docs[i].db_version,
                 mode: docs[i].mode || OsuMode.Standard,
                 extra: docs[i].extra || {}
             };
 
-            if (docs[i].db_version !== CURRENT_DB_VERSION) {
-                this.migrate_user(user);
-            }
-
-            this.users.push(user);
+            this._users.push(user);
 
             let time = Date.now();
-            if (user.last_updated === undefined || time - user.last_updated >= this.get_user_update_interval(user, time)) {
-                this.update_user(user);
-            }
+            if (user.lastUpdated === undefined || time - user.lastUpdated >= this.getUserUpdateInterval(user, time))
+                this.updateUser(user);
         }
 
-        stats.update("osu_num_users", this.users.length);
+        StatsManager.update("osu_num_users", this._users.length);
     }
 
-    on_shutdown() {
-        clearInterval(this.check);
-        clearInterval(this.api_stats);
+    onShutdown() {
+        //clearInterval(this._check);
+        //clearInterval(this._apiStats);
 
-        for (let i = 0; i < this.pending.length; i++) {
-            this.load_balancer.cancel(this.pending[i]);
-        }
+        /*for (let i = 0; i < this.pending.length; i++) {
+            this._loadBalancer.cancel(this.pending[i]);
+        }*/
     }
 
-    on_load(server) {
-        if (this.servers[server.id] !== undefined)
+    onLoad(server) {
+        if (this._servers[server.id] !== undefined)
             return;
 
-        this.servers[server.id] = server;
+        this._servers[server.id] = server;
     }
 
-    on_unload(server) {
-        if (this.servers[server.id] === undefined)
+    onUnload(server) {
+        if (this._servers[server.id] === undefined)
             return;
 
-        delete this.servers[server.id];
+        delete this._servers[server.id];
     }
 
-    async api_call(method, params, first, num) {
+    async apiCall(method: string, params?: { [key: string]: any }, first?: boolean, num?: number) {
         num = (num === undefined) ? 0 : num;
 
         first = (first === undefined) ? true : first;
-        let url = (method.startsWith("http:") ? method : (typeof config.osu.api_url !== "undefined") ? config.osu.api_url + method : "http://osu.ppy.sh/api/" + method) + "?k=" + config.osu.api_key;
+        let url = (method.startsWith("http:") ? method : Config.osu.apiurl ? Config.osu.apiurl + method : "http://osu.ppy.sh/api/" + method) + "?k=" + Config.osu.apikey;
 
-        for (let key in params) {
+        for (let key in params)
             url += "&" + key + "=" + params[key];
-        }
 
-        let tmp = this.load_balancer.create(url);
-        this.pending.push(tmp);
+        let tmp = this._loadBalancer.create(url);
+        this._pending.push(tmp);
 
         let obj = await tmp;
-        stats.update("osu_api_calls", 1);
+        StatsManager.update("osu_api_calls", 1);
 
         let body = obj.body;
 
@@ -649,28 +582,28 @@ class OsuModule extends ModuleBase {
             if (num === 4)
                 throw e;
 
-            return await this.api_call(method, params, first, num + 1);
+            return await this.apiCall(method, params, first, num + 1);
         }
     }
 
-    get_user(username, mode) {
+    getUser(username, mode) {
         mode = mode || OsuMode.Standard;
 
-        return this.api_call("get_user", {
+        return this.apiCall("get_user", {
             u: username, m: mode
         });
     }
 
-    get_beatmaps(id) {
-        return this.api_call("http://osu.ppy.sh/api/get_beatmaps", {
+    getBeatmaps(id) {
+        return this.apiCall("http://osu.ppy.sh/api/get_beatmaps", {
             b: id
         });
     }
 
-    get_user_best(id, mode, limit) {
+    getUserBest(id, mode, limit) {
         mode = mode || OsuMode.Standard;
 
-        return this.api_call("get_user_best", {
+        return this.apiCall("get_user_best", {
             u: id,
             m: mode,
             limit: limit,
@@ -678,7 +611,7 @@ class OsuModule extends ModuleBase {
         }, false);
     }
 
-    calculate_accuracy(beatmap, mode) {
+    calculateAccuracy(beatmap, mode) {
         if (mode === OsuMode.Taiko) {
             let totalPointOfHits = (beatmap.count100 * 0.5 + beatmap.count300 * 1) * 300;
             let totalNumberOfHits = beatmap.countmiss + beatmap.count100 + beatmap.count300;
@@ -702,7 +635,7 @@ class OsuModule extends ModuleBase {
         return (totalPointOfHits / (totalNumberOfHits * 300) * 100).toFixed(2);
     }
 
-    force_check(_username, _message, _no_report, _force, _mode) {
+    forceCheck(_username, _message, _no_report, _force, _mode) {
         let username = _username;
         let message = _message || null;
         let no_report = _no_report || false;
@@ -710,21 +643,21 @@ class OsuModule extends ModuleBase {
         let mode = _mode || OsuMode.Standard;
 
         let profile = null;
-        for (let i in this.users) {
-            let user = this.users[i];
+        for (let i in this._users) {
+            let user = this._users[i];
 
-            if (user.username.toLowerCase() === username.toLowerCase() || user.user_id === username.toLowerCase()) {
+            if (user.username.toLowerCase() === username.toLowerCase() || user.userId === username.toLowerCase()) {
                 if (user.mode !== mode)
                     continue;
 
-                profile = this.users[i];
+                profile = this._users[i];
                 break;
             }
         }
 
         if (profile === null) {
             if (message) {
-                this.bot.respond(message, responses.get("OSU_NOT_FOLLOWING").format({
+                this._bot.respond(message, StringFormat(Responses.get("OSU_NOT_FOLLOWING"), {
                     author: message.author.id,
                     user: username
                 }));
@@ -735,15 +668,15 @@ class OsuModule extends ModuleBase {
 
         if (message) {
             if (profile.mode === OsuMode.Standard)
-                this.bot.respond(message, responses.get("OSU_CHECK").format({
+                this._bot.respond(message, StringFormat(Responses.get("OSU_CHECK"), {
                     author: message.author.id,
                     user: profile.username
                 }));
             else
-                this.bot.respond(message, responses.get("OSU_CHECK_MODE").format({
+                this._bot.respond(message, StringFormat(Responses.get("OSU_CHECK_MODE"), {
                     author: message.author.id,
                     user: profile.username,
-                    mode: OsuMode.to_string(profile.mode)
+                    mode: (profile.mode as OsuMode).toString()
                 }));
         }
 
@@ -754,7 +687,7 @@ class OsuModule extends ModuleBase {
 
         let topRank;
         let handle = async () => {
-            let json = await this.get_user_best(profile.user_id, profile.mode, 50);
+            let json = await this.getUserBest(profile.user_id, profile.mode, 50);
             for (let j = 0; j < json.length; j++) {
                 let beatmap = json[j];
                 beatmap.count50 = parseInt(beatmap.count50);
@@ -766,7 +699,7 @@ class OsuModule extends ModuleBase {
                 beatmap.enabled_mods = parseInt(beatmap.enabled_mods);
                 beatmap.perfect = parseInt(beatmap.perfect);
                 beatmap.pp = Math.round(parseFloat(beatmap.pp));
-                beatmap.acc = this.calculate_accuracy(beatmap, mode);
+                beatmap.acc = this.calculateAccuracy(beatmap, mode);
 
                 if (["X", "XH"].indexOf(beatmap.rank) !== -1)
                     beatmap.rank = "SS";
@@ -778,7 +711,7 @@ class OsuModule extends ModuleBase {
                 for (let i = 0; i < 16; i++) {
                     if ((beatmap.enabled_mods & (1 << i)) > 0)
                         if (i !== 6 || ((beatmap.enabled_mods & (1 << 9)) === 0))
-                            beatmap.mods += ((beatmap.mods.length !== 0) ? "" : "+") + this.modsList[i];
+                            beatmap.mods += ((beatmap.mods.length !== 0) ? "" : "+") + OsuModule._modsList[i];
                 }
 
                 let skip = false;
@@ -810,8 +743,8 @@ class OsuModule extends ModuleBase {
                 if (no_report)
                     continue;
 
-                let beatmap_info = await this.get_beatmaps(beatmap.beatmap_id);
-                let user_data = await this.update_user(profile, profile.mode);
+                let beatmap_info = await this.getBeatmaps(beatmap.beatmap_id);
+                let user_data = await this.updateUser(profile, profile.mode);
 
                 let oldTotalpp = parseFloat(profile.pp);
                 let newTotalpp = parseFloat(user_data.pp_raw);
@@ -848,14 +781,14 @@ class OsuModule extends ModuleBase {
                     old_rank: oldRank,
                     new_rank: newRank,
                     delta_rank: deltaRank,
-                    mode: OsuMode.to_string(profile.mode)
+                    mode: (profile.mode as OsuMode).toString()
                 };
 
-                this.on_new_record(profile, announcement);
+                this.onNewRecord(profile, announcement);
             }
 
             profile.last_checked = (new Date()).getTime();
-            OsuUser.findOneAndUpdate({ user_id: profile.user_id }, { db_version: CURRENT_DB_VERSION, records: profile.records, last_checked: profile.last_checked }, {});
+            //OsuUser.findOneAndUpdate({ user_id: profile.user_id }, { db_version: CURRENT_DB_VERSION, records: profile.records, last_checked: profile.last_checked }, {});
 
             profile.checking = false;
         };
@@ -863,7 +796,7 @@ class OsuModule extends ModuleBase {
         handle();
     }
 
-    update_user(_profile) {
+    updateUser(_profile, _mode: OsuMode = OsuMode.Standard) {
         let profile = _profile;
 
         if (profile.update_in_progress !== null)
@@ -871,17 +804,17 @@ class OsuModule extends ModuleBase {
 
         let promise = async () => {
             try {
-                let data = await this.get_user(profile.username, profile.mode);
+                let data = await this.getUser(profile.username, profile.mode);
                 profile.last_updated = Date.now();
 
-                await OsuUser.findOneAndUpdate({ user_id: profile.user_id }, {
+                /*await OsuUser.findOneAndUpdate({ user_id: profile.user_id }, {
                     db_version: CURRENT_DB_VERSION,
                     user_id: data.user_id,
                     pp: parseFloat(data.pp_raw),
                     rank: parseInt(data.pp_rank),
                     last_updated: profile.last_updated,
                     extra: data
-                });
+                });*/
 
                 profile.update_in_progress = null;
                 return data;
@@ -895,5 +828,3 @@ class OsuModule extends ModuleBase {
         return profile.update_in_progress;
     }
 }
-
-module.exports = new OsuModule();

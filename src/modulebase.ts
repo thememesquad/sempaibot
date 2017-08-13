@@ -17,11 +17,11 @@ export interface MessageInterface {
 }
 
 export interface CommandInterface {
-    formats: Array<Array<any>|string>;
-    permission: string;
+    formats: CommandProcessor;
     execute: (message: MessageInterface, args: { [key: string]: any }) => void;
 
-    sample?: string;
+    permission?: string | Array<string>;
+    sample?: string | Array<string>;
     description?: string;
     defaults?: { [key: string]: any };
 
@@ -30,12 +30,85 @@ export interface CommandInterface {
     hideInHelp?: boolean;
 }
 
+export enum CommandOptions {
+    None = 0,
+    HideInHelp = 1,
+    Global = 2
+}
+
+export function Command(format: string | Array<string | { [key: string]: any }>, options: CommandOptions = CommandOptions.None) {
+    return function (target: ModuleBase, propertyKey: string, descriptor: PropertyDescriptor) {
+        let command: CommandInterface = target.getCommandInternal(propertyKey);
+        if (!command) {
+            command = {
+                formats: new CommandProcessor(null),
+                execute: descriptor.value
+            };
+        }
+
+        command.formats.addFormat(format);
+
+        if (options & CommandOptions.HideInHelp)
+            command.hideInHelp = true;
+
+        if (options & CommandOptions.Global)
+            command.global = true;
+
+        target.setCommandInternal(propertyKey, command);
+    };
+}
+
+export function CommandDescription(description: string) {
+    return function (target: ModuleBase, propertyKey: string, descriptor: PropertyDescriptor) {
+        let command: CommandInterface = target.getCommandInternal(propertyKey);
+        if (!command) {
+            command = {
+                formats: new CommandProcessor(null),
+                execute: descriptor.value
+            };
+        }
+
+        command.description = description;
+        target.setCommandInternal(propertyKey, command);
+    };
+}
+
+export function CommandSample(samples: string | Array<string>) {
+    return function (target: ModuleBase, propertyKey: string, descriptor: PropertyDescriptor) {
+        let command: CommandInterface = target.getCommandInternal(propertyKey);
+        if (!command) {
+            command = {
+                formats: new CommandProcessor(null),
+                execute: descriptor.value
+            };
+        }
+
+        command.sample = samples;
+        target.setCommandInternal(propertyKey, command);
+    };
+}
+
+export function CommandPermission(permissions: string | Array<string>) {
+    return function (target: ModuleBase, propertyKey: string, descriptor: PropertyDescriptor) {
+        let command: CommandInterface = target.getCommandInternal(propertyKey);
+        if (!command) {
+            command = {
+                formats: new CommandProcessor(null),
+                execute: descriptor.value
+            };
+        }
+
+        command.permission = permissions;
+        target.setCommandInternal(propertyKey, command);
+    };
+}
+
 export class ModuleBase {
     public _bot: BotBase;
     
     protected _name: string;
-    protected _description: string;
-    protected _commands: Array<CommandInterface>;
+    protected _description: string | Array<string>;
+    protected _commands: { [key: string]: CommandInterface };
     protected _permissions: Permissions;
     
     protected _alwaysOn: boolean = false;
@@ -45,22 +118,33 @@ export class ModuleBase {
 
     constructor() {
         this._name = "";
-        this._commands = [];
         this._bot = null;
         this._permissions = new Permissions();
+
+        if (!this._commands)
+            this._commands = {};
     }
 
-    addCommand(command: CommandInterface): void {
-        command.execute = command.execute.bind(this);
-        this._commands.push(command);
+    getCommandInternal(key: string): CommandInterface {
+        if (!this._commands)
+            this._commands = {};
+
+        return this._commands[key];
+    }
+
+    setCommandInternal(key: string, command: CommandInterface): void {
+        if (!this._commands)
+            this._commands = {};
+
+        this._commands[key] = command;
     }
 
     checkMessage(server: Server, message: MessageInterface): boolean {
         let best = null;
-        for (let i = 0; i < this._commands.length; i++) {
-            let command = this._commands[i];
+        for (let key in this._commands) {
+            let command = this._commands[key];
             let data = null;
-            let is_private = this._commands[i].private !== undefined && this._commands[i].private === true;
+            let is_private = command.private !== undefined && command.private === true;
 
             if (server !== null && !command.global) {
                 if (!this._alwaysOn && !server.isModuleEnabled(this._name)) {
@@ -74,10 +158,7 @@ export class ModuleBase {
                 continue;
             }
 
-            let processor = new CommandProcessor(this._bot);
-            for (let format of command.formats)
-                processor.addFormat(format);
-
+            let processor = command.formats;
             let args = processor.process(message.content);
             if (args === null)
                 continue;
@@ -90,12 +171,12 @@ export class ModuleBase {
 
             data = [message, args];
 
-            if (command.permission !== null && !this._permissions.isAllowed(command.permission, message.user.getRole(message.server), message.server)) {
+            if (command.permission !== null && !this._permissions.isAllowed(command.permission as string, message.user.getRole(message.server), message.server)) {
                 this._bot.respond(message, StringFormat(Responses.get("NOT_ALLOWED"), { author: message.author.id, permission: command.permission }));
                 return true;
             }
 
-            command.execute.apply(null, data);
+            command.execute.apply(this, data);
             return true;
         }
 
@@ -110,7 +191,7 @@ export class ModuleBase {
         return this._disabled;
     }
 
-    get commands(): Array<CommandInterface> {
+    get commands(): { [key: string]: CommandInterface } {
         return this._commands;
     }
 

@@ -111,11 +111,11 @@ export class CommandProcessor {
         this._bot = bot;
     }
 
-    addFormat(format: Array<string> | string): void {
+    addFormat(format: Array<string | { [key: string]: any}> | string): void {
         if (Array.isArray(format)) {
             this._formats.push({
-                format: CreateRegex(format[0]),
-                variables: format.length > 1 ? format[1] : {}
+                format: CreateRegex(format[0] as string),
+                variables: format.length > 1 ? format[1] as { [key: string]: any } : {}
             });
 
             return;

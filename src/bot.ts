@@ -312,7 +312,7 @@ export class Bot implements BotBase {
         }
     }
 
-    async onServerCreated(server) {
+    async onServerCreated(server): Promise<void> {
         if (!this._ready)
             return;
 
@@ -331,7 +331,7 @@ export class Bot implements BotBase {
         StatsManager.update("num_servers", this._serversInternal.length);
     }
 
-    async onServerDeleted(server) {
+    async onServerDeleted(server): Promise<void> {
         if (!this._ready)
             return;
 
@@ -343,19 +343,19 @@ export class Bot implements BotBase {
         StatsManager.update("num_servers", this._serversInternal.length);
     }
 
-    async blacklistUser(user: User) {
+    async blacklistUser(user: User): Promise<void> {
         this._userBlacklist.value.blacklist.push(user._userID);
         await DB.connection.manager.save(this._userBlacklist);
     }
 
-    async blacklistServer(server_id: string) {
+    async blacklistServer(server_id: string): Promise<void> {
         this.message(Responses.get("INFORM_SERVER_BLACKLISTED"), this._servers[server_id]);
 
         this._serverBlacklist.value.blacklist.push(server_id);
         await DB.connection.manager.save(this._serverBlacklist);
     }
 
-    async whitelistUser(user: User) {
+    async whitelistUser(user: User): Promise<boolean> {
         let idx = this._userBlacklist.value.blacklist.indexOf(user._userID);
         if (idx === -1)
             return false;
@@ -366,7 +366,7 @@ export class Bot implements BotBase {
         return true;
     }
 
-    async whitelistServer(server_id: string) {
+    async whitelistServer(server_id: string): Promise<boolean> {
         let idx = this._serverBlacklist.value.blacklist.indexOf(server_id);
         if (idx === -1)
             return false;
@@ -382,11 +382,11 @@ export class Bot implements BotBase {
         return this._userBlacklist.value.blacklist.indexOf(user._userID) !== -1;
     }
 
-    isServerBlacklisted(server_id: string) {
+    isServerBlacklisted(server_id: string): boolean {
         return this._serverBlacklist.value.blacklist.indexOf(server_id) !== -1;
     }
 
-    getInternalServerId(server): number {
+    getInternalServerId(server: Server): number {
         let id = this._serversInternal.indexOf(server);
         if (id === -1)
             return null;
@@ -394,7 +394,7 @@ export class Bot implements BotBase {
         return id;
     }
 
-    getInternalServer(serverID): Server {
+    getInternalServer(serverID: number): Server {
         if (serverID < 0 || serverID >= this._serversInternal.length)
             return null;
 
