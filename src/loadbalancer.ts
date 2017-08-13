@@ -32,7 +32,7 @@ export class LoadBalancer {
         this._balancer = null;
     }
 
-    balance() {
+    balance(): void {
         if (this._requests.length === 0) {
             clearInterval(this._balancer);
             this._balancer = null;
@@ -70,7 +70,7 @@ export class LoadBalancer {
         this._pendingRequests.push(req);
     }
 
-    create(url) {
+    create(url): Promise<ResponseInterface> {
         if (this._namedRequests[url] !== undefined)
             return this._namedRequests[url];
 
@@ -88,7 +88,7 @@ export class LoadBalancer {
         return this._namedRequests[url];
     }
 
-    cancel(request) {
+    cancel(request): void {
         if (this._namedRequests[request.url] === undefined)
             return;
 
@@ -109,7 +109,7 @@ export class LoadBalancer {
         }
     }
 
-    close() {
+    close(): void {
         while (this._requests.length > 0)
             this.cancel(this._requests[0]);
 
@@ -122,7 +122,7 @@ export class LoadBalancer {
         this._balancer = null;
     }
 
-    get numRequests() {
+    get numRequests(): number {
         return this._requests.length + this._pendingRequests.length;
     }
 }

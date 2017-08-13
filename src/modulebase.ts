@@ -50,12 +50,12 @@ export class ModuleBase {
         this._permissions = new Permissions();
     }
 
-    add_command(command: CommandInterface) {
+    addCommand(command: CommandInterface): void {
         command.execute = command.execute.bind(this);
         this._commands.push(command);
     }
 
-    check_message(server: Server, message: MessageInterface) {
+    checkMessage(server: Server, message: MessageInterface): boolean {
         let best = null;
         for (let i = 0; i < this._commands.length; i++) {
             let command = this._commands[i];
@@ -76,7 +76,7 @@ export class ModuleBase {
 
             let processor = new CommandProcessor(this._bot);
             for (let format of command.formats)
-                processor.add_format(format);
+                processor.addFormat(format);
 
             let args = processor.process(message.content);
             if (args === null)
@@ -126,8 +126,8 @@ export class ModuleBase {
         return this._hidden;
     }
 
-    onSetup() { }
-    onLoad(server: Server) { }
-    onUnload(server: Server) { }
-    onShutdown() { }
+    onSetup(): void { }
+    onLoad(server: Server): void { }
+    onUnload(server: Server): void { }
+    onShutdown(): void { }
 }

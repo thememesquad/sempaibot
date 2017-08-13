@@ -16,7 +16,7 @@ export class CoreModule extends ModuleBase {
 
         this._permissions.register("CHANGE_PERSONALITY", "moderator");
 
-        this.add_command({
+        this.addCommand({
             defaults: { please: false, german: false },
             formats: [
                 ["please help", { please: true }],
@@ -36,7 +36,7 @@ export class CoreModule extends ModuleBase {
             execute: this.handle_help_me
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "set response mode to {responsetype!type}",
                 "use {responsetype!type}",
@@ -48,7 +48,7 @@ export class CoreModule extends ModuleBase {
             execute: this.handle_response_mode
         });
 
-        this.add_command({
+        this.addCommand({
             defaults: {},
             formats: [
                 "what is my role"
@@ -61,7 +61,7 @@ export class CoreModule extends ModuleBase {
             execute: this.handle_my_role
         });
 
-        this.add_command({
+        this.addCommand({
             defaults: {},
             formats: [
                 "what are my permissions",
@@ -79,7 +79,7 @@ export class CoreModule extends ModuleBase {
             execute: this.handle_my_permissions
         });
 
-        this.add_command({
+        this.addCommand({
             defaults: {},
             formats: [
                 "list roles"
@@ -92,7 +92,7 @@ export class CoreModule extends ModuleBase {
             execute: this.handle_list_roles
         });
 
-        this.add_command({
+        this.addCommand({
             defaults: {},
             formats: [
                 "list permissions"
@@ -105,7 +105,7 @@ export class CoreModule extends ModuleBase {
             execute: this.handle_list_permissions
         });
 
-        this.add_command({
+        this.addCommand({
             defaults: {},
             formats: [
                 "show ignore list",
@@ -120,7 +120,7 @@ export class CoreModule extends ModuleBase {
             execute: this.handle_show_ignorelist
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "go to {channelid!channel}"
             ],

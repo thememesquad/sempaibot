@@ -7,7 +7,7 @@ interface RegexInterface {
     variables: { [key: string]: number };
 }
 
-function CreateRegex(format): RegexInterface {
+function CreateRegex(format: string): RegexInterface {
     format = format.trim();
     format = format.replace(/</g, "(?:");
     format = format.replace(/>/g, ")?");
@@ -111,12 +111,14 @@ export class CommandProcessor {
         this._bot = bot;
     }
 
-    add_format(format) {
+    addFormat(format: Array<string> | string): void {
         if (Array.isArray(format)) {
-            return this._formats.push({
+            this._formats.push({
                 format: CreateRegex(format[0]),
                 variables: format.length > 1 ? format[1] : {}
             });
+
+            return;
         }
 
         this._formats.push({
@@ -125,7 +127,7 @@ export class CommandProcessor {
         });
     }
 
-    format(type, msg) {
+    format(type: string, msg: string): string {
         if (typeof CommandProcessor._typeParsers[type] !== "undefined")
             return CommandProcessor._typeParsers[type](msg);
 
@@ -134,8 +136,8 @@ export class CommandProcessor {
         return msg;
     }
 
-    process(message) {
-        let matches = [];
+    process(message: string): Object {
+        let matches: Array<Array<string | Object>> = [];
 
         for (let entry of this._formats) {
             let match = message.trim().match(entry.format.regex);
@@ -150,7 +152,7 @@ export class CommandProcessor {
                     else {
                         args[tmp[2]] = this.format(tmp[1], match[entry.format.variables[key]] || "");
                         if (args[tmp[2]] === null) {
-                            match = false;
+                            match = null;
                             break;
                         }
                     }
@@ -166,7 +168,7 @@ export class CommandProcessor {
         return matches[0][1];
     }
 
-    static addCustomType(type: string, func: (msg: string) => any) {
+    static addCustomType(type: string, func: (msg: string) => any): void {
         CommandProcessor._typeParsers[type] = func;
     }
 }

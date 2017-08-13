@@ -19,7 +19,7 @@ export class AdminModule extends ModuleBase {
         this._permissions.register("MANAGE_PERMISSIONS", "admin");
         this._permissions.register("ASSIGN_ROLES", "admin");
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "show statistics"
             ],
@@ -31,7 +31,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_show_statistics
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "list servers",
                 "show servers"
@@ -44,7 +44,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_list_servers
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "blacklist server {int!server}"
             ],
@@ -56,7 +56,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_blacklist_server
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "whitelist server {int!server}"
             ],
@@ -68,7 +68,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_whitelist_server
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "blacklist user {userid!user}"
             ],
@@ -80,7 +80,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_blacklist_user
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "whitelist user {userid!user}"
             ],
@@ -92,7 +92,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_whitelist_user
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "show user blacklist"
             ],
@@ -104,7 +104,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_show_user_blacklist
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "show server blacklist"
             ],
@@ -116,7 +116,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_show_server_blacklist
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "enable {module}",
                 "enable module {module}"
@@ -129,7 +129,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_enable_module
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "disable {module}",
                 "disable module {module}"
@@ -142,7 +142,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_disable_module
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "assign role {role} to user {userid!user}",
                 "assign {role} to user {userid!user}",
@@ -158,7 +158,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_assign_role
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "add permission {permission} to role {role}",
                 "add {permission} to role {role}",
@@ -173,7 +173,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_add_permission
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "remove permission {permission} from role {role}",
                 "remove {permission} from role {role}",
@@ -188,7 +188,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_remove_permission
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "list modules",
                 "show modules"
@@ -201,7 +201,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_list_modules
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "ignore {userid!user}",
                 "start ignoring {userid!user}"
@@ -214,7 +214,7 @@ export class AdminModule extends ModuleBase {
             execute: this.handle_ignore_user
         });
 
-        this.add_command({
+        this.addCommand({
             formats: [
                 "unignore {userid!user}",
                 "stop ignoring {userid!user}"

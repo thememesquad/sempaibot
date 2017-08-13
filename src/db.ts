@@ -3,7 +3,7 @@ import { createConnection, Entity, Column, PrimaryGeneratedColumn, Connection } 
 export class DB {
     public static connection: Connection;
 
-    static setup() {
+    static setup(): Promise<void> {
         return createConnection({
             type: "sqlite",
             database: "data.sqlite",

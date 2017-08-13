@@ -254,7 +254,7 @@ export class Bot implements BotBase {
             if (this._modules[key].disabled)
                 continue;
 
-            let resp = this._modules[key].check_message(server, message);
+            let resp = this._modules[key].checkMessage(server, message);
 
             if (typeof resp === "string") {
                 tmp.push(resp);
