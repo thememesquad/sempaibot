@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert, BeforeUpdate, AfterLoad } from "typeorm";
+import { watch } from "melanke-watchjs";
 
 @Entity()
 export class ConfigKeyValueModel {
@@ -13,8 +14,13 @@ export class ConfigKeyValueModel {
     private _valueUnserialized: { [key: string]: any } = null;
 
     get value(): { [key: string]: any } {
-        if (this._valueUnserialized === null)
+        if (this._valueUnserialized === null) {
             this._valueUnserialized = JSON.parse(this._value);
+
+            watch(this._valueUnserialized, () => {
+                this._value = JSON.stringify(this._valueUnserialized);
+            });
+        }
 
         return this._valueUnserialized;
     }
@@ -26,19 +32,13 @@ export class ConfigKeyValueModel {
 
     @AfterLoad()
     _loadValue() {
-        console.log("AfterLoad");
+        let loaded = this._valueUnserialized !== null;
         this._valueUnserialized = JSON.parse(this._value);
-    }
 
-    @BeforeInsert()
-    _updateValueInsert() {
-        console.log("BeforeInsert");
-        this._value = JSON.stringify(this._valueUnserialized);
-    }
-
-    @BeforeUpdate()
-    _updateValueUpdate() {
-        console.log("BeforeUpdate");
-        this._value = JSON.stringify(this._valueUnserialized);
+        if (!loaded) {
+            watch(this._valueUnserialized, () => {
+                this._value = JSON.stringify(this._valueUnserialized);
+            });
+        }    
     }
 }

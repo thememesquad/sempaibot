@@ -42,8 +42,13 @@ export class Server {
                     osu_limit: 50
                 };
 
-                await DB.connection.manager.save(this._config);
-                return this.onLoad(true);
+                try {
+                    await DB.connection.manager.save(this._config);
+                    return this.onLoad(true);
+                } catch (err) {
+                    reject(err);
+                    return;
+                }    
             }
 
             this._config = doc;
