@@ -17,15 +17,13 @@ import { BotBase } from "./botbase";
 import { MessageInterface } from "./modulebase";
 import * as Modules from "./modules/modules";
 
-//return connect(`mongodb://${config.db_username}:${config.db_password}@${config.db_host}:${config.db_port}/${db_name}`);
-
 export class Bot implements BotBase {
     private _api: DiscordAPI;
     private _servers: { [key: string]: Server };
     private _serversInternal: Array<Server>;
     private _modules: { [key: string]: ModuleBase };
-    private _userBlacklist: Array<number>;
-    private _serverBlacklist: Array<number>;
+    private _userBlacklist: ConfigKeyValueModel;
+    private _serverBlacklist: ConfigKeyValueModel;
 
     private _allowLog: boolean;
     private _ready: boolean;
@@ -39,12 +37,13 @@ export class Bot implements BotBase {
         this._servers = {};
         this._serversInternal = [];
         this._modules = {};
-        this._userBlacklist = [];
-        this._serverBlacklist = [];
 
         this._ready = false;
         this._allowLog = allowLog;
         this._availableModules = {};
+
+        this._userBlacklist = null;
+        this._serverBlacklist = null;
 
         for (let key of Object.keys(Modules))
             this._availableModules[key] = new Modules[key]();
@@ -155,42 +154,38 @@ export class Bot implements BotBase {
         for (let i = 0; i < docs.length; i++) {
             switch (docs[i].key) {
                 case "mode":
-                    //Responses.setMode(docs[i].value.value);
+                    Responses.setMode(docs[i].value.value);
                     break;
 
                 case "user_blacklist":
-                    //this.user_blacklist = docs[i];
+                    this._userBlacklist = docs[i];
                     break;
 
                 case "server_blacklist":
-                    //this.server_blacklist = docs[i];
+                    this._serverBlacklist = docs[i];
                     break;
             }
         }
 
-        /*if (this.user_blacklist === null) {
-            this.user_blacklist = db.ConfigKeyValue.create({
-                key: "user_blacklist",
-                value: { blacklist: [] }
-            });
+        if (this._userBlacklist === null) {
+            this._userBlacklist = new ConfigKeyValueModel();
+            this._userBlacklist.key = "user_blacklist";
+            this._userBlacklist.value = { blacklist: [] };
+            this._userBlacklist = await DB.connection.manager.save(this._userBlacklist);
+        }
 
-            await this.user_blacklist.save();
-        }*/
-
-        /*if (this.server_blacklist === null) {
-            this.server_blacklist = db.ConfigKeyValue.create({
-                key: "server_blacklist",
-                value: { blacklist: [] }
-            });
-
-            await this.server_blacklist.save();
-        }*/
+        if (this._serverBlacklist === null) {
+            this._serverBlacklist = new ConfigKeyValueModel();
+            this._serverBlacklist.key = "server_blacklist";
+            this._serverBlacklist.value = { blacklist: [] };
+            this._serverBlacklist = await DB.connection.manager.save(this._serverBlacklist);
+        }
     }
 
     async onReady() {
         await DB.setup();
         await this.printStatus("Loading config from DB", async () => {
-            let data = await DB.connection.manager.find(ConfigKeyValueModel);
+            let data = await DB.connection.getRepository(ConfigKeyValueModel).find();
             await this.processConfig(data);
         });
 
@@ -323,8 +318,6 @@ export class Bot implements BotBase {
 
         this.log("Joined server '" + server.name + "'.");
 
-        StatsManager.update("num_servers", this._api.servers.length);
-
         this._servers[server.id] = new Server(this, server);
         await this._servers[server.id].loadPromise;
 
@@ -334,6 +327,8 @@ export class Bot implements BotBase {
         }
 
         this._serversInternal.push(this._servers[server.id]);
+
+        StatsManager.update("num_servers", this._serversInternal.length);
     }
 
     async onServerDeleted(server) {
@@ -342,54 +337,53 @@ export class Bot implements BotBase {
 
         this.log("Left server '" + server.name + "'.");
 
-        //stats.update("num_servers", this.discord.guilds.array().length);
-
         delete this._serversInternal[this._serversInternal.indexOf(this._servers[server.id])];
         delete this._servers[server.id];
+
+        StatsManager.update("num_servers", this._serversInternal.length);
     }
 
     async blacklistUser(user: User) {
-        //this.user_blacklist.value.blacklist.push(user.user_id);
-        //await this.user_blacklist.save();
+        this._userBlacklist.value.blacklist.push(user._userID);
+        await DB.connection.manager.save(this._userBlacklist);
     }
 
     async blacklistServer(server_id: string) {
         this.message(Responses.get("INFORM_SERVER_BLACKLISTED"), this._servers[server_id]);
-        //this.server_blacklist.value.blacklist.push(server_id);
-        //await this.server_blacklist.save();
+
+        this._serverBlacklist.value.blacklist.push(server_id);
+        await DB.connection.manager.save(this._serverBlacklist);
     }
 
     async whitelistUser(user: User) {
-        /*let idx = this.user_blacklist.value.blacklist.indexOf(user.user_id);
+        let idx = this._userBlacklist.value.blacklist.indexOf(user._userID);
         if (idx === -1)
             return false;
 
-        this.user_blacklist.value.blacklist.splice(idx, 1);
-        await this.user_blacklist.save();*/
+        this._serverBlacklist.value.blacklist.splice(idx, 1);
+        await DB.connection.manager.save(this._serverBlacklist);
 
         return true;
     }
 
     async whitelistServer(server_id: string) {
-        /*let idx = this.server_blacklist.value.blacklist.indexOf(server_id);
+        let idx = this._serverBlacklist.value.blacklist.indexOf(server_id);
         if (idx === -1)
             return false;
 
-        this.server_blacklist.value.blacklist.splice(idx, 1);
-        await this.server_blacklist.save();
-        await this.message(responses.get("INFORM_SERVER_WHITELISTED"), this.servers[server_id]);*/
+        this._serverBlacklist.value.blacklist.splice(idx, 1);
+        await DB.connection.manager.save(this._serverBlacklist);
+        await this.message(Responses.get("INFORM_SERVER_WHITELISTED"), this._servers[server_id]);
 
         return true;
     }
 
     isUserBlacklisted(user: User): boolean {
-        //return this.user_blacklist.value.blacklist.indexOf(user.user_id) !== -1;
-        return false;
+        return this._userBlacklist.value.blacklist.indexOf(user._userID) !== -1;
     }
 
     isServerBlacklisted(server_id: string) {
-        //return this.server_blacklist.value.blacklist.indexOf(server_id) !== -1;
-        return false;
+        return this._serverBlacklist.value.blacklist.indexOf(server_id) !== -1;
     }
 
     getInternalServerId(server): number {

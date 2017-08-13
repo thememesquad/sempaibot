@@ -33,7 +33,7 @@ class Counter {
     _highest: number;
     _lowest: number;
 
-    constructor(name, delta, start, document) {
+    constructor(name: string, delta: number, start: number, document) {
         this._name = name;
         this._currentTime = start;
         this._delta = delta;
@@ -55,7 +55,7 @@ class Counter {
         });*/
     }
 
-    update(num) {
+    update(num: number) {
         this.refresh();
 
         this._current += num;
@@ -85,25 +85,26 @@ class Counter {
         this.document.currentTime = this._currentTime;*/
     }
 
-    get current() {
+    get current(): number {
         return this._current;
     }
 
-    get average() {
+    get average(): number {
         return this._average;
     }
 
-    get lowest() {
+    get lowest(): number {
         return this._lowest;
     }
 
-    get highest() {
+    get highest(): number {
         return this._highest;
     }
 }
 
 export class StatsManager {
-    static load() {
+    static load(): Promise<void> {
+        return Promise.resolve();
         /*return CounterDB.find({}).then(docs => {
             this.processDatabase(docs);
 
@@ -115,7 +116,7 @@ export class StatsManager {
         });*/
     }
 
-    static save() {
+    static save(): Promise<any[]> {
         let all = [];
 
         /*for (let key in this.stats)

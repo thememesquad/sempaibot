@@ -1,13 +1,15 @@
 import { BotBase } from "./botbase";
 import { Responses } from "./responses";
-import { Users } from "./users";
-import { Channel, Guild } from "discord.js";
+import { Users, User } from "./users";
+import { Channel, Guild, Snowflake } from "discord.js";
+
+import { DB } from "./db";
+import { ConfigKeyValueModel } from "./model/configkeyvalue";
 
 export class Server {
     private _bot: BotBase;
-    private _config: string;
-    private _id: string;
-    private _modules: Array<string>;
+    private _config: ConfigKeyValueModel;
+    private _id: Snowflake;
     public _server: Guild;
 
     loadPromiseResolve: (initial: boolean) => void;
@@ -19,7 +21,6 @@ export class Server {
         this._config = null;
         this._server = server;
         this._id = server.id;
-        this._modules = [];
 
         for (let key of server.members.keyArray()) {
             let member = server.members.get(key);
@@ -27,66 +28,51 @@ export class Server {
         }
 
         this.loadPromiseResolve = null;
-        this.loadPromise = new Promise((resolve, reject) => {
+        this.loadPromise = new Promise(async (resolve, reject) => {
             this.loadPromiseResolve = resolve;
-            this.onLoad(true);
 
-            //todo: implement this
-            /*db.ConfigKeyValue.findOne({ key: this.server.id + "_config" }).then(doc => {
-                if (doc === null) {
-                    this.config = db.ConfigKeyValue.create({
-                        key: this.server.id + "_config",
-                        value: {
-                            channel: "",
-                            modules: [],
-                            ignorelist: [],
-                            osu_limit: 50
-                        }
-                    });
+            let doc = await DB.connection.manager.findOne(ConfigKeyValueModel, { key: this._server.id + "_config" });
+            if (!doc) {
+                this._config = new ConfigKeyValueModel();
+                this._config.key = this._server.id + "_config";
+                this._config.value = {
+                    channel: "",
+                    modules: [],
+                    ignoreList: [],
+                    osu_limit: 50
+                };
 
-                    this.config.save().then(() => this.on_load(true)).catch(err => {
-                        console.log("save: ", err);
-                        this.on_load(true);
-                    });
-                }
-                else {
-                    this.config = doc;
+                await DB.connection.manager.save(this._config);
+                return this.onLoad(true);
+            }
 
-                    let changed = false;
-                    if (this.config.value.osu_limit === undefined) {
-                        this.config.value.osu_limit = 50;
-                        changed = true;
-                    }
+            this._config = doc;
 
-                    for (let i = 0; i < this.modules.length; i++) {
-                        let module = this.bot.get_module(this.modules[i]);
-                        if (module === null)
-                            continue;
+            let changed = false;
+            if (this._config.value.osu_limit === undefined) {
+                this._config.value.osu_limit = 50;
+                changed = true;
+            }
 
-                        if (module.disabled)
-                            continue;
+            for (let i = 0; i < this.modules.length; i++) {
+                let module = this._bot.getModule(this.modules[i]);
+                if (module === null)
+                    continue;
 
-                        module.on_load(this);
-                    }
+                if (module.disabled)
+                    continue;
 
-                    if (changed) {
-                        this.config.save().then(() => this.on_load(false)).catch(err => {
-                            console.log("save: ", err);
-                            this.on_load(false);
-                        });
-                    }
-                    else {
-                        this.on_load(false);
-                    }
-                }
-            }).catch(err => {
-                console.log("findOne: " + err.stack);
-                reject(err);
-            });*/
+                module.onLoad(this);
+            }
+
+            if (changed)
+                await DB.connection.manager.save(this._config);
+
+            this.onLoad(false);
         });
     }
 
-    onLoad(initial: boolean) {
+    onLoad(initial: boolean): void {
         this.channelCheck = setInterval(() => {
             if (this.channel.length !== 0) {
                 if (this._server.channels.get(this.channel) === null) {
@@ -109,7 +95,7 @@ export class Server {
         this.loadPromiseResolve(initial);
     }
 
-    enableModule(name: string) {
+    enableModule(name: string): void {
         if (this.modules.indexOf(name) !== -1)
             return; //already enabled
 
@@ -123,17 +109,15 @@ export class Server {
         this.modules.push(name.toLowerCase());
         module.onLoad(this);
 
-        /*this.config.value.modules = this.modules;
-        this.config.save().catch(err => {
-            console.log(err);
-        });*/
+        this._config.value.modules = this.modules;
+        DB.connection.manager.save(this._config);
     }
 
-    isModuleEnabled(name: string) {
+    isModuleEnabled(name: string): boolean {
         return this.modules.indexOf(name.toLowerCase()) !== -1;
     }
 
-    disableModule(name: string) {
+    disableModule(name: string): void {
         if (this.modules.indexOf(name) === -1)
             return; //already enabled
 
@@ -147,58 +131,47 @@ export class Server {
         this.modules.splice(this.modules.indexOf(name.toLowerCase()), 1);
         module.onUnload(this);
 
-        /*this.config.value.modules = this.modules;
-        this.config.save().catch(err => {
-            console.log(err);
-        });*/
+        this._config.value.modules = this.modules;
+        DB.connection.manager.save(this._config);
     }
 
-    ignoreUser(user) {
-        if (this.ignoreList.indexOf(user.user_id) === -1) {
-            /*this.config.value.ignoreList.push(user.user_id);
-            this.config.save().catch(err => {
-                console.log(err);
-            });*/
+    ignoreUser(user: User): void {
+        if (this.ignoreList.indexOf(user._userID) === -1) {
+            this._config.value.ignoreList.push(user._userID);
+            DB.connection.manager.save(this._config);
         }
     }
 
-    unignoreUser(user) {
-        let idx = this.ignoreList.indexOf(user.user_id);
+    unignoreUser(user: User): void {
+        let idx = this.ignoreList.indexOf(user._userID);
         if (idx !== -1) {
-            /*this.config.value.ignoreList.splice(idx, 1);
-            this.config.save().catch(err => {
-                console.log(err);
-            });*/
+            this._config.value.ignoreList.splice(idx, 1);
+            DB.connection.manager.save(this._config);
         }
     }
 
-    isUserIgnored(user) {
-        return this.ignoreList.indexOf(user.user_id) !== -1;
+    isUserIgnored(user: User): boolean {
+        return this.ignoreList.indexOf(user._userID) !== -1;
     }
 
-    set channel(channel) {
-        /*this.config.value.channel = channel;
-        this.config.save().catch(err => {
-            console.log(err);
-        });*/
+    set channel(channel: string) {
+        this._config.value.channel = channel;
+        DB.connection.manager.save(this._config);
     }
 
     get channel(): string {
-        return "";
-        //return this.config.value.channel;
+        return this._config.value.channel;
     }
 
-    get modules() {
-        return this._modules;
-        //return this.config.value.modules;
+    get modules(): Array<string> {
+        return this._config.value.modules;
     }
 
-    get ignoreList() {
-        return [];
-        //return this.config.value.ignoreList;
+    get ignoreList(): Array<string> {
+        return this._config.value.ignoreList;
     }
 
-    get id() {
+    get id(): Snowflake {
         return this._id;
     }
 }

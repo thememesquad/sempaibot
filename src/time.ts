@@ -1,11 +1,11 @@
 import * as moment from "moment";
 
-interface TimeObject {
+interface TimeInterface {
     base: string;
     time: moment.Moment;
 }
 
-function ParseTimeInternal(str): TimeObject {
+function ParseTimeInternal(str): TimeInterface {
     str = str.toLowerCase().trim();
 
     let currentDate = moment();

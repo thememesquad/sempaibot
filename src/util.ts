@@ -1,29 +1,43 @@
-export function StringFormat(str, args: { [key: string]: any }) {
+import { Snowflake } from "discord.js";
+
+export enum IDType {
+    Channel,
+    User,
+    Unknown
+};
+
+interface IDInterface {
+    type: IDType;
+    id: Snowflake;
+    alias: boolean;
+}
+
+export function StringFormat(str, args: { [key: string]: any }): string {
     return str.replace(/{(.*?)}/g, (match, key) => {
         return typeof args[key] !== "undefined" ? args[key] : match;
     });
 }
 
-export function ParseID(id:string) {
+export function ParseID(id: string): IDInterface {
     let base_id = id;
     if (id.length < 4)
-        return { type: "unknown", id: base_id, alias: false };
+        return { type: IDType.Unknown, id: base_id, alias: false };
 
-    let type = "";
+    let type = IDType.Unknown;
     let is_alias = false;
 
     id = id.substr(1, id.length - 2);
     switch (id.charAt(0)) {
         case "@":
-            type = "user";
+            type = IDType.User;
             break;
 
         case "#":
-            type = "channel";
+            type = IDType.Channel;
             break;
 
         default:
-            return { type: "unknown", id: base_id, alias: false };
+            return { type: IDType.Unknown, id: base_id, alias: false };
     }
 
     id = id.substr(1);
@@ -35,7 +49,7 @@ export function ParseID(id:string) {
     return { type: type, id: id, alias: is_alias };
 }
 
-export function GenerateTable(base_message: string, columns: { [key: string]: string }, data: Array<Array<string>>, minimum_lengths?: { [key: string]: number }) {
+export function GenerateTable(base_message: string, columns: { [key: string]: string }, data: Array<Array<string>>, minimum_lengths?: { [key: string]: number }): Array<string> {
     minimum_lengths = minimum_lengths || null;
 
     if (base_message === null || base_message === undefined)

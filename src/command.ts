@@ -1,5 +1,6 @@
-import { ParseID } from "./util";
+import { ParseID, IDType } from "./util";
 import { BotBase } from "./botbase";
+import { ResponseType } from "./responses";
 
 interface RegexInterface {
     regex: RegExp;
@@ -78,17 +79,28 @@ export class CommandProcessor {
             CommandProcessor.addCustomType("id", msg => { return ParseID(msg); });
             CommandProcessor.addCustomType("channelid", msg => {
                 let id = ParseID(msg);
-                if (id.type !== "channel")
+                if (id.type !== IDType.Channel)
                     return null;
 
                 return id.id;
             });
             CommandProcessor.addCustomType("userid", msg => {
                 let id = ParseID(msg);
-                if (id.type !== "user")
+                if (id.type !== IDType.User)
                     return null;
 
                 return id.id;
+            });
+            CommandProcessor.addCustomType("responsetype", msg => {
+                switch (msg.toLowerCase()) {
+                    case "normal":
+                        return ResponseType.Normal;
+
+                    case "tsundere":
+                        return ResponseType.Tsundere;
+                }
+
+                return null;
             });
         }
 

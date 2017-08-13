@@ -18,19 +18,19 @@ export class User {
         }    
     }
 
-    load() {
-        return new Promise((resolve, reject) => {
+    load(): Promise<void> {
+        return new Promise((resolve: () => void, reject: (err) => void) => {
             resolve();
         });
     }
 
-    save() {
-        return new Promise((resolve, reject) => {
+    save(): Promise<void> {
+        return new Promise((resolve: () => void, reject: (err) => void) => {
             resolve();
         });
     }
 
-    getRole(server: Server) {
+    getRole(server: Server): string {
         if (server === null || server === undefined) {
             if (Config.superadmins.indexOf(this._userID) !== -1)
                 return "superadmin";
@@ -59,7 +59,7 @@ export class User {
         return this._roles[server.id];
     }
 
-    getRoleId(server: Server) {
+    getRoleId(server: Server): number {
         let role = this.getRole(server);
         switch (role) {
             case "superadmin":
@@ -75,7 +75,7 @@ export class User {
         return 3;
     }
 
-    getName(server: Server) {
+    getName(server: Server): string {
         for (let key of server._server.members.keyArray()) {
             let member = server._server.members.get(key);
 
@@ -90,7 +90,7 @@ export class User {
         return this._name;
     }
 
-    getDetailedName(server: Server, member?: Discord.GuildMember) {
+    getDetailedName(server: Server, member?: Discord.GuildMember): string {
         if (member === undefined) {
             for (let key of server._server.members.keyArray()) {
                 let tmp = server._server.members.get(key);
@@ -135,7 +135,7 @@ export class Users {
         }
     }
 
-    static registerUser(id: string, name: string, server: Server, role?: string) {
+    static registerUser(id: string, name: string, server: Server, role?: string): User {
         if (this._users[id] !== undefined) {
             if (this._users[id]._name !== name) {
                 this._users[id]._name = name;
@@ -175,7 +175,7 @@ export class Users {
         return this._users[id];
     }
 
-    static getUserById(id: Discord.Snowflake, server?: Server) {
+    static getUserById(id: Discord.Snowflake, server?: Server): User {
         let user = this._users[id];
         if (user === undefined) {
             if (server !== undefined && server !== null) {
@@ -191,16 +191,15 @@ export class Users {
         return (this._users[id] === undefined) ? null : this._users[id];
     }
 
-    static getUser(user: Discord.User, server) {
+    static getUser(user: Discord.User, server): User {
         let ret = this.getUserById(user.id, server);
-        if (ret === null) {
+        if (ret === null)
             return this.registerUser(user.id, user.username, server);
-        }
 
         return ret;
     }
 
-    static assignRole(id: string, server: Server, role: string) {
+    static assignRole(id: string, server: Server, role: string): boolean {
         if (this._users[id] === undefined)
             return false;
 
@@ -212,7 +211,7 @@ export class Users {
         return true;
     }
 
-    static get users() {
+    static get users(): { [key: string]: User } {
         return Users._users;
     }
 }

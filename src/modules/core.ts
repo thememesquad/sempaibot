@@ -37,16 +37,15 @@ export class CoreModule extends ModuleBase {
         });
 
         this.add_command({
-            defaults: { on: false },
             formats: [
-                ["tsundere on", { on: true }],
-                "tsundere off"
+                "set response mode to {responsetype!type}",
+                "use {responsetype!type}",
+                "use {responsetype!type} mode"
             ],
-            hideInHelp: true,
             permission: "CHANGE_PERSONALITY",
             global: false,
 
-            execute: this.handle_tsundere
+            execute: this.handle_response_mode
         });
 
         this.add_command({
@@ -213,7 +212,7 @@ export class CoreModule extends ModuleBase {
             if (i !== 0)
                 response += "\r\n";
 
-            response += Users.getUser(message.server.ignoreList[i], message.server).getDetailedName(message.server);
+            response += Users.getUserById(message.server.ignoreList[i], message.server).getDetailedName(message.server);
         }
 
         response += "```";
@@ -303,34 +302,24 @@ export class CoreModule extends ModuleBase {
         });
     }
 
-    handle_tsundere(message: MessageInterface, args: { [key: string]: any }) {
-        if (args.on) {
-            if (Responses.currentMode)
-                return this._bot.respond(message, StringFormat(Responses.get("ALREADY_IN_MODE"), { author: message.author.id }));
-
-            Responses.setMode(ResponseType.Tsundere);
-            this._bot.respond(message, StringFormat(Responses.get("SWITCHED"), { author: message.author.id }));
+    handle_response_mode(message: MessageInterface, args: { [key: string]: any }) {
+        if (args.type === null) {
+            //unknown response mode
         }
-        else {
-            if (!Responses.currentMode)
-                return this._bot.respond(message, StringFormat(Responses.get("ALREADY_IN_MODE"), { author: message.author.id }));
 
-            Responses.setMode(ResponseType.Normal);
-            this._bot.respond(message, StringFormat(Responses.get("SWITCHED"), { author: message.author.id }));
-        }
+        if (Responses.currentMode === args.type)
+            return this._bot.respond(message, StringFormat(Responses.get("ALREADY_IN_MODE"), { author: message.author.id }));
+
+        Responses.setMode(args.type);
+        this._bot.respond(message, StringFormat(Responses.get("SWITCHED"), { author: message.author.id }));
+    }
+
+    private static _jsUcfirst(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
     handle_my_role(message: MessageInterface, args: { [key: string]: any }) {
-        let role = message.user.getRole(message.server);
-        if (role === "superadmin")
-            role = "Superadmin";
-        else if (role === "admin")
-            role = "Admin";
-        else if (role === "moderator")
-            role = "Moderator";
-        else
-            role = "Normal";
-
+        let role = CoreModule._jsUcfirst(message.user.getRole(message.server).toLowerCase());
         this._bot.respond(message, StringFormat(Responses.get("MY_ROLE"), { author: message.author.id, role: role }));
     }
 

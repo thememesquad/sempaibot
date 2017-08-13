@@ -1,3 +1,5 @@
+import { Server } from "./server";
+
 /*class DBRole extends Document {
     constructor() {
         super();
@@ -34,7 +36,7 @@ export class Role {
         };
     }
 
-    setup(id) {
+    setup(id: string): void {
         if (this._permissions[id] === undefined) {
             this._permissions[id] = {};
 
@@ -44,7 +46,7 @@ export class Role {
         }
     }
 
-    add(server, permission) {
+    add(server: Server, permission: string): void {
         if (server === null) {
             this._permissions["null"][permission] = true;
 
@@ -60,7 +62,7 @@ export class Role {
         this._permissions[server.id][permission] = true;
     }
 
-    remove(server, permission) {
+    remove(server: Server, permission: string): void {
         if (server === null) {
             this._permissions["null"][permission] = false;
             return;
@@ -70,7 +72,7 @@ export class Role {
         this._permissions[server.id][permission] = false;
     }
 
-    isAllowed(server, permission) {
+    isAllowed(server: Server, permission: string): boolean {
         if (this._name === "superadmin")
             return true;
 
@@ -95,12 +97,12 @@ export class Role {
         return this._permissions[server.id][permission];
     }
 
-    getPermissions(server) {
+    getPermissions(server: Server): { [key: string]: boolean } {
         this.setup(server.id);
         return this._permissions[server.id];
     }
 
-    save() {
+    save(): Promise<void> {
         return new Promise((resolve, reject) => {
             resolve();
         });
@@ -114,7 +116,7 @@ export class Role {
         });*/
     }
 
-    load() {
+    load(): Promise<void> {
         return new Promise((resolve, reject) => {
             resolve();
         });
@@ -157,7 +159,7 @@ export class Permissions {
         }    
     }
 
-    save() {
+    save(): Promise<void> {
         return new Promise((resolve, reject) => {
             Permissions._roles["superadmin"].save().then(() => {
                 return Permissions._roles["admin"].save();
@@ -173,7 +175,7 @@ export class Permissions {
         });
     }
 
-    load() {
+    load(): Promise<void> {
         return new Promise((resolve, reject) => {
             Permissions._roles["superadmin"].load().then(() => {
                 return Permissions._roles["admin"].load();
@@ -189,7 +191,7 @@ export class Permissions {
         });
     }
 
-    register(name, defaultRole) {
+    register(name: string, defaultRole?: string): void {
         //Can't register a permission twice
         if (Permissions._permissions.indexOf(name) !== -1) {
             console.log("Permission '" + name + "' already registered.");
@@ -224,7 +226,7 @@ export class Permissions {
         Permissions._roles["normal"].add(null, name);
     }
 
-    add(name, role, server) {
+    add(name: string, role: string, server: Server): boolean {
         if (Permissions._roles[role] === undefined)
             return false;
 
@@ -234,7 +236,7 @@ export class Permissions {
         return true;
     }
 
-    remove(name, role, server) {
+    remove(name: string, role: string, server: Server): boolean {
         if (Permissions._roles[role] === undefined)
             return false;
 
@@ -244,11 +246,11 @@ export class Permissions {
         return true;
     }
 
-    isAllowed(name, role, server) {
+    isAllowed(name: string, role: string, server: Server): boolean {
         return Permissions._roles[role].isAllowed(server, name);
     }
 
-    getRole(name) {
+    getRole(name: string): Role {
         return Permissions._roles[name];
     }
 }

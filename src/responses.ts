@@ -1,3 +1,6 @@
+import { DB } from "./db";
+import { ConfigKeyValueModel } from "./model/configkeyvalue";
+
 const ResponsesNormal: { [key: string]: Array<string> } = {
     NAME: [
         "Yes I'm here! What can I do for you?",
@@ -419,7 +422,7 @@ export class Responses {
         return tmp[idx];
     }
 
-    static setMode(mode: ResponseType): void {
+    static async setMode(mode: ResponseType): Promise<void> {
         if (this.currentMode === mode)
             return;
 
@@ -434,15 +437,13 @@ export class Responses {
                 break;
         }
 
-        /*
-        db.ConfigKeyValue.findOneAndUpdate({ key: "mode" }, { value: { value: responses.currentMode } }, {}).then(doc => {
-            if (doc === null) {
-                let dbkey = db.ConfigKeyValue.create({ key: "mode", value: { value: responses.currentMode } });
-                dbkey.save();
-            }
-        }).catch(err => {
-            console.log(err);
-        });
-        */
+        let model = await DB.connection.manager.findOne(ConfigKeyValueModel, { key: "mode" });
+        if (!model) {
+            model = new ConfigKeyValueModel();
+            model.key = "mode";
+        }
+
+        model.value = { value: Responses.currentMode };
+        await DB.connection.manager.save(model);
     }
 }
