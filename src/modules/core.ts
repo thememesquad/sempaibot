@@ -3,94 +3,20 @@ import { Permissions } from "../permissions";
 import { Users } from "../users";
 import { Config } from "../../config";
 import { GenerateTable, StringFormat } from "../util";
-import { ModuleBase, MessageInterface, Command, CommandDescription, CommandSample, CommandPermission, CommandOptions } from "../modulebase";
+import { ModuleBase, MessageInterface, Module, ModuleOptions, Command, CommandDescription, CommandSample, CommandPermission, CommandOptions } from "../modulebase";
 
+@Module("Core", "This is the core module!", ModuleOptions.AlwaysOn | ModuleOptions.Hidden)
 export class CoreModule extends ModuleBase {
     constructor() {
         super();
 
-        this._name = "Core";
-        this._description = "This is the core module! Cannot be disabled.";
-        this._alwaysOn = true;
-        this._hidden = true;
-
         this._permissions.register("CHANGE_PERSONALITY", "moderator");
-
-        /*
-        this.addCommand({
-            defaults: {},
-            formats: [
-                "what is my role"
-            ],
-            sample: "what is my role?",
-            description: "Displays your role.",
-            permission: null,
-            global: false,
-
-            execute: this.handle_my_role
-        });
-
-        this.addCommand({
-            defaults: {},
-            formats: [
-                "what are my permissions",
-                "show my permissions",
-                "show my permission list",
-                "show my permissions list",
-                "list my permissions",
-                "show permissions"
-            ],
-            sample: "what are my permissions?",
-            description: "Displays your role's permissions.",
-            permission: null,
-            global: false,
-
-            execute: this.handle_my_permissions
-        });
-
-        this.addCommand({
-            defaults: {},
-            formats: [
-                "list roles"
-            ],
-            sample: "list roles",
-            description: "Lists every user's role.",
-            permission: null,
-            global: false,
-
-            execute: this.handle_list_roles
-        });
-
-        this.addCommand({
-            defaults: {},
-            formats: [
-                "list permissions"
-            ],
-            sample: "list permissions",
-            description: "Lists the available permissions for each role.",
-            permission: null,
-            global: false,
-
-            execute: this.handle_list_permissions
-        });
-
-        this.addCommand({
-            defaults: {},
-            formats: [
-                "show ignore list",
-                "list ignores",
-                "show ignorelist"
-            ],
-            sample: "show ignore list",
-            description: "Shows the list of people I'm currently ignoring!",
-            permission: null,
-            global: false,
-
-            execute: this.handle_show_ignorelist
-        });*/
     }
 
-    handle_list_roles(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("list roles")
+    @CommandSample("list roles")
+    @CommandDescription("Lists every user's role.")
+    private handleListRoles(message: MessageInterface, args: { [key: string]: any }) {
         let server = message.server;
         let tmp = [];
 
@@ -122,7 +48,10 @@ export class CoreModule extends ModuleBase {
         this._bot.respondQueue(message, messages);
     }
 
-    handle_list_permissions(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("list permissions")
+    @CommandSample("list permissions")
+    @CommandDescription("Lists the available permissions for each role.")
+    private handleListPermissions(message: MessageInterface, args: { [key: string]: any }) {
         let server = message.server;
         let admin_permissions = this._permissions.getRole("admin").getPermissions(server);
 
@@ -162,7 +91,12 @@ export class CoreModule extends ModuleBase {
         this._bot.respondQueue(message, messages);
     }
 
-    handle_show_ignorelist(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("show ignore list")
+    @Command("list ignores")
+    @Command("show ignorelist")
+    @CommandSample("show ignore list")
+    @CommandDescription("Shows the list of people I'm currently ignoring!")
+    private handleShowIgnorelist(message: MessageInterface, args: { [key: string]: any }) {
         let response = "``` ";
 
         for (let i = 0; i < message.server.ignoreList.length; i++) {
@@ -192,7 +126,7 @@ export class CoreModule extends ModuleBase {
     @Command("show help")
     @Command(["助けて", { japanese: true }])
     @Command(["助けてください", { japanese: true, please: true }])
-    private onHelp(message: MessageInterface, args: { [key: string]: any }) {
+    private handleHelp(message: MessageInterface, args: { [key: string]: any }) {
         let response = "";
 
         if (args.please)
@@ -280,7 +214,7 @@ export class CoreModule extends ModuleBase {
     @CommandDescription("Change my personality to Normal or Tsundere")
     @CommandSample("set response mode to __*tsundere*__")
     @CommandPermission("CHANGE_PERSONALITY")
-    onResponseMode(message: MessageInterface, args: { [key: string]: any }) {
+    private handleResponseMode(message: MessageInterface, args: { [key: string]: any }) {
         if (args.type === null) {
             //unknown response mode
         }
@@ -299,12 +233,20 @@ export class CoreModule extends ModuleBase {
     @Command("what is my role")
     @CommandSample("what is my role?")
     @CommandDescription("Displays your role.")
-    private onMyRole(message: MessageInterface, args: { [key: string]: any }) {
+    private handleMyRole(message: MessageInterface, args: { [key: string]: any }) {
         let role = CoreModule._jsUcfirst(message.user.getRole(message.server).toLowerCase());
         this._bot.respond(message, StringFormat(Responses.get("MY_ROLE"), { author: message.author.id, role: role }));
     }
 
-    handle_my_permissions(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("what are my permissions")
+    @Command("show my permissions")
+    @Command("show my permission list")
+    @Command("show my permissions list")
+    @Command("list my permissions")
+    @Command("show permissions")
+    @CommandDescription("Displays your role's permissions.")
+    @CommandSample("what are my permissions?")
+    private handleMyPermissions(message: MessageInterface, args: { [key: string]: any }) {
         let server = message.server;
         let role = this._permissions.getRole(message.user.getRole(server));
         let list = role.getPermissions(server);
@@ -332,7 +274,7 @@ export class CoreModule extends ModuleBase {
     @CommandDescription("Tells me to output to the specified channel.")
     @CommandSample("go to __*#channel*__")
     @CommandPermission("GO_TO_CHANNEL")
-    private onGotoChannel(message: MessageInterface, args: { [key: string]: any }) {
+    private handleGotoChannel(message: MessageInterface, args: { [key: string]: any }) {
         let id = args.channel;
         if (message.server._server.channels.get(id) === null)
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_CHANNEL"), { author: message.author.id, channel: args.channel }));
@@ -341,7 +283,7 @@ export class CoreModule extends ModuleBase {
         this._bot.message(StringFormat(Responses.get("OUTPUT_CHANNEL"), { author: message.author.id, channel: id }), message.server);
     }
 
-    onSetup() {
+    public onSetup() {
         this._bot.setStatus("Online");
     }
 }

@@ -1,16 +1,12 @@
-import { ModuleBase, MessageInterface } from "../modulebase";
+import { ModuleBase, MessageInterface, Module, ModuleOptions, Command, CommandDescription, CommandSample, CommandPermission, CommandOptions } from "../modulebase";
 import { Responses } from "../responses";
 import { Users } from "../users";
 import { StringFormat, GenerateTable } from "../util";
 
+@Module("Admin", "This is the admin module.", ModuleOptions.AlwaysOn | ModuleOptions.Hidden)
 export class AdminModule extends ModuleBase {
     constructor() {
         super();
-
-        this._name = "Admin";
-        this._description = "This is the permissions and roles module! Cannot be disabled.";
-        this._alwaysOn = true;
-        this._hidden = true;
 
         this._permissions.register("SUPERADMIN", "superadmin");
         this._permissions.register("IGNORE_USERS", "moderator");
@@ -19,18 +15,7 @@ export class AdminModule extends ModuleBase {
         this._permissions.register("MANAGE_PERMISSIONS", "admin");
         this._permissions.register("ASSIGN_ROLES", "admin");
 
-        /*this.addCommand({
-            formats: [
-                "show statistics"
-            ],
-            sample: "show statistics",
-            description: "Shows statistics for me server-wide.",
-            permission: "SUPERADMIN",
-            global: true,
-
-            execute: this.onShowStatistics
-        });
-
+        /*
         this.addCommand({
             formats: [
                 "list servers",
@@ -363,7 +348,11 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("SERVER_BLACKLIST"), { author: message.author.id, response: response }));
     }
 
-    onShowStatistics(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("show statistics", CommandOptions.Global)
+    @CommandDescription("Shows statistics for me server-wide.")
+    @CommandSample("show statistics")
+    @CommandPermission("SUPERADMIN")
+    private onShowStatistics(message: MessageInterface, args: { [key: string]: any }) {
         let msg = StringFormat(Responses.get("SHOW_STATISTICS"), {
             author: message.author.id,
             num_servers: 0,//stats.get_value("num_servers"),

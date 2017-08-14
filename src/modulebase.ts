@@ -36,6 +36,13 @@ export enum CommandOptions {
     Global = 2
 }
 
+export enum ModuleOptions {
+    None = 0,
+    AlwaysOn = 1,
+    DefaultOn = 2,
+    Hidden = 4
+}
+
 export function Command(format: string | Array<string | { [key: string]: any }>, options: CommandOptions = CommandOptions.None) {
     return function (target: ModuleBase, propertyKey: string, descriptor: PropertyDescriptor) {
         let command: CommandInterface = target.getCommandInternal(propertyKey);
@@ -101,6 +108,22 @@ export function CommandPermission(permissions: string | Array<string>) {
         command.permission = permissions;
         target.setCommandInternal(propertyKey, command);
     };
+}
+
+export function Module(name: string, description: string, options: ModuleOptions = ModuleOptions.None) {
+    return function <T extends { new(...args: any[]): {} }>(constructor: T) {
+        let alwaysOn = options & ModuleOptions.AlwaysOn;
+        let defaultOn = options & ModuleOptions.DefaultOn;
+        let hidden = options & ModuleOptions.Hidden;
+
+        return class extends constructor {
+            _name = name;
+            _description = description;
+            _alwaysOn = alwaysOn;
+            _defaultOn = defaultOn;
+            _hidden = hidden;
+        }
+    }
 }
 
 export class ModuleBase {
