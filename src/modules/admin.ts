@@ -14,206 +14,13 @@ export class AdminModule extends ModuleBase {
         this._permissions.register("MANAGE_MODULES", "admin");
         this._permissions.register("MANAGE_PERMISSIONS", "admin");
         this._permissions.register("ASSIGN_ROLES", "admin");
-
-        /*
-        this.addCommand({
-            formats: [
-                "list servers",
-                "show servers"
-            ],
-            sample: "list servers",
-            description: "Lists all the servers I'm currently running on.",
-            permission: "SUPERADMIN",
-            global: true,
-
-            execute: this.onListServers
-        });
-
-        this.addCommand({
-            formats: [
-                "blacklist server {int!server}"
-            ],
-            sample: "blacklist server __*server*__",
-            description: "Blacklists a server.",
-            permission: "SUPERADMIN",
-            global: true,
-
-            execute: this.onServerBlacklist
-        });
-
-        this.addCommand({
-            formats: [
-                "whitelist server {int!server}"
-            ],
-            sample: "whitelist server __*server*__",
-            description: "Whitelists a server.",
-            permission: "SUPERADMIN",
-            global: true,
-
-            execute: this.onServerWhitelist
-        });
-
-        this.addCommand({
-            formats: [
-                "blacklist user {userid!user}"
-            ],
-            sample: "blacklist user __*@user*__",
-            description: "Blacklists an user.",
-            permission: "SUPERADMIN",
-            global: true,
-
-            execute: this.onUserBlacklist
-        });
-
-        this.addCommand({
-            formats: [
-                "whitelist user {userid!user}"
-            ],
-            sample: "whitelist user __*@user*__",
-            description: "Whitelists an user.",
-            permission: "SUPERADMIN",
-            global: true,
-
-            execute: this.onUserWhitelist
-        });
-
-        this.addCommand({
-            formats: [
-                "show user blacklist"
-            ],
-            sample: "show user blacklist",
-            description: "Displays the user blacklist",
-            permission: "SUPERADMIN",
-            global: true,
-
-            execute: this.onShowUserBlacklist
-        });
-
-        this.addCommand({
-            formats: [
-                "show server blacklist"
-            ],
-            sample: "show server blacklist",
-            description: "Displays the server blacklist",
-            permission: "SUPERADMIN",
-            global: true,
-
-            execute: this.onShowServerBlacklist
-        });
-
-        this.addCommand({
-            formats: [
-                "enable {module}",
-                "enable module {module}"
-            ],
-            sample: "enable __*module name*__",
-            description: "Enables a module for this server.",
-            permission: "MANAGE_MODULES",
-            global: false,
-
-            execute: this.onEnableModule
-        });
-
-        this.addCommand({
-            formats: [
-                "disable {module}",
-                "disable module {module}"
-            ],
-            sample: "disable __*module name*__",
-            description: "Disables the specified module for this server.",
-            permission: "MANAGE_MODULES",
-            global: false,
-
-            execute: this.onDisableModule
-        });
-
-        this.addCommand({
-            formats: [
-                "assign role {role} to user {userid!user}",
-                "assign {role} to user {userid!user}",
-                "assign role {role} to {userid!user}",
-                "assign {role} to {userid!user}",
-                "assign {role} {userid!user}"
-            ],
-            sample: "assign __*role*__ to __*@user*__",
-            description: "Assigns the specified role to the specified user.",
-            permission: "ASSIGN_ROLES",
-            global: false,
-
-            execute: this.onAssignRole
-        });
-
-        this.addCommand({
-            formats: [
-                "add permission {permission} to role {role}",
-                "add {permission} to role {role}",
-                "add permission {permission} to {role}",
-                "add {permission} {role}"
-            ],
-            sample: "add __*permission*__ to __*role*__",
-            description: "Adds the specified permission to the specified role.",
-            permission: "MANAGE_PERMISSIONS",
-            global: false,
-
-            execute: this.onAddPermission
-        });
-
-        this.addCommand({
-            formats: [
-                "remove permission {permission} from role {role}",
-                "remove {permission} from role {role}",
-                "remove permission {permission} from {role}",
-                "remove {permission} {role}"
-            ],
-            sample: "remove __*permission*__ from __*role*__",
-            description: "Removes the specified permission from the specified role.",
-            permission: "MANAGE_PERMISSIONS",
-            global: false,
-
-            execute: this.onRemovePermission
-        });
-
-        this.addCommand({
-            formats: [
-                "list modules",
-                "show modules"
-            ],
-            sample: "list modules",
-            description: "Lists all available modules.",
-            permission: "MANAGE_MODULES",
-            global: false,
-
-            execute: this.onListModules
-        });
-
-        this.addCommand({
-            formats: [
-                "ignore {userid!user}",
-                "start ignoring {userid!user}"
-            ],
-            sample: "ignore __*@user*__",
-            description: "Ignores the specified user.",
-            permission: "IGNORE_USERS",
-            global: false,
-
-            execute: this.onIgnoreUser
-        });
-
-        this.addCommand({
-            formats: [
-                "unignore {userid!user}",
-                "stop ignoring {userid!user}"
-            ],
-            sample: "unignore __*@user*__",
-            description: "Stops ignoring the specified user.",
-            permission: "IGNORE_USERS",
-            global: false,
-
-            execute: this.onUnignoreUser
-        });*/
     }
 
-    onServerBlacklist(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("blacklist server {int!server}", CommandOptions.Global)
+    @CommandSample("blacklist server __*server*__")
+    @CommandDescription("Blacklists a server.")
+    @CommandPermission("SUPERADMIN")
+    private handleServerBlacklist(message: MessageInterface, args: { [key: string]: any }): void {
         let server = this._bot.getInternalServer(args.server - 1);
 
         if (server === null)
@@ -226,7 +33,11 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("SERVER_BLACKLISTED"), { author: message.author.id, server_name: server._server.name }));
     }
 
-    onServerWhitelist(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("whitelist server {int!server}", CommandOptions.Global)
+    @CommandSample("whitelist server __*server*__")
+    @CommandDescription("Whitelists a server.")
+    @CommandPermission("SUPERADMIN")
+    private handleServerWhitelist(message: MessageInterface, args: { [key: string]: any }) {
         let server = this._bot.getInternalServer(args.server - 1);
 
         if (server === null)
@@ -239,7 +50,11 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("SERVER_WHITELISTED"), { author: message.author.id, server_name: server._server.name }));
     }
 
-    onUserBlacklist(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("blacklist user {userid!user}", CommandOptions.Global)
+    @CommandSample("blacklist user __*@user*__")
+    @CommandDescription("Blacklists an user.")
+    @CommandPermission("SUPERADMIN")
+    private handleUserBlacklist(message: MessageInterface, args: { [key: string]: any }) {
         let user = Users.getUser(args.user, message.server);
         if (user === null)
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_USER"), { author: message.author.id, user: args.user }));
@@ -248,7 +63,11 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("BLACKLISTED_USER"), { author: message.author.id, user: user._userID }));
     }
 
-    onUserWhitelist(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("whitelist user {userid!user}", CommandOptions.Global)
+    @CommandSample("whitelist user __*@user*__")
+    @CommandDescription("Whitelists an user.")
+    @CommandPermission("SUPERADMIN")
+    private handleUserWhitelist(message: MessageInterface, args: { [key: string]: any }) {
         let user = Users.getUser(args.user, message.server);
         if (user === null)
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_USER"), { author: message.author.id, user: args.user }));
@@ -257,7 +76,11 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("WHITELISTED_USER"), { author: message.author.id, user: user._userID }));
     }
 
-    onShowUserBlacklist(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("show user blacklist", CommandOptions.Global)
+    @CommandSample("show user blacklist")
+    @CommandDescription("Displays the user blacklist")
+    @CommandPermission("SUPERADMIN")
+    private handleShowUserBlacklist(message: MessageInterface, args: { [key: string]: any }) {
         let id = "ID";
         let name = "Name";
 
@@ -299,7 +122,11 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("USER_BLACKLIST"), { author: message.author.id, response: response }));
     }
 
-    onShowServerBlacklist(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("show server blacklist", CommandOptions.Global)
+    @CommandSample("show server blacklist")
+    @CommandDescription("Displays the server blacklist")
+    @CommandPermission("SUPERADMIN")
+    private handleShowServerBlacklist(message: MessageInterface, args: { [key: string]: any }) {
         let id = "ID";
         let name = "Name";
         let owner = "Owner";
@@ -352,7 +179,7 @@ export class AdminModule extends ModuleBase {
     @CommandDescription("Shows statistics for me server-wide.")
     @CommandSample("show statistics")
     @CommandPermission("SUPERADMIN")
-    private onShowStatistics(message: MessageInterface, args: { [key: string]: any }) {
+    private handleShowStatistics(message: MessageInterface, args: { [key: string]: any }) {
         let msg = StringFormat(Responses.get("SHOW_STATISTICS"), {
             author: message.author.id,
             num_servers: 0,//stats.get_value("num_servers"),
@@ -374,7 +201,12 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, msg);
     }
 
-    onListServers(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("list servers", CommandOptions.Global)
+    @Command("show servers")
+    @CommandSample("list servers")
+    @CommandDescription("Lists all the servers I'm currently running on.")
+    @CommandPermission("SUPERADMIN")
+    private handleListServers(message: MessageInterface, args: { [key: string]: any }) {
         let data = [];
         for (let i = 0; i < this._bot.internalServers.length; i++) {
             if (this._bot.isServerBlacklisted(this._bot.internalServers[i].id)) {
@@ -393,7 +225,12 @@ export class AdminModule extends ModuleBase {
         this._bot.respondQueue(message, messages);
     }
 
-    onEnableModule(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("enable {module}")
+    @Command("enable module {module}")
+    @CommandSample("enable __*module name*__")
+    @CommandDescription("Enables a module for this server.")
+    @CommandPermission("MANAGE_MODULES")
+    private handleEnableModule(message: MessageInterface, args: { [key: string]: any }) {
         if (this._bot.getModule(args.module) === null) {
             return this._bot.respond(message, StringFormat(Responses.get("MODULE_INVALID"), { author: message.author.id, module: args.module }));
         }
@@ -406,7 +243,12 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("MODULE_ENABLED"), { author: message.author.id, module: args.module }));
     }
 
-    onDisableModule(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("disable {module}")
+    @Command("disable module {module}")
+    @CommandSample("disable __*module name*__")
+    @CommandDescription("Disables a module for this server.")
+    @CommandPermission("MANAGE_MODULES")
+    private handleDisableModule(message: MessageInterface, args: { [key: string]: any }) {
         let module = this._bot.getModule(args.module);
         if (module === null) {
             return this._bot.respond(message, StringFormat(Responses.get("MODULE_INVALID"), { author: message.author.id, module: args.module }));
@@ -424,7 +266,12 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("MODULE_DISABLED"), { author: message.author.id, module: args.module }));
     }
 
-    onListModules(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("list modules")
+    @Command("show modules")
+    @CommandSample("list modules")
+    @CommandDescription("Lists all available modules.")
+    @CommandPermission("MANAGE_MODULES")
+    private handleListModules(message: MessageInterface, args: { [key: string]: any }) {
         let columns = { name: "Name", enabled: "Enabled", flags: "Flags" };
         let data = [];
 
@@ -451,7 +298,15 @@ export class AdminModule extends ModuleBase {
         this._bot.respondQueue(message, messages);
     }
 
-    onAssignRole(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("assign role {role} to user {userid!user}")
+    @Command("assign {role} to user {userid!user}")
+    @Command("assign role {role} to {userid!user}")
+    @Command("assign {role} to {userid!user}")
+    @Command("assign {role} {userid!user}")
+    @CommandSample("assign __*role*__ to __*@user*__")
+    @CommandDescription("Assigns the specified role to the specified user.")
+    @CommandPermission("ASSIGN_ROLES")
+    private handleAssignRole(message: MessageInterface, args: { [key: string]: any }) {
         args.role = args.role.toLowerCase();
 
         let role_id = 0;
@@ -493,7 +348,14 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("ROLE_ASSIGNED"), { author: message.author.id, role: args.role, user: args.user }));
     }
 
-    onAddPermission(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("add permission {permission} to role {role}")
+    @Command("add {permission} to role {role}")
+    @Command("add permission {permission} to {role}")
+    @Command("add {permission} {role}")
+    @CommandSample("add __*permission*__ to __*role*__")
+    @CommandDescription("Adds the specified permission to the specified role.")
+    @CommandPermission("MANAGE_PERMISSIONS")
+    private handleAddPermission(message: MessageInterface, args: { [key: string]: any }) {
         args.permission = args.permission.toUpperCase();
         args.role = args.role.toLowerCase();
 
@@ -528,7 +390,14 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("ADDED_PERMISSION"), { author: message.author.id, permission: args.permission, role: args.role }));
     }
 
-    onRemovePermission(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("remove permission {permission} from role {role}")
+    @Command("remove {permission} from role {role}")
+    @Command("remove permission {permission} from {role}")
+    @Command("remove {permission} {role}")
+    @CommandSample("remove __*permission*__ from __*role*__")
+    @CommandDescription("Removes the specified permission from the specified role.")
+    @CommandPermission("MANAGE_PERMISSIONS")
+    private handleRemovePermission(message: MessageInterface, args: { [key: string]: any }) {
         args.permission = args.permission.toUpperCase();
         args.role = args.role.toLowerCase();
 
@@ -563,7 +432,12 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, StringFormat(Responses.get("REMOVED_PERMISSION"), { author: message.author.id, permission: args.permission, role: args.role }));
     }
 
-    onIgnoreUser(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("ignore {userid!user}")
+    @Command("start ignoring {userid!user}")
+    @CommandSample("ignore __*@user*__")
+    @CommandDescription("Ignores the specified user.")
+    @CommandPermission("IGNORE_USERS")
+    private handleIgnoreUser(message: MessageInterface, args: { [key: string]: any }) {
         let user = Users.getUserById(args.user, message.server);
         if (user === null) {
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_USER"), { author: message.author.id, user: args.user }));
@@ -577,7 +451,12 @@ export class AdminModule extends ModuleBase {
         return this._bot.respond(message, StringFormat(Responses.get("STARTED_IGNORING"), { author: message.author.id, user: user._userID }));
     }
 
-    onUnignoreUser(message: MessageInterface, args: { [key: string]: any }) {
+    @Command("unignore {userid!user}")
+    @Command("stop ignoring {userid!user}")
+    @CommandSample("unignore __*@user*__")
+    @CommandDescription("Stops ignoring the specified user.")
+    @CommandPermission("IGNORE_USERS")
+    private handleUnignoreUser(message: MessageInterface, args: { [key: string]: any }) {
         let user = Users.getUserById(args.user, message.server);
         if (user === null) {
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_USER"), { author: message.author.id, user: args.user }));

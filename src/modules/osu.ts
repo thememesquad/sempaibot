@@ -1,4 +1,4 @@
-import { ModuleBase, MessageInterface } from "../modulebase";
+import { ModuleBase, MessageInterface, Module, Command, CommandDescription, CommandSample, CommandPermission, CommandOptions, ModuleOptions } from "../modulebase";
 import { OsuUserModel } from "../model/osuuser";
 import { User } from "../users";
 import { Server } from "../server";
@@ -37,6 +37,7 @@ interface OsuUserInterface {
     extra: { [key: string]: any };
 }
 
+@Module("osu!", "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Great if you want to fanboy about Cookiezi, or make fun of your friend for setting a new PP score with bad acc!", ModuleOptions.DefaultOn)
 export class OsuModule extends ModuleBase {
     private static _modsList: Array<string> = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
     private _lastChecked: number;
@@ -48,17 +49,9 @@ export class OsuModule extends ModuleBase {
     constructor() {
         super();
 
-        this._name = "osu!";
-        this._description = [
-            "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Great if you want to fanboy about Cookiezi, or make fun of your friend for setting a new PP score with bad acc!",
-            "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Who needs /r/osugame when you have this?",
-            "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! This is like /r/osugame, but automated and with worse memes. I tried, okay.",
-            "This is a game module for osu! Follow your friends and keep track of whenever they set a new top PP score! Just don't follow everyone on osu! because Peppy will get angry at us."
-        ];
         this._lastChecked = -1;
         this._users = [];
         this._servers = {};
-        this._defaultOn = true;
         this._loadBalancer = new LoadBalancer(60);
         this._pending = [];
 
@@ -72,15 +65,15 @@ export class OsuModule extends ModuleBase {
 
         CommandProcessor.addCustomType("osumode", msg => {
             let tmp = msg.toLowerCase();
-            if (tmp.endsWith("standard")) {
+            
+            if (tmp.endsWith("standard"))
                 return OsuMode.Standard;
-            } else if (tmp.endsWith("taiko")) {
+            else if (tmp.endsWith("taiko"))
                 return OsuMode.Taiko;
-            } else if (tmp.endsWith("mania")) {
+            else if (tmp.endsWith("mania"))
                 return OsuMode.Mania;
-            } else if (tmp.endsWith("ctb")) {
+            else if (tmp.endsWith("ctb"))
                 return OsuMode.CatchTheBeat;
-            }
 
             return OsuMode.Standard;
         });

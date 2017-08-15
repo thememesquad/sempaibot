@@ -43,8 +43,12 @@ export enum ModuleOptions {
     Hidden = 4
 }
 
+interface CommandPropertyDescriptor {
+    value?: (message: MessageInterface, args: { [key: string]: any }) => void;
+}
+
 export function Command(format: string | Array<string | { [key: string]: any }>, options: CommandOptions = CommandOptions.None) {
-    return function (target: ModuleBase, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: ModuleBase, propertyKey: string, descriptor: CommandPropertyDescriptor) {
         let command: CommandInterface = target.getCommandInternal(propertyKey);
         if (!command) {
             command = {
@@ -66,7 +70,7 @@ export function Command(format: string | Array<string | { [key: string]: any }>,
 }
 
 export function CommandDescription(description: string) {
-    return function (target: ModuleBase, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: ModuleBase, propertyKey: string, descriptor: CommandPropertyDescriptor) {
         let command: CommandInterface = target.getCommandInternal(propertyKey);
         if (!command) {
             command = {
@@ -81,7 +85,7 @@ export function CommandDescription(description: string) {
 }
 
 export function CommandSample(samples: string | Array<string>) {
-    return function (target: ModuleBase, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: ModuleBase, propertyKey: string, descriptor: CommandPropertyDescriptor) {
         let command: CommandInterface = target.getCommandInternal(propertyKey);
         if (!command) {
             command = {
@@ -96,7 +100,7 @@ export function CommandSample(samples: string | Array<string>) {
 }
 
 export function CommandPermission(permissions: string | Array<string>) {
-    return function (target: ModuleBase, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: ModuleBase, propertyKey: string, descriptor: CommandPropertyDescriptor) {
         let command: CommandInterface = target.getCommandInternal(propertyKey);
         if (!command) {
             command = {
@@ -112,9 +116,9 @@ export function CommandPermission(permissions: string | Array<string>) {
 
 export function Module(name: string, description: string, options: ModuleOptions = ModuleOptions.None) {
     return function <T extends { new(...args: any[]): {} }>(constructor: T) {
-        let alwaysOn = options & ModuleOptions.AlwaysOn;
-        let defaultOn = options & ModuleOptions.DefaultOn;
-        let hidden = options & ModuleOptions.Hidden;
+        let alwaysOn = options & ModuleOptions.AlwaysOn ? true : false;
+        let defaultOn = options & ModuleOptions.DefaultOn ? true : false;
+        let hidden = options & ModuleOptions.Hidden ? true : false;
 
         return class extends constructor {
             _name = name;
