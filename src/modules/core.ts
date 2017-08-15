@@ -40,9 +40,8 @@ export class CoreModule extends ModuleBase {
         let columns = { name: "Name", role: "Role" };
         let data = [];
 
-        for (let i = 0; i < tmp.length; i++) {
+        for (let i = 0; i < tmp.length; i++)
             data.push({ name: tmp[i].get_name_detailed(server), role: tmp[i].get_role(server) });
-        }
 
         let messages = GenerateTable(StringFormat(Responses.get("LIST_ROLES"), { author: message.author.id }), columns, data, { name: 30, role: 15 });
         this._bot.respondQueue(message, messages);
@@ -80,10 +79,18 @@ export class CoreModule extends ModuleBase {
         }
 
         data.sort((a, b) => {
-            if (a.roles.length < b.roles.length) return -1;
-            if (a.roles.length > b.roles.length) return 1;
-            if (a.permission < b.permission) return -1;
-            if (a.permission > b.permission) return 1;
+            if (a.roles.length < b.roles.length)
+                return -1;
+
+            if (a.roles.length > b.roles.length)
+                return 1;
+
+            if (a.permission < b.permission)
+                return -1;
+
+            if (a.permission > b.permission)
+                return 1;
+            
             return 0;
         });
 

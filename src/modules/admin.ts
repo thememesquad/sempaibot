@@ -209,9 +209,8 @@ export class AdminModule extends ModuleBase {
     private handleListServers(message: MessageInterface, args: { [key: string]: any }) {
         let data = [];
         for (let i = 0; i < this._bot.internalServers.length; i++) {
-            if (this._bot.isServerBlacklisted(this._bot.internalServers[i].id)) {
+            if (this._bot.isServerBlacklisted(this._bot.internalServers[i].id))
                 continue;
-            }
 
             data.push({
                 id: "#" + (i + 1) + ".",
@@ -231,13 +230,11 @@ export class AdminModule extends ModuleBase {
     @CommandDescription("Enables a module for this server.")
     @CommandPermission("MANAGE_MODULES")
     private handleEnableModule(message: MessageInterface, args: { [key: string]: any }) {
-        if (this._bot.getModule(args.module) === null) {
+        if (this._bot.getModule(args.module) === null)
             return this._bot.respond(message, StringFormat(Responses.get("MODULE_INVALID"), { author: message.author.id, module: args.module }));
-        }
 
-        if (message.server.isModuleEnabled(args.module)) {
+        if (message.server.isModuleEnabled(args.module))
             return this._bot.respond(message, StringFormat(Responses.get("MODULE_ALREADY_ENABLED"), { author: message.author.id, module: args.module }));
-        }
 
         message.server.enableModule(args.module);
         return this._bot.respond(message, StringFormat(Responses.get("MODULE_ENABLED"), { author: message.author.id, module: args.module }));
@@ -250,17 +247,14 @@ export class AdminModule extends ModuleBase {
     @CommandPermission("MANAGE_MODULES")
     private handleDisableModule(message: MessageInterface, args: { [key: string]: any }) {
         let module = this._bot.getModule(args.module);
-        if (module === null) {
+        if (module === null)
             return this._bot.respond(message, StringFormat(Responses.get("MODULE_INVALID"), { author: message.author.id, module: args.module }));
-        }
 
-        if (!message.server.isModuleEnabled(args.module)) {
+        if (!message.server.isModuleEnabled(args.module))
             return this._bot.respond(message, StringFormat(Responses.get("MODULE_NOT_ENABLED"), { author: message.author.id, module: args.module }));
-        }
 
-        if (module.alwaysOn) {
+        if (module.alwaysOn)
             return this._bot.respond(message, StringFormat(Responses.get("MODULE_ALWAYS_ON"), { author: message.author.id, module: args.module }));
-        }
 
         message.server.disableModule(args.module);
         return this._bot.respond(message, StringFormat(Responses.get("MODULE_DISABLED"), { author: message.author.id, module: args.module }));
@@ -328,22 +322,18 @@ export class AdminModule extends ModuleBase {
         }
 
         let my_role = message.user.getRoleId(message.server);
-        if (role_id < my_role) {
+        if (role_id < my_role)
             return this._bot.respond(message, StringFormat(Responses.get("NOT_ALLOWED"), { author: message.author.id }));
-        }
 
         let user = Users.getUser(args.user, message.server);
-        if (user === null) {
+        if (user === null)
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_USER"), { author: message.author.id, user: args.user }));
-        }
 
-        if (user.getRole(message.server) === args.role) {
+        if (user.getRole(message.server) === args.role)
             return this._bot.respond(message, StringFormat(Responses.get("ROLE_ALREADY_ASSIGNED"), { author: message.author.id, role: args.role, user: args.user }));
-        }
 
-        if (!Users.assignRole(user._userID, message.server, args.role)) {
+        if (!Users.assignRole(user._userID, message.server, args.role))
             return this._bot.respond(message, StringFormat(Responses.get("ERROR"), { author: message.author.id }));
-        }
 
         return this._bot.respond(message, StringFormat(Responses.get("ROLE_ASSIGNED"), { author: message.author.id, role: args.role, user: args.user }));
     }
@@ -378,13 +368,11 @@ export class AdminModule extends ModuleBase {
         }
 
         let my_role = message.user.getRoleId(message.server);
-        if (role_id < my_role) {
+        if (role_id < my_role)
             return this._bot.respond(message, StringFormat(Responses.get("NOT_ALLOWED"), { author: message.author.id }));
-        }
 
-        if (!this._permissions.isAllowed(args.permission, message.user.getRole(message.server), message.server)) {
+        if (!this._permissions.isAllowed(args.permission, message.user.getRole(message.server), message.server))
             return this._bot.respond(message, StringFormat(Responses.get("NOT_ALLOWED"), { author: message.author.id }));
-        }
 
         this._permissions.add(args.permission, args.role, message.server);
         this._bot.respond(message, StringFormat(Responses.get("ADDED_PERMISSION"), { author: message.author.id, permission: args.permission, role: args.role }));
@@ -420,13 +408,11 @@ export class AdminModule extends ModuleBase {
         }
 
         let my_role = message.user.getRoleId(message.server);
-        if (role_id < my_role) {
+        if (role_id < my_role)
             return this._bot.respond(message, StringFormat(Responses.get("NOT_ALLOWED"), { author: message.author.id }));
-        }
 
-        if (!this._permissions.isAllowed(args.permission, message.user.getRole(message.server), message.server)) {
+        if (!this._permissions.isAllowed(args.permission, message.user.getRole(message.server), message.server))
             return this._bot.respond(message, StringFormat(Responses.get("NOT_ALLOWED"), { author: message.author.id }));
-        }
 
         this._permissions.remove(args.permission, args.role, message.server);
         this._bot.respond(message, StringFormat(Responses.get("REMOVED_PERMISSION"), { author: message.author.id, permission: args.permission, role: args.role }));
@@ -439,13 +425,11 @@ export class AdminModule extends ModuleBase {
     @CommandPermission("IGNORE_USERS")
     private handleIgnoreUser(message: MessageInterface, args: { [key: string]: any }) {
         let user = Users.getUserById(args.user, message.server);
-        if (user === null) {
+        if (user === null)
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_USER"), { author: message.author.id, user: args.user }));
-        }
 
-        if (message.user.getRoleId(message.server) >= user.getRoleId(message.server)) {
+        if (message.user.getRoleId(message.server) >= user.getRoleId(message.server))
             return this._bot.respond(message, StringFormat(Responses.get("NOT_ALLOWED"), { author: message.author.id }));
-        }
 
         message.server.ignoreUser(user);
         return this._bot.respond(message, StringFormat(Responses.get("STARTED_IGNORING"), { author: message.author.id, user: user._userID }));
@@ -458,13 +442,11 @@ export class AdminModule extends ModuleBase {
     @CommandPermission("IGNORE_USERS")
     private handleUnignoreUser(message: MessageInterface, args: { [key: string]: any }) {
         let user = Users.getUserById(args.user, message.server);
-        if (user === null) {
+        if (user === null)
             return this._bot.respond(message, StringFormat(Responses.get("INVALID_USER"), { author: message.author.id, user: args.user }));
-        }
 
-        if (message.user.getRoleId(message.server) >= user.getRoleId(message.server)) {
+        if (message.user.getRoleId(message.server) >= user.getRoleId(message.server))
             return this._bot.respond(message, StringFormat(Responses.get("NOT_ALLOWED"), { author: message.author.id }));
-        }
 
         message.server.unignoreUser(user);
         return this._bot.respond(message, StringFormat(Responses.get("STOPPED_IGNORING"), { author: message.author.id, user: user._userID }));
