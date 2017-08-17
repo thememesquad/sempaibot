@@ -166,7 +166,7 @@ export class ModuleBase {
         this._commands[key] = command;
     }
 
-    checkMessage(server: Server, message: MessageInterface): boolean {
+    public async checkMessage(server: Server, message: MessageInterface): Promise<boolean> {
         let best = null;
         for (let key in this._commands) {
             let command = this._commands[key];
@@ -203,7 +203,7 @@ export class ModuleBase {
                 return true;
             }
 
-            command.execute.apply(this, data);
+            await command.execute.apply(this, data);
             return true;
         }
 

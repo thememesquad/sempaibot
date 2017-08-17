@@ -23,11 +23,15 @@ export class AdminModule extends ModuleBase {
     private handleServerBlacklist(message: MessageInterface, args: { [key: string]: any }): void {
         let server = this._bot.getInternalServer(args.server - 1);
 
-        if (server === null)
-            return this._bot.respond(message, StringFormat(Responses.get("INVALID_SERVER"), { author: message.author.id, id: args.server }));
+        if (server === null) {
+            this._bot.respond(message, StringFormat(Responses.get("INVALID_SERVER"), { author: message.author.id, id: args.server }));
+            return;
+        }
 
-        if (this._bot.isServerBlacklisted(server.id))
-            return this._bot.respond(message, StringFormat(Responses.get("SERVER_ALREADY_BLACKLISTED"), { author: message.author.id, server_name: server._server.name }));
+        if (this._bot.isServerBlacklisted(server.id)) {
+            this._bot.respond(message, StringFormat(Responses.get("SERVER_ALREADY_BLACKLISTED"), { author: message.author.id, server_name: server._server.name }));
+            return;
+        }
 
         this._bot.blacklistServer(server.id);
         this._bot.respond(message, StringFormat(Responses.get("SERVER_BLACKLISTED"), { author: message.author.id, server_name: server._server.name }));

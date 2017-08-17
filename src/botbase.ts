@@ -14,12 +14,11 @@ export abstract class BotBase {
     abstract getInternalServerId(server): number;
     abstract getInternalServer(serverID): Server;
     
-    abstract embed(message: RichEmbed | RichEmbedOptions, server: Server);
-    abstract message(message: string, server: Server);
-    abstract messageQueue(messages: Array<string>, server: Server);
-    abstract respond(m: MessageInterface, message: string);
-    abstract respondQueue(m: MessageInterface, messages: Array<string>);
-    abstract edit(message: Snowflake, edit: string);
+    abstract message(message: string | RichEmbed | RichEmbedOptions, server: Server): Promise<Message>;
+    abstract messageQueue(messages: Array<string | RichEmbed | RichEmbedOptions>, server: Server): Promise<Array<Message>>;
+    abstract respond(m: MessageInterface, message: string | RichEmbed | RichEmbedOptions): Promise<Message>;
+    abstract respondQueue(m: MessageInterface, messages: Array<string | RichEmbed | RichEmbedOptions>): Promise<Array<Message>>;
+    abstract edit(original: Message, edit: string | RichEmbed | RichEmbedOptions): Promise<Message>;
     
     abstract onReady(): void;
     abstract onMessage(message: Message): void;

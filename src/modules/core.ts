@@ -214,7 +214,6 @@ export class CoreModule extends ModuleBase {
         });
     }
 
-
     @Command("set response mode to {responsetype!type}")
     @Command("use {responsetype!type}")
     @Command("use {responsetype!type} mode")

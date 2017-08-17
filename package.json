@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@types/node": "^8.0.20",
+    "@types/request": "^2.0.1",
     "auto-loader": "^0.2.0",
     "bufferutil": "^3.0.2",
     "discord.js": "^11.1.0",

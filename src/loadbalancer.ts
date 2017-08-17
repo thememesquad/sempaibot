@@ -1,7 +1,7 @@
 import * as request from "request";
 
 export interface ResponseInterface {
-    response: string;
+    response: request.RequestResponse;
     body: any;
 }
 

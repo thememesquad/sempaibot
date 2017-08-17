@@ -1,5 +1,5 @@
 import { BotBase } from "./botbase";
-import { Client, TextChannel, RichEmbed, RichEmbedOptions } from "discord.js";
+import { Client, TextChannel, RichEmbed, RichEmbedOptions, Snowflake, Message } from "discord.js";
 import { Config } from "../config";
 import { Server } from "./server";
 import { MessageInterface } from "./modulebase";
@@ -17,7 +17,7 @@ class DiscordQueue {
         this._queue = [];
     }
 
-    queue(callback) {
+    queue(callback): Promise<Message> {
         return new Promise((resolve, reject) => {
             this._queue.push({ resolve, reject, callback });
         });
@@ -68,7 +68,7 @@ export class DiscordAPI {
         });
     }
 
-    message(message: string, server: Server) {
+    message(message: string | RichEmbed | RichEmbedOptions, server: Server): Promise<Message> {
         if (this.bot.isServerBlacklisted(server.id))
             return Promise.reject("blacklisted");
 
@@ -77,76 +77,73 @@ export class DiscordAPI {
             channel = server._server.channels.first().id;
 
         let actual_channel: TextChannel = server._server.channels.get(channel) as TextChannel;
+        let options = {};
+
+        if (message instanceof RichEmbed) {
+            options["embed"] = message;
+            message = "";
+        }
 
         return new Promise((resolve, reject) => {
             let queue = () => {
                 return this.queue.queue((resolve, reject) => {
-                    actual_channel.send(message).then(() => resolve(message)).catch(err => reject(err));
+                    actual_channel.send(message, options).then((ret: Message) => resolve(ret)).catch(err => reject(err));
                 });
             };
 
-            if (!this.connected)
-                return queue().then(ret => resolve(ret)).catch(err => reject(err));
-
-            actual_channel.send(message).then(() => resolve(message)).catch(() => {
+            actual_channel.send(message, options).then((ret: Message) => resolve(ret)).catch(() => {
                 this.connected = false;
                 return queue().then(ret => resolve(ret)).catch(err => reject(err));
             });
         });
     }
 
-    embed(message: RichEmbed | RichEmbedOptions, server: Server) {
-        if (this.bot.isServerBlacklisted(server.id))
-            return Promise.reject("blacklisted");
-
-        let channel = server.channel;
-
-        if (channel.length === 0)
-            channel = server._server.channels.first().id;
-
-        let actual_channel: TextChannel = server._server.channels.get(channel) as TextChannel;
-
-        return new Promise((resolve, reject) => {
-            let queue = () => {
-                return this.queue.queue((resolve, reject) => actual_channel.sendEmbed(message).then(() => resolve(message)).catch(err => reject(err)));
-            };
-
-            if (!this.connected)
-                return queue().then(ret => resolve(ret)).catch(err => reject(err));
-
-            actual_channel.sendEmbed(message).then(() => resolve(message)).catch((err) => {
-                this.connected = false;
-                return queue().then(ret => resolve(ret)).catch(err => reject(err));
-            });
-
-        });
-    }
-
-    respond(m: MessageInterface, message: string) {
+    respond(m: MessageInterface, message: string | RichEmbed | RichEmbedOptions): Promise<Message> {
         if (m.server !== null && this.bot.isServerBlacklisted(m.server.id))
             return Promise.reject("blacklisted");
 
         let actual_channel: TextChannel = m.channel as TextChannel;
+        let options = {};
 
+        if (message instanceof RichEmbed) {
+            options["embed"] = message;
+            message = "";
+        }
+        
         return new Promise((resolve, reject) => {
             let queue = () => {
                 return this.queue.queue((resolve, reject) => {
-                    actual_channel.send(message).then(() => resolve(message)).catch(err => reject(err));
+                    actual_channel.send(message, options).then((ret: Message) => resolve(ret)).catch(err => reject(err));
                 });
             };
 
-            if (!this.connected)
-                return queue().then(ret => resolve(ret)).catch(err => reject(err));
-
-            actual_channel.send(message).then(() => resolve(message)).catch(() => {
+            actual_channel.send(message, options).then((ret: Message) => resolve(ret)).catch(() => {
                 this.connected = false;
                 return queue().then(ret => resolve(ret)).catch(err => reject(err));
             });
         });
     }
 
-    edit(message, edit) {
-        
+    edit(original: Message, message: string | RichEmbed | RichEmbedOptions): Promise<Message> {
+        let options = {};
+
+        if (message instanceof RichEmbed) {
+            options["embed"] = message;
+            message = "";
+        }
+
+        return new Promise((resolve, reject) => {
+            let queue = () => {
+                return this.queue.queue((resolve, reject) => {
+                    original.edit(message, options).then((ret: Message) => resolve(ret)).catch(err => reject(err));
+                });
+            };
+
+            original.edit(message, options).then((ret: Message) => resolve(ret)).catch((err) => {
+                this.connected = false;
+                return queue().then(ret => resolve(ret)).catch(err => reject(err));
+            });
+        });
     }
 
     async startup() {
@@ -198,7 +195,7 @@ export class DiscordAPI {
     }
 
     async onError(err) {
-        this.bot.log("discord error: " + err);
+        this.bot.log("discord error: ", err);
     }
 
     get servers() {

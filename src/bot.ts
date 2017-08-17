@@ -6,7 +6,7 @@ import { Server } from "./server";
 import { Users, User } from "./users";
 import { Responses } from "./responses";
 import { StringFormat } from "./util";
-import { Guild, Snowflake, RichEmbed, RichEmbedOptions } from "discord.js";
+import { Guild, Snowflake, RichEmbed, RichEmbedOptions, Message } from "discord.js";
 import { StatsManager } from "./stats";
 import { Permissions } from "./permissions";
 import { ModuleBase } from "./modulebase";
@@ -116,15 +116,11 @@ export class Bot implements BotBase {
         return await this._api.setStatus(status);
     }
 
-    async embed(message: RichEmbed | RichEmbedOptions, server: Server) {
-        return await this._api.embed(message, server);
-    }
-
-    async message(message: string, server: Server) {
+    async message(message: string | RichEmbed | RichEmbedOptions, server: Server): Promise<Message> {
         return await this._api.message(message, server);
     }
 
-    async messageQueue(messages: Array<string>, server: Server) {
+    async messageQueue(messages: Array<string | RichEmbed | RichEmbedOptions>, server: Server): Promise<Array<Message>> {
         let ids = [];
 
         for (let entry of messages)
@@ -133,11 +129,11 @@ export class Bot implements BotBase {
         return ids;
     }
 
-    async respond(m: MessageInterface, message: string) {
+    async respond(m: MessageInterface, message: string | RichEmbed | RichEmbedOptions): Promise<Message> {
         return await this._api.respond(m, message);
     }
 
-    async respondQueue(m: MessageInterface, messages: Array<string>) {
+    async respondQueue(m: MessageInterface, messages: Array<string | RichEmbed | RichEmbedOptions>): Promise<Array<Message>> {
         let ids = [];
 
         for (let entry of messages)
@@ -146,7 +142,7 @@ export class Bot implements BotBase {
         return ids;
     }
 
-    async edit(message: Snowflake, edit: string) {
+    async edit(message: Message, edit: string | RichEmbed | RichEmbedOptions): Promise<Message> {
         return await this._api.edit(message, edit);
     }
 
@@ -238,7 +234,7 @@ export class Bot implements BotBase {
         this._ready = true;
     }
 
-    async processMessage(server, message: MessageInterface, identifier) {
+    public async processMessage(server, message: MessageInterface, identifier): Promise<boolean> {
         identifier = identifier.trim();
 
         if (message.content.toLowerCase().indexOf(identifier) === -1)
@@ -254,7 +250,7 @@ export class Bot implements BotBase {
             if (this._modules[key].disabled)
                 continue;
 
-            let resp = this._modules[key].checkMessage(server, message);
+            let resp = await this._modules[key].checkMessage(server, message);
 
             if (typeof resp === "string") {
                 tmp.push(resp);

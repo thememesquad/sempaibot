@@ -440,7 +440,7 @@ export class OsuModule extends ModuleBase {
             embed.addField("Map links", `[Map link](https://osu.ppy.sh/b/${record.beatmap_id}) | [Osu direct](osu://b/${record.beatmap_id})`, false)
                 .addField("\u200b", "This score has been tracked by [Sempaibot!](http://sempai.moe) | Follow us [@sempaibot](https://twitter.com/osusempaibot)");
 
-            this._bot.embed(embed, server);
+            this._bot.message(embed, server);
         }
     }
 
