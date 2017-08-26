@@ -116,30 +116,12 @@ export class Bot implements BotBase {
         return await this._api.setStatus(status);
     }
 
-    async message(message: string | RichEmbed | RichEmbedOptions, server: Server): Promise<Message> {
+    async message(message: string | RichEmbed | RichEmbedOptions | Array<string | RichEmbed | RichEmbedOptions>, server: Server): Promise<Message | Message[]> {
         return await this._api.message(message, server);
     }
 
-    async messageQueue(messages: Array<string | RichEmbed | RichEmbedOptions>, server: Server): Promise<Array<Message>> {
-        let ids = [];
-
-        for (let entry of messages)
-            ids.push(await this.message(entry, server));
-
-        return ids;
-    }
-
-    async respond(m: MessageInterface, message: string | RichEmbed | RichEmbedOptions): Promise<Message> {
+    async respond(m: MessageInterface, message: string | RichEmbed | RichEmbedOptions | Array<string | RichEmbed | RichEmbedOptions>): Promise<Message | Message[]> {
         return await this._api.respond(m, message);
-    }
-
-    async respondQueue(m: MessageInterface, messages: Array<string | RichEmbed | RichEmbedOptions>): Promise<Array<Message>> {
-        let ids = [];
-
-        for (let entry of messages)
-            ids.push(await this.respond(m, entry));
-
-        return ids;
     }
 
     async edit(message: Message, edit: string | RichEmbed | RichEmbedOptions): Promise<Message> {

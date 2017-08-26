@@ -225,7 +225,7 @@ export class AdminModule extends ModuleBase {
         }
 
         let messages = GenerateTable(StringFormat(Responses.get("LIST_SERVERS"), { author: message.author.id }), { id: "ID", name: "Name", owner: "Owner", limit: "Limit" }, data);
-        this._bot.respondQueue(message, messages);
+        this._bot.respond(message, messages);
     }
 
     @Command("enable {module}")
@@ -293,7 +293,7 @@ export class AdminModule extends ModuleBase {
         }
 
         let messages = GenerateTable(StringFormat(Responses.get("MODULE_LIST"), { author: message.author.id }), columns, data, { name: 20, enabled: 10, flags: 15 });
-        this._bot.respondQueue(message, messages);
+        this._bot.respond(message, messages);
     }
 
     @Command("assign role {role} to user {userid!user}")

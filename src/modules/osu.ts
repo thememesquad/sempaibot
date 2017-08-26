@@ -230,7 +230,7 @@ export class OsuModule extends ModuleBase {
                         name: "Name",
                         pp: "PP"
                     }, data);
-                this._bot.respondQueue(message, messages);
+                this._bot.respond(message, messages);
             } else {
                 let messages = GenerateTable(StringFormat(Responses.get("OSU_FOLLOWING_MODE"), {
                     author: message.author.id,
@@ -240,7 +240,7 @@ export class OsuModule extends ModuleBase {
                         name: "Name",
                         pp: "PP"
                     }, data);
-                this._bot.respondQueue(message, messages);
+                this._bot.respond(message, messages);
             }
         }
     }

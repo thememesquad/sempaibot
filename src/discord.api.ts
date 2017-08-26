@@ -4,42 +4,11 @@ import { Config } from "../config";
 import { Server } from "./server";
 import { MessageInterface } from "./modulebase";
 
-interface DiscordQueueObject {
-    resolve: () => void;
-    reject: () => void;
-    callback: (resolve: () => void, reject: () => void) => void;
-}
-
-class DiscordQueue {
-    _queue: Array<DiscordQueueObject>;
-
-    constructor() {
-        this._queue = [];
-    }
-
-    queue(callback): Promise<Message> {
-        return new Promise((resolve, reject) => {
-            this._queue.push({ resolve, reject, callback });
-        });
-    }
-
-    execute() {
-        for (let obj of this._queue) {
-            setTimeout(() => {
-                obj.callback(obj.resolve, obj.reject);
-            }, 0);
-        }
-
-        this._queue = [];
-    }
-}
-
 export class DiscordAPI {
     connectedOnce: boolean;
     connected: boolean;
 
     bot: BotBase;
-    queue: DiscordQueue;
     discord: Client;
 
     constructor(bot: BotBase) {
@@ -47,7 +16,6 @@ export class DiscordAPI {
         this.connected = false;
 
         this.bot = bot;
-        this.queue = new DiscordQueue();
 
         this.discord = new Client();
         this.discord.on("message", this.onMessage.bind(this));
@@ -59,18 +27,25 @@ export class DiscordAPI {
     }
 
     setStatus(status) {
-        if (!this.connected)
-            return this.queue.queue(this.setStatus.bind(this, status));
-
         this.discord.user.setStatus(status).catch(() => {
             this.connected = false;
-            this.queue.queue(this.setStatus.bind(this, status));
         });
     }
 
-    message(message: string | RichEmbed | RichEmbedOptions, server: Server): Promise<Message> {
+    async message(message: string | RichEmbed | RichEmbedOptions | Array<string | RichEmbed | RichEmbedOptions>, server: Server): Promise<Message | Message[]> {
         if (this.bot.isServerBlacklisted(server.id))
             return Promise.reject("blacklisted");
+
+        if (Array.isArray(message)) {
+            let ids = [];
+
+            for (let msg of message) {
+                ids.push(this.message(msg, server));
+            }
+
+            ids = await Promise.all(ids);
+            return ids;
+        }
 
         let channel = server.channel;
         if (channel.length === 0)
@@ -84,23 +59,23 @@ export class DiscordAPI {
             message = "";
         }
 
-        return new Promise((resolve, reject) => {
-            let queue = () => {
-                return this.queue.queue((resolve, reject) => {
-                    actual_channel.send(message, options).then((ret: Message) => resolve(ret)).catch(err => reject(err));
-                });
-            };
-
-            actual_channel.send(message, options).then((ret: Message) => resolve(ret)).catch(() => {
-                this.connected = false;
-                return queue().then(ret => resolve(ret)).catch(err => reject(err));
-            });
-        });
+        return await actual_channel.send(message, options) as Message;
     }
 
-    respond(m: MessageInterface, message: string | RichEmbed | RichEmbedOptions): Promise<Message> {
+    async respond(m: MessageInterface, message: string | RichEmbed | RichEmbedOptions | Array<string | RichEmbed | RichEmbedOptions>): Promise<Message | Message[]> {
         if (m.server !== null && this.bot.isServerBlacklisted(m.server.id))
             return Promise.reject("blacklisted");
+
+        if (Array.isArray(message)) {
+            let ids = [];
+
+            for (let msg of message) {
+                ids.push(this.respond(m, msg));
+            }
+
+            ids = await Promise.all(ids);
+            return ids;
+        }
 
         let actual_channel: TextChannel = m.channel as TextChannel;
         let options = {};
@@ -110,21 +85,10 @@ export class DiscordAPI {
             message = "";
         }
         
-        return new Promise((resolve, reject) => {
-            let queue = () => {
-                return this.queue.queue((resolve, reject) => {
-                    actual_channel.send(message, options).then((ret: Message) => resolve(ret)).catch(err => reject(err));
-                });
-            };
-
-            actual_channel.send(message, options).then((ret: Message) => resolve(ret)).catch(() => {
-                this.connected = false;
-                return queue().then(ret => resolve(ret)).catch(err => reject(err));
-            });
-        });
+        return await actual_channel.send(message, options) as Message;
     }
 
-    edit(original: Message, message: string | RichEmbed | RichEmbedOptions): Promise<Message> {
+    async edit(original: Message, message: string | RichEmbed | RichEmbedOptions): Promise<Message> {
         let options = {};
 
         if (message instanceof RichEmbed) {
@@ -132,18 +96,7 @@ export class DiscordAPI {
             message = "";
         }
 
-        return new Promise((resolve, reject) => {
-            let queue = () => {
-                return this.queue.queue((resolve, reject) => {
-                    original.edit(message, options).then((ret: Message) => resolve(ret)).catch(err => reject(err));
-                });
-            };
-
-            original.edit(message, options).then((ret: Message) => resolve(ret)).catch((err) => {
-                this.connected = false;
-                return queue().then(ret => resolve(ret)).catch(err => reject(err));
-            });
-        });
+        return await original.edit(message, options) as Message;
     }
 
     async startup() {
@@ -174,9 +127,6 @@ export class DiscordAPI {
         this.connected = true;
 
         this.bot.log("Connected to discord.");
-
-        if (this.connectedOnce)
-            return this.queue.execute();
 
         this.connectedOnce = true;
         await this.bot.onReady();

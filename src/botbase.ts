@@ -14,10 +14,8 @@ export abstract class BotBase {
     abstract getInternalServerId(server): number;
     abstract getInternalServer(serverID): Server;
     
-    abstract message(message: string | RichEmbed | RichEmbedOptions, server: Server): Promise<Message>;
-    abstract messageQueue(messages: Array<string | RichEmbed | RichEmbedOptions>, server: Server): Promise<Array<Message>>;
-    abstract respond(m: MessageInterface, message: string | RichEmbed | RichEmbedOptions): Promise<Message>;
-    abstract respondQueue(m: MessageInterface, messages: Array<string | RichEmbed | RichEmbedOptions>): Promise<Array<Message>>;
+    abstract message(message: string | RichEmbed | RichEmbedOptions | Array<string | RichEmbed | RichEmbedOptions>, server: Server): Promise<Message | Message[]>;
+    abstract respond(m: MessageInterface, message: string | RichEmbed | RichEmbedOptions | Array<string | RichEmbed | RichEmbedOptions>): Promise<Message | Message[]>;
     abstract edit(original: Message, edit: string | RichEmbed | RichEmbedOptions): Promise<Message>;
     
     abstract onReady(): void;

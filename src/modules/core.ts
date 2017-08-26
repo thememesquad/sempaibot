@@ -44,7 +44,7 @@ export class CoreModule extends ModuleBase {
             data.push({ name: tmp[i].get_name_detailed(server), role: tmp[i].get_role(server) });
 
         let messages = GenerateTable(StringFormat(Responses.get("LIST_ROLES"), { author: message.author.id }), columns, data, { name: 30, role: 15 });
-        this._bot.respondQueue(message, messages);
+        this._bot.respond(message, messages);
     }
 
     @Command("list permissions")
@@ -95,7 +95,7 @@ export class CoreModule extends ModuleBase {
         });
 
         let messages = GenerateTable(StringFormat(Responses.get("LIST_PERMISSIONS"), { author: message.author.id }), columns, data, { permission: 20, roles: 15 });
-        this._bot.respondQueue(message, messages);
+        this._bot.respond(message, messages);
     }
 
     @Command("show ignore list")
@@ -209,7 +209,7 @@ export class CoreModule extends ModuleBase {
             message_queue.push(response + add);
         }
 
-        this._bot.respondQueue(message, message_queue).catch(err => {
+        this._bot.respond(message, message_queue).catch(err => {
             console.log("err", err);
         });
     }

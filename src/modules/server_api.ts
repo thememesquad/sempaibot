@@ -12,32 +12,182 @@ enum TorrentState {
     Unknown
 }
 
+interface TorrentEpisodeInterface {
+    season: number | Array<number>;
+    episode: number | Array<number>;
+    thumbnail?: string;
+}
+
 interface TorrentInterface {
-    added_on: number;
-    amount_left: number;
-    category: string;
+    added_on?: number;
+    amount_left?: number;
+    category?: string;
 
-    completed: number;
-    completion_on: number;
-    downloaded: number;
-    downloaded_session: number;
-    eta: number;
+    completed?: number;
+    completion_on?: number;
+    downloaded?: number;
+    downloaded_session?: number;
+    eta?: number;
+    num_leechs?: number;
+    num_seeds?: number;
 
-    dl_limit: number;
-    dlspeed: number;
+    dl_limit?: number;
+    dlspeed?: number;
 
-    hash: string;
-    name: string;
+    hash?: string;
+    name?: string;
 
-    num_complete: number;
-    num_incomplete: number;
+    num_complete?: number;
+    num_incomplete?: number;
 
-    size: number;
-    state: string | TorrentState;
+    size?: number;
+    state?: string | TorrentState;
 
-    total_size: number;
+    total_size?: number;
+
+    episode_data?: TorrentEpisodeInterface;
     discord_message?: Discord.Message;
     updating?: boolean;
+    translator?: string;
+}
+
+interface SonarrEpisodeInterface {
+    seasonNumber: number;
+    episodeNumber: number;
+    title: string;
+    airDate: string;
+    airDateUtc: string;
+    overview: string;
+    absoluteEpisodeNumber: number;
+}
+
+interface SonarrImageInterface {
+    coverType: string;
+    url: string;
+}
+
+interface SonarrSeasonInterface {
+    seasonNumber: number;
+    monitored: boolean;
+}
+
+interface SonarrRatingsInterface {
+    votes: number;
+    value: number;
+}
+
+interface SonarrSeriesInterface {
+    title: string;
+    sortTitle: string;
+    seasonCount: number;
+    status: string;
+    overview: string;
+    network: string;
+    airTime: string;
+
+    images: Array<SonarrImageInterface>;
+    seasons: Array<SonarrSeasonInterface>;
+
+    year: number;
+    path: string;
+    profileId: number;
+
+    seasonFolder: boolean;
+    monitored: boolean;
+    useSceneNumbering: boolean;
+    runtime: number;
+    tvdbId: number;
+    tvRageId: number;
+    tvMazeId: number;
+    firstAired: string;
+    seriesType: string;
+    cleanTitle: string;
+    imdbId: number;
+    titleSlug: string;
+    certification: string;
+    genres: Array<string>;
+    tags: Array<string>;
+    added: string;
+    ratings: SonarrRatingsInterface;
+    qualityProfileId: number;
+    id: number;
+}
+
+interface SonarrQualityInterface {
+    id: number;
+    name: string;
+}
+
+interface SonarrRevisionInterface {
+    version: number;
+    real: number;
+}
+
+interface SonarrQualityContainerInterface {
+    quality: SonarrQualityInterface;
+    revision: SonarrRevisionInterface;
+}
+
+interface SonarrDownloadInterface {
+    series: SonarrSeriesInterface;
+    episode: SonarrEpisodeInterface;
+    quality: SonarrQualityContainerInterface;
+    size: number;
+    title: string;
+    sizeleft: number;
+    timeleft: string;
+    estimatedCompletionTime: string;
+    status: string;
+    trackedDownloadStatus: string;
+    statusMessages: Array<string>;
+    downloadId: string;
+    protocol: string;
+    id: number;
+}
+
+class SonarrAPI {
+    private _cookieJar: request.CookieJar = request.jar();
+
+    public getQueue(): Promise<Array<SonarrDownloadInterface>> {
+        return this._apiCall("get", "/queue").then(result => {
+            return (JSON.parse(result) as Array<SonarrDownloadInterface>);
+        });
+    }
+
+    private _apiCall(method: string, path: string, options?: { [key: string]: string }): Promise<any> {
+        return new Promise((resolve, reject) => {
+            if (!Config.server.sonarr_url.endsWith("/"))
+                Config.server.sonarr_url += "/";
+
+            if (path.startsWith("/"))
+                path = path.substr(1);
+
+            let url = `${Config.server.sonarr_url}${path}`;
+            let requestOptions: request.CoreOptions = {
+                jar: this._cookieJar
+            };
+
+            if (options && method.toLowerCase() === "post") {
+                requestOptions.qs = {
+                    "apikey": Config.server.sonarr_key
+                };
+                requestOptions.form = options;
+            } else {
+                if (!options)
+                    options = {};
+
+                options["apikey"] = Config.server.sonarr_key;
+                requestOptions.qs = options;
+            }
+
+            request(url, requestOptions, (err, response, body) => {
+                if (err)
+                    reject(err);
+                else
+                    resolve(body);
+            });
+        });
+    }
 }
 
 class TorrentAPI {
@@ -110,11 +260,15 @@ class TorrentAPI {
     }
 
     private _convertTorrentState(state: string): TorrentState {
+        if (typeof state !== "string")
+            return state as TorrentState;
+
         switch (state.toLowerCase().trim()) {
             case "downloading":
                 return TorrentState.Downloading;
 
             case "pausedup":
+            case "uploading":
                 return TorrentState.DoneSeeding;
 
             case "metadl":
@@ -135,50 +289,114 @@ class TorrentAPI {
 
 @Module("ServerAPI", "API module for a server")
 export class ServerAPIModule extends ModuleBase {
+    private _sonarrAPI: SonarrAPI;
     private _torrentAPI: TorrentAPI;
     private _torrentMonitorQueue: { [key: string]: TorrentInterface };
-    private _torrentMonitorLoop: NodeJS.Timer;
+    private _torrentMonitorLoop: boolean;
 
     constructor() {
         super();
 
+        this._sonarrAPI = new SonarrAPI();
         this._torrentAPI = new TorrentAPI();
         this._torrentMonitorQueue = {};
-        this._torrentMonitorLoop = setInterval(async () => {
-            let data = await this._torrentAPI.getDownloadList();
-            for (let key in this._torrentMonitorQueue) {
-                let monitor = this._torrentMonitorQueue[key];
-                if (monitor.updating) {
-                    console.log("still updating:", monitor.name);
-                    continue;
-                }
+        this._torrentMonitorLoop = true;
 
-                for (let torrent of data) {
-                    if (torrent.hash === monitor.hash) {
-                        if (torrent.state !== monitor.state || torrent.dlspeed !== monitor.dlspeed || torrent.downloaded !== monitor.downloaded)
-                            (this._updateTorrent(torrent, monitor) as Promise<Discord.Message>).then(message => {
-                                monitor.discord_message = message;
-                            });
-                    }
-                }
-            }    
-        }, 4000);
+        this._monitorTorrents();
+    }
+
+    private async _monitorTorrents() {
+        if (!this._torrentMonitorLoop)
+            return;
+
+        let data = await this._torrentAPI.getDownloadList();
+        for (let key in this._torrentMonitorQueue) {
+            let monitor = this._torrentMonitorQueue[key];
+            if (monitor.updating)
+                continue;
+
+            /*for (let torrent of data) {
+                if (torrent.hash === monitor.hash)
+                    await (this._updateTorrent(torrent, monitor) as Promise<Discord.Message>);
+            }*/
+        }
+        
+        setTimeout(this._monitorTorrents.bind(this), 500);
     }
 
     @Command("list downloads")
     private async onGetDownloads(message: MessageInterface, args: { [key: string]: any }): Promise<void> {
-        let data = await this._torrentAPI.getDownloadList();
-        
+        let data: Array<TorrentInterface> = await this._torrentAPI.getDownloadList();
+        let sonarr: Array<SonarrDownloadInterface> = await this._sonarrAPI.getQueue();
+        let messages: Array<Discord.RichEmbed> = [];
+
         for (let torrent of data) {
+            let show: SonarrSeriesInterface = null;
+            let episode: SonarrEpisodeInterface | Array<SonarrEpisodeInterface> = null;
+
+            for (let download of sonarr) {
+                if (download.downloadId.toLowerCase() !== torrent.hash.toLowerCase())
+                    continue;
+
+                show = download.series;
+                if (episode !== null) {
+                    if (Array.isArray(episode))
+                        episode.push(download.episode);
+                    else
+                        episode = [episode, download.episode];
+                } else {
+                    episode = download.episode;
+                }
+            }
+
+            if (show !== null) {
+                let thumbnail: string = null;
+                for (let img of show.images) {
+                    if (img.coverType === "poster") {
+                        thumbnail = img.url;
+                        break;
+                    }
+                }
+
+                if (thumbnail === null && show.images.length > 0)
+                    thumbnail = show.images[0].url;
+
+                if (!Array.isArray(episode)) {
+                    torrent.name = show.title + ": " + episode.title;
+                    torrent.episode_data = {
+                        season: episode.seasonNumber,
+                        episode: episode.episodeNumber,
+                        thumbnail: thumbnail
+                    };
+                } else {
+                    torrent.name = show.title;
+
+                    let seasons: Array<number> = [];
+                    let episodes: Array<number> = [];
+
+                    for (let ep of episode as Array<SonarrEpisodeInterface>) {
+                        if (seasons.indexOf(ep.seasonNumber) === -1)
+                            seasons.push(ep.seasonNumber);
+
+                        episodes.push(ep.episodeNumber);
+                    }
+
+                    torrent.episode_data = {
+                        season: seasons,
+                        episode: episodes,
+                        thumbnail: thumbnail
+                    };
+                }
+            }
+
             let embed: Discord.RichEmbed = this._updateTorrent(torrent) as Discord.RichEmbed;
             
-            if (torrent.state !== TorrentState.DoneFailed && torrent.state !== TorrentState.DoneSeeding) {
-                this._bot.respond(message, embed).then(message => {
-                    this._monitorTorrent(torrent, message);
-                });
-            } else {
-                this._bot.respond(message, embed);
-            }
+            messages.push(embed);
+        }
+
+        let ids = await this._bot.respond(message, messages);
+        for (let i in ids) {
+            this._monitorTorrent(data[i], ids[i]);
         }
     }
 
@@ -217,27 +435,62 @@ export class ServerAPIModule extends ModuleBase {
         if (torrent.updating)
             return null;
         
-        let percentage: number = torrent.downloaded / torrent.size;
+        let percentage: number = torrent.downloaded / torrent.total_size;
         let numCrossed: number = Math.floor(percentage * 10);
         let numEmpty: number = 10 - numCrossed;
         let bar: string = "█".repeat(numCrossed) + "░".repeat(numEmpty) + " " + Math.floor(percentage * 100) + "%";
-        let speed: string = "" + torrent.dlspeed;
+        let speed: string = this._formatSpeed(torrent.dlspeed);
 
         let embed: Discord.RichEmbed = new Discord.RichEmbed();
         embed.setTitle(torrent.name);
         embed.setColor(this._statusToColor(torrent.state as TorrentState));
+        
+        if (torrent.episode_data) {
+            if (torrent.episode_data.thumbnail)
+                embed.setThumbnail(torrent.episode_data.thumbnail);
+
+            embed.addField("Season", Array.isArray(torrent.episode_data.season) ? torrent.episode_data.season.join(", ") : `${torrent.episode_data.season}`, true);
+            embed.addField("Episode", Array.isArray(torrent.episode_data.episode) ? torrent.episode_data.episode.join(", ") : `${torrent.episode_data.episode}`, true);
+        }
+        
+        if (torrent.translator) {
+            embed.addField("Translator", `${torrent.translator}`);
+        }
+
         embed.addField("Progress", bar, true);
         embed.addField("Speed", speed, true);
+        embed.setFooter(`Seeders: ${torrent.num_seeds} Leechers: ${torrent.num_leechs}`);
 
         if (torrent.discord_message) {
             torrent.updating = true;
             return this._bot.edit(torrent.discord_message, embed).then(ret => {
-                console.log("finished updating", torrent.name);
                 torrent.updating = false;
                 return ret;
             });
         } else {
             return embed;
         }
+    }
+
+    private _formatSpeed(speed: number): string {
+        let ret: string = "";
+
+        if (speed < 1000)
+            return speed + "b/s";
+
+        speed /= 1000;
+        if (speed < 1000)
+            return speed.toFixed(2) + "kb/s";
+
+        speed /= 1000;
+        if (speed < 1000)
+            return speed.toFixed(2) + "mb/s";
+
+        speed /= 1000;
+        if (speed < 1000)
+            return speed.toFixed(2) + "gb/s";
+
+        speed /= 1000;
+        return speed.toFixed(2) + "tb/s";
     }
 }
