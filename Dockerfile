@@ -1,13 +1,17 @@
 FROM node:8-alpine
 
-RUN npm install -g typescript && npm cache clean
+RUN npm install -g typescript
 
-VOLUME /app
 WORKDIR /app
 
 COPY src src
 COPY tsconfig.json tsconfig.json
 COPY package.json package.json
+COPY config.d.ts config.d.ts
 COPY LICENSE LICENSE
+COPY Docker/exec.sh exec.sh
 
-ENTRYPOINT npm install && tsc -p . --outDir build && npm start
+RUN apk add --update build-base libtool autoconf automake python git
+RUN yarn install && tsc -p .
+
+ENTRYPOINT /app/exec.sh
