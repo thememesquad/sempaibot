@@ -533,14 +533,14 @@ export class OsuModule extends ModuleBase {
         }*/
     }
 
-    onLoad(server) {
+    onLoad(server: Server) {
         if (this._servers[server.id] !== undefined)
             return;
 
         this._servers[server.id] = server;
     }
 
-    onUnload(server) {
+    onUnload(server: Server) {
         if (this._servers[server.id] === undefined)
             return;
 

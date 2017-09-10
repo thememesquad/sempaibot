@@ -130,7 +130,7 @@ export class StatsManager {
         //    this.stats[docs[i].name + "_" + docs[i].deltaTime] = new Counter(docs[i].name, docs[i].deltaTime, docs[i].currentTime, docs[i]);
     }
 
-    static register(name, value) {
+    static register(name, value): Counter {
         /*if (typeof this.stats[name + "_" + timestamps[0]] !== "undefined")
             return;
 
@@ -141,22 +141,25 @@ export class StatsManager {
             this.stats[name + "_" + delta] = new Counter(name, delta, rounded.valueOf());
             this.stats[name + "_" + delta].update(value);
         }*/
+
+        return null;
     }
 
-    static update(name, value) {
+    static update(name, value): Counter {
         //if (typeof this.stats[name + "_" + timestamps[0]] === "undefined")
         //    return;
 
         //for (let delta of timestamps)
         //    this.stats[name + "_" + delta].update(value);
+        return null;
     }
 
-    static get(name, delta) {
+    static get(name, delta): Counter {
         /*if (typeof this.stats[name + "_" + delta] === "undefined")
             return null;
 
         this.stats[name + "_" + delta].refresh();
         return this.stats[name + "_" + delta];*/
-        return 0;
+        return null;
     }
 }

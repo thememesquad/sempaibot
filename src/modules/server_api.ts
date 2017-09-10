@@ -287,7 +287,7 @@ class TorrentAPI {
     }
 }
 
-@Module("ServerAPI", "API module for a server")
+@Module("ServerAPI", "API module for a server", ModuleOptions.Hidden)
 export class ServerAPIModule extends ModuleBase {
     private _sonarrAPI: SonarrAPI;
     private _torrentAPI: TorrentAPI;
