@@ -1,17 +1,19 @@
 import * as moment from "moment";
 
-interface TimeInterface {
+interface ITimeInterface {
     base: string;
     time: moment.Moment;
 }
 
-function ParseTimeInternal(str): TimeInterface {
+function ParseTimeInternal(str): ITimeInterface {
     str = str.toLowerCase().trim();
 
-    let currentDate = moment();
+    const currentDate = moment();
 
-    let day_func = (target, day:string) => {
-        let current = currentDate.day();
+    let base;
+    let time;
+    const dayFunc = (target, day: string) => {
+        const current = currentDate.day();
 
         if (current === target)
             return null;
@@ -22,50 +24,51 @@ function ParseTimeInternal(str): TimeInterface {
         else
             num = target - current;
 
-        let base = "on " + day;
-        let time = currentDate.add(num, "days");
+        base = "on " + day;
+        time = currentDate.add(num, "days");
 
         return { base, time };
     };
 
-    let match = str.trim().split(" ");
+    const match = str.trim().split(" ");
     switch (match[0]) {
         case "monday":
-            return day_func(1, "monday");
+            return dayFunc(1, "monday");
 
         case "tuesday":
-            return day_func(2, "tuesday");
+            return dayFunc(2, "tuesday");
 
         case "wednesday":
-            return day_func(3, "wednesday");
+            return dayFunc(3, "wednesday");
 
         case "thursday":
-            return day_func(4, "thursday");
+            return dayFunc(4, "thursday");
 
         case "friday":
-            return day_func(5, "friday");
+            return dayFunc(5, "friday");
 
         case "saturday":
-            return day_func(6, "saturday");
+            return dayFunc(6, "saturday");
 
         case "sunday":
-            return day_func(0, "sunday");
+            return dayFunc(0, "sunday");
 
         case "tomorrow":
-            let base = "tomorrow";
-            let time = currentDate.add(1, "day");
+            base = "tomorrow";
+            time = currentDate.add(1, "day");
 
             return { base, time };
     }
 
     if (match.length === 2) {
-        let num, name;
+        let num;
+        let name;
 
         switch (match[1]) {
             case "second":
             case "seconds":
                 {
-                    num = parseInt(match[0]);
+                    num = parseInt(match[0], 10);
                     if (isNaN(num)) {
                         console.log("Unknown second: " + match[0]);
                         return null;
@@ -77,8 +80,8 @@ function ParseTimeInternal(str): TimeInterface {
                     else
                         name += " seconds";
 
-                    let base = "in " + name;
-                    let time = moment(currentDate.unix() + (num * 1000));
+                    base = "in " + name;
+                    time = moment(currentDate.unix() + (num * 1000));
 
                     return { base, time };
                 }
@@ -86,7 +89,7 @@ function ParseTimeInternal(str): TimeInterface {
             case "minute":
             case "minutes":
                 {
-                    num = parseInt(match[0]);
+                    num = parseInt(match[0], 10);
                     if (isNaN(num)) {
                         console.log("Unknown minute: " + match[0]);
                         return null;
@@ -98,8 +101,8 @@ function ParseTimeInternal(str): TimeInterface {
                     else
                         name += " minutes";
 
-                    let base = "in " + name;
-                    let time = currentDate.add(num, "minutes");
+                    base = "in " + name;
+                    time = currentDate.add(num, "minutes");
 
                     return { base, time };
                 }
@@ -107,7 +110,7 @@ function ParseTimeInternal(str): TimeInterface {
             case "hour":
             case "hours":
                 {
-                    num = parseInt(match[0]);
+                    num = parseInt(match[0], 10);
                     if (isNaN(num)) {
                         console.log("Unknown hour: " + match[0]);
                         return null;
@@ -119,8 +122,8 @@ function ParseTimeInternal(str): TimeInterface {
                     else
                         name += " hours";
 
-                    let base = "in " + name;
-                    let time = currentDate.add(num, "hours");
+                    base = "in " + name;
+                    time = currentDate.add(num, "hours");
 
                     return { base, time };
                 }
@@ -128,7 +131,7 @@ function ParseTimeInternal(str): TimeInterface {
             case "day":
             case "days":
                 {
-                    num = parseInt(match[0]);
+                    num = parseInt(match[0], 10);
                     if (isNaN(num)) {
                         console.log("Unknown day: " + match[0]);
                         return null;
@@ -140,8 +143,8 @@ function ParseTimeInternal(str): TimeInterface {
                     else
                         name += " days";
 
-                    let base = "in " + name;
-                    let time = currentDate.add(num, "days");
+                    base = "in " + name;
+                    time = currentDate.add(num, "days");
 
                     return { base, time };
                 }
@@ -149,7 +152,7 @@ function ParseTimeInternal(str): TimeInterface {
             case "week":
             case "weeks":
                 {
-                    num = parseInt(match[0]);
+                    num = parseInt(match[0], 10);
                     if (isNaN(num)) {
                         switch (match[0]) {
                             case "next":
@@ -168,8 +171,8 @@ function ParseTimeInternal(str): TimeInterface {
                     else
                         name += " weeks";
 
-                    let base = "in " + name;
-                    let time = currentDate.add(num, "weeks");
+                    base = "in " + name;
+                    time = currentDate.add(num, "weeks");
 
                     return { base, time };
                 }
@@ -177,7 +180,7 @@ function ParseTimeInternal(str): TimeInterface {
             case "month":
             case "months":
                 {
-                    num = parseInt(match[0]);
+                    num = parseInt(match[0], 10);
                     if (isNaN(num)) {
                         console.log("Unknown month: " + match[0]);
                         return null;
@@ -189,8 +192,8 @@ function ParseTimeInternal(str): TimeInterface {
                     else
                         name += " months";
 
-                    let base = "in " + name;
-                    let time = currentDate.add(num, "months");
+                    base = "in " + name;
+                    time = currentDate.add(num, "months");
 
                     return { base, time };
                 }
@@ -198,7 +201,7 @@ function ParseTimeInternal(str): TimeInterface {
             case "year":
             case "years":
                 {
-                    num = parseInt(match[0]);
+                    num = parseInt(match[0], 10);
                     if (isNaN(num)) {
                         console.log("Unknown year: " + match[0]);
                         return null;
@@ -210,15 +213,15 @@ function ParseTimeInternal(str): TimeInterface {
                     else
                         name += " years";
 
-                    let base = "in " + name;
-                    let time = currentDate.add(num, "years");
+                    base = "in " + name;
+                    time = currentDate.add(num, "years");
 
                     return { base, time };
                 }
         }
     }
 
-    let time = moment(str, [
+    time = moment(str, [
         "YYYY-MM-DD HH:mm",
         "HH:mm",
         "YYYY-MM-DD",
@@ -230,20 +233,21 @@ function ParseTimeInternal(str): TimeInterface {
         "MMMM Do YYYY",
         "YYYY MMMM DD",
         "YYYY MMMM D",
-        "YYYY MMMM Do"
+        "YYYY MMMM Do",
     ], true);
-    let base = time.calendar();
+
+    base = time.calendar();
 
     return { base, time };
 }
 
 export function ParseTime(str) {
     let ret = [];
-    let split = str.trim().split(" ");
+    const split = str.trim().split(" ");
 
     let size = split.length;
     while (size > 1) {
-        let matches = [];
+        const matches = [];
 
         for (let i = 0; i < split.length; i++) {
             let tmp = "";
@@ -265,13 +269,17 @@ export function ParseTime(str) {
                 continue;
             }
 
-            let tmp2 = ParseTimeInternal(tmp);
+            const tmp2 = ParseTimeInternal(tmp);
             if (tmp2 === null || !tmp2[1].isValid()) {
                 continue;
             }
 
-            let index = str.indexOf(tmp);
-            matches.push({ index: index, str: tmp, ret: tmp2 });
+            const index = str.indexOf(tmp);
+            matches.push({
+                index,
+                ret: tmp2,
+                str: tmp,
+            });
         }
 
         ret = ret.concat(matches);

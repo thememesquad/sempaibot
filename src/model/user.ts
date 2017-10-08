@@ -1,13 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class UserModel {
     @PrimaryGeneratedColumn()
-    id: number;
+    public id: number;
 
-    @Column()
-    discordId: string;
+    @Column({ type: "varchar", length: 255 })
+    public discordId: string;
 
-    @Column()
-    name: string;
+    @Column({ type: "varchar", length: 255 })
+    public name: string;
 }

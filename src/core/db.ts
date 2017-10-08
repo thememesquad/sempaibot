@@ -1,16 +1,16 @@
-import { createConnection, Entity, Column, PrimaryGeneratedColumn, Connection } from "typeorm";
+import { Column, Connection, createConnection, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 export class DB {
     public static connection: Connection;
 
-    static setup(): Promise<void> {
+    public static setup(): Promise<void> {
         return createConnection({
-            type: "sqlite",
+            autoSchemaSync: true,
             database: "data.sqlite",
             entities: [
-                __dirname + "/model/*.js"
+                __dirname + "/../model/*.js",
             ],
-            autoSchemaSync: true,
+            type: "sqlite",
         }).then((connection) => {
             DB.connection = connection;
         });

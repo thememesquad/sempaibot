@@ -1,45 +1,49 @@
-import { BotBase } from "./botbase";
-import { Responses } from "./responses";
-import { Users, User } from "./users";
 import { Channel, Guild, Snowflake } from "discord.js";
+import { BotBase } from "./botbase";
 
+import { ConfigKeyValueModel } from "../model/configkeyvalue";
 import { DB } from "./db";
-import { ConfigKeyValueModel } from "./model/configkeyvalue";
+import { RoleType } from "./permission/roletype";
+import { MessageID } from "./personality/messageid";
+import { PersonalityManager } from "./personality/personalitymanager";
+import { User } from "./user/user";
+import { UserManager } from "./user/usermanager";
 
 export class Server {
+    public server: Guild;
+    public loadPromise: Promise<boolean>;
+
     private _bot: BotBase;
     private _config: ConfigKeyValueModel;
     private _id: Snowflake;
-    public _server: Guild;
-
-    loadPromiseResolve: (initial: boolean) => void;
-    loadPromise: Promise<boolean>;
-    channelCheck: NodeJS.Timer;
+    private _loadPromiseResolve: (initial: boolean) => void;
+    private _channelCheck: NodeJS.Timer;
 
     constructor(bot: BotBase, server: Guild) {
+        this.server = server;
+
         this._bot = bot;
         this._config = null;
-        this._server = server;
         this._id = server.id;
 
-        for (let key of server.members.keyArray()) {
-            let member = server.members.get(key);
-            Users.registerUser(member.id, member.displayName, this);
+        for (const key of server.members.keyArray()) {
+            const member = server.members.get(key);
+            UserManager.instance.registerUser(member.id, member.displayName, this);
         }
 
-        this.loadPromiseResolve = null;
+        this._loadPromiseResolve = null;
         this.loadPromise = new Promise(async (resolve, reject) => {
-            this.loadPromiseResolve = resolve;
+            this._loadPromiseResolve = resolve;
 
-            let doc = await DB.connection.manager.findOne(ConfigKeyValueModel, { key: this._server.id + "_config" });
+            const doc = await DB.connection.manager.findOne(ConfigKeyValueModel, { key: this.server.id + "_config" });
             if (!doc) {
                 this._config = new ConfigKeyValueModel();
-                this._config.key = this._server.id + "_config";
+                this._config.key = this.server.id + "_config";
                 this._config.value = {
                     channel: "",
-                    modules: [],
                     ignoreList: [],
-                    osu_limit: 50
+                    modules: [],
+                    osu_limit: 50,
                 };
 
                 try {
@@ -48,7 +52,7 @@ export class Server {
                 } catch (err) {
                     reject(err);
                     return;
-                }    
+                }
             }
 
             this._config = doc;
@@ -59,8 +63,8 @@ export class Server {
                 changed = true;
             }
 
-            for (let i = 0; i < this.modules.length; i++) {
-                let module = this._bot.getModule(this.modules[i]);
+            for (const moduleid of this.modules) {
+                const module = this._bot.getModule(moduleid);
                 if (module === null)
                     continue;
 
@@ -77,36 +81,36 @@ export class Server {
         });
     }
 
-    onLoad(initial: boolean): void {
-        this.channelCheck = setInterval(() => {
+    public onLoad(initial: boolean): void {
+        this._channelCheck = setInterval(() => {
             if (this.channel.length !== 0) {
-                if (this._server.channels.get(this.channel) === null) {
+                if (this.server.channels.get(this.channel) === null) {
                     this.channel = "";
-                    this._bot.message(Responses.get("CHANNEL_DELETED"), this);
+                    this._bot.message(PersonalityManager.instance.get(MessageID.SempaiHomeChannelDeleted), this);
                 }
             }
         }, 100);
 
         if (this.channel.length !== 0) {
-            if (this._server.channels.get(this.channel) === null) {
-                this._bot.message(Responses.get("CHANNEL_DELETED"), this);
+            if (this.server.channels.get(this.channel) === null) {
+                this._bot.message(PersonalityManager.instance.get(MessageID.SempaiHomeChannelDeleted), this);
                 this.channel = "";
             }
         } else {
-            Users.assignRole(this._server.owner.id, this, "admin");
-            this._bot.message(Responses.get("SETTING_UP"), this);
+            UserManager.instance.assignRole(this.server.owner.id, this, RoleType.Admin);
+            this._bot.message(PersonalityManager.instance.get(MessageID.SempaiSettingUp), this);
         }
 
-        this.loadPromiseResolve(initial);
+        this._loadPromiseResolve(initial);
     }
 
-    enableModule(name: string): void {
+    public enableModule(name: string): void {
         if (this.modules.indexOf(name) !== -1)
-            return; //already enabled
+            return; // already enabled
 
-        let module = this._bot.getModule(name);
+        const module = this._bot.getModule(name);
         if (module === null)
-            return; //no such module
+            return; // no such module
 
         if (module.disabled)
             return;
@@ -118,17 +122,17 @@ export class Server {
         DB.connection.manager.save(this._config);
     }
 
-    isModuleEnabled(name: string): boolean {
+    public isModuleEnabled(name: string): boolean {
         return this.modules.indexOf(name.toLowerCase()) !== -1;
     }
 
-    disableModule(name: string): void {
+    public disableModule(name: string): void {
         if (this.modules.indexOf(name) === -1)
-            return; //already enabled
+            return; // already enabled
 
-        let module = this._bot.getModule(name);
+        const module = this._bot.getModule(name);
         if (module === null)
-            return; //no such module
+            return; // no such module
 
         if (module.disabled)
             return;
@@ -140,26 +144,26 @@ export class Server {
         DB.connection.manager.save(this._config);
     }
 
-    ignoreUser(user: User): void {
+    public ignoreUser(user: User): void {
         if (this.ignoreList.indexOf(user._userID) === -1) {
             this._config.value.ignoreList.push(user._userID);
             DB.connection.manager.save(this._config);
         }
     }
 
-    unignoreUser(user: User): void {
-        let idx = this.ignoreList.indexOf(user._userID);
+    public unignoreUser(user: User): void {
+        const idx = this.ignoreList.indexOf(user._userID);
         if (idx !== -1) {
             this._config.value.ignoreList.splice(idx, 1);
             DB.connection.manager.save(this._config);
         }
     }
 
-    isUserIgnored(user: User): boolean {
+    public isUserIgnored(user: User): boolean {
         return this.ignoreList.indexOf(user._userID) !== -1;
     }
 
-    async saveConfig(): Promise<void> {
+    public async saveConfig(): Promise<void> {
         await DB.connection.manager.save(this._config);
     }
 
@@ -172,11 +176,11 @@ export class Server {
         return this._config.value.channel;
     }
 
-    get modules(): Array<string> {
+    get modules(): string[] {
         return this._config.value.modules;
     }
 
-    get ignoreList(): Array<string> {
+    get ignoreList(): string[] {
         return this._config.value.ignoreList;
     }
 

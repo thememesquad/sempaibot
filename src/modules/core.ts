@@ -1,33 +1,41 @@
-import { Responses, ResponseType } from "../responses";
-import { Permissions } from "../permissions";
-import { Users } from "../users";
-import { Config } from "../../config";
-import { GenerateTable, StringFormat } from "../util";
-import { ModuleBase, MessageInterface, Module, ModuleOptions, Command, CommandDescription, CommandSample, CommandPermission, CommandOptions } from "../modulebase";
+import { Command } from "../core/command/attributes/command";
+import { CommandDescription } from "../core/command/attributes/commanddescription";
+import { CommandSample } from "../core/command/attributes/commandexample";
+import { CommandPermission } from "../core/command/attributes/commandpermission";
+import { Module } from "../core/module/attributes/module";
+import { IMessageInterface } from "../core/module/messageinterface";
+import { ModuleBase } from "../core/module/modulebase";
+import { ModuleOptions } from "../core/module/moduleoptions";
+import { PermissionManager } from "../core/permission/manager";
+import { RoleType } from "../core/permission/roletype";
+import { MessageID } from "../core/personality/messageid";
+import { PersonalityManager } from "../core/personality/personalitymanager";
+import { UserManager } from "../core/user/usermanager";
+import { GenerateTable } from "../core/utils/util";
 
 @Module("Core", "This is the core module!", ModuleOptions.AlwaysOn | ModuleOptions.Hidden)
 export class CoreModule extends ModuleBase {
     constructor() {
         super();
 
-        this._permissions.register("CHANGE_PERSONALITY", "moderator");
+        PermissionManager.instance.register("CHANGE_PERSONALITY", RoleType.Moderator);
     }
 
     @Command("list roles")
     @CommandSample("list roles")
     @CommandDescription("Lists every user's role.")
-    private handleListRoles(message: MessageInterface, args: { [key: string]: any }) {
-        let server = message.server;
-        let tmp = [];
+    private handleListRoles(message: IMessageInterface, args: { [key: string]: any }) {
+        const server = message.server;
+        const tmp = [];
 
-        for (let key of server._server.members.keyArray()) {
-            let member = server._server.members.get(key);
-            let user = Users.getUser(member.user, server);
+        for (const key of server.server.members.keyArray()) {
+            const member = server.server.members.get(key);
+            const user = UserManager.instance.getUser(member.user, server);
 
             if (member.id === this._bot.user._userID)
                 continue;
 
-            if (user.getRoleId(server) === 0)
+            if (user.getRole(server) === RoleType.Normal)
                 continue;
 
             tmp.push(user);
@@ -37,36 +45,41 @@ export class CoreModule extends ModuleBase {
             return a.get_role_id(server) - b.get_role_id(server);
         });
 
-        let columns = { name: "Name", role: "Role" };
-        let data = [];
+        const columns = { name: "Name", role: "Role" };
+        const data = [];
 
-        for (let i = 0; i < tmp.length; i++)
-            data.push({ name: tmp[i].get_name_detailed(server), role: tmp[i].get_role(server) });
+        for (const dat of tmp)
+            data.push({ name: dat.get_name_detailed(server), role: dat.get_role(server) });
 
-        let messages = GenerateTable(StringFormat(Responses.get("LIST_ROLES"), { author: message.author.id }), columns, data, { name: 30, role: 15 });
+        const messages = GenerateTable(PersonalityManager.instance.get(MessageID.ListRoles, {
+            author: message.author.id,
+        }), columns, data, { name: 30, role: 15 });
+
         this._bot.respond(message, messages);
     }
 
     @Command("list permissions")
     @CommandSample("list permissions")
     @CommandDescription("Lists the available permissions for each role.")
-    private handleListPermissions(message: MessageInterface, args: { [key: string]: any }) {
-        let server = message.server;
-        let admin_permissions = this._permissions.getRole("admin").getPermissions(server);
+    private handleListPermissions(message: IMessageInterface, args: { [key: string]: any }) {
+        const server = message.server;
+        const adminPermissions = PermissionManager.instance.getRole(RoleType.Admin).getPermissions(server);
 
-        let columns = { permission: "Permission", roles: "Roles" };
-        let data = [];
-        let roles = ["admin", "moderator", "normal"];
+        const columns = { permission: "Permission", roles: "Roles" };
+        const data = [];
+        const roles = [
+            PermissionManager.instance.getRole(RoleType.Admin),
+            PermissionManager.instance.getRole(RoleType.Moderator),
+            PermissionManager.instance.getRole(RoleType.Normal),
+        ];
 
-        for (let key in admin_permissions) {
-            if (!admin_permissions[key])
+        for (const key in adminPermissions) {
+            if (!adminPermissions[key])
                 continue;
 
             let tmp = "";
-            for (let i = 0; i < roles.length; i++) {
-                let role = roles[i];
-
-                if (!this._permissions.getRole(role).isAllowed(server, key))
+            for (const role of roles) {
+                if (!role.isAllowed(server, key))
                     continue;
 
                 if (tmp.length !== 0)
@@ -75,7 +88,10 @@ export class CoreModule extends ModuleBase {
                 tmp += role;
             }
 
-            data.push({ permission: key.toLowerCase(), roles: tmp });
+            data.push({
+                permission: key.toLowerCase(),
+                roles: tmp,
+            });
         }
 
         data.sort((a, b) => {
@@ -90,11 +106,14 @@ export class CoreModule extends ModuleBase {
 
             if (a.permission > b.permission)
                 return 1;
-            
+
             return 0;
         });
 
-        let messages = GenerateTable(StringFormat(Responses.get("LIST_PERMISSIONS"), { author: message.author.id }), columns, data, { permission: 20, roles: 15 });
+        const messages = GenerateTable(PersonalityManager.instance.get(MessageID.ListPermissions, {
+            author: message.author.id,
+        }), columns, data, { permission: 20, roles: 15 });
+
         this._bot.respond(message, messages);
     }
 
@@ -103,26 +122,25 @@ export class CoreModule extends ModuleBase {
     @Command("show ignorelist")
     @CommandSample("show ignore list")
     @CommandDescription("Shows the list of people I'm currently ignoring!")
-    private handleShowIgnorelist(message: MessageInterface, args: { [key: string]: any }) {
+    private handleShowIgnorelist(message: IMessageInterface, args: { [key: string]: any }) {
         let response = "``` ";
 
         for (let i = 0; i < message.server.ignoreList.length; i++) {
             if (i !== 0)
                 response += "\r\n";
 
-            response += Users.getUserById(message.server.ignoreList[i], message.server).getDetailedName(message.server);
+            response += UserManager.instance.getUserById(message.server.ignoreList[i], message.server).getDetailedName(message.server);
         }
 
         response += "```";
 
         if (message.server.ignoreList.length === 0)
-            this._bot.respond(message, StringFormat(Responses.get("IGNORE_LIST_EMPTY"), { author: message.author.id }));
+            this._bot.respond(message, PersonalityManager.instance.get(MessageID.IgnoreListEmpty, { author: message.author.id }));
         else
-            this._bot.respond(message, StringFormat(Responses.get("SHOW_IGNORELIST"), { author: message.author.id, list: response }));
+            this._bot.respond(message, PersonalityManager.instance.get(MessageID.ListIgnores, { author: message.author.id, list: response }));
     }
 
-
-    @Command(["please help", { please: true }], CommandOptions.HideInHelp | CommandOptions.Global)
+    /*@Command(["please help", { please: true }], CommandOptions.HideInHelp | CommandOptions.Global)
     @Command(["hilfe", { german: true }])
     @Command(["please show help", { please: true }])
     @Command(["hilfe bitte", { german: true, please: true }])
@@ -212,9 +230,9 @@ export class CoreModule extends ModuleBase {
         this._bot.respond(message, message_queue).catch(err => {
             console.log("err", err);
         });
-    }
+    }*/
 
-    @Command("set response mode to {responsetype!type}")
+    /*@Command("set response mode to {responsetype!type}")
     @Command("use {responsetype!type}")
     @Command("use {responsetype!type} mode")
     @CommandDescription("Change my personality to Normal or Tsundere")
@@ -230,18 +248,18 @@ export class CoreModule extends ModuleBase {
 
         Responses.setMode(args.type);
         this._bot.respond(message, StringFormat(Responses.get("SWITCHED"), { author: message.author.id }));
-    }
-
-    private static _jsUcfirst(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
+    }*/
 
     @Command("what is my role")
     @CommandSample("what is my role?")
     @CommandDescription("Displays your role.")
-    private handleMyRole(message: MessageInterface, args: { [key: string]: any }) {
-        let role = CoreModule._jsUcfirst(message.user.getRole(message.server).toLowerCase());
-        this._bot.respond(message, StringFormat(Responses.get("MY_ROLE"), { author: message.author.id, role: role }));
+    private handleMyRole(message: IMessageInterface, args: { [key: string]: any }) {
+        const role: string = RoleType[message.user.getRole(message.server)];
+
+        this._bot.respond(message, PersonalityManager.instance.get(MessageID.CurrentUserRole, {
+            author: message.author.id,
+            role,
+        }));
     }
 
     @Command("what are my permissions")
@@ -252,14 +270,14 @@ export class CoreModule extends ModuleBase {
     @Command("show permissions")
     @CommandDescription("Displays your role's permissions.")
     @CommandSample("what are my permissions?")
-    private handleMyPermissions(message: MessageInterface, args: { [key: string]: any }) {
-        let server = message.server;
-        let role = this._permissions.getRole(message.user.getRole(server));
-        let list = role.getPermissions(server);
+    private handleMyPermissions(message: IMessageInterface, args: { [key: string]: any }) {
+        const server = message.server;
+        const role = PermissionManager.instance.getRole(message.user.getRole(server));
+        const list = role.getPermissions(server);
 
         let response = "```";
 
-        for (let key in list) {
+        for (const key in list) {
             if (key.toUpperCase() === "BLACKLIST_SERVERS" || key.toUpperCase() === "BLACKLIST_USERS")
                 continue;
 
@@ -273,23 +291,28 @@ export class CoreModule extends ModuleBase {
         }
         response += "```";
 
-        this._bot.respond(message, StringFormat(Responses.get("MY_PERMISSIONS"), { author: message.author.id, permissions: response }));
+        this._bot.respond(message, PersonalityManager.instance.get(MessageID.CurrentUserPermissions, {
+            author: message.author.id,
+            permissions: response,
+        }));
     }
 
     @Command("go to {channelid!channel}")
     @CommandDescription("Tells me to output to the specified channel.")
     @CommandSample("go to __*#channel*__")
     @CommandPermission("GO_TO_CHANNEL")
-    private handleGotoChannel(message: MessageInterface, args: { [key: string]: any }) {
-        let id = args.channel;
-        if (message.server._server.channels.get(id) === null)
-            return this._bot.respond(message, StringFormat(Responses.get("INVALID_CHANNEL"), { author: message.author.id, channel: args.channel }));
+    private handleGotoChannel(message: IMessageInterface, args: { [key: string]: any }) {
+        const id = args.channel;
+        if (message.server.server.channels.get(id) === null)
+            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidChannel, {
+                author: message.author.id,
+                channel: args.channel,
+            }));
 
         message.server.channel = id;
-        this._bot.message(StringFormat(Responses.get("OUTPUT_CHANNEL"), { author: message.author.id, channel: id }), message.server);
-    }
-
-    public onSetup() {
-        this._bot.setStatus("Online");
+        this._bot.message(PersonalityManager.instance.get(MessageID.SempaiHomeChannelChanged, {
+            author: message.author.id,
+            channel: id,
+        }), message.server);
     }
 }

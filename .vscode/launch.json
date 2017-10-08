@@ -4,7 +4,7 @@
             "name": "Launch",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceRoot}/src/bot.ts",
+            "program": "${workspaceRoot}/src/main.ts",
             "stopOnEntry": false,
             "args": [],
             "cwd": "${workspaceRoot}",
@@ -19,7 +19,7 @@
             },
             "console": "integratedTerminal",
             "sourceMaps": true,
-            "outFiles": ["${workspaceRoot}/build/bot.js"]
+            "outFiles": ["${workspaceRoot}/build/main.js"]
         },
         {
             "name": "Attach",
