@@ -1,7 +1,9 @@
+import { Config } from "../../config";
 import { Command } from "../core/command/attributes/command";
 import { CommandDescription } from "../core/command/attributes/commanddescription";
 import { CommandSample } from "../core/command/attributes/commandexample";
 import { CommandPermission } from "../core/command/attributes/commandpermission";
+import { CommandOptions } from "../core/command/commandoptions";
 import { Module } from "../core/module/attributes/module";
 import { IMessageInterface } from "../core/module/messageinterface";
 import { ModuleBase } from "../core/module/modulebase";
@@ -11,7 +13,7 @@ import { RoleType } from "../core/permission/roletype";
 import { MessageID } from "../core/personality/messageid";
 import { PersonalityManager } from "../core/personality/personalitymanager";
 import { UserManager } from "../core/user/usermanager";
-import { GenerateTable } from "../core/utils/util";
+import { generateTable } from "../core/utils/generatetable";
 
 @Module("Core", "This is the core module!", ModuleOptions.AlwaysOn | ModuleOptions.Hidden)
 export class CoreModule extends ModuleBase {
@@ -51,7 +53,7 @@ export class CoreModule extends ModuleBase {
         for (const dat of tmp)
             data.push({ name: dat.get_name_detailed(server), role: dat.get_role(server) });
 
-        const messages = GenerateTable(PersonalityManager.instance.get(MessageID.ListRoles, {
+        const messages = generateTable(PersonalityManager.instance.get(MessageID.ListRoles, {
             author: message.author.id,
         }), columns, data, { name: 30, role: 15 });
 
@@ -110,7 +112,7 @@ export class CoreModule extends ModuleBase {
             return 0;
         });
 
-        const messages = GenerateTable(PersonalityManager.instance.get(MessageID.ListPermissions, {
+        const messages = generateTable(PersonalityManager.instance.get(MessageID.ListPermissions, {
             author: message.author.id,
         }), columns, data, { permission: 20, roles: 15 });
 
@@ -140,7 +142,7 @@ export class CoreModule extends ModuleBase {
             this._bot.respond(message, PersonalityManager.instance.get(MessageID.ListIgnores, { author: message.author.id, list: response }));
     }
 
-    /*@Command(["please help", { please: true }], CommandOptions.HideInHelp | CommandOptions.Global)
+    @Command(["please help", { please: true }], CommandOptions.HideInHelp | CommandOptions.Global)
     @Command(["hilfe", { german: true }])
     @Command(["please show help", { please: true }])
     @Command(["hilfe bitte", { german: true, please: true }])
@@ -151,20 +153,20 @@ export class CoreModule extends ModuleBase {
     @Command("show help")
     @Command(["助けて", { japanese: true }])
     @Command(["助けてください", { japanese: true, please: true }])
-    private handleHelp(message: MessageInterface, args: { [key: string]: any }) {
+    private handleHelp(message: IMessageInterface, args: { [key: string]: any }) {
         let response = "";
 
-        if (args.please)
-            response = StringFormat(Responses.get("PLEASE_HELP_TOP"), { author: message.author.id });
-        else
-            response = StringFormat(Responses.get("HELP_TOP"), { author: message.author.id });
+        // if (args.please)
+        //     response = stringFormat(Responses.get("PLEASE_HELP_TOP"), { author: message.author.id });
+        // else
+        //     response = stringFormat(Responses.get("HELP_TOP"), { author: message.author.id });
 
-        let message_queue = [];
-        let role = message.user.getRole(message.server);
+        const messageQueue = [];
+        const role = message.user.getRole(message.server);
         let modules = "";
-        for (let key in this._bot.modules) {
-            let module = this._bot.modules[key];
-            let enabled = (message.server === null) ? false : message.server.isModuleEnabled(module.name);
+        for (const key in this._bot.modules) {
+            const module = this._bot.modules[key];
+            const enabled = (message.server === null) ? false : message.server.isModuleEnabled(module.name);
 
             if (enabled) {
                 if (modules.length !== 0)
@@ -175,16 +177,14 @@ export class CoreModule extends ModuleBase {
 
             let hasNonHidden = false;
             let tmp = "";
-            for (let key in module.commands) {
-                let command = module.commands[key];
-
-                if (command.permission !== null && !this._permissions.isAllowed(command.permission as string, role, message.server))
+            for (const command of module.commands) {
+                if (command.permission !== null && !PermissionManager.instance.isAllowed(command.permission as string, role, message.server))
                     continue;
 
                 if (command.hideInHelp === undefined || command.hideInHelp === false) {
-                    let is_private = command.private !== undefined && command.private === true;
+                    const isPrivate = command.private !== undefined && command.private === true;
 
-                    if (message.server !== null && is_private)
+                    if (message.server !== null && isPrivate)
                         continue;
 
                     if (command.global === false && !enabled)
@@ -201,7 +201,7 @@ export class CoreModule extends ModuleBase {
                 continue;
 
             if (response.length + tmp.length >= 1900) {
-                message_queue.push(response);
+                messageQueue.push(response);
                 response = "";
             }
 
@@ -214,23 +214,22 @@ export class CoreModule extends ModuleBase {
         if (message.server !== null)
             add += "**Enabled modules**: " + modules + "\r\n\r\n";
 
-        if (args.please)
-            add += StringFormat(Responses.get("PLEASE_HELP_BOTTOM"), { author: message.author.id });
-        else
-            add += StringFormat(Responses.get("HELP_BOTTOM"), { author: message.author.id });
+        // if (args.please)
+        //     add += StringFormat(Responses.get("PLEASE_HELP_BOTTOM"), { author: message.author.id });
+        // else
+        //     add += StringFormat(Responses.get("HELP_BOTTOM"), { author: message.author.id });
 
         if (response.length + add.length >= 1900) {
-            message_queue.push(response);
-            message_queue.push(add);
-        }
-        else {
-            message_queue.push(response + add);
+            messageQueue.push(response);
+            messageQueue.push(add);
+        } else {
+            messageQueue.push(response + add);
         }
 
-        this._bot.respond(message, message_queue).catch(err => {
+        this._bot.respond(message, messageQueue).catch((err) => {
             console.log("err", err);
         });
-    }*/
+    }
 
     /*@Command("set response mode to {responsetype!type}")
     @Command("use {responsetype!type}")

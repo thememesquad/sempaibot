@@ -1,5 +1,7 @@
 import { BotBase } from "../botbase";
-import { IDType, ParseID, ParseRoleType } from "../utils/util";
+import { IdType } from "../utils/idtype";
+import { parseId } from "../utils/parseid";
+import { parseRoleType } from "../utils/parseroletype";
 import { ICommandFormatInterface } from "./commandformatinterface";
 import { CreateRegex } from "./createregex";
 
@@ -22,23 +24,23 @@ export class CommandProcessor {
 
             CommandProcessor.addCustomType("float", (msg) => parseFloat(msg));
             CommandProcessor.addCustomType("int", (msg) => parseInt(msg, 10));
-            CommandProcessor.addCustomType("id", (msg) => ParseID(msg));
+            CommandProcessor.addCustomType("id", (msg) => parseId(msg));
             CommandProcessor.addCustomType("channelid", (msg) => {
-                const id = ParseID(msg);
-                if (id.type !== IDType.Channel)
+                const id = parseId(msg);
+                if (id.type !== IdType.Channel)
                     return null;
 
                 return id.id;
             });
             CommandProcessor.addCustomType("userid", (msg) => {
-                const id = ParseID(msg);
-                if (id.type !== IDType.User)
+                const id = parseId(msg);
+                if (id.type !== IdType.User)
                     return null;
 
                 return id.id;
             });
             CommandProcessor.addCustomType("roletype", (msg) => {
-                return ParseRoleType(msg);
+                return parseRoleType(msg);
             });
         }
 

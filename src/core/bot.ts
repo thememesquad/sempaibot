@@ -77,8 +77,12 @@ export class Bot implements BotBase {
         process.exit(0);
     }
 
+    public getServer(id: string): Server {
+        return this._servers[id] || null;
+    }
+
     public getModule(name: string): ModuleBase {
-        return (this._modules[name.toLowerCase()] === undefined) ? null : this._modules[name.toLowerCase()];
+        return this._modules[name.toLowerCase()] || null;
     }
 
     public async message(message: MessageContent | MessageContent[], server: Server): Promise<IMessageInterface | IMessageInterface[]> {

@@ -34,28 +34,31 @@ export class Server {
         this._loadPromiseResolve = null;
         this.loadPromise = new Promise(async (resolve, reject) => {
             this._loadPromiseResolve = resolve;
+            try {
+                const doc = await DB.connection.manager.findOne(ConfigKeyValueModel, { key: this.server.id + "_config" });
+                if (!doc) {
+                    this._config = new ConfigKeyValueModel();
+                    this._config.key = this.server.id + "_config";
+                    this._config.value = {
+                        channel: "",
+                        ignoreList: [],
+                        modules: [],
+                        osu_limit: 50,
+                    };
 
-            const doc = await DB.connection.manager.findOne(ConfigKeyValueModel, { key: this.server.id + "_config" });
-            if (!doc) {
-                this._config = new ConfigKeyValueModel();
-                this._config.key = this.server.id + "_config";
-                this._config.value = {
-                    channel: "",
-                    ignoreList: [],
-                    modules: [],
-                    osu_limit: 50,
-                };
-
-                try {
-                    await DB.connection.manager.save(this._config);
-                    return this.onLoad(true);
-                } catch (err) {
-                    reject(err);
-                    return;
+                    try {
+                        await DB.connection.manager.save(this._config);
+                        return this.onLoad(true);
+                    } catch (err) {
+                        reject(err);
+                        return;
+                    }
                 }
-            }
 
-            this._config = doc;
+                this._config = doc;
+            } catch (err) {
+                return reject(err);
+            }
 
             let changed = false;
             if (this._config.value.osu_limit === undefined) {
@@ -74,8 +77,12 @@ export class Server {
                 module.onLoad(this);
             }
 
-            if (changed)
-                await DB.connection.manager.save(this._config);
+            try {
+                if (changed)
+                    await DB.connection.manager.save(this._config);
+            } catch (err) {
+                return reject(err);
+            }
 
             this.onLoad(false);
         });

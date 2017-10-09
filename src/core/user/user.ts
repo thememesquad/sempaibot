@@ -14,6 +14,10 @@ export class User {
             this._name = user.name;
             this._userID = user.discordId;
             this._roles = {};
+
+            for (const role of user.roles) {
+                this._roles[role.serverId] = role.role;
+            }
         }
     }
 

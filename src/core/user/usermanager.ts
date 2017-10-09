@@ -19,11 +19,9 @@ export class UserManager {
         const users = await DB.connection.manager.find(UserModel);
         for (const user of users) {
             if (Config.superadmins.indexOf(user.discordId) !== -1) {
-                // todo: override all roles with superadmin
-
-                /*for (let key in user.roles) {
-                    user.roles[key] = "superadmin";
-                }*/
+                for (const key in user.roles) {
+                    user.roles[key].role = RoleType.SuperAdmin;
+                }
             }
 
             this._users[user.discordId] = new User(user);

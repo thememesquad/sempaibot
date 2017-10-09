@@ -1,11 +1,7 @@
 import * as moment from "moment";
+import { ITimeInterface } from "./timeinterface";
 
-interface ITimeInterface {
-    base: string;
-    time: moment.Moment;
-}
-
-function ParseTimeInternal(str): ITimeInterface {
+function parseTimeInternal(str): ITimeInterface {
     str = str.toLowerCase().trim();
 
     const currentDate = moment();
@@ -241,7 +237,7 @@ function ParseTimeInternal(str): ITimeInterface {
     return { base, time };
 }
 
-export function ParseTime(str) {
+export function parseTime(str) {
     let ret = [];
     const split = str.trim().split(" ");
 
@@ -269,7 +265,7 @@ export function ParseTime(str) {
                 continue;
             }
 
-            const tmp2 = ParseTimeInternal(tmp);
+            const tmp2 = parseTimeInternal(tmp);
             if (tmp2 === null || !tmp2[1].isValid()) {
                 continue;
             }

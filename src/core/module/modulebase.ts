@@ -11,7 +11,7 @@ export class ModuleBase {
 
     protected _name: string;
     protected _description: string | string[];
-    protected _commands: { [key: string]: ICommandInterface };
+    protected _commands: ICommandInterface[];
 
     protected _alwaysOn: boolean = false;
     protected _defaultOn: boolean = false;
@@ -22,28 +22,38 @@ export class ModuleBase {
         this._name = "";
         this._bot = null;
 
-        if (!this._commands)
-            this._commands = {};
+        if (this._commands == null)
+            this._commands = [];
     }
 
     public getCommandInternal(key: string): ICommandInterface {
-        if (!this._commands)
-            this._commands = {};
+        if (this._commands == null)
+            this._commands = [];
 
-        return this._commands[key];
+        return this._commands.find((value, index, obj) => {
+            return value.key === key;
+        });
     }
 
     public setCommandInternal(key: string, command: ICommandInterface): void {
-        if (!this._commands)
-            this._commands = {};
+        if (this._commands == null)
+            this._commands = [];
 
-        this._commands[key] = command;
+        command.key = key;
+
+        for (const i in this._commands) {
+            if (this._commands[i].key === key) {
+                this._commands[i] = command;
+                return;
+            }
+        }
+
+        this._commands.push(command);
     }
 
     public async checkMessage(server: Server, message: IMessageInterface): Promise<boolean> {
         const best = null;
-        for (const key in this._commands) {
-            const command = this._commands[key];
+        for (const command of this._commands) {
             let data = null;
             const isPrivate = command.private !== undefined && command.private === true;
 
@@ -92,7 +102,7 @@ export class ModuleBase {
         return this._disabled;
     }
 
-    public get commands(): { [key: string]: ICommandInterface } {
+    public get commands(): ICommandInterface[] {
         return this._commands;
     }
 
@@ -108,8 +118,19 @@ export class ModuleBase {
         return this._hidden;
     }
 
-    public onSetup(): void {}
-    public onLoad(server: Server): void {}
-    public onUnload(server: Server): void {}
-    public onShutdown(): void {}
+    public onSetup(): void {
+        // empty
+    }
+
+    public onLoad(server: Server): void {
+        // empty
+    }
+
+    public onUnload(server: Server): void {
+        // empty
+    }
+
+    public onShutdown(): void {
+        // empty
+    }
 }

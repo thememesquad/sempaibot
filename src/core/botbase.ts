@@ -12,6 +12,8 @@ export abstract class BotBase {
 
     public abstract isUserBlacklisted(user: User): boolean;
     public abstract isServerBlacklisted(server: string): boolean;
+
+    public abstract getServer(id: string): Server;
     public abstract getModule(name: string): ModuleBase;
 
     public abstract message(message: MessageContent | MessageContent[], server: Server): Promise<IMessageInterface | IMessageInterface[]>;

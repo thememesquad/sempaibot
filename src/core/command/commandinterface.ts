@@ -2,6 +2,8 @@ import { IMessageInterface } from "../module/messageinterface";
 import { CommandProcessor } from "./commandprocessor";
 
 export interface ICommandInterface {
+    key?: string;
+
     formats: CommandProcessor;
     execute: (message: IMessageInterface, args: { [key: string]: any }) => void;
 

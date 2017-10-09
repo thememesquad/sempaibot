@@ -13,7 +13,7 @@ import { MessageID } from "../core/personality/messageid";
 import { PersonalityManager } from "../core/personality/personalitymanager";
 import { User } from "../core/user/user";
 import { UserManager } from "../core/user/usermanager";
-import { GenerateTable } from "../core/utils/util";
+import { generateTable } from "../core/utils/generatetable";
 
 @Module("Admin", "This is the admin module.", ModuleOptions.AlwaysOn | ModuleOptions.Hidden)
 export class AdminModule extends ModuleBase {
@@ -28,12 +28,12 @@ export class AdminModule extends ModuleBase {
         PermissionManager.instance.register("ASSIGN_ROLES", RoleType.Admin);
     }
 
-    @Command("blacklist server {int!server}", CommandOptions.Global)
+    @Command("blacklist server {server}", CommandOptions.Global)
     @CommandSample("blacklist server __*server*__")
     @CommandDescription("Blacklists a server.")
     @CommandPermission("SUPERADMIN")
     private handleServerBlacklist(message: IMessageInterface, args: { [key: string]: any }): void {
-        /*const server = this._bot.getInternalServer(args.server - 1);
+        const server = this._bot.getServer(args.server);
 
         if (server === null) {
             this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidServer, {
@@ -57,15 +57,15 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerBlacklisted, {
             author: message.author.id,
             server_name: server.server.name,
-        }));*/
+        }));
     }
 
-    @Command("whitelist server {int!server}", CommandOptions.Global)
+    @Command("whitelist server {server}", CommandOptions.Global)
     @CommandSample("whitelist server __*server*__")
     @CommandDescription("Whitelists a server.")
     @CommandPermission("SUPERADMIN")
     private handleServerWhitelist(message: IMessageInterface, args: { [key: string]: any }) {
-        /*const server = this._bot.getInternalServer(args.server - 1);
+        const server = this._bot.getServer(args.server);
 
         if (server === null)
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidServer, {
@@ -83,7 +83,7 @@ export class AdminModule extends ModuleBase {
         this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerWhitelisted, {
             author: message.author.id,
             server_name: server.server.name,
-        }));*/
+        }));
     }
 
     @Command("blacklist user {userid!user}", CommandOptions.Global)
@@ -252,7 +252,7 @@ export class AdminModule extends ModuleBase {
             });
         }
 
-        const messages = GenerateTable(PersonalityManager.instance.get(MessageID.ListServers, {
+        const messages = generateTable(PersonalityManager.instance.get(MessageID.ListServers, {
             author: message.author.id,
         }), { id: "ID", name: "Name", owner: "Owner", limit: "Limit" }, data);
         this._bot.respond(message, messages);
@@ -343,7 +343,7 @@ export class AdminModule extends ModuleBase {
             data.push({ name: key, enabled: (enabled) ? "yes" : "no", flags });
         }
 
-        const messages = GenerateTable(PersonalityManager.instance.get(MessageID.ListModules, {
+        const messages = generateTable(PersonalityManager.instance.get(MessageID.ListModules, {
             author: message.author.id,
         }), columns, data, { name: 20, enabled: 10, flags: 15 });
 

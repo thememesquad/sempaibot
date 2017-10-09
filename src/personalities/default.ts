@@ -1,6 +1,6 @@
 import { MessageID } from "../core/personality/messageid";
 import { PersonalityBase } from "../core/personality/personalitybase";
-import { StringFormat } from "../core/utils/util";
+import { stringFormat } from "../core/utils/stringformat";
 
 const personality: { [key: number]: any } = {};
 personality[MessageID.SempaiCalled] = [
@@ -192,6 +192,6 @@ export class DefaultPersonality extends PersonalityBase {
         if (Array.isArray(str))
             str = str[Math.floor(Math.random() * str.length)];
 
-        return StringFormat(str as string, args);
+        return stringFormat(str as string, args);
     }
 }
