@@ -12,11 +12,9 @@ export class DiscordAPI implements IAPI {
     private _bot: BotBase;
     private _discord: Client;
 
-    constructor(bot: BotBase) {
+    constructor() {
         this._connectedOnce = false;
         this._connected = false;
-
-        this._bot = bot;
 
         this._discord = new Client();
         this._discord.on("message", this.onMessage.bind(this));
@@ -25,6 +23,10 @@ export class DiscordAPI implements IAPI {
         this._discord.on("serverDeleted", this.onServerDeleted.bind(this));
         this._discord.on("disconnected", this.onDisconnected.bind(this));
         this._discord.on("error", this.onError.bind(this));
+    }
+
+    public setBot(bot: BotBase): void {
+        this._bot = bot;
     }
 
     public async message(message: MessageContent | MessageContent[], server: Server): Promise<IMessageInterface | IMessageInterface[]> {

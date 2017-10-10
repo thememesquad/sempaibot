@@ -27,8 +27,10 @@ export class Bot implements BotBase {
 
     private _availableModules: { [key: string]: ModuleBase };
 
-    constructor(allowLog: boolean = true) {
-        this._api = new DiscordAPI(this);
+    constructor(api: IAPI, allowLog: boolean = true) {
+        this._api = api;
+        this._api.setBot(this);
+
         this._servers = {};
         this._modules = {};
 
@@ -41,8 +43,6 @@ export class Bot implements BotBase {
 
         for (const key of Object.keys(Modules))
             this._availableModules[key] = new Modules[key]();
-
-        process.on("SIGTERM", () => this.shutdown());
     }
 
     public log(...args: any[]): void {
@@ -74,7 +74,8 @@ export class Bot implements BotBase {
         for (const key in this._modules)
             this._modules[key].onShutdown();
 
-        process.exit(0);
+        this._api.setBot(null);
+        this._api = null;
     }
 
     public getServer(id: string): Server {

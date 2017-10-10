@@ -10,7 +10,16 @@
         "forin": false,
         "no-console": false,
         "no-bitwise": false,
-        "max-line-length": 140
+        "max-line-length": 140,
+
+        "quotes": [
+            "error",
+            "double"
+        ],
+        "semi": [
+            "error",
+            "always"
+        ]
     },
     "rulesDirectory": []
 }

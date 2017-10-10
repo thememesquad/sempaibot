@@ -11,3 +11,4 @@
 /coverage
 /build
 /data.sqlite
+/.nyc_output
