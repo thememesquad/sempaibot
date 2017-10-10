@@ -1,19 +1,21 @@
 import { Config } from "../../config";
-import { Command } from "../core/command/attributes/command";
-import { CommandDescription } from "../core/command/attributes/commanddescription";
-import { CommandSample } from "../core/command/attributes/commandexample";
-import { CommandPermission } from "../core/command/attributes/commandpermission";
-import { CommandOptions } from "../core/command/commandoptions";
-import { Module } from "../core/module/attributes/module";
-import { IMessageInterface } from "../core/module/messageinterface";
-import { ModuleBase } from "../core/module/modulebase";
-import { ModuleOptions } from "../core/module/moduleoptions";
-import { PermissionManager } from "../core/permission/manager";
-import { RoleType } from "../core/permission/roletype";
-import { MessageID } from "../core/personality/messageid";
-import { PersonalityManager } from "../core/personality/personalitymanager";
-import { UserManager } from "../core/user/usermanager";
-import { generateTable } from "../core/utils/generatetable";
+import {
+    Command,
+    CommandDescription,
+    CommandOptions,
+    CommandPermission,
+    CommandSample,
+    generateTable,
+    IMessageInterface,
+    MessageID,
+    Module,
+    ModuleBase,
+    ModuleOptions,
+    PermissionManager,
+    PersonalityManager,
+    RoleType,
+    UserManager,
+} from "../core";
 
 @Module("Core", "This is the core module!", ModuleOptions.AlwaysOn | ModuleOptions.Hidden)
 export class CoreModule extends ModuleBase {

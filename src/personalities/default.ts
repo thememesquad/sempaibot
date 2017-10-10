@@ -1,6 +1,6 @@
+import { stringFormat } from "../core";
 import { MessageID } from "../core/personality/messageid";
 import { PersonalityBase } from "../core/personality/personalitybase";
-import { stringFormat } from "../core/utils/stringformat";
 
 const personality: { [key: number]: any } = {};
 personality[MessageID.SempaiCalled] = [

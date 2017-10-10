@@ -1,5 +1,5 @@
-import { DiscordAPI } from "./core/api/discord";
-import { Bot } from "./core/bot";
+import { DiscordAPI } from "./api/discordapi";
+import { Bot, parseTime } from "./core";
 
 const bot: Bot = new Bot(new DiscordAPI());
 process.on("SIGTERM", () => {

@@ -2,18 +2,20 @@ import { Message, RichEmbed, RichEmbedOptions } from "discord.js";
 import { Config } from "../../config";
 import { ConfigKeyValueModel } from "../model/configkeyvalue";
 import * as Modules from "../modules/modules";
-import { IAPI } from "./api/apibase";
-import { DiscordAPI } from "./api/discord";
-import { BotBase, MessageContent } from "./botbase";
-import { DB } from "./db";
-import { IMessageInterface } from "./module/messageinterface";
-import { ModuleBase } from "./module/modulebase";
-import { PermissionManager } from "./permission/manager";
-import { MessageID } from "./personality/messageid";
-import { PersonalityManager } from "./personality/personalitymanager";
-import { Server } from "./server";
-import { User } from "./user/user";
-import { UserManager } from "./user/usermanager";
+import {
+    BotBase,
+    DB,
+    IAPI,
+    IMessageInterface,
+    MessageContent,
+    MessageID,
+    ModuleBase,
+    PermissionManager,
+    PersonalityManager,
+    Server,
+    User,
+    UserManager,
+} from "./index";
 
 export class Bot implements BotBase {
     private _api: IAPI;

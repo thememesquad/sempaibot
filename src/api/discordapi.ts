@@ -1,9 +1,7 @@
 import { Client, Message, MessageOptions, RichEmbed, RichEmbedOptions, TextChannel } from "discord.js";
-import { Config } from "../../../config";
-import { BotBase, MessageContent } from "../botbase";
-import { IMessageInterface } from "../module/messageinterface";
-import { Server } from "../server";
-import { IAPI } from "./apibase";
+import { Config } from "../../config";
+import { BotBase } from "../core/botbase";
+import { IAPI, IMessageInterface, MessageContent, Server } from "../core/index";
 
 export class DiscordAPI implements IAPI {
     private _connectedOnce: boolean;

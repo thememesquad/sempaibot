@@ -1,8 +1,12 @@
 import * as chai from "chai";
 import "mocha";
+import { RoleType } from "../src/core/permission/roletype";
 import { generateTable } from "../src/core/utils/generatetable";
 import { IdType } from "../src/core/utils/idtype";
 import { parseId } from "../src/core/utils/parseid";
+import { parseRoleType } from "../src/core/utils/parseroletype";
+import { parseTime } from "../src/core/utils/parsetime";
+import { stringFormat } from "../src/core/utils/stringformat";
 
 chai.should();
 
@@ -49,7 +53,94 @@ describe("Util", () => {
         });
     });
 
-    describe("generate_table", () => {
+    describe("parse role type", () => {
+        it("superadmin", () => {
+            const role = parseRoleType("superadmin");
+
+            role.should.equal(RoleType.SuperAdmin);
+        });
+
+        it("superadmin random caps", () => {
+            const role = parseRoleType("sUpErAdmiN");
+
+            role.should.equal(RoleType.SuperAdmin);
+        });
+
+        it("admin", () => {
+            const role = parseRoleType("admin");
+
+            role.should.equal(RoleType.Admin);
+        });
+
+        it("admin random caps", () => {
+            const role = parseRoleType("AdmiN");
+
+            role.should.equal(RoleType.Admin);
+        });
+
+        it("moderator", () => {
+            const role = parseRoleType("moderator");
+
+            role.should.equal(RoleType.Moderator);
+        });
+
+        it("moderator random caps", () => {
+            const role = parseRoleType("mOdeRatoR");
+
+            role.should.equal(RoleType.Moderator);
+        });
+
+        it("normal", () => {
+            const role = parseRoleType("normal");
+
+            role.should.equal(RoleType.Normal);
+        });
+
+        it("normal random caps", () => {
+            const role = parseRoleType("noRmAl");
+
+            role.should.equal(RoleType.Normal);
+        });
+
+        it("unknown", () => {
+            const role = parseRoleType("helloworld");
+
+            role.should.equal(RoleType.Normal);
+        });
+    });
+
+    describe("string format", () => {
+        it("no format 1", () => {
+            const str = stringFormat("Hello World");
+            str.should.equal("Hello World");
+        });
+
+        it("no format 2", () => {
+            const str = stringFormat("Hello {World}", {});
+            str.should.equal("Hello {World}");
+        });
+
+        it("format", () => {
+            const str = stringFormat("Hello {world}", {world: "World"});
+            str.should.equal("Hello World");
+        });
+
+        it("null format", () => {
+            const str = stringFormat("Hello World", null);
+            str.should.equal("Hello World");
+        });
+    });
+
+    describe("parse time", () => {
+        it("basic", () => {
+            const tmp = parseTime("today");
+            tmp.length.should.equal(1);
+            tmp[0].ret.base.should.equal("today");
+            tmp[0].ret.time.isValid().should.equal(true);
+        });
+    });
+
+    describe("generate table", () => {
         it("null base_message", () => {
             const data = [];
             data.push({ tmp: "hello world" });

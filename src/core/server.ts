@@ -1,13 +1,7 @@
 import { Channel, Guild, Snowflake } from "discord.js";
-import { BotBase } from "./botbase";
-
 import { ConfigKeyValueModel } from "../model/configkeyvalue";
 import { DB } from "./db";
-import { RoleType } from "./permission/roletype";
-import { MessageID } from "./personality/messageid";
-import { PersonalityManager } from "./personality/personalitymanager";
-import { User } from "./user/user";
-import { UserManager } from "./user/usermanager";
+import { BotBase, MessageID, PersonalityManager, RoleType, User, UserManager } from "./index";
 
 export class Server {
     public server: Guild;

@@ -1,8 +1,5 @@
 import { RichEmbed, RichEmbedOptions } from "discord.js";
-import { IMessageInterface } from "./module/messageinterface";
-import { ModuleBase } from "./module/modulebase";
-import { Server } from "./server";
-import { User } from "./user/user";
+import { IMessageInterface, ModuleBase, Server, User } from "./index";
 
 export type MessageContent = string | RichEmbed | RichEmbedOptions;
 export abstract class BotBase {

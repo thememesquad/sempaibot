@@ -1,5 +1,6 @@
 import * as moment from "moment";
 import { ITimeInterface } from "./timeinterface";
+import { ITimeMatchInterface } from "./timematchinterface";
 
 function parseTimeInternal(str): ITimeInterface {
     str = str.toLowerCase().trim();
@@ -48,6 +49,18 @@ function parseTimeInternal(str): ITimeInterface {
 
         case "sunday":
             return dayFunc(0, "sunday");
+
+        case "yesterday":
+            base = "yesterday";
+            time = currentDate.subtract(1, "day");
+
+            return { base, time };
+
+        case "today":
+            base = "today";
+            time = currentDate;
+
+            return { base, time };
 
         case "tomorrow":
             base = "tomorrow";
@@ -237,13 +250,13 @@ function parseTimeInternal(str): ITimeInterface {
     return { base, time };
 }
 
-export function parseTime(str) {
-    let ret = [];
+export function parseTime(str): ITimeMatchInterface[] {
+    let ret: ITimeMatchInterface[] = [];
     const split = str.trim().split(" ");
 
     let size = split.length;
-    while (size > 1) {
-        const matches = [];
+    while (size > 0) {
+        const matches: ITimeMatchInterface[] = [];
 
         for (let i = 0; i < split.length; i++) {
             let tmp = "";
@@ -266,7 +279,7 @@ export function parseTime(str) {
             }
 
             const tmp2 = parseTimeInternal(tmp);
-            if (tmp2 === null || !tmp2[1].isValid()) {
+            if (tmp2 === null || !tmp2.time.isValid()) {
                 continue;
             }
 
