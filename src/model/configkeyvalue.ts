@@ -1,4 +1,4 @@
-// import { watch } from "melanke-watchjs";
+import "proxy-observe";
 import { AfterLoad, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
@@ -17,9 +17,10 @@ export class ConfigKeyValueModel {
         if (this._valueUnserialized === null) {
             this._valueUnserialized = JSON.parse(this._value);
 
-            // watch(this._valueUnserialized, () => {
-            //     this._value = JSON.stringify(this._valueUnserialized);
-            // });
+            const base = this;
+            (Object as any).deepObserve(this._valueUnserialized, (changeset) => {
+                base._value = JSON.stringify(base._valueUnserialized);
+            });
         }
 
         return this._valueUnserialized;
@@ -36,9 +37,10 @@ export class ConfigKeyValueModel {
         this._valueUnserialized = JSON.parse(this._value);
 
         if (!loaded) {
-            // watch(this._valueUnserialized, () => {
-            //     this._value = JSON.stringify(this._valueUnserialized);
-            // });
+            const base = this;
+            (Object as any).deepObserve(this._valueUnserialized, (changeset) => {
+                base._value = JSON.stringify(base._valueUnserialized);
+            });
         }
     }
 }

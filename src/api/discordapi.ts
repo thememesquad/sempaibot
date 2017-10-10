@@ -28,9 +28,6 @@ export class DiscordAPI implements IAPI {
     }
 
     public async message(message: MessageContent | MessageContent[], server: Server): Promise<IMessageInterface | IMessageInterface[]> {
-        if (this._bot.isServerBlacklisted(server.id))
-            return Promise.reject("blacklisted");
-
         if (Array.isArray(message)) {
             let ids = [];
 
@@ -58,9 +55,6 @@ export class DiscordAPI implements IAPI {
     }
 
     public async respond(m: IMessageInterface, message: MessageContent | MessageContent[]): Promise<IMessageInterface | IMessageInterface[]> {
-        if (m.server !== null && this._bot.isServerBlacklisted(m.server.id))
-            return Promise.reject("blacklisted");
-
         if (Array.isArray(message)) {
             let ids = [];
 
