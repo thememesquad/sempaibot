@@ -76,157 +76,157 @@ function parseTimeInternal(str): ITimeInterface {
         switch (match[1]) {
             case "second":
             case "seconds":
-                {
-                    num = parseInt(match[0], 10);
-                    if (isNaN(num)) {
-                        console.log("Unknown second: " + match[0]);
-                        return null;
-                    }
-
-                    name = "" + num;
-                    if (num === 1)
-                        name += " second";
-                    else
-                        name += " seconds";
-
-                    base = "in " + name;
-                    time = moment(currentDate.unix() + (num * 1000));
-
-                    return { base, time };
+            {
+                num = parseInt(match[0], 10);
+                if (isNaN(num)) {
+                    console.log("Unknown second: " + match[0]);
+                    return null;
                 }
+
+                name = "" + num;
+                if (num === 1)
+                    name += " second";
+                else
+                    name += " seconds";
+
+                base = "in " + name;
+                time = moment(currentDate.unix() + (num * 1000));
+
+                return { base, time };
+            }
 
             case "minute":
             case "minutes":
-                {
-                    num = parseInt(match[0], 10);
-                    if (isNaN(num)) {
-                        console.log("Unknown minute: " + match[0]);
-                        return null;
-                    }
-
-                    name = "" + num;
-                    if (num === 1)
-                        name += " minute";
-                    else
-                        name += " minutes";
-
-                    base = "in " + name;
-                    time = currentDate.add(num, "minutes");
-
-                    return { base, time };
+            {
+                num = parseInt(match[0], 10);
+                if (isNaN(num)) {
+                    console.log("Unknown minute: " + match[0]);
+                    return null;
                 }
+
+                name = "" + num;
+                if (num === 1)
+                    name += " minute";
+                else
+                    name += " minutes";
+
+                base = "in " + name;
+                time = currentDate.add(num, "minutes");
+
+                return { base, time };
+            }
 
             case "hour":
             case "hours":
-                {
-                    num = parseInt(match[0], 10);
-                    if (isNaN(num)) {
-                        console.log("Unknown hour: " + match[0]);
-                        return null;
-                    }
-
-                    name = "" + num;
-                    if (num === 1)
-                        name += " hour";
-                    else
-                        name += " hours";
-
-                    base = "in " + name;
-                    time = currentDate.add(num, "hours");
-
-                    return { base, time };
+            {
+                num = parseInt(match[0], 10);
+                if (isNaN(num)) {
+                    console.log("Unknown hour: " + match[0]);
+                    return null;
                 }
+
+                name = "" + num;
+                if (num === 1)
+                    name += " hour";
+                else
+                    name += " hours";
+
+                base = "in " + name;
+                time = currentDate.add(num, "hours");
+
+                return { base, time };
+            }
 
             case "day":
             case "days":
-                {
-                    num = parseInt(match[0], 10);
-                    if (isNaN(num)) {
-                        console.log("Unknown day: " + match[0]);
-                        return null;
-                    }
-
-                    name = "" + num;
-                    if (num === 1)
-                        name += " day";
-                    else
-                        name += " days";
-
-                    base = "in " + name;
-                    time = currentDate.add(num, "days");
-
-                    return { base, time };
+            {
+                num = parseInt(match[0], 10);
+                if (isNaN(num)) {
+                    console.log("Unknown day: " + match[0]);
+                    return null;
                 }
+
+                name = "" + num;
+                if (num === 1)
+                    name += " day";
+                else
+                    name += " days";
+
+                base = "in " + name;
+                time = currentDate.add(num, "days");
+
+                return { base, time };
+            }
 
             case "week":
             case "weeks":
-                {
-                    num = parseInt(match[0], 10);
-                    if (isNaN(num)) {
-                        switch (match[0]) {
-                            case "next":
-                                num = 1;
-                                break;
+            {
+                num = parseInt(match[0], 10);
+                if (isNaN(num)) {
+                    switch (match[0]) {
+                        case "next":
+                            num = 1;
+                            break;
 
-                            default:
-                                console.log("Unknown week: " + match[0]);
-                                return null;
-                        }
+                        default:
+                            console.log("Unknown week: " + match[0]);
+                            return null;
                     }
-
-                    name = "" + num;
-                    if (num === 1)
-                        name += " week";
-                    else
-                        name += " weeks";
-
-                    base = "in " + name;
-                    time = currentDate.add(num, "weeks");
-
-                    return { base, time };
                 }
+
+                name = "" + num;
+                if (num === 1)
+                    name += " week";
+                else
+                    name += " weeks";
+
+                base = "in " + name;
+                time = currentDate.add(num, "weeks");
+
+                return { base, time };
+            }
 
             case "month":
             case "months":
-                {
-                    num = parseInt(match[0], 10);
-                    if (isNaN(num)) {
-                        console.log("Unknown month: " + match[0]);
-                        return null;
-                    }
-
-                    name = "" + num;
-                    if (num === 1)
-                        name += " month";
-                    else
-                        name += " months";
-
-                    base = "in " + name;
-                    time = currentDate.add(num, "months");
-
-                    return { base, time };
+            {
+                num = parseInt(match[0], 10);
+                if (isNaN(num)) {
+                    console.log("Unknown month: " + match[0]);
+                    return null;
                 }
+
+                name = "" + num;
+                if (num === 1)
+                    name += " month";
+                else
+                    name += " months";
+
+                base = "in " + name;
+                time = currentDate.add(num, "months");
+
+                return { base, time };
+            }
 
             case "year":
             case "years":
-                {
-                    num = parseInt(match[0], 10);
-                    if (isNaN(num)) {
-                        console.log("Unknown year: " + match[0]);
-                        return null;
-                    }
-
-                    name = "" + num;
-                    if (num === 1)
-                        name += " year";
-                    else
-                        name += " years";
-
-                    base = "in " + name;
-                    time = currentDate.add(num, "years");
-
-                    return { base, time };
+            {
+                num = parseInt(match[0], 10);
+                if (isNaN(num)) {
+                    console.log("Unknown year: " + match[0]);
+                    return null;
                 }
+
+                name = "" + num;
+                if (num === 1)
+                    name += " year";
+                else
+                    name += " years";
+
+                base = "in " + name;
+                time = currentDate.add(num, "years");
+
+                return { base, time };
+            }
         }
     }
 
