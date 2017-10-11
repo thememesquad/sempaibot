@@ -178,20 +178,15 @@ personality[MessageID.RoleAlreadyAssignedToUser] = [
 ];
 
 export class DefaultPersonality extends PersonalityBase {
+    public messages(): { [key: number]: any; } {
+        return personality;
+    }
+
     public id(): string {
         return "default";
     }
 
     public displayName(): string {
         return "Default";
-    }
-
-    public get(id: MessageID, args: { [key: string]: any; }): string {
-        let str: string | string[] = personality[id];
-
-        if (Array.isArray(str))
-            str = str[Math.floor(Math.random() * str.length)];
-
-        return stringFormat(str as string, args);
     }
 }

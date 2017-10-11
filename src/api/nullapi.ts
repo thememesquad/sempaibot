@@ -1,5 +1,5 @@
 import { RichEmbed } from "discord.js";
-import { BotBase, IAPI, IMessageInterface, MessageContent, Server } from "../core/index";
+import { BotBase, IAPI, IMessageInterface, MessageContent, Server } from "../core";
 
 export class NullAPI implements IAPI {
     private _bot: BotBase;

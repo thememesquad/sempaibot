@@ -1,14 +1,22 @@
-import * as Personalities from "../../personalities/personalities";
+import * as Personalities from "../../personalities";
 import { MessageID } from "./messageid";
 import { PersonalityBase } from "./personalitybase";
 
 export class PersonalityManager {
     private static _instance: PersonalityManager = new PersonalityManager();
     private _mode: PersonalityBase;
+    private _personalities: { [key: string]: PersonalityBase };
     private _defaultMode: PersonalityBase;
 
     constructor() {
-        this._defaultMode = new Personalities.DefaultPersonality();
+        this._personalities = {};
+
+        for (const key in Personalities) {
+            const tmp: PersonalityBase = new Personalities[key]();
+            this._personalities[tmp.id()] = tmp;
+        }
+
+        this._defaultMode = this._personalities.default;
         this._mode = this._defaultMode;
     }
 
@@ -19,6 +27,13 @@ export class PersonalityManager {
             return this._defaultMode.get(id, args);
 
         return result;
+    }
+
+    public expand(id: string, expansion: PersonalityBase): void {
+        if (this._personalities[id] === undefined)
+            return;
+
+        this._personalities[id].expand(expansion);
     }
 
     static get instance(): PersonalityManager {

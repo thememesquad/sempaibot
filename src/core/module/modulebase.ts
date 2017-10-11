@@ -1,6 +1,6 @@
 import { BotBase } from "../botbase";
 import { ICommandInterface } from "../command/commandinterface";
-import { PermissionManager } from "../permission/manager";
+import { PermissionManager } from "../permission";
 import { MessageID } from "../personality/messageid";
 import { PersonalityManager } from "../personality/personalitymanager";
 import { Server } from "../server";

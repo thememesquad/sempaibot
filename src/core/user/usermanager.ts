@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { Config } from "../../../config";
-import { UserModel } from "../../model/user";
 import { DB } from "../db";
+import { UserModel } from "../model";
 import { RoleType } from "../permission/roletype";
 import { Server } from "../server";
 import { User } from "./user";

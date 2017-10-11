@@ -1,7 +1,6 @@
 import { Message, RichEmbed, RichEmbedOptions } from "discord.js";
 import { Config } from "../../config";
-import { ConfigKeyValueModel } from "../model/configkeyvalue";
-import * as Modules from "../modules/modules";
+import * as Modules from "../modules";
 import {
     BotBase,
     DB,
@@ -15,7 +14,8 @@ import {
     Server,
     User,
     UserManager,
-} from "./index";
+} from "./";
+import { ConfigKeyValueModel } from "./model/configkeyvalue";
 
 export class Bot implements BotBase {
     private _api: IAPI;

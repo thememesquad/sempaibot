@@ -8,7 +8,7 @@ export class DB {
             autoSchemaSync: true,
             database: "data.sqlite",
             entities: [
-                __dirname + "/../model/*.js",
+                __dirname + "/model/*.js",
             ],
             type: "sqlite",
         }).then((connection) => {

@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
-import { RoleType } from "../core";
+import { RoleType } from "../";
 import { UserModel } from "./user";
 
 @Entity()
