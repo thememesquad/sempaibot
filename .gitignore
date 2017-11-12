@@ -12,3 +12,4 @@
 /build
 /data.sqlite
 /.nyc_output
+npm-debug.log
