@@ -29,7 +29,7 @@ export class OsuUserModel {
     @Column()
     public mode: number;
 
-    //this.servers = [String];
-    //this.records = [Object];
-    //this.extra = [Object];
+    // this.servers = [String];
+    // this.records = [Object];
+    // this.extra = [Object];
 }

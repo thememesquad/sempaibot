@@ -1,5 +1,5 @@
 import { Bot, IMessage, User } from "../";
-import { ReactionCallbacks } from "./index";
+import { IReactionCallbacks } from "./index";
 import { IReactionMessage } from "./ireactionmessage";
 import { ReactionId } from "./reactionid";
 
@@ -7,7 +7,7 @@ export class ReactionManager {
     private static _instance: ReactionManager = new ReactionManager();
     private _messages: IReactionMessage[] = [];
 
-    public registerMessage(message: IMessage, reactionids: ReactionCallbacks) {
+    public registerMessage(message: IMessage, reactionids: IReactionCallbacks) {
         this._messages.push({
             message,
             reactionids

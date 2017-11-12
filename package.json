@@ -28,8 +28,9 @@
   "scripts": {
     "start": "node build/main.js",
     "test": "nyc mocha tests/**/*.ts",
-    "precommit": "npm test",
-    "prepush": "npm test"
+    "lint": "./node_modules/.bin/tslint src/**/*.ts",
+    "precommit": "npm test && npm run lint",
+    "prepush": "npm test && npm run lint"
   },
   "devDependencies": {
     "@types/mocha": ">=2.2.44",
