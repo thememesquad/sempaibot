@@ -1,17 +1,17 @@
 import { BotBase } from "../botbase";
-import { ICommandInterface } from "../command/commandinterface";
+import { ICommand } from "../command/commandinterface";
 import { PermissionManager } from "../permission";
 import { MessageID } from "../personality/messageid";
 import { PersonalityManager } from "../personality/personalitymanager";
 import { Server } from "../server";
-import { IMessageInterface } from "./messageinterface";
+import { IMessage } from "./messageinterface";
 
 export class ModuleBase {
     public _bot: BotBase;
 
     protected _name: string;
     protected _description: string | string[];
-    protected _commands: ICommandInterface[];
+    protected _commands: ICommand[];
 
     protected _alwaysOn: boolean = false;
     protected _defaultOn: boolean = false;
@@ -26,7 +26,7 @@ export class ModuleBase {
             this._commands = [];
     }
 
-    public getCommandInternal(key: string): ICommandInterface {
+    public getCommandInternal(key: string): ICommand {
         if (this._commands == null)
             this._commands = [];
 
@@ -35,7 +35,7 @@ export class ModuleBase {
         });
     }
 
-    public setCommandInternal(key: string, command: ICommandInterface): void {
+    public setCommandInternal(key: string, command: ICommand): void {
         if (this._commands == null)
             this._commands = [];
 
@@ -51,7 +51,7 @@ export class ModuleBase {
         this._commands.push(command);
     }
 
-    public async checkMessage(server: Server, message: IMessageInterface): Promise<boolean> {
+    public async checkMessage(server: Server, message: IMessage): Promise<boolean> {
         const best = null;
         for (const command of this._commands) {
             let data = null;
@@ -102,7 +102,7 @@ export class ModuleBase {
         return this._disabled;
     }
 
-    public get commands(): ICommandInterface[] {
+    public get commands(): ICommand[] {
         return this._commands;
     }
 

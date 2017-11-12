@@ -1,6 +1,6 @@
 import * as request from "request";
 
-export interface IResponseInterface {
+export interface IResponse {
     response: request.RequestResponse;
     body: any;
 }

@@ -2,7 +2,7 @@ import * as lodash from "lodash";
 import * as moment from "moment";
 import {
     CommandProcessor,
-    IMessageInterface,
+    IMessage,
     Module,
     ModuleBase,
     ModuleOptions,
@@ -15,7 +15,7 @@ import { OsuRecordModel } from "./model/osurecord";
 import { OsuUserModel } from "./model/osuuser";
 import { OsuAPI } from "./osuapi";
 import { OsuMode } from "./osumode";
-import { IOsuUserInterface } from "./osuuserinterface";
+import { IOsuUser } from "./osuuserinterface";
 import { OsuDefaultPersonalityExpansion } from "./personality/osudefaultpersonality";
 
 const USER_UPDATE_INTERVAL = 1200000;
@@ -26,7 +26,7 @@ const CURRENT_DB_VERSION = 1;
 export class OsuModule extends ModuleBase {
     private static _modsList: string[] = ["NF", "EZ", "b", "HD", "HR", "SD", "DT", "RX", "HT", "NC", "FL", "c", "SO", "d", "PF"];
     private _lastChecked: number;
-    private _users: IOsuUserInterface[];
+    private _users: IOsuUser[];
     private _servers: { [key: string]: Server };
     // private _loadBalancer: LoadBalancer;
     // private _pending: Array<Promise<ResponseInterface>>;
@@ -481,7 +481,7 @@ export class OsuModule extends ModuleBase {
             //     records.push(record);
             // }
 
-            const user: IOsuUserInterface = {
+            const user: IOsuUser = {
                 checking: false,
                 extra: {}, // dbuser.extra || {}
                 lastChecked: dbuser.lastChecked || Date.now(),
@@ -715,7 +715,7 @@ export class OsuModule extends ModuleBase {
     //     handle();
     // }
 
-    public updateUser(profile: IOsuUserInterface, _mode: OsuMode = OsuMode.Standard): Promise<IOsuUserInterface> {
+    public updateUser(profile: IOsuUser, _mode: OsuMode = OsuMode.Standard): Promise<IOsuUser> {
         if (profile.updateInProgress !== null)
             return profile.updateInProgress;
 
@@ -733,15 +733,15 @@ export class OsuModule extends ModuleBase {
                     extra: data
                 });*/
 
-                profile.update_in_progress = null;
+                profile.updateInProgress = null;
                 return data;
             } catch (err) {
-                profile.update_in_progress = null;
+                profile.updateInProgress = null;
                 throw err;
             }
         };
 
-        profile.update_in_progress = promise();
-        return profile.update_in_progress;
+        profile.updateInProgress = promise();
+        return profile.updateInProgress;
     }
 }

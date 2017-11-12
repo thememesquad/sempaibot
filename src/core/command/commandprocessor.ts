@@ -2,7 +2,7 @@ import { BotBase } from "../botbase";
 import { IdType } from "../utils/idtype";
 import { parseId } from "../utils/parseid";
 import { parseRoleType } from "../utils/parseroletype";
-import { ICommandFormatInterface } from "./commandformatinterface";
+import { ICommandFormat } from "./commandformatinterface";
 import { CreateRegex } from "./createregex";
 
 export class CommandProcessor {
@@ -12,7 +12,7 @@ export class CommandProcessor {
 
     private static _typeParsers: { [key: string]: (msg: string) => any };
 
-    private _formats: ICommandFormatInterface[];
+    private _formats: ICommandFormat[];
     private _regex: RegExp;
     private _variableRegex: RegExp;
     private _typeRegex: RegExp;

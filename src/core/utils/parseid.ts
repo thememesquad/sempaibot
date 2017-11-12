@@ -1,7 +1,7 @@
-import { IIdInterface } from "./idinterface";
+import { IId } from "./idinterface";
 import { IdType } from "./idtype";
 
-export function parseId(id: string): IIdInterface {
+export function parseId(id: string): IId {
     const baseId = id;
     if (id.length < 4)
         return { type: IdType.Unknown, id: baseId, alias: false };

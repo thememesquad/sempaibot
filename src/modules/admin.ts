@@ -5,7 +5,7 @@ import {
     CommandPermission,
     CommandSample,
     generateTable,
-    IMessageInterface,
+    IMessage,
     MessageID,
     Module,
     ModuleBase,
@@ -34,7 +34,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("blacklist server __*server*__")
     @CommandDescription("Blacklists a server.")
     @CommandPermission("SUPERADMIN")
-    private handleServerBlacklist(message: IMessageInterface, args: { [key: string]: any }): void {
+    private handleServerBlacklist(message: IMessage, args: { [key: string]: any }): void {
         const server = this._bot.getServer(args.server);
 
         if (server === null) {
@@ -66,7 +66,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("whitelist server __*server*__")
     @CommandDescription("Whitelists a server.")
     @CommandPermission("SUPERADMIN")
-    private handleServerWhitelist(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleServerWhitelist(message: IMessage, args: { [key: string]: any }) {
         const server = this._bot.getServer(args.server);
 
         if (server === null)
@@ -92,7 +92,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("blacklist user __*@user*__")
     @CommandDescription("Blacklists an user.")
     @CommandPermission("SUPERADMIN")
-    private handleUserBlacklist(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleUserBlacklist(message: IMessage, args: { [key: string]: any }) {
         const user: User = UserManager.instance.getUser(args.user, message.server);
         if (user === null)
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
@@ -111,7 +111,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("whitelist user __*@user*__")
     @CommandDescription("Whitelists an user.")
     @CommandPermission("SUPERADMIN")
-    private handleUserWhitelist(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleUserWhitelist(message: IMessage, args: { [key: string]: any }) {
         const user: User = UserManager.instance.getUser(args.user, message.server);
         if (user === null)
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
@@ -130,7 +130,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("show user blacklist")
     @CommandDescription("Displays the user blacklist")
     @CommandPermission("SUPERADMIN")
-    private handleShowUserBlacklist(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleShowUserBlacklist(message: IMessage, args: { [key: string]: any }) {
         let id = "ID";
         let name = "Name";
 
@@ -181,7 +181,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("show server blacklist")
     @CommandDescription("Displays the server blacklist")
     @CommandPermission("SUPERADMIN")
-    private handleShowServerBlacklist(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleShowServerBlacklist(message: IMessage, args: { [key: string]: any }) {
         let id = "ID";
         let name = "Name";
         let owner = "Owner";
@@ -239,7 +239,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("list servers")
     @CommandDescription("Lists all the servers I'm currently running on.")
     @CommandPermission("SUPERADMIN")
-    private handleListServers(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleListServers(message: IMessage, args: { [key: string]: any }) {
         const data = [];
         for (const key in this._bot.servers) {
             const server = this._bot.servers[key];
@@ -265,7 +265,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("enable __*module name*__")
     @CommandDescription("Enables a module for this server.")
     @CommandPermission("MANAGE_MODULES")
-    private handleEnableModule(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleEnableModule(message: IMessage, args: { [key: string]: any }) {
         if (this._bot.getModule(args.module) === null)
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidModule, {
                 author: message.author.id,
@@ -290,7 +290,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("disable __*module name*__")
     @CommandDescription("Disables a module for this server.")
     @CommandPermission("MANAGE_MODULES")
-    private handleDisableModule(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleDisableModule(message: IMessage, args: { [key: string]: any }) {
         const module = this._bot.getModule(args.module);
         if (module === null)
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidModule, {
@@ -322,7 +322,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("list modules")
     @CommandDescription("Lists all available modules.")
     @CommandPermission("MANAGE_MODULES")
-    private handleListModules(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleListModules(message: IMessage, args: { [key: string]: any }) {
         const columns = { name: "Name", enabled: "Enabled", flags: "Flags" };
         const data = [];
 
@@ -360,7 +360,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("assign __*role*__ to __*@user*__")
     @CommandDescription("Assigns the specified role to the specified user.")
     @CommandPermission("ASSIGN_ROLES")
-    private handleAssignRole(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleAssignRole(message: IMessage, args: { [key: string]: any }) {
         if (args.role === RoleType.SuperAdmin)
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
                 author: message.author.id,
@@ -406,7 +406,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("add __*permission*__ to __*role*__")
     @CommandDescription("Adds the specified permission to the specified role.")
     @CommandPermission("MANAGE_PERMISSIONS")
-    private handleAddPermission(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleAddPermission(message: IMessage, args: { [key: string]: any }) {
         args.permission = args.permission.toUpperCase();
         if (args.role === RoleType.SuperAdmin)
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
@@ -440,7 +440,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("remove __*permission*__ from __*role*__")
     @CommandDescription("Removes the specified permission from the specified role.")
     @CommandPermission("MANAGE_PERMISSIONS")
-    private handleRemovePermission(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleRemovePermission(message: IMessage, args: { [key: string]: any }) {
         args.permission = args.permission.toUpperCase();
         if (args.role === RoleType.SuperAdmin)
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
@@ -472,7 +472,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("ignore __*@user*__")
     @CommandDescription("Ignores the specified user.")
     @CommandPermission("IGNORE_USERS")
-    private handleIgnoreUser(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleIgnoreUser(message: IMessage, args: { [key: string]: any }) {
         const user = UserManager.instance.getUserById(args.user, message.server);
         if (user === null)
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
@@ -492,7 +492,7 @@ export class AdminModule extends ModuleBase {
     @CommandSample("unignore __*@user*__")
     @CommandDescription("Stops ignoring the specified user.")
     @CommandPermission("IGNORE_USERS")
-    private handleUnignoreUser(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleUnignoreUser(message: IMessage, args: { [key: string]: any }) {
         const user = UserManager.instance.getUserById(args.user, message.server);
         if (user === null)
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {

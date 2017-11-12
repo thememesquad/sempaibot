@@ -1,7 +1,25 @@
-import { Client, Message, MessageOptions, RichEmbed, RichEmbedOptions, TextChannel } from "discord.js";
+import { Client, Message, MessageOptions, MessageReaction, RichEmbed, RichEmbedOptions, TextChannel, User as DiscordUser } from "discord.js";
 import { Config } from "../../config";
-import { IAPI, IMessageInterface, MessageContent, Server } from "../core";
+import { IAPI, IMessage, MessageContent, ReactionId, ReactionManager, Server, User, UserManager } from "../core";
 import { BotBase } from "../core/botbase";
+
+const REACTION_TO_DISCORD = {
+    [ReactionId.ThumbsUp]: "👍",
+    [ReactionId.ThumbsDown]: "👎",
+    [ReactionId.Left]: "⬅️",
+    [ReactionId.Right]: "➡️",
+    [ReactionId.Up]: "⬆️",
+    [ReactionId.Down]: "️️️️⬇️",
+};
+
+const DISCORD_TO_REACTION = {
+    "➡️": ReactionId.Right,
+    "⬅️": ReactionId.Left,
+    "⬆️": ReactionId.Up,
+    "⬇️": ReactionId.Down,
+    "👍": ReactionId.ThumbsUp,
+    "👎": ReactionId.ThumbsDown
+};
 
 export class DiscordAPI implements IAPI {
     private _connectedOnce: boolean;
@@ -14,20 +32,25 @@ export class DiscordAPI implements IAPI {
         this._connectedOnce = false;
         this._connected = false;
 
-        this._discord = new Client();
+        this._discord = new Client({
+            restTimeOffset: 200,
+            restWsBridgeTimeout: 1000
+        });
         this._discord.on("message", this.onMessage.bind(this));
         this._discord.on("ready", this.onReady.bind(this));
         this._discord.on("serverCreated", this.onServerCreated.bind(this));
         this._discord.on("serverDeleted", this.onServerDeleted.bind(this));
         this._discord.on("disconnected", this.onDisconnected.bind(this));
         this._discord.on("error", this.onError.bind(this));
+
+        this._discord.on("messageReactionAdd", this.onMessageReactionAdded.bind(this));
     }
 
     public setBot(bot: BotBase): void {
         this._bot = bot;
     }
 
-    public async message(message: MessageContent | MessageContent[], server: Server): Promise<IMessageInterface | IMessageInterface[]> {
+    public async message(message: MessageContent | MessageContent[], server: Server): Promise<IMessage | IMessage[]> {
         if (Array.isArray(message)) {
             let ids = [];
 
@@ -51,10 +74,10 @@ export class DiscordAPI implements IAPI {
             message = "";
         }
 
-        return await actualChannel.send(message, options) as IMessageInterface;
+        return await actualChannel.send(message, options) as IMessage;
     }
 
-    public async respond(m: IMessageInterface, message: MessageContent | MessageContent[]): Promise<IMessageInterface | IMessageInterface[]> {
+    public async respond(m: IMessage, message: MessageContent | MessageContent[]): Promise<IMessage | IMessage[]> {
         if (Array.isArray(message)) {
             let ids = [];
 
@@ -74,10 +97,10 @@ export class DiscordAPI implements IAPI {
             message = "";
         }
 
-        return await actualChannel.send(message, options) as IMessageInterface;
+        return await actualChannel.send(message, options) as IMessage;
     }
 
-    public async edit(original: IMessageInterface, message: MessageContent): Promise<IMessageInterface> {
+    public async edit(original: IMessage, message: MessageContent): Promise<IMessage> {
         const options: MessageOptions = {};
 
         if (message instanceof RichEmbed) {
@@ -85,7 +108,41 @@ export class DiscordAPI implements IAPI {
             message = "";
         }
 
-        return await (original as Message).edit(message, options) as IMessageInterface;
+        return await (original as Message).edit(message, options) as IMessage;
+    }
+
+    public async addReaction(message: IMessage, reaction: ReactionId | ReactionId[] | string | string[]): Promise<IMessage> {
+        if (Array.isArray(reaction)) {
+            const promises = [];
+
+            for (const id of reaction) {
+                promises.push(this.addReaction(message, id));
+            }
+
+            await Promise.all(promises);
+            return message;
+        }
+
+        await (message as Message).react(this._getEmojiForReactionId(reaction));
+        return message;
+    }
+
+    public async removeReaction(message: IMessage, reaction: ReactionId | string, user?: User): Promise<IMessage> {
+        let userid: string = this.getUserId();
+        if (user !== null)
+            userid = user._userID;
+
+        const emoji = this._getEmojiForReactionId(reaction);
+        const tmp = await (message as Message).reactions.find((value, key, collection) => {
+            return value.emoji.name === emoji;
+        });
+        await tmp.remove(userid);
+
+        return message;
+    }
+
+    public async clearReactions(message: IMessage): Promise<IMessage> {
+        return await (message as Message).clearReactions() as IMessage;
     }
 
     public async startup() {
@@ -111,7 +168,49 @@ export class DiscordAPI implements IAPI {
         return servers;
     }
 
-    public async onMessage(message) {
+    public async onMessageReactionAdded(messageReaction: MessageReaction, discorduser: DiscordUser) {
+        if (discorduser.id === this.getUserId())
+            return;
+
+        const user = UserManager.instance.getUserById(discorduser.id);
+        if (user === null)
+            return;
+
+        if (messageReaction.message.author.id !== this.getUserId())
+            return;
+
+        if (!messageReaction.me)
+            return;
+
+        const id = this._getReactionIdForEmoji(messageReaction.emoji.name);
+        if (id === null)
+            return;
+
+        ReactionManager.instance.reaction(id, messageReaction.message as IMessage, user);
+    }
+
+    // public async onMessageReactionRemoved(messageReaction: MessageReaction, discorduser: DiscordUser) {
+    //     if (discorduser.id === this.getUserId())
+    //         return;
+
+    //     const user = UserManager.instance.getUserById(discorduser.id);
+    //     if (user === null)
+    //         return;
+
+    //     if (messageReaction.message.author.id !== this.getUserId())
+    //         return;
+
+    //     if (!messageReaction.me)
+    //         return;
+
+    //     const id = this._getReactionIdForEmoji(messageReaction.emoji.name);
+    //     if (id === null)
+    //         return;
+
+    //     ReactionManager.instance.removeReaction(id, messageReaction.message.id, user);
+    // }
+
+    public async onMessage(message: IMessage) {
         await this._bot.onMessage(message);
     }
 
@@ -157,5 +256,22 @@ export class DiscordAPI implements IAPI {
 
     public get user() {
         return this._discord.user;
+    }
+
+    private _getReactionIdForEmoji(name: string): ReactionId {
+        if (typeof DISCORD_TO_REACTION[name] === "undefined")
+            return null;
+
+        return DISCORD_TO_REACTION[name];
+    }
+
+    private _getEmojiForReactionId(reaction: ReactionId | string): string {
+        if (typeof reaction === "string")
+            reaction = parseInt(reaction, 10) as ReactionId;
+
+        if (typeof REACTION_TO_DISCORD[reaction] === "undefined")
+            return null;
+
+        return REACTION_TO_DISCORD[reaction];
     }
 }

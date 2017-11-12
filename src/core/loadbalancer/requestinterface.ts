@@ -1,8 +1,8 @@
-import { IResponseInterface } from "./responseinterface";
+import { IResponse } from "./responseinterface";
 
-export interface IRequestInterface {
+export interface IRequest {
     url: string;
 
-    resolve: (result: IResponseInterface) => void;
+    resolve: (result: IResponse) => void;
     reject: (err: any) => void;
 }

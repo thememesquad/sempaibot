@@ -1,6 +1,6 @@
-import { IRegexInterface } from "./regexinterface";
+import { IRegex } from "./regexinterface";
 
-export function CreateRegex(format: string): IRegexInterface {
+export function CreateRegex(format: string): IRegex {
     format = format.trim();
     format = format.replace(/</g, "(?:");
     format = format.replace(/>/g, ")?");

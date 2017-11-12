@@ -1,12 +1,12 @@
 import * as request from "request";
-import { IRequestInterface } from "./requestinterface";
-import { IResponseInterface } from "./responseinterface";
+import { IRequest } from "./requestinterface";
+import { IResponse } from "./responseinterface";
 
 export class LoadBalancer {
     private _limit: number;
-    private _requests: IRequestInterface[];
-    private _pendingRequests: IRequestInterface[];
-    private _namedRequests: { [key: string]: Promise<IResponseInterface> };
+    private _requests: IRequest[];
+    private _pendingRequests: IRequest[];
+    private _namedRequests: { [key: string]: Promise<IResponse> };
     private _oldMinutes: number;
     private _current: number;
     private _balancer: number;
@@ -38,7 +38,7 @@ export class LoadBalancer {
         if (this._current >= this._limit)
             return;
 
-        const req: IRequestInterface = this._requests[0];
+        const req: IRequest = this._requests[0];
         this._requests.splice(0, 1);
         this._current++;
         this._oldMinutes = time;
@@ -63,7 +63,7 @@ export class LoadBalancer {
         this._pendingRequests.push(req);
     }
 
-    public create(url): Promise<IResponseInterface> {
+    public create(url): Promise<IResponse> {
         if (this._namedRequests[url] !== undefined)
             return this._namedRequests[url];
 
@@ -82,7 +82,7 @@ export class LoadBalancer {
     }
 
     // tslint:disable-next-line:no-shadowed-variable
-    public cancel(req: IRequestInterface): void {
+    public cancel(req: IRequest): void {
         if (this._namedRequests[req.url] === undefined)
             return;
 

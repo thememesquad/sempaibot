@@ -6,7 +6,7 @@ import {
     CommandPermission,
     CommandSample,
     generateTable,
-    IMessageInterface,
+    IMessage,
     MessageID,
     Module,
     ModuleBase,
@@ -28,7 +28,7 @@ export class CoreModule extends ModuleBase {
     @Command("list roles")
     @CommandSample("list roles")
     @CommandDescription("Lists every user's role.")
-    private handleListRoles(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleListRoles(message: IMessage, args: { [key: string]: any }) {
         const server = message.server;
         const tmp = [];
 
@@ -65,7 +65,7 @@ export class CoreModule extends ModuleBase {
     @Command("list permissions")
     @CommandSample("list permissions")
     @CommandDescription("Lists the available permissions for each role.")
-    private handleListPermissions(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleListPermissions(message: IMessage, args: { [key: string]: any }) {
         const server = message.server;
         const adminPermissions = PermissionManager.instance.getRole(RoleType.Admin).getPermissions(server);
 
@@ -126,7 +126,7 @@ export class CoreModule extends ModuleBase {
     @Command("show ignorelist")
     @CommandSample("show ignore list")
     @CommandDescription("Shows the list of people I'm currently ignoring!")
-    private handleShowIgnorelist(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleShowIgnorelist(message: IMessage, args: { [key: string]: any }) {
         let response = "``` ";
 
         for (let i = 0; i < message.server.ignoreList.length; i++) {
@@ -155,7 +155,7 @@ export class CoreModule extends ModuleBase {
     @Command("show help")
     @Command(["助けて", { japanese: true }])
     @Command(["助けてください", { japanese: true, please: true }])
-    private handleHelp(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleHelp(message: IMessage, args: { [key: string]: any }) {
         let response = "";
 
         // if (args.please)
@@ -254,7 +254,7 @@ export class CoreModule extends ModuleBase {
     @Command("what is my role")
     @CommandSample("what is my role?")
     @CommandDescription("Displays your role.")
-    private handleMyRole(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleMyRole(message: IMessage, args: { [key: string]: any }) {
         const role: string = RoleType[message.user.getRole(message.server)];
 
         this._bot.respond(message, PersonalityManager.instance.get(MessageID.CurrentUserRole, {
@@ -271,7 +271,7 @@ export class CoreModule extends ModuleBase {
     @Command("show permissions")
     @CommandDescription("Displays your role's permissions.")
     @CommandSample("what are my permissions?")
-    private handleMyPermissions(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleMyPermissions(message: IMessage, args: { [key: string]: any }) {
         const server = message.server;
         const role = PermissionManager.instance.getRole(message.user.getRole(server));
         const list = role.getPermissions(server);
@@ -302,7 +302,7 @@ export class CoreModule extends ModuleBase {
     @CommandDescription("Tells me to output to the specified channel.")
     @CommandSample("go to __*#channel*__")
     @CommandPermission("GO_TO_CHANNEL")
-    private handleGotoChannel(message: IMessageInterface, args: { [key: string]: any }) {
+    private handleGotoChannel(message: IMessage, args: { [key: string]: any }) {
         const id = args.channel;
         if (message.server.server.channels.get(id) === null)
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidChannel, {

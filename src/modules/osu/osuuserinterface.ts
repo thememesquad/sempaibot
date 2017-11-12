@@ -1,8 +1,8 @@
 import { OsuRecordModel } from "./model/osurecord";
 
-export interface IOsuUserInterface {
+export interface IOsuUser {
     checking?: boolean;
-    updateInProgress?: Promise<IOsuUserInterface>;
+    updateInProgress?: Promise<IOsuUser>;
 
     userId: string;
     username: string;

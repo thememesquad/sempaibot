@@ -19,7 +19,8 @@
         "semi": [
             "error",
             "always"
-        ]
+        ],
+        "trailing-comma": false
     },
     "rulesDirectory": []
 }

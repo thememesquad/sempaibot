@@ -1,13 +1,13 @@
-interface DiscordConfigInterface {
+interface IDiscordConfig {
     token: string;
 }
 
-interface OsuConfigInterface {
+interface IOsuConfig {
     apikey: string;
     apiurl: string;
 }
 
-interface ServerConfigInterface {
+interface IServerConfig {
     sonarr_url?: string;
     sonarr_key?: string;
 
@@ -23,14 +23,14 @@ interface ServerConfigInterface {
     torrent_password?: string;
 }
 
-interface ConfigInterface {
+interface IConfig {
     identifiers: Array<string>;
 
-    discord: DiscordConfigInterface;
-    osu?: OsuConfigInterface;
-    server?: ServerConfigInterface;
+    discord: IDiscordConfig;
+    osu?: IOsuConfig;
+    server?: IServerConfig;
 
     superadmins: Array<string>;
 }
 
-export let Config: ConfigInterface;
+export let Config: IConfig;

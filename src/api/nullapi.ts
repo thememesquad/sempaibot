@@ -1,5 +1,5 @@
 import { RichEmbed } from "discord.js";
-import { BotBase, IAPI, IMessageInterface, MessageContent, Server } from "../core";
+import { BotBase, IAPI, IMessage, MessageContent, ReactionId, Server } from "../core";
 
 export class NullAPI implements IAPI {
     private _bot: BotBase;
@@ -8,34 +8,49 @@ export class NullAPI implements IAPI {
         this._bot = bot;
     }
 
-    public async message(message: MessageContent | MessageContent[], server: Server): Promise<IMessageInterface | IMessageInterface[]> {
+    public async message(message: MessageContent | MessageContent[], server: Server): Promise<IMessage | IMessage[]> {
         // empty
-        const ret: IMessageInterface = {
+        const ret: IMessage = {
             channel: null,
             content: null,
+            id: ""
         };
 
         return ret;
     }
 
-    public async respond(m: IMessageInterface, message: MessageContent | MessageContent[]): Promise<IMessageInterface | IMessageInterface[]> {
+    public async respond(m: IMessage, message: MessageContent | MessageContent[]): Promise<IMessage | IMessage[]> {
         // empty
-        const ret: IMessageInterface = {
+        const ret: IMessage = {
             channel: null,
             content: null,
+            id: ""
         };
 
         return ret;
     }
 
-    public async edit(original: IMessageInterface, message: MessageContent): Promise<IMessageInterface> {
+    public async edit(original: IMessage, message: MessageContent): Promise<IMessage> {
         // empty
-        const ret: IMessageInterface = {
+        const ret: IMessage = {
             channel: null,
             content: null,
+            id: ""
         };
 
         return ret;
+    }
+
+    public async addReaction(message: IMessage, reaction: ReactionId | ReactionId[] | string | string[]): Promise<IMessage> {
+        return message;
+    }
+
+    public async removeReaction(message: IMessage, reaction: ReactionId | string): Promise<IMessage> {
+        return message;
+    }
+
+    public async clearReactions(message: IMessage): Promise<IMessage> {
+        return message;
     }
 
     public async startup(): Promise<void> {

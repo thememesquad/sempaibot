@@ -1,5 +1,5 @@
 import { RichEmbed, RichEmbedOptions } from "discord.js";
-import { IMessageInterface, ModuleBase, Server, User } from "./";
+import { IMessage, ModuleBase, Server, User } from "./";
 
 export type MessageContent = string | RichEmbed | RichEmbedOptions;
 export abstract class BotBase {
@@ -13,12 +13,12 @@ export abstract class BotBase {
     public abstract getServer(id: string): Server;
     public abstract getModule(name: string): ModuleBase;
 
-    public abstract message(message: MessageContent | MessageContent[], server: Server): Promise<IMessageInterface | IMessageInterface[]>;
-    public abstract respond(m: IMessageInterface, message: MessageContent | MessageContent[]): Promise<IMessageInterface | IMessageInterface[]>;
-    public abstract edit(original: IMessageInterface, edit: string | RichEmbed | RichEmbedOptions): Promise<IMessageInterface>;
+    public abstract message(message: MessageContent | MessageContent[], server: Server): Promise<IMessage | IMessage[]>;
+    public abstract respond(m: IMessage, message: MessageContent | MessageContent[]): Promise<IMessage | IMessage[]>;
+    public abstract edit(original: IMessage, edit: string | RichEmbed | RichEmbedOptions): Promise<IMessage>;
 
     public abstract onReady(): void;
-    public abstract onMessage(message: IMessageInterface): void;
+    public abstract onMessage(message: IMessage): void;
     public abstract onServerCreated(server: Server): void;
     public abstract onServerDeleted(server: Server): void;
 

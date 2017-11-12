@@ -1,8 +1,8 @@
 import * as moment from "moment";
-import { ITimeInterface } from "./timeinterface";
-import { ITimeMatchInterface } from "./timematchinterface";
+import { ITime } from "./timeinterface";
+import { ITimeMatch } from "./timematchinterface";
 
-function parseTimeInternal(str): ITimeInterface {
+function parseTimeInternal(str): ITime {
     str = str.toLowerCase().trim();
 
     const currentDate = moment();
@@ -250,13 +250,13 @@ function parseTimeInternal(str): ITimeInterface {
     return { base, time };
 }
 
-export function parseTime(str): ITimeMatchInterface[] {
-    let ret: ITimeMatchInterface[] = [];
+export function parseTime(str): ITimeMatch[] {
+    let ret: ITimeMatch[] = [];
     const split = str.trim().split(" ");
 
     let size = split.length;
     while (size > 0) {
-        const matches: ITimeMatchInterface[] = [];
+        const matches: ITimeMatch[] = [];
 
         for (let i = 0; i < split.length; i++) {
             let tmp = "";

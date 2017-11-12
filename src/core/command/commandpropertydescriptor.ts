@@ -1,5 +1,5 @@
-import { IMessageInterface } from "../module/messageinterface";
+import { IMessage } from "../module/messageinterface";
 
 export interface ICommandPropertyDescriptor {
-    value?: (message: IMessageInterface, args: { [key: string]: any }) => void;
+    value?: (message: IMessage, args: { [key: string]: any }) => void;
 }

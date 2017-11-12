@@ -5,12 +5,13 @@ import {
     BotBase,
     DB,
     IAPI,
-    IMessageInterface,
+    IMessage,
     MessageContent,
     MessageID,
     ModuleBase,
     PermissionManager,
     PersonalityManager,
+    ReactionId,
     Server,
     User,
     UserManager,
@@ -18,6 +19,8 @@ import {
 import { ConfigKeyValueModel } from "./model/configkeyvalue";
 
 export class Bot implements BotBase {
+    private static _instance: Bot;
+
     private _api: IAPI;
     private _servers: { [key: string]: Server };
     private _modules: { [key: string]: ModuleBase };
@@ -30,6 +33,8 @@ export class Bot implements BotBase {
     private _availableModules: { [key: string]: ModuleBase };
 
     constructor(api: IAPI, allowLog: boolean = true) {
+        Bot._instance = this;
+
         this._api = api;
         this._api.setBot(this);
 
@@ -88,16 +93,28 @@ export class Bot implements BotBase {
         return this._modules[name.toLowerCase()] || null;
     }
 
-    public async message(message: MessageContent | MessageContent[], server: Server): Promise<IMessageInterface | IMessageInterface[]> {
+    public async message(message: MessageContent | MessageContent[], server: Server): Promise<IMessage | IMessage[]> {
         return await this._api.message(message, server);
     }
 
-    public async respond(m: IMessageInterface, message: MessageContent | MessageContent[]): Promise<IMessageInterface | IMessageInterface[]> {
+    public async respond(m: IMessage, message: MessageContent | MessageContent[]): Promise<IMessage | IMessage[]> {
         return await this._api.respond(m, message);
     }
 
-    public async edit(message: IMessageInterface, edit: string | RichEmbed | RichEmbedOptions): Promise<IMessageInterface> {
+    public async edit(message: IMessage, edit: string | RichEmbed | RichEmbedOptions): Promise<IMessage> {
         return await this._api.edit(message, edit);
+    }
+
+    public async addReaction(message: IMessage, reaction: ReactionId | ReactionId[] | string | string[]): Promise<IMessage> {
+        return await this._api.addReaction(message, reaction);
+    }
+
+    public async removeReaction(message: IMessage, reaction: ReactionId | string, user?: User): Promise<IMessage> {
+        return await this._api.removeReaction(message, reaction, user);
+    }
+
+    public async clearReactions(message: IMessage): Promise<IMessage> {
+        return await this._api.clearReactions(message);
     }
 
     public async onReady() {
@@ -151,7 +168,7 @@ export class Bot implements BotBase {
         }
     }
 
-    public async processMessage(server, message: IMessageInterface, identifier): Promise<boolean> {
+    public async processMessage(server, message: IMessage, identifier): Promise<boolean> {
         identifier = identifier.trim();
 
         if (message.content.toLowerCase().indexOf(identifier) === -1)
@@ -191,7 +208,7 @@ export class Bot implements BotBase {
         return true;
     }
 
-    public async onMessage(message: IMessageInterface) {
+    public async onMessage(message: IMessage) {
         let server: Server = null;
 
         if (message.channel.type !== "dm") {
@@ -353,5 +370,9 @@ export class Bot implements BotBase {
             this._serverBlacklist.value = { blacklist: [] };
             this._serverBlacklist = await DB.connection.manager.save(this._serverBlacklist);
         }
+    }
+
+    public static get instance() {
+        return Bot._instance;
     }
 }

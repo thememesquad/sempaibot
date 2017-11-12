@@ -1,6 +1,6 @@
 import { Moment } from "moment";
 
-export interface ITimeInterface {
+export interface ITime {
     base: string;
     time: Moment;
 }

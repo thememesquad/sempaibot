@@ -1,6 +1,6 @@
-import { IRegexInterface } from "./regexinterface";
+import { IRegex } from "./regexinterface";
 
-export interface ICommandFormatInterface {
-    format: IRegexInterface;
+export interface ICommandFormat {
+    format: IRegex;
     variables: { [key: string]: any };
 }

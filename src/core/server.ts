@@ -97,9 +97,11 @@ export class Server {
                 this.channel = "";
             }
         } else {
-            UserManager.instance.assignRole(this.server.owner.id, this, RoleType.Admin);
             this._bot.message(PersonalityManager.instance.get(MessageID.SempaiSettingUp), this);
         }
+
+        if (this.server.owner !== undefined)
+            UserManager.instance.assignRole(this.server.owner.id, this, RoleType.Admin);
 
         this._loadPromiseResolve(initial);
     }

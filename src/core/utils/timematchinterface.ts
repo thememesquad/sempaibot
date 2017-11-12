@@ -1,7 +1,7 @@
-import { ITimeInterface } from "./timeinterface";
+import { ITime } from "./timeinterface";
 
-export interface ITimeMatchInterface {
+export interface ITimeMatch {
     index: number;
-    ret: ITimeInterface;
+    ret: ITime;
     str: string;
 }

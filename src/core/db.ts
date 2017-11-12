@@ -5,7 +5,6 @@ export class DB {
 
     public static setup(): Promise<void> {
         return createConnection({
-            autoSchemaSync: true,
             database: "data.sqlite",
             entities: [
                 __dirname + "/model/*.js",

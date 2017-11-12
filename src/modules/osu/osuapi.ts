@@ -1,5 +1,5 @@
 import { Config } from "../../../config";
-import { IResponseInterface, LoadBalancer } from "../../core/loadbalancer";
+import { IResponse, LoadBalancer } from "../../core/loadbalancer";
 import { OsuMode } from "./osumode";
 
 export class OsuAPI {
@@ -10,7 +10,7 @@ export class OsuAPI {
     }
 
     private _loadBalancer: LoadBalancer;
-    private _pending: Array<Promise<IResponseInterface>>;
+    private _pending: Array<Promise<IResponse>>;
 
     constructor() {
         this._loadBalancer = new LoadBalancer(60);
