@@ -7,7 +7,7 @@ export class DB {
         return createConnection({
             database: "data.sqlite",
             entities: [
-                __dirname + "/model/*.js",
+                __dirname + "/../**/model/*.js",
             ],
             type: "sqlite",
         }).then((connection) => {

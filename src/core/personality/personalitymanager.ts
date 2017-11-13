@@ -20,8 +20,17 @@ export class PersonalityManager {
         this._mode = this._defaultMode;
     }
 
-    public get(id: MessageID, args: { [key: string]: any } = null): string {
+    public get(id: MessageID | number, args: { [key: string]: any } = null): string {
         const result = this._mode.get(id, args);
+
+        if (result === null && this._mode.id() !== "default")
+            return this._defaultMode.get(id, args);
+
+        return result;
+    }
+
+    public getExtended(namespace: string, id: MessageID | number, args: { [key: string]: any } = null): string {
+        const result = this._mode.getExtended(namespace, id, args);
 
         if (result === null && this._mode.id() !== "default")
             return this._defaultMode.get(id, args);

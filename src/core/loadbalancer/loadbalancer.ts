@@ -1,21 +1,19 @@
 import * as request from "request";
-import { IRequest } from "./requestinterface";
-import { IResponse } from "./responseinterface";
+import { IRequest } from "./irequest";
+import { IResponse } from "./iresponse";
 
 export class LoadBalancer {
     private _limit: number;
-    private _requests: IRequest[];
+    private _requests: { [key: string]: IRequest };
     private _pendingRequests: IRequest[];
-    private _namedRequests: { [key: string]: Promise<IResponse> };
     private _oldMinutes: number;
     private _current: number;
     private _balancer: number;
 
     constructor(maxPerMinute: number) {
         this._limit = maxPerMinute;
-        this._requests = [];
+        this._requests = {};
         this._pendingRequests = [];
-        this._namedRequests = {};
         this._oldMinutes = (new Date()).getMinutes();
         this._current = 0;
 
@@ -23,7 +21,7 @@ export class LoadBalancer {
     }
 
     public balance(): void {
-        if (this._requests.length === 0) {
+        if (Object.keys(this._requests).length === 0) {
             clearInterval(this._balancer);
             this._balancer = null;
 
@@ -31,23 +29,29 @@ export class LoadBalancer {
         }
 
         const time = (new Date()).getMinutes();
-        if (time !== this._oldMinutes) {
+        if (time !== this._oldMinutes)
             this._current = 0;
-        }
 
         if (this._current >= this._limit)
             return;
 
-        const req: IRequest = this._requests[0];
-        this._requests.splice(0, 1);
+        const key: string = Object.keys(this._requests)[0];
+        const req: IRequest = this._requests[key];
+
+        if (typeof req === "undefined") {
+            delete this._requests[key];
+            return this.balance();
+        }
+
         this._current++;
         this._oldMinutes = time;
 
         request(req.url, (error, response, body) => {
-            if (req.url !== undefined) {
-                delete this._namedRequests[req.url];
-                this._namedRequests[req.url] = undefined;
-            }
+            if (this._requests[key] === undefined)
+                return;
+
+            delete this._requests[key];
+            this._requests[key] = undefined;
 
             this._pendingRequests.splice(this._pendingRequests.indexOf(req));
 
@@ -63,37 +67,31 @@ export class LoadBalancer {
         this._pendingRequests.push(req);
     }
 
-    public create(url): Promise<IResponse> {
-        if (this._namedRequests[url] !== undefined)
-            return this._namedRequests[url];
+    public create(url): IRequest {
+        if (this._requests[url] !== undefined)
+            return this._requests[url];
 
-        this._namedRequests[url] = new Promise((resolve, reject) => {
-            this._requests.push({
-                reject,
-                resolve,
-                url,
-            });
+        this._requests[url] = {
+            promise: null,
+            url
+        };
+
+        this._requests[url].promise = new Promise((resolve, reject) => {
+            this._requests[url].resolve = resolve;
+            this._requests[url].reject = reject;
 
             if (this._balancer === null)
                 this._balancer = setInterval(this.balance.bind(this), 1);
         });
 
-        return this._namedRequests[url];
+        return this._requests[url];
     }
 
-    // tslint:disable-next-line:no-shadowed-variable
     public cancel(req: IRequest): void {
-        if (this._namedRequests[req.url] === undefined)
+        if (this._requests[req.url] === undefined)
             return;
 
-        delete this._namedRequests[req.url];
-
-        for (let i = 0; i < this._requests.length; i++) {
-            if (this._requests[i].url === req.url) {
-                this._requests.splice(i, 1);
-                break;
-            }
-        }
+        delete this._requests[req.url];
 
         for (let i = 0; i < this._pendingRequests.length; i++) {
             if (this._pendingRequests[i].url === req.url) {
@@ -104,8 +102,8 @@ export class LoadBalancer {
     }
 
     public close(): void {
-        while (this._requests.length > 0)
-            this.cancel(this._requests[0]);
+        for (const key in this._requests)
+            this.cancel(this._requests[key]);
 
         while (this._pendingRequests.length > 0)
             this.cancel(this._pendingRequests[0]);
@@ -117,6 +115,6 @@ export class LoadBalancer {
     }
 
     get numRequests(): number {
-        return this._requests.length + this._pendingRequests.length;
+        return Object.keys(this._requests).length + this._pendingRequests.length;
     }
 }

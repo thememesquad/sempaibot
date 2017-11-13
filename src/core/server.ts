@@ -2,12 +2,20 @@ import { Channel, Guild, Snowflake } from "discord.js";
 import { BotBase, DB, MessageID, PersonalityManager, RoleType, User, UserManager } from "./";
 import { ConfigKeyValueModel } from "./model";
 
+interface IServerConfig {
+    channel: string;
+    ignoreList: string[];
+    modules: string[];
+    osu_limit: number;
+}
+
 export class Server {
     public server: Guild;
     public loadPromise: Promise<boolean>;
 
     private _bot: BotBase;
-    private _config: ConfigKeyValueModel;
+    private _config: IServerConfig;
+    private _configModel: ConfigKeyValueModel;
     private _id: Snowflake;
     private _loadPromiseResolve: (initial: boolean) => void;
     private _channelCheck: NodeJS.Timer;
@@ -17,6 +25,7 @@ export class Server {
 
         this._bot = bot;
         this._config = null;
+        this._configModel = null;
         this._id = server.id;
 
         for (const key of server.members.keyArray()) {
@@ -28,19 +37,29 @@ export class Server {
         this.loadPromise = new Promise(async (resolve, reject) => {
             this._loadPromiseResolve = resolve;
             try {
-                const doc = await DB.connection.manager.findOne(ConfigKeyValueModel, { key: this.server.id + "_config" });
+                let doc: ConfigKeyValueModel = null;
+
+                try {
+                    doc = await DB.connection.manager.findOne(ConfigKeyValueModel, { key: this.server.id + "_config" });
+                } catch (e) {
+                    // empty
+                }
+
                 if (!doc) {
-                    this._config = new ConfigKeyValueModel();
-                    this._config.key = this.server.id + "_config";
-                    this._config.value = {
+                    this._configModel = DB.connection.manager.create(ConfigKeyValueModel);
+                    this._configModel.key = this.server.id + "_config";
+
+                    this._config = {
                         channel: "",
                         ignoreList: [],
                         modules: [],
                         osu_limit: 50,
                     };
 
+                    this._configModel.value = JSON.stringify(this._config);
+
                     try {
-                        await DB.connection.manager.save(this._config);
+                        await DB.connection.manager.save(this._configModel);
                         return this.onLoad(true);
                     } catch (err) {
                         reject(err);
@@ -48,14 +67,15 @@ export class Server {
                     }
                 }
 
-                this._config = doc;
+                this._configModel = doc;
+                this._config = JSON.parse(doc.value);
             } catch (err) {
                 return reject(err);
             }
 
             let changed = false;
-            if (this._config.value.osu_limit === undefined) {
-                this._config.value.osu_limit = 50;
+            if (this._config.osu_limit === undefined) {
+                this._config.osu_limit = 50;
                 changed = true;
             }
 
@@ -71,8 +91,11 @@ export class Server {
             }
 
             try {
-                if (changed)
-                    await DB.connection.manager.save(this._config);
+                if (changed) {
+                    this._configModel.value = JSON.stringify(this._config);
+
+                    await DB.connection.manager.save(this._configModel);
+                }
             } catch (err) {
                 return reject(err);
             }
@@ -120,8 +143,10 @@ export class Server {
         this.modules.push(name.toLowerCase());
         module.onLoad(this);
 
-        this._config.value.modules = this.modules;
-        DB.connection.manager.save(this._config);
+        this._config.modules = this.modules;
+        this._configModel.value = JSON.stringify(this._config);
+
+        DB.connection.manager.save(this._configModel);
     }
 
     public isModuleEnabled(name: string): boolean {
@@ -142,22 +167,28 @@ export class Server {
         this.modules.splice(this.modules.indexOf(name.toLowerCase()), 1);
         module.onUnload(this);
 
-        this._config.value.modules = this.modules;
-        DB.connection.manager.save(this._config);
+        this._config.modules = this.modules;
+        this._configModel.value = JSON.stringify(this._config);
+
+        DB.connection.manager.save(this._configModel);
     }
 
     public ignoreUser(user: User): void {
         if (this.ignoreList.indexOf(user._userID) === -1) {
-            this._config.value.ignoreList.push(user._userID);
-            DB.connection.manager.save(this._config);
+            this._config.ignoreList.push(user._userID);
+            this._configModel.value = JSON.stringify(this._config);
+
+            DB.connection.manager.save(this._configModel);
         }
     }
 
     public unignoreUser(user: User): void {
         const idx = this.ignoreList.indexOf(user._userID);
         if (idx !== -1) {
-            this._config.value.ignoreList.splice(idx, 1);
-            DB.connection.manager.save(this._config);
+            this._config.ignoreList.splice(idx, 1);
+            this._configModel.value = JSON.stringify(this._config);
+
+            DB.connection.manager.save(this._configModel);
         }
     }
 
@@ -166,31 +197,33 @@ export class Server {
     }
 
     public async saveConfig(): Promise<void> {
-        await DB.connection.manager.save(this._config);
+        await DB.connection.manager.save(this._configModel);
     }
 
     set channel(channel: string) {
-        this._config.value.channel = channel;
-        DB.connection.manager.save(this._config);
+        this._config.channel = channel;
+        this._configModel.value = JSON.stringify(this._config);
+
+        DB.connection.manager.save(this._configModel);
     }
 
     get channel(): string {
-        return this._config.value.channel;
+        return this._config.channel;
     }
 
     get modules(): string[] {
-        return this._config.value.modules;
+        return this._config.modules;
     }
 
     get ignoreList(): string[] {
-        return this._config.value.ignoreList;
+        return this._config.ignoreList;
+    }
+
+    get osuLimit(): number {
+        return this._config.osu_limit;
     }
 
     get id(): Snowflake {
         return this._id;
-    }
-
-    get config(): ConfigKeyValueModel {
-        return this._config;
     }
 }

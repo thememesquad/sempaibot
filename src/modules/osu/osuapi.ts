@@ -1,16 +1,18 @@
 import { Config } from "../../../config";
-import { IResponse, LoadBalancer } from "../../core/loadbalancer";
+import { IRequest, IResponse, LoadBalancer } from "../../core/loadbalancer";
+import { IOsuRecord } from "./iosurecord";
+import { IOsuUser } from "./iosuuser";
 import { OsuMode } from "./osumode";
 
 export class OsuAPI {
-    private static _instance: OsuAPI;
+    private static _instance: OsuAPI = new OsuAPI();
 
     public static get instance() {
         return OsuAPI._instance;
     }
 
     private _loadBalancer: LoadBalancer;
-    private _pending: Array<Promise<IResponse>>;
+    private _pending: IRequest[];
 
     constructor() {
         this._loadBalancer = new LoadBalancer(60);
@@ -29,7 +31,7 @@ export class OsuAPI {
         const tmp = this._loadBalancer.create(url);
         this._pending.push(tmp);
 
-        const obj = await tmp;
+        const obj = await tmp.promise;
         // StatsManager.update("osu_api_calls", 1);
 
         const body = obj.body;
@@ -49,7 +51,7 @@ export class OsuAPI {
         }
     }
 
-    public getUser(username, mode) {
+    public getUser(username, mode): IOsuUser {
         mode = mode || OsuMode.Standard;
 
         return this.apiCall("get_user", {
@@ -64,7 +66,7 @@ export class OsuAPI {
         });
     }
 
-    public getUserBest(id, mode, limit) {
+    public getUserBest(id, mode, limit): IOsuRecord[] {
         mode = mode || OsuMode.Standard;
 
         return this.apiCall("get_user_best", {

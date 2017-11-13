@@ -18,9 +18,13 @@ export function Command(format: string | Array<string | { [key: string]: any }>,
 
         if (options & CommandOptions.HideInHelp)
             command.hideInHelp = true;
+        else
+            command.hideInHelp = false;
 
         if (options & CommandOptions.Global)
             command.global = true;
+        else
+            command.global = false;
 
         target.setCommandInternal(propertyKey, command);
     };

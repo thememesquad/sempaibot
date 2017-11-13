@@ -3,6 +3,7 @@ import { Config } from "../../config";
 import * as Modules from "../modules";
 import {
     BotBase,
+    Cron,
     DB,
     IAPI,
     IMessage,
@@ -24,8 +25,10 @@ export class Bot implements BotBase {
     private _api: IAPI;
     private _servers: { [key: string]: Server };
     private _modules: { [key: string]: ModuleBase };
-    private _userBlacklist: ConfigKeyValueModel;
-    private _serverBlacklist: ConfigKeyValueModel;
+    private _userBlacklistModel: ConfigKeyValueModel;
+    private _serverBlacklistModel: ConfigKeyValueModel;
+    private _userBlacklist: string[];
+    private _serverBlacklist: string[];
 
     private _allowLog: boolean;
     private _ready: boolean;
@@ -45,8 +48,10 @@ export class Bot implements BotBase {
         this._allowLog = allowLog;
         this._availableModules = {};
 
-        this._userBlacklist = null;
-        this._serverBlacklist = null;
+        this._userBlacklistModel = null;
+        this._serverBlacklistModel = null;
+        this._userBlacklist = [];
+        this._serverBlacklist = [];
 
         for (const key of Object.keys(Modules))
             this._availableModules[key] = new Modules[key]();
@@ -71,10 +76,12 @@ export class Bot implements BotBase {
     }
 
     public async startup() {
+        Cron.instance.start();
         await this._api.startup();
     }
 
     public async shutdown() {
+        Cron.instance.stop();
         this.log("received termination signal, shutting down....");
         await this._api.shutdown();
 
@@ -121,8 +128,12 @@ export class Bot implements BotBase {
         try {
             await DB.setup();
             await this.printStatus("Loading config from DB", async () => {
-                const data = await DB.connection.getRepository(ConfigKeyValueModel).find();
-                await this._processConfig(data);
+                try {
+                    const data = await DB.connection.getRepository(ConfigKeyValueModel).find();
+                    await this._processConfig(data);
+                } catch (e) {
+                    await this._processConfig([]);
+                }
             });
 
             await this.printStatus("Loading users from DB", () => UserManager.instance.load());
@@ -174,6 +185,8 @@ export class Bot implements BotBase {
         if (message.content.toLowerCase().indexOf(identifier) === -1)
             return false;
 
+        await this._api.startTyping(message);
+
         message.content = message.content.substr(identifier.length).replace(/\s+/g, " ").trim();
 
         const split = message.content.split(" ");
@@ -205,6 +218,7 @@ export class Bot implements BotBase {
                 }));
         }
 
+        await this._api.stopTyping(message);
         return true;
     }
 
@@ -262,46 +276,54 @@ export class Bot implements BotBase {
     }
 
     public async blacklistUser(user: User): Promise<void> {
-        this._userBlacklist.value.blacklist.push(user._userID);
-        await DB.connection.manager.save(this._userBlacklist);
+        this._userBlacklist.push(user._userID);
+        this._userBlacklistModel.value = this._userBlacklist.join(";");
+
+        await DB.connection.manager.save(this._userBlacklistModel);
     }
 
     public async blacklistServer(serverId: string): Promise<void> {
         this.message(PersonalityManager.instance.get(MessageID.InformServerBlacklisted), this._servers[serverId]);
 
-        this._serverBlacklist.value.blacklist.push(serverId);
-        await DB.connection.manager.save(this._serverBlacklist);
+        this._serverBlacklist.push(serverId);
+        this._serverBlacklistModel.value = this._serverBlacklist.join(";");
+
+        await DB.connection.manager.save(this._serverBlacklistModel);
     }
 
     public async whitelistUser(user: User): Promise<boolean> {
-        const idx = this._userBlacklist.value.blacklist.indexOf(user._userID);
+        const idx = this._userBlacklist.indexOf(user._userID);
         if (idx === -1)
             return false;
 
-        this._serverBlacklist.value.blacklist.splice(idx, 1);
-        await DB.connection.manager.save(this._serverBlacklist);
+        this._userBlacklist.splice(idx, 1);
+        this._userBlacklistModel.value = this._userBlacklist.join(";");
+
+        await DB.connection.manager.save(this._userBlacklistModel);
 
         return true;
     }
 
     public async whitelistServer(serverId: string): Promise<boolean> {
-        const idx = this._serverBlacklist.value.blacklist.indexOf(serverId);
+        const idx = this._serverBlacklist.indexOf(serverId);
         if (idx === -1)
             return false;
 
-        this._serverBlacklist.value.blacklist.splice(idx, 1);
-        await DB.connection.manager.save(this._serverBlacklist);
+        this._serverBlacklist.splice(idx, 1);
+        this._serverBlacklistModel.value = this._serverBlacklist.join(";");
+
+        await DB.connection.manager.save(this._serverBlacklistModel);
         await this.message(PersonalityManager.instance.get(MessageID.InformServerWhitelisted), this._servers[serverId]);
 
         return true;
     }
 
     public isUserBlacklisted(user: User): boolean {
-        return this._userBlacklist.value.blacklist.indexOf(user._userID) !== -1;
+        return this._userBlacklist.indexOf(user._userID) !== -1;
     }
 
     public isServerBlacklisted(serverId: string): boolean {
-        return this._serverBlacklist.value.blacklist.indexOf(serverId) !== -1;
+        return this._serverBlacklist.indexOf(serverId) !== -1;
     }
 
     public get user(): User {
@@ -348,27 +370,31 @@ export class Bot implements BotBase {
                     break;
 
                 case "user_blacklist":
-                    this._userBlacklist = doc;
+                    this._userBlacklistModel = doc;
                     break;
 
                 case "server_blacklist":
-                    this._serverBlacklist = doc;
+                    this._serverBlacklistModel = doc;
                     break;
             }
         }
 
-        if (this._userBlacklist === null) {
-            this._userBlacklist = new ConfigKeyValueModel();
-            this._userBlacklist.key = "user_blacklist";
-            this._userBlacklist.value = { blacklist: [] };
-            this._userBlacklist = await DB.connection.manager.save(this._userBlacklist);
+        if (this._userBlacklistModel === null) {
+            this._userBlacklistModel = DB.connection.manager.create(ConfigKeyValueModel);
+            this._userBlacklistModel.key = "user_blacklist";
+            this._userBlacklistModel.value = "";
+            this._userBlacklistModel = await DB.connection.manager.save(this._userBlacklistModel);
+        } else {
+            this._userBlacklist = this._userBlacklistModel.value.split(";");
         }
 
-        if (this._serverBlacklist === null) {
-            this._serverBlacklist = new ConfigKeyValueModel();
-            this._serverBlacklist.key = "server_blacklist";
-            this._serverBlacklist.value = { blacklist: [] };
-            this._serverBlacklist = await DB.connection.manager.save(this._serverBlacklist);
+        if (this._serverBlacklistModel === null) {
+            this._serverBlacklistModel = DB.connection.manager.create(ConfigKeyValueModel);
+            this._serverBlacklistModel.key = "server_blacklist";
+            this._serverBlacklistModel.value = "";
+            this._serverBlacklistModel = await DB.connection.manager.save(this._serverBlacklistModel);
+        } else {
+            this._serverBlacklist = this._serverBlacklistModel.value.split(";");
         }
     }
 

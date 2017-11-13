@@ -1,3 +1,3 @@
 export * from "./loadbalancer";
-export * from "./requestinterface";
-export * from "./responseinterface";
+export * from "./irequest";
+export * from "./iresponse";

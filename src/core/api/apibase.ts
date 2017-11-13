@@ -19,5 +19,8 @@ export abstract class IAPI {
     public abstract async shutdown(): Promise<void>;
     public abstract async processServers(): Promise<Server[]>;
 
+    public abstract async startTyping(message: IMessage): Promise<void>;
+    public abstract async stopTyping(message: IMessage): Promise<void>;
+
     public abstract getUserId(): string;
 }

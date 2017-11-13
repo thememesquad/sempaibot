@@ -16,15 +16,19 @@ export class UserManager {
     private _users: { [key: string]: User } = {};
 
     public async load() {
-        const users = await DB.connection.manager.find(UserModel);
-        for (const user of users) {
-            if (Config.superadmins.indexOf(user.discordId) !== -1) {
-                for (const key in user.roles) {
-                    user.roles[key].role = RoleType.SuperAdmin;
+        try {
+            const users = await DB.connection.manager.find(UserModel);
+            for (const user of users) {
+                if (Config.superadmins.indexOf(user.discordId) !== -1) {
+                    for (const key in user.roles) {
+                        user.roles[key].role = RoleType.SuperAdmin;
+                    }
                 }
-            }
 
-            this._users[user.discordId] = new User(user);
+                this._users[user.discordId] = new User(user);
+            }
+        } catch (e) {
+            // empty
         }
     }
 

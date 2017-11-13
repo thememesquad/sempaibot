@@ -61,6 +61,14 @@ export class NullAPI implements IAPI {
         // empty
     }
 
+    public async startTyping(message: IMessage): Promise<void> {
+        // empty
+    }
+
+    public async stopTyping(message: IMessage): Promise<void> {
+        // empty
+    }
+
     public async processServers(): Promise<Server[]> {
         return [];
     }

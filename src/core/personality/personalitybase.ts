@@ -15,15 +15,30 @@ export abstract class PersonalityBase {
     public get(id: MessageID | number, args: { [key: string]: any; }): string {
         const personality = this.messages();
 
-        if (personality[id] === undefined) {
+        if (personality[id] === undefined)
+            return null;
+
+        let str: string | string[] = personality[id];
+
+        if (Array.isArray(str))
+            str = str[Math.floor(Math.random() * str.length)];
+
+        return stringFormat(str as string, args);
+    }
+
+    public getExtended(namespace: string, id: MessageID | number, args: { [key: string]: any; }): string {
+        if (this.id() !== namespace) {
             for (const expansion of this._expansions) {
-                const tmp = expansion.get(id, args);
-                if (tmp !== null)
-                    return tmp;
+                if (expansion.id() !== namespace)
+                    continue;
+
+                return expansion.get(id, args);
             }
 
             return null;
         }
+
+        const personality = this.messages();
 
         let str: string | string[] = personality[id];
 

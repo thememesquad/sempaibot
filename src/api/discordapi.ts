@@ -189,27 +189,6 @@ export class DiscordAPI implements IAPI {
         ReactionManager.instance.reaction(id, messageReaction.message as IMessage, user);
     }
 
-    // public async onMessageReactionRemoved(messageReaction: MessageReaction, discorduser: DiscordUser) {
-    //     if (discorduser.id === this.getUserId())
-    //         return;
-
-    //     const user = UserManager.instance.getUserById(discorduser.id);
-    //     if (user === null)
-    //         return;
-
-    //     if (messageReaction.message.author.id !== this.getUserId())
-    //         return;
-
-    //     if (!messageReaction.me)
-    //         return;
-
-    //     const id = this._getReactionIdForEmoji(messageReaction.emoji.name);
-    //     if (id === null)
-    //         return;
-
-    //     ReactionManager.instance.removeReaction(id, messageReaction.message.id, user);
-    // }
-
     public async onMessage(message: IMessage) {
         await this._bot.onMessage(message);
     }
@@ -256,6 +235,14 @@ export class DiscordAPI implements IAPI {
 
     public get user() {
         return this._discord.user;
+    }
+
+    public async startTyping(message: IMessage): Promise<void> {
+        message.channel.startTyping();
+    }
+
+    public async stopTyping(message: IMessage): Promise<void> {
+        message.channel.stopTyping();
     }
 
     private _getReactionIdForEmoji(name: string): ReactionId {
