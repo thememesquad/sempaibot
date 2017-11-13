@@ -311,10 +311,10 @@ export class OsuModule extends ModuleBase {
         json.servers = [message.server.id];
         json.updateInProgress = null;
 
-        const user = this._userRepository.create(json);
-        this._users.push(user);
+        const dbuser = this._userRepository.create(json);
+        this._users.push(dbuser);
 
-        await this._userRepository.save(user);
+        await this._userRepository.save(dbuser);
 
         // StatsManager.update("osu_num_users", this._users.length);
 
