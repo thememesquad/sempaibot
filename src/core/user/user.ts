@@ -1,16 +1,22 @@
 import * as Discord from "discord.js";
+import { Repository } from "typeorm";
 import { Config } from "../../../config";
-import { UserModel } from "../model";
+import { DB } from "../index";
+import { UserModel, UserRoleModel } from "../model";
 import { RoleType } from "../permission/roletype";
 import { Server } from "../server";
 
 export class User {
-    public _name: string;
-    public _userID: string;
-    public _roles: { [key: string]: RoleType };
+    private _name: string;
+    private _userID: string;
+    private _roles: { [key: string]: RoleType };
+    private _model: UserModel;
+    private _repository: Repository<UserModel>;
+    private _roleRepository: Repository<UserRoleModel>;
 
     constructor(user?: UserModel) {
         if (user) {
+            this._model = user;
             this._name = user.name;
             this._userID = user.discordId;
             this._roles = {};
@@ -18,19 +24,64 @@ export class User {
             for (const role of user.roles) {
                 this._roles[role.serverId] = role.role;
             }
+        } else {
+            this._model = null;
         }
-    }
 
-    public load(): Promise<void> {
-        return new Promise((resolve: () => void, reject: (err) => void) => {
-            resolve();
-        });
+        this._repository = DB.connection.getRepository(UserModel);
+        this._roleRepository = DB.connection.getRepository(UserRoleModel);
     }
 
     public save(): Promise<void> {
-        return new Promise((resolve: () => void, reject: (err) => void) => {
-            resolve();
-        });
+        if (this._model === null) {
+            this._model = this._repository.create();
+            this._model.roles = [];
+        }
+
+        this._model.name = this._name;
+        this._model.discordId = this._userID;
+
+        for (const server in this._roles) {
+            let found = false;
+
+            for (const role of this._model.roles) {
+                if (role.serverId === server) {
+                    role.role = this._roles[server];
+                    found = true;
+
+                    break;
+                }
+            }
+
+            if (!found) {
+                const role = this._roleRepository.create();
+                role.role = this._roles[server];
+                role.serverId = server;
+                role.user = this._model;
+
+                this._model.roles.push(role);
+            }
+        }
+
+        return this._repository.save(this._model).then(() => {
+            // empty
+         });
+    }
+
+    public setUsername(name: string): void {
+        this._name = name;
+    }
+
+    public setUserID(id: string): void {
+        this._userID = id;
+    }
+
+    public setRoles(roles: {[key: string]: RoleType}): void {
+        this._roles = roles;
+    }
+
+    public setRole(server: Server, role: RoleType): void {
+        this._roles[server.id] = role;
     }
 
     public getRole(server: Server): RoleType {
@@ -44,6 +95,7 @@ export class User {
         if (Config.superadmins.indexOf(this._userID) !== -1) {
             if (this._roles[server.id] === undefined || this._roles[server.id] !== RoleType.SuperAdmin) {
                 this._roles[server.id] = RoleType.SuperAdmin;
+
                 this.save().catch((err) => {
                     console.log(err);
                 });
@@ -54,12 +106,17 @@ export class User {
 
         if (this._roles[server.id] === undefined) {
             this._roles[server.id] = RoleType.Normal;
+
             this.save().catch((err) => {
                 console.log(err);
             });
         }
 
         return this._roles[server.id];
+    }
+
+    public getUsername(): string {
+        return this._name;
     }
 
     public getName(server: Server): string {
@@ -101,5 +158,9 @@ export class User {
         }
 
         return name;
+    }
+
+    public getUserID(): string {
+        return this._userID;
     }
 }

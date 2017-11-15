@@ -103,7 +103,7 @@ export class AdminModule extends ModuleBase {
         this._bot.blacklistUser(user);
         return this._bot.respond(message, PersonalityManager.instance.get(MessageID.UserBlacklisted, {
             author: message.author.id,
-            user: user._userID,
+            user: user.getUserID(),
         }));
     }
 
@@ -122,7 +122,7 @@ export class AdminModule extends ModuleBase {
         this._bot.whitelistUser(user);
         return this._bot.respond(message, PersonalityManager.instance.get(MessageID.UserWhitelisted, {
             author: message.author.id,
-            user: user._userID,
+            user: user.getUserID(),
         }));
     }
 
@@ -150,8 +150,8 @@ export class AdminModule extends ModuleBase {
             if (!this._bot.isUserBlacklisted(user))
                 continue;
 
-            id = "" + user._userID;
-            name = user._name;
+            id = "" + user.getUserID();
+            name = user.getUsername();
 
             while (id.length < 25)
                 id += " ";
@@ -387,7 +387,7 @@ export class AdminModule extends ModuleBase {
                 user: args.user,
             }));
 
-        if (!UserManager.instance.assignRole(user._userID, message.server, args.role))
+        if (!UserManager.instance.assignRole(user.getUserID(), message.server, args.role))
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.UnknownError, {
                 author: message.author.id,
             }));
@@ -484,7 +484,7 @@ export class AdminModule extends ModuleBase {
             return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, { author: message.author.id }));
 
         message.server.ignoreUser(user);
-        return this._bot.respond(message, PersonalityManager.instance.get(MessageID.StartedIgnoringUser, { author: message.author.id, user: user._userID }));
+        return this._bot.respond(message, PersonalityManager.instance.get(MessageID.StartedIgnoringUser, { author: message.author.id, user: user.getUserID() }));
     }
 
     @Command("unignore {userid!user}")
@@ -508,7 +508,7 @@ export class AdminModule extends ModuleBase {
         message.server.unignoreUser(user);
         return this._bot.respond(message, PersonalityManager.instance.get(MessageID.StoppedIgnoringUser, {
             author: message.author.id,
-            user: user._userID,
+            user: user.getUserID(),
         }));
     }
 }

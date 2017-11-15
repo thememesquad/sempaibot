@@ -12,6 +12,7 @@ export class DB {
             type: "sqlite",
         }).then((connection) => {
             DB.connection = connection;
+            return connection.synchronize();
         });
     }
 }

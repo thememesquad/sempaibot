@@ -7,7 +7,10 @@ export class UserRoleModel {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    @OneToOne((type) => UserModel)
+    @OneToOne((type) => UserModel, {
+        cascadeInsert: true,
+        cascadeUpdate: true
+    })
     @JoinColumn()
     public user: UserModel;
 
