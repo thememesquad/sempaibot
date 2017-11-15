@@ -83,15 +83,15 @@ export class OsuUserModel implements IOsuUser {
     })
     public records: OsuRecordModel[];
 
-    @Column("int")
+    @Column("int", { nullable: true })
     // tslint:disable-next-line:variable-name
     public last_record: number;
 
-    @Column("int")
+    @Column("int", { nullable: true })
     // tslint:disable-next-line:variable-name
     public last_updated: number;
 
-    @Column("int")
+    @Column("int", { nullable: true })
     // tslint:disable-next-line:variable-name
     public last_checked: number;
 }
