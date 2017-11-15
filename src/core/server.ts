@@ -174,8 +174,8 @@ export class Server {
     }
 
     public ignoreUser(user: User): void {
-        if (this.ignoreList.indexOf(user._userID) === -1) {
-            this._config.ignoreList.push(user._userID);
+        if (this.ignoreList.indexOf(user.getUserID()) === -1) {
+            this._config.ignoreList.push(user.getUserID());
             this._configModel.value = JSON.stringify(this._config);
 
             DB.connection.manager.save(this._configModel);
@@ -183,7 +183,7 @@ export class Server {
     }
 
     public unignoreUser(user: User): void {
-        const idx = this.ignoreList.indexOf(user._userID);
+        const idx = this.ignoreList.indexOf(user.getUserID());
         if (idx !== -1) {
             this._config.ignoreList.splice(idx, 1);
             this._configModel.value = JSON.stringify(this._config);
@@ -193,7 +193,7 @@ export class Server {
     }
 
     public isUserIgnored(user: User): boolean {
-        return this.ignoreList.indexOf(user._userID) !== -1;
+        return this.ignoreList.indexOf(user.getUserID()) !== -1;
     }
 
     public async saveConfig(): Promise<void> {

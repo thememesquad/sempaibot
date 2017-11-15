@@ -276,7 +276,7 @@ export class Bot implements BotBase {
     }
 
     public async blacklistUser(user: User): Promise<void> {
-        this._userBlacklist.push(user._userID);
+        this._userBlacklist.push(user.getUserID());
         this._userBlacklistModel.value = this._userBlacklist.join(";");
 
         await DB.connection.manager.save(this._userBlacklistModel);
@@ -292,7 +292,7 @@ export class Bot implements BotBase {
     }
 
     public async whitelistUser(user: User): Promise<boolean> {
-        const idx = this._userBlacklist.indexOf(user._userID);
+        const idx = this._userBlacklist.indexOf(user.getUserID());
         if (idx === -1)
             return false;
 
@@ -319,7 +319,7 @@ export class Bot implements BotBase {
     }
 
     public isUserBlacklisted(user: User): boolean {
-        return this._userBlacklist.indexOf(user._userID) !== -1;
+        return this._userBlacklist.indexOf(user.getUserID()) !== -1;
     }
 
     public isServerBlacklisted(serverId: string): boolean {

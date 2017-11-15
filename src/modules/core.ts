@@ -36,7 +36,7 @@ export class CoreModule extends ModuleBase {
             const member = server.server.members.get(key);
             const user = UserManager.instance.getUser(member.user, server);
 
-            if (member.id === this._bot.user._userID)
+            if (member.id === this._bot.user.getUserID())
                 continue;
 
             if (user.getRole(server) === RoleType.Normal)

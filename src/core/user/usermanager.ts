@@ -16,8 +16,11 @@ export class UserManager {
     private _users: { [key: string]: User } = {};
 
     public async load() {
+        const userRepository = DB.connection.getRepository(UserModel);
+
         try {
-            const users = await DB.connection.manager.find(UserModel);
+            const users = await userRepository.find({ relations: ["roles"] });
+
             for (const user of users) {
                 if (Config.superadmins.indexOf(user.discordId) !== -1) {
                     for (const key in user.roles) {
@@ -34,8 +37,8 @@ export class UserManager {
 
     public registerUser(id: string, name: string, server: Server, role?: string): User {
         if (this._users[id] !== undefined) {
-            if (this._users[id]._name !== name) {
-                this._users[id]._name = name;
+            if (this._users[id].getUsername() !== name) {
+                this._users[id].setUsername(name);
                 this._users[id].save().catch((err) => {
                     console.log(err);
                 });
@@ -60,9 +63,9 @@ export class UserManager {
         }
 
         const user = new User();
-        user._name = name;
-        user._userID = id;
-        user._roles = roles;
+        user.setUsername(name);
+        user.setUserID(id);
+        user.setRoles(roles);
 
         user.save().catch((err) => {
             console.log(err);
@@ -100,7 +103,7 @@ export class UserManager {
         if (this._users[id] === undefined)
             return false;
 
-        this._users[id]._roles[server.id] = role;
+        this._users[id].setRole(server, role);
         this._users[id].save().catch((err) => {
             console.log(err);
         });

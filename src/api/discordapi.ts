@@ -130,7 +130,7 @@ export class DiscordAPI implements IAPI {
     public async removeReaction(message: IMessage, reaction: ReactionId | string, user?: User): Promise<IMessage> {
         let userid: string = this.getUserId();
         if (user !== null)
-            userid = user._userID;
+            userid = user.getUserID();
 
         const emoji = this._getEmojiForReactionId(reaction);
         const tmp = await (message as Message).reactions.find((value, key, collection) => {
