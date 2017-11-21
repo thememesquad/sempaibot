@@ -44,6 +44,7 @@ export class DiscordAPI implements IAPI {
         this._discord.on("error", this.onError.bind(this));
 
         this._discord.on("messageReactionAdd", this.onMessageReactionAdded.bind(this));
+        this._discord.on("messageReactionRemove", this.onMessageReactionRemoved.bind(this));
     }
 
     public setBot(bot: BotBase): void {
@@ -176,7 +177,7 @@ export class DiscordAPI implements IAPI {
         if (user === null)
             return;
 
-        if (messageReaction.message.author.id !== this.getUserId())
+        if (messageReaction.message.author.id === this.getUserId())
             return;
 
         if (!messageReaction.me)
@@ -187,6 +188,27 @@ export class DiscordAPI implements IAPI {
             return;
 
         ReactionManager.instance.reaction(id, messageReaction.message as IMessage, user);
+    }
+
+    public async onMessageReactionRemoved(messageReaction: MessageReaction, discorduser: DiscordUser) {
+        if (discorduser.id === this.getUserId())
+            return;
+
+        const user = UserManager.instance.getUserById(discorduser.id);
+        if (user === null)
+            return;
+
+        if (messageReaction.message.author.id === this.getUserId())
+            return;
+
+        if (!messageReaction.me)
+            return;
+
+        const id = this._getReactionIdForEmoji(messageReaction.emoji.name);
+        if (id === null)
+            return;
+
+        ReactionManager.instance.reaction(id, messageReaction.message as IMessage, user, false);
     }
 
     public async onMessage(message: IMessage) {

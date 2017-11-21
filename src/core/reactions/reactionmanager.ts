@@ -7,10 +7,11 @@ export class ReactionManager {
     private static _instance: ReactionManager = new ReactionManager();
     private _messages: IReactionMessage[] = [];
 
-    public registerMessage(message: IMessage, reactionids: IReactionCallbacks) {
+    public registerMessage(message: IMessage, reactionids: IReactionCallbacks, remove: boolean = true) {
         this._messages.push({
             message,
-            reactionids
+            reactionids,
+            remove
         });
 
         Bot.instance.addReaction(message, Object.keys(reactionids));
@@ -29,7 +30,7 @@ export class ReactionManager {
         await Bot.instance.addReaction(message, Object.keys(reactionids));
     }
 
-    public async reaction(id: ReactionId, msg: IMessage, user: User): Promise<void> {
+    public async reaction(id: ReactionId, msg: IMessage, user: User, added: boolean = true): Promise<void> {
         for (const message of this._messages) {
             if (message.message.id !== msg.id)
                 continue;
@@ -37,8 +38,12 @@ export class ReactionManager {
             if (typeof message.reactionids[id] === "undefined")
                 continue;
 
-            message.reactionids[id](true, user);
-            Bot.instance.removeReaction(message.message, id, user);
+            message.reactionids[id](added, user);
+
+            if (message.remove) {
+                Bot.instance.removeReaction(message.message, id, user);
+            }
+
             break;
         }
     }

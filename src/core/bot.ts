@@ -29,6 +29,12 @@ export class Bot implements BotBase {
     private _serverBlacklistModel: ConfigKeyValueModel;
     private _userBlacklist: string[];
     private _serverBlacklist: string[];
+    private _hookables: {
+        [key: string]: {
+            object: ModuleBase,
+            hook: string
+        }
+    };
 
     private _allowLog: boolean;
     private _ready: boolean;
@@ -52,6 +58,7 @@ export class Bot implements BotBase {
         this._serverBlacklistModel = null;
         this._userBlacklist = [];
         this._serverBlacklist = [];
+        this._hookables = {};
 
         for (const key of Object.keys(Modules))
             this._availableModules[key] = new Modules[key]();
@@ -179,6 +186,16 @@ export class Bot implements BotBase {
         }
     }
 
+    public addHookable(identifier: string, object: ModuleBase, hook: string): void {
+        if (this._hookables[identifier] === undefined)
+            this._hookables[identifier] = { object, hook };
+    }
+
+    public removeHookable(identifier: string): void {
+        if (this._hookables[identifier] !== undefined)
+            delete this._hookables[identifier];
+    }
+
     public async processMessage(server, message: IMessage, identifier): Promise<boolean> {
         identifier = identifier.trim();
 
@@ -244,6 +261,12 @@ export class Bot implements BotBase {
 
         if (message.author.id === this._api.getUserId())
             return;
+
+        for (const i in this._hookables) {
+            const object = this._hookables[i].object;
+            const hook = this._hookables[i].hook;
+            object[hook](message);
+        }
 
         for (const identifier of Config.identifiers) {
             if (await this.processMessage(server, message, identifier))

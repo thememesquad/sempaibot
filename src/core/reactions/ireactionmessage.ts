@@ -6,4 +6,5 @@ export interface IReactionCallbacks { [key: number]: (added: boolean, user: User
 export interface IReactionMessage {
     message: IMessage;
     reactionids: IReactionCallbacks;
+    remove: boolean;
 }

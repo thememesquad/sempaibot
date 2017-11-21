@@ -13,6 +13,9 @@ export abstract class BotBase {
     public abstract getServer(id: string): Server;
     public abstract getModule(name: string): ModuleBase;
 
+    public abstract addHookable(identifier: string, object: ModuleBase, hook: string): void;
+    public abstract removeHookable(identifier: string): void;
+
     public abstract message(message: MessageContent | MessageContent[], server: Server): Promise<IMessage | IMessage[]>;
     public abstract respond(m: IMessage, message: MessageContent | MessageContent[]): Promise<IMessage | IMessage[]>;
     public abstract edit(original: IMessage, edit: string | RichEmbed | RichEmbedOptions): Promise<IMessage>;
