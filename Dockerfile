@@ -6,6 +6,7 @@ WORKDIR /app
 
 COPY src src
 COPY tsconfig.json tsconfig.json
+COPY config.js config.js
 COPY package.json package.json
 COPY config.d.ts config.d.ts
 COPY LICENSE LICENSE
