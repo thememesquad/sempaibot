@@ -56,12 +56,6 @@ export class UserManager {
         const roles = {};
         roles[serverId] = role;
 
-        if (server !== null) {
-            console.log("Adding user '" + id + "' (" + name + ") from server '" + server.server.name + "'.");
-        } else {
-            console.log("Adding user '" + id + "' (" + name + ")");
-        }
-
         const user = new User();
         user.setUsername(name);
         user.setUserID(id);
