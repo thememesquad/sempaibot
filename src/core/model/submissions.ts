@@ -18,4 +18,7 @@ export class Submissions extends BaseEntity {
 
     @Column("int")
     public upvotes: number;
+
+    @Column("int")
+    public downvotes: number;
 }

@@ -49,6 +49,7 @@ export class ChillhopModule extends ModuleBase {
         submission.messageid = message.id;
         submission.content = message.content;
         submission.upvotes = 0;
+        submission.downvotes = 0;
         submission.channelid = channel;
         submission.save();
 
@@ -66,10 +67,10 @@ export class ChillhopModule extends ModuleBase {
                 },
                 [ReactionId.ThumbsDown]: (added, user) => {
                     if (added) {
-                        submission.upvotes--;
+                        submission.downvotes++;
                         submission.save();
                     } else {
-                        submission.upvotes++;
+                        submission.downvotes--;
                         submission.save();
                     }
                 }
@@ -124,11 +125,12 @@ export class ChillhopModule extends ModuleBase {
         return await this._bot.respond(message, "Successfully ended the event!") as IMessage;
     }
 
-    @Command("get most upvoted in {channelid!channel}")
-    @CommandSample("get most upvoted in __*#channel*__")
-    @CommandDescription("See what is the highest upvoted post.")
+    @Command("get top {num} upvoted in {channelid!channel}")
+    @CommandSample("get top __*10*__ upvoted in __*#channel*__")
+    @CommandDescription("Get the top number of upvoted submissions.")
     private async handleMostUpvoted(message: IMessage, args: { [key: string]: any }): Promise<IMessage> {
         const channel: string = args.channel;
+        const num: number = args.num;
 
         const event = await Events.findOne({ channelid: channel });
 
@@ -138,18 +140,15 @@ export class ChillhopModule extends ModuleBase {
 
         const submissions = await Submissions.find({ channelid: channel });
 
-        let upvotes;
-        let content: string;
+        // Sort the submissions based on how many upvotes they have
+        submissions.sort((a, b) => (a.upvotes - a.downvotes) < (b.upvotes - b.downvotes) ? -1 : (a.upvotes - a.downvotes) > (b.upvotes - b.downvotes) ? 1 : 0);
 
-        for (const i in submissions) {
+        // Loop through either the top number or the submission length
+        const loop = Math.min(submissions.length, num);
+
+        for (let i = 0; i < loop; i++) {
             const submission = submissions[i];
-
-            if (upvotes === undefined || submission.upvotes > upvotes) {
-                upvotes = submission.upvotes;
-                content = submission.content;
-            }
+            await this._bot.respond(message, `The #${i + 1} song with :thumbsup: [${submission.upvotes}] and :thumbsdown: [${submission.downvotes}]\n${submission.content}`);
         }
-
-        return await this._bot.respond(message, `This song got the most upvotes with ${upvotes} :thumbsup:\n${content}`) as IMessage;
     }
 }
