@@ -141,7 +141,7 @@ export class ChillhopModule extends ModuleBase {
         const submissions = await Submissions.find({ channelid: channel });
 
         // Sort the submissions based on how many upvotes they have
-        submissions.sort((a, b) => (a.upvotes - a.downvotes) < (b.upvotes - b.downvotes) ? -1 : (a.upvotes - a.downvotes) > (b.upvotes - b.downvotes) ? 1 : 0);
+        submissions.sort((a, b) => (a.upvotes - a.downvotes) > (b.upvotes - b.downvotes) ? -1 : (a.upvotes - a.downvotes) < (b.upvotes - b.downvotes) ? 1 : 0);
 
         // Loop through either the top number or the submission length
         const loop = Math.min(submissions.length, num);
