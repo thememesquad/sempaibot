@@ -1,5 +1,5 @@
 import { Message, RichEmbed, RichEmbedOptions } from "discord.js";
-import { Config } from "../../config";
+import { Config } from "../../config.js";
 import * as Modules from "../modules";
 import {
     BotBase,
@@ -53,8 +53,9 @@ export class Bot implements BotBase {
         this._userBlacklist = [];
         this._serverBlacklist = [];
 
-        for (const key of Object.keys(Modules))
+        for (const key of Object.keys(Modules)) {
             this._availableModules[key] = new Modules[key]();
+        }
     }
 
     public log(...args: any[]): void {

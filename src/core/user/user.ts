@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { Repository } from "typeorm";
-import { Config } from "../../../config";
+import { Config } from "../../../config.js";
 import { DB } from "../index";
 import { UserModel, UserRoleModel } from "../model";
 import { RoleType } from "../permission/roletype";

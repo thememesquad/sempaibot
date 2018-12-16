@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { RoleType } from "../";
 import { UserModel } from "./user";
 
@@ -7,11 +7,7 @@ export class UserRoleModel {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    @OneToOne((type) => UserModel, {
-        cascadeInsert: true,
-        cascadeUpdate: true
-    })
-    @JoinColumn()
+    @ManyToOne(type => UserModel, (user: UserModel) => user.roles)
     public user: UserModel;
 
     @Column({ type: "varchar", length: 255 })

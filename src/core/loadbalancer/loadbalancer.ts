@@ -8,7 +8,7 @@ export class LoadBalancer {
     private _pendingRequests: IRequest[];
     private _oldMinutes: number;
     private _current: number;
-    private _balancer: number;
+    private _balancer: NodeJS.Timeout;
 
     constructor(maxPerMinute: number) {
         this._limit = maxPerMinute;

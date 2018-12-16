@@ -8,7 +8,7 @@ export class OsuRecordModel implements IOsuRecord {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    @ManyToOne((type) => OsuUserModel, (author) => author.records)
+    @ManyToOne((type) => OsuUserModel, (author: OsuUserModel) => author.records)
     public user: OsuUserModel;
 
     @Column("int")

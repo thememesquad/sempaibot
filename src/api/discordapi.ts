@@ -1,5 +1,5 @@
 import { Client, Message, MessageOptions, MessageReaction, RichEmbed, RichEmbedOptions, TextChannel, User as DiscordUser } from "discord.js";
-import { Config } from "../../config";
+import { Config } from "../../config.js";
 import { IAPI, IMessage, MessageContent, ReactionId, ReactionManager, Server, User, UserManager } from "../core";
 import { BotBase } from "../core/botbase";
 
@@ -64,7 +64,7 @@ export class DiscordAPI implements IAPI {
 
         let channel = server.channel;
         if (channel.length === 0)
-            channel = server.server.channels.first().id;
+            channel = server.server.channels.filter(x => x.type === "text").first().id;
 
         const actualChannel: TextChannel = server.server.channels.get(channel) as TextChannel;
         const options: MessageOptions = {};

@@ -77,9 +77,8 @@ export class OsuUserModel implements IOsuUser {
     @Column("simple-array")
     public servers: string[];
 
-    @OneToMany((type) => OsuRecordModel, (record) => record.user, {
-        cascadeInsert: true,
-        cascadeUpdate: true
+    @OneToMany((type) => OsuRecordModel, (record: OsuRecordModel) => record.user, {
+        cascade: true
     })
     public records: OsuRecordModel[];
 

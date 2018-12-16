@@ -8,6 +8,7 @@ export class DB {
             database: "data.sqlite",
             entities: [
                 __dirname + "/../**/model/*.js",
+                __dirname + "/../**/model/*.ts",
             ],
             type: "sqlite",
         }).then((connection) => {

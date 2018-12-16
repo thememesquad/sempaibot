@@ -1,4 +1,4 @@
-import { Config } from "../../../config";
+import { Config } from "../../../config.js";
 import { IRequest, IResponse, LoadBalancer } from "../../core/loadbalancer";
 import { IOsuRecord } from "./iosurecord";
 import { IOsuUser } from "./iosuuser";

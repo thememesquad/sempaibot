@@ -12,9 +12,8 @@ export class UserModel {
     @Column({ type: "varchar", length: 255 })
     public name: string;
 
-    @OneToMany((type) => UserRoleModel, (model) => model.user, {
-        cascadeInsert: true,
-        cascadeUpdate: true
+    @OneToMany(type => UserRoleModel, (userrole: UserRoleModel) => userrole.user, {
+        cascade: true
     })
     public roles: UserRoleModel[];
 }
