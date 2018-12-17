@@ -1,124 +1,116 @@
-import { Config } from "../../config.js";
-import {
-    Command,
-    CommandDescription,
-    CommandOptions,
-    CommandPermission,
-    CommandSample,
-    generateTable,
-    IMessage,
-    MessageID,
-    Module,
-    ModuleBase,
-    ModuleOptions,
-    PermissionManager,
-    PersonalityManager,
-    RoleType,
-    UserManager,
-} from "../core";
+import { Module } from "../core/attributes/module";
+import { ModuleOptions } from "../core/moduleoptions";
+import { IModule } from "../core/imodule";
+import { AccessManager, TemplateManager } from "../core/managers";
+import { Command, CommandSample, CommandDescription, CommandOptions, CommandPermission } from "../core/command";
+import { IMessage } from "../core/imessage";
+import { DBServer } from "../core/models/dbserver";
+import { RoleType } from "../core/roletype";
+import { injectable } from "inversify";
+import { TemplateMessageID } from "../core/itemplatemessageid";
+import { DiscordAPI } from "../api/discord";
+import { identifiers } from "../../config";
 
 @Module("Core", "This is the core module!", ModuleOptions.AlwaysOn | ModuleOptions.Hidden)
-export class CoreModule extends ModuleBase {
-    constructor() {
-        super();
-
-        PermissionManager.instance.register("CHANGE_PERSONALITY", RoleType.Moderator);
-    }
-
+@injectable()
+export class CoreModule extends IModule
+{
     @Command("list roles")
     @CommandSample("list roles")
     @CommandDescription("Lists every user's role.")
-    private handleListRoles(message: IMessage, args: { [key: string]: any }) {
-        const server = message.server;
+    private handleListRoles(message: IMessage, args: { [key: string]: any })
+    {
+        const server = message.server as DBServer;
         const tmp = [];
 
-        for (const key of server.server.members.keyArray()) {
-            const member = server.server.members.get(key);
-            const user = UserManager.instance.getUser(member.user, server);
-
-            if (member.id === this._bot.user.getUserID())
+        for (const user of server.users) {
+            if (user.getRole(server) === RoleType.Normal) {
                 continue;
-
-            if (user.getRole(server) === RoleType.Normal)
-                continue;
+            }
 
             tmp.push(user);
         }
 
-        tmp.sort((a, b) => {
-            return a.get_role_id(server) - b.get_role_id(server);
-        });
+        // tmp.sort((a, b) => {
+        //     return a.get_role_id(server) - b.get_role_id(server);
+        // });
 
-        const columns = { name: "Name", role: "Role" };
-        const data = [];
+        // const columns = { name: "Name", role: "Role" };
+        // const data = [];
 
-        for (const dat of tmp)
-            data.push({ name: dat.get_name_detailed(server), role: dat.get_role(server) });
+        // for (const dat of tmp)
+        //     data.push({ name: dat.get_name_detailed(server), role: dat.get_role(server) });
 
-        const messages = generateTable(PersonalityManager.instance.get(MessageID.ListRoles, {
-            author: message.author.id,
-        }), columns, data, { name: 30, role: 15 });
+        // const messages = generateTable(PersonalityManager.instance.get(MessageID.ListRoles, {
+        //     author: message.author.id,
+        // }), columns, data, { name: 30, role: 15 });
 
-        this._bot.respond(message, messages);
+        // this._bot.respond(message, messages);
     }
 
     @Command("list permissions")
     @CommandSample("list permissions")
     @CommandDescription("Lists the available permissions for each role.")
-    private handleListPermissions(message: IMessage, args: { [key: string]: any }) {
-        const server = message.server;
-        const adminPermissions = PermissionManager.instance.getRole(RoleType.Admin).getPermissions(server);
+    private handleListPermissions(message: IMessage, args: { [key: string]: any })
+    {
+        // const server = message.server;
+        // const adminPermissions = PermissionManager.instance.getRole(RoleType.Admin).getPermissions(server);
 
-        const columns = { permission: "Permission", roles: "Roles" };
-        const data = [];
-        const roles = [
-            PermissionManager.instance.getRole(RoleType.Admin),
-            PermissionManager.instance.getRole(RoleType.Moderator),
-            PermissionManager.instance.getRole(RoleType.Normal),
-        ];
+        // const columns = { permission: "Permission", roles: "Roles" };
+        // const data = [];
+        // const roles = [
+        //     PermissionManager.instance.getRole(RoleType.Admin),
+        //     PermissionManager.instance.getRole(RoleType.Moderator),
+        //     PermissionManager.instance.getRole(RoleType.Normal),
+        // ];
 
-        for (const key in adminPermissions) {
-            if (!adminPermissions[key])
-                continue;
+        // for (const key in adminPermissions) {
+        //     if (!adminPermissions[key]) {
+        //         continue;
+        //     }
 
-            let tmp = "";
-            for (const role of roles) {
-                if (!role.isAllowed(server, key))
-                    continue;
+        //     let tmp = "";
+        //     for (const role of roles) {
+        //         if (!role.isAllowed(server, key))
+        //             continue;
 
-                if (tmp.length !== 0)
-                    tmp += " ";
+        //         if (tmp.length !== 0)
+        //             tmp += " ";
 
-                tmp += role;
-            }
+        //         tmp += role;
+        //     }
 
-            data.push({
-                permission: key.toLowerCase(),
-                roles: tmp,
-            });
-        }
+        //     data.push({
+        //         permission: key.toLowerCase(),
+        //         roles: tmp,
+        //     });
+        // }
 
-        data.sort((a, b) => {
-            if (a.roles.length < b.roles.length)
-                return -1;
+        // data.sort((a, b) => {
+        //     if (a.roles.length < b.roles.length) {
+        //         return -1;
+        //     }
 
-            if (a.roles.length > b.roles.length)
-                return 1;
+        //     if (a.roles.length > b.roles.length) {
+        //         return 1;
+        //     }
 
-            if (a.permission < b.permission)
-                return -1;
+        //     if (a.permission < b.permission) {
+        //         return -1;
+        //     }
 
-            if (a.permission > b.permission)
-                return 1;
+        //     if (a.permission > b.permission) {
+        //         return 1;
+        //     }
 
-            return 0;
-        });
+        //     return 0;
+        // });
 
-        const messages = generateTable(PersonalityManager.instance.get(MessageID.ListPermissions, {
-            author: message.author.id,
-        }), columns, data, { permission: 20, roles: 15 });
+        // const messages = generateTable(PersonalityManager.instance.get(MessageID.ListPermissions, {
+        //     author: message.author.id,
+        // }), columns, data, { permission: 20, roles: 15 });
 
-        this._bot.respond(message, messages);
+        // this._bot.respond(message, messages);
     }
 
     @Command("show ignore list")
@@ -126,22 +118,24 @@ export class CoreModule extends ModuleBase {
     @Command("show ignorelist")
     @CommandSample("show ignore list")
     @CommandDescription("Shows the list of people I'm currently ignoring!")
-    private handleShowIgnorelist(message: IMessage, args: { [key: string]: any }) {
-        let response = "``` ";
+    private handleShowIgnorelist(message: IMessage, args: { [key: string]: any })
+    {
+        // let response = "``` ";
 
-        for (let i = 0; i < message.server.ignoreList.length; i++) {
-            if (i !== 0)
-                response += "\r\n";
+        // for (let i = 0; i < message.server.ignoreList.length; i++) {
+        //     if (i !== 0)
+        //         response += "\r\n";
 
-            response += UserManager.instance.getUserById(message.server.ignoreList[i], message.server).getDetailedName(message.server);
-        }
+        //     response += UserManager.instance.getUserById(message.server.ignoreList[i], message.server).getDetailedName(message.server);
+        // }
 
-        response += "```";
+        // response += "```";
 
-        if (message.server.ignoreList.length === 0)
-            this._bot.respond(message, PersonalityManager.instance.get(MessageID.IgnoreListEmpty, { author: message.author.id }));
-        else
-            this._bot.respond(message, PersonalityManager.instance.get(MessageID.ListIgnores, { author: message.author.id, list: response }));
+        // if (message.server.ignoreList.length === 0) {
+        //     this._bot.respond(message, PersonalityManager.instance.get(MessageID.IgnoreListEmpty, { author: message.author.id }));
+        // } else {
+        //     this._bot.respond(message, PersonalityManager.instance.get(MessageID.ListIgnores, { author: message.author.id, list: response }));
+        // }
     }
 
     @Command(["please help", { please: true }], CommandOptions.HideInHelp | CommandOptions.Global)
@@ -155,71 +149,82 @@ export class CoreModule extends ModuleBase {
     @Command("show help")
     @Command(["助けて", { japanese: true }])
     @Command(["助けてください", { japanese: true, please: true }])
-    private handleHelp(message: IMessage, args: { [key: string]: any }) {
+    private handleHelp(message: IMessage, args: { [key: string]: any })
+    {
         let response = "";
 
-        // if (args.please)
-        //     response = stringFormat(Responses.get("PLEASE_HELP_TOP"), { author: message.author.id });
-        // else
-        //     response = stringFormat(Responses.get("HELP_TOP"), { author: message.author.id });
+        if (args.please) {
+            response = this._bot.get(TemplateManager).get(TemplateMessageID.PleaseHelpTop, { author: message.author.id }) as string;
+        } else {
+            response = this._bot.get(TemplateManager).get(TemplateMessageID.HelpTop, { author: message.author.id }) as string;
+        }
 
         const messageQueue = [];
         const role = message.user.getRole(message.server);
         let modules = "";
-        for (const key in this._bot.modules) {
-            const module = this._bot.modules[key];
+
+        for (const key of this._bot.modules) {
+            const module: IModule = this._bot.get(key);
             const enabled = (message.server === null) ? false : message.server.isModuleEnabled(module.name);
 
             if (enabled) {
-                if (modules.length !== 0)
+                if (modules.length !== 0) {
                     modules += ", ";
+                }
 
-                modules += key;
+                modules += module.name;
             }
 
             let hasNonHidden = false;
             let tmp = "";
+
             for (const command of module.commands) {
-                if (command.permission !== null && !PermissionManager.instance.isAllowed(command.permission as string, role, message.server))
+                if (command.permission !== null && !this._bot.get(AccessManager).isAllowed(command.permission as string, role, message.server)) {
                     continue;
+                }
 
                 if (command.hideInHelp === undefined || command.hideInHelp === false) {
                     const isPrivate = command.private !== undefined && command.private === true;
 
-                    if (message.server !== null && isPrivate)
+                    if (message.server !== null && isPrivate) {
                         continue;
+                    }
 
-                    if (command.global === false && !enabled)
+                    if (command.global === false && !enabled) {
                         continue;
+                    }
 
                     hasNonHidden = true;
 
-                    tmp += "**" + Config.identifiers[0] + command.sample + "** - " + command.description;
+                    tmp += "**" + identifiers[0] + command.sample + "** - " + command.description;
                     tmp += "\r\n";
                 }
             }
 
-            if (!hasNonHidden)
+            if (!hasNonHidden) {
                 continue;
+            }
 
             if (response.length + tmp.length >= 1900) {
                 messageQueue.push(response);
                 response = "";
             }
 
-            response += "**" + key + "**:\r\n";
+            response += "**" + module.name + "**:\r\n";
             response += tmp;
             response += "\r\n";
         }
 
         let add = "";
-        if (message.server !== null)
+        if (message.server !== null) {
             add += "**Enabled modules**: " + modules + "\r\n\r\n";
+        }
 
-        // if (args.please)
-        //     add += StringFormat(Responses.get("PLEASE_HELP_BOTTOM"), { author: message.author.id });
-        // else
-        //     add += StringFormat(Responses.get("HELP_BOTTOM"), { author: message.author.id });
+        if (args.please) {
+            add += this._bot.get(TemplateManager).get(TemplateMessageID.PleaseHelpBottom, { author: message.author.id }) as string;
+        } else {
+            add += this._bot.get(TemplateManager).get(TemplateMessageID.HelpBottom, { author: message.author.id }) as string;
+        }
 
         if (response.length + add.length >= 1900) {
             messageQueue.push(response);
@@ -228,7 +233,7 @@ export class CoreModule extends ModuleBase {
             messageQueue.push(response + add);
         }
 
-        this._bot.respond(message, messageQueue).catch((err) => {
+        this._bot.get(DiscordAPI).respond(message, messageQueue).catch((err) => {
             console.log("err", err);
         });
     }
@@ -254,13 +259,14 @@ export class CoreModule extends ModuleBase {
     @Command("what is my role")
     @CommandSample("what is my role?")
     @CommandDescription("Displays your role.")
-    private handleMyRole(message: IMessage, args: { [key: string]: any }) {
-        const role: string = RoleType[message.user.getRole(message.server)];
+    private handleMyRole(message: IMessage, args: { [key: string]: any })
+    {
+        // const role: string = RoleType[message.user.getRole(message.server)];
 
-        this._bot.respond(message, PersonalityManager.instance.get(MessageID.CurrentUserRole, {
-            author: message.author.id,
-            role,
-        }));
+        // this._bot.respond(message, PersonalityManager.instance.get(MessageID.CurrentUserRole, {
+        //     author: message.author.id,
+        //     role,
+        // }));
     }
 
     @Command("what are my permissions")
@@ -271,49 +277,51 @@ export class CoreModule extends ModuleBase {
     @Command("show permissions")
     @CommandDescription("Displays your role's permissions.")
     @CommandSample("what are my permissions?")
-    private handleMyPermissions(message: IMessage, args: { [key: string]: any }) {
-        const server = message.server;
-        const role = PermissionManager.instance.getRole(message.user.getRole(server));
-        const list = role.getPermissions(server);
+    private handleMyPermissions(message: IMessage, args: { [key: string]: any })
+    {
+        // const server = message.server;
+        // const role = PermissionManager.instance.getRole(message.user.getRole(server));
+        // const list = role.getPermissions(server);
 
-        let response = "```";
+        // let response = "```";
 
-        for (const key in list) {
-            if (key.toUpperCase() === "BLACKLIST_SERVERS" || key.toUpperCase() === "BLACKLIST_USERS")
-                continue;
+        // for (const key in list) {
+        //     if (key.toUpperCase() === "BLACKLIST_SERVERS" || key.toUpperCase() === "BLACKLIST_USERS")
+        //         continue;
 
-            let name = key;
-            while (name.length !== 20)
-                name += " ";
+        //     let name = key;
+        //     while (name.length !== 20)
+        //         name += " ";
 
-            response += "\r\n";
-            response += name;
-            response += list[key] ? " (allowed)" : " (not allowed)";
-        }
-        response += "```";
+        //     response += "\r\n";
+        //     response += name;
+        //     response += list[key] ? " (allowed)" : " (not allowed)";
+        // }
+        // response += "```";
 
-        this._bot.respond(message, PersonalityManager.instance.get(MessageID.CurrentUserPermissions, {
-            author: message.author.id,
-            permissions: response,
-        }));
+        // this._bot.respond(message, PersonalityManager.instance.get(MessageID.CurrentUserPermissions, {
+        //     author: message.author.id,
+        //     permissions: response,
+        // }));
     }
 
-    @Command("go to {channelid!channel}")
+    @Command("go to {channelid!channel} <for {category}>")
     @CommandDescription("Tells me to output to the specified channel.")
     @CommandSample("go to __*#channel*__")
     @CommandPermission("GO_TO_CHANNEL")
-    private handleGotoChannel(message: IMessage, args: { [key: string]: any }) {
-        const id = args.channel;
-        if (message.server.server.channels.get(id) === null)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidChannel, {
-                author: message.author.id,
-                channel: args.channel,
-            }));
+    private handleGotoChannel(message: IMessage, args: { [key: string]: any })
+    {
+        // const id = args.channel;
+        // if (message.server.server.channels.get(id) === null)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidChannel, {
+        //         author: message.author.id,
+        //         channel: args.channel,
+        //     }));
 
-        message.server.channel = id;
-        this._bot.message(PersonalityManager.instance.get(MessageID.SempaiHomeChannelChanged, {
-            author: message.author.id,
-            channel: id,
-        }), message.server);
+        // message.server.channel = id;
+        // this._bot.message(PersonalityManager.instance.get(MessageID.SempaiHomeChannelChanged, {
+        //     author: message.author.id,
+        //     channel: id,
+        // }), message.server);
     }
 }

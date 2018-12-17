@@ -2,18 +2,6 @@ interface IDiscordConfig {
     token: string;
 }
 
-interface IOsuConfig {
-    apikey: string;
-    apiurl: string;
-}
-
-interface IConfig {
-    identifiers: Array<string>;
-
-    discord: IDiscordConfig;
-    osu?: IOsuConfig;
-
-    superadmins: Array<string>;
-}
-
-export let Config: IConfig;
+export let identifiers: string[];
+export let discord: IDiscordConfig;
+export let superadmins: string[];

@@ -1,9 +1,7 @@
-import { BotBase } from "../botbase";
-import { IdType } from "../utils/idtype";
-import { parseId } from "../utils/parseid";
-import { parseRoleType } from "../utils/parseroletype";
 import { ICommandFormat } from "./commandformatinterface";
 import { CreateRegex } from "./createregex";
+import { Bot } from "../bot";
+import { parseId, IdType, parseRoleType } from "../../utils";
 
 export class CommandProcessor {
     public static addCustomType(type: string, func: (msg: string) => any): void {
@@ -16,9 +14,9 @@ export class CommandProcessor {
     private _regex: RegExp;
     private _variableRegex: RegExp;
     private _typeRegex: RegExp;
-    private _bot: BotBase;
+    private _bot: Bot | null;
 
-    constructor(bot: BotBase) {
+    constructor(bot: Bot | null) {
         if (!CommandProcessor._typeParsers) {
             CommandProcessor._typeParsers = {};
 
@@ -83,13 +81,14 @@ export class CommandProcessor {
             let match = message.trim().match(entry.format.regex);
 
             if (match !== null) {
-                const args = {};
+                const args: { [key: string]: any} = {};
 
                 for (const key in entry.format.variables) {
                     const tmp = key.match(this._typeRegex);
-                    if (tmp === null)
+
+                    if (tmp === null) {
                         args[key] = match[entry.format.variables[key]];
-                    else {
+                    } else {
                         args[tmp[2]] = this.format(tmp[1], match[entry.format.variables[key]] || "");
                         if (args[tmp[2]] === null) {
                             match = null;

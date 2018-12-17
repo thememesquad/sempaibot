@@ -1,237 +1,235 @@
-import {
-    Command,
-    CommandDescription,
-    CommandOptions,
-    CommandPermission,
-    CommandSample,
-    generateTable,
-    IMessage,
-    MessageID,
-    Module,
-    ModuleBase,
-    ModuleOptions,
-    PermissionManager,
-    PersonalityManager,
-    RoleType,
-    User,
-    UserManager,
-} from "../core";
+import { Module } from "../core/attributes/module";
+import { ModuleOptions } from "../core/moduleoptions";
+import { IModule } from "../core/imodule";
+import { Command, CommandSample, CommandDescription, CommandPermission, CommandOptions } from "../core/command";
+import { IMessage } from "../core/imessage";
+import { RoleType } from "../core/roletype";
+import { RegisterRight } from "../core/attributes/registerright";
+import { injectable } from "inversify";
+import { DiscordAPI } from "../api/discord";
+import { Guild } from "discord.js";
+import { TemplateManager } from "../core/managers";
+import { TemplateMessageID } from "../core/itemplatemessageid";
+import { generateTable } from "../utils";
 
+@RegisterRight("SUPERADMIN", RoleType.SuperAdmin)
+@RegisterRight("IGNORE_USERS", RoleType.Moderator)
+@RegisterRight("GO_TO_CHANNEL", RoleType.Moderator)
+@RegisterRight("MANAGE_MODULES", RoleType.Admin)
+@RegisterRight("MANAGE_PERMISSIONS", RoleType.Admin)
+@RegisterRight("ASSIGN_ROLES", RoleType.Admin)
 @Module("Admin", "This is the admin module.", ModuleOptions.AlwaysOn | ModuleOptions.Hidden)
-export class AdminModule extends ModuleBase {
-    constructor() {
-        super();
-
-        PermissionManager.instance.register("SUPERADMIN", RoleType.SuperAdmin);
-        PermissionManager.instance.register("IGNORE_USERS", RoleType.Moderator);
-        PermissionManager.instance.register("GO_TO_CHANNEL", RoleType.Moderator);
-        PermissionManager.instance.register("MANAGE_MODULES", RoleType.Admin);
-        PermissionManager.instance.register("MANAGE_PERMISSIONS", RoleType.Admin);
-        PermissionManager.instance.register("ASSIGN_ROLES", RoleType.Admin);
-    }
-
+@injectable()
+export class AdminModule extends IModule
+{
     @Command("blacklist server {server}", CommandOptions.Global)
     @CommandSample("blacklist server __*server*__")
     @CommandDescription("Blacklists a server.")
     @CommandPermission("SUPERADMIN")
-    private handleServerBlacklist(message: IMessage, args: { [key: string]: any }): void {
-        const server = this._bot.getServer(args.server);
+    private handleServerBlacklist(message: IMessage, args: { [key: string]: any }): void
+    {
+        // const server = this._bot.getServer(args.server);
 
-        if (server === null) {
-            this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidServer, {
-                author: message.author.id,
-                id: args.server,
-            }));
+        // if (server === null) {
+        //     this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidServer, {
+        //         author: message.author.id,
+        //         id: args.server,
+        //     }));
 
-            return;
-        }
+        //     return;
+        // }
 
-        if (this._bot.isServerBlacklisted(server.id)) {
-            this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerAlreadyBlacklisted, {
-                author: message.author.id,
-                server_name: server.server.name,
-            }));
+        // if (this._bot.isServerBlacklisted(server.id)) {
+        //     this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerAlreadyBlacklisted, {
+        //         author: message.author.id,
+        //         server_name: server.server.name,
+        //     }));
 
-            return;
-        }
+        //     return;
+        // }
 
-        this._bot.blacklistServer(server.id);
-        this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerBlacklisted, {
-            author: message.author.id,
-            server_name: server.server.name,
-        }));
+        // this._bot.blacklistServer(server.id);
+        // this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerBlacklisted, {
+        //     author: message.author.id,
+        //     server_name: server.server.name,
+        // }));
     }
 
     @Command("whitelist server {server}", CommandOptions.Global)
     @CommandSample("whitelist server __*server*__")
     @CommandDescription("Whitelists a server.")
     @CommandPermission("SUPERADMIN")
-    private handleServerWhitelist(message: IMessage, args: { [key: string]: any }) {
-        const server = this._bot.getServer(args.server);
+    private handleServerWhitelist(message: IMessage, args: { [key: string]: any })
+    {
+        // const server = this._bot.getServer(args.server);
 
-        if (server === null)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidServer, {
-                author: message.author.id,
-                id: args.server,
-            }));
+        // if (server === null)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidServer, {
+        //         author: message.author.id,
+        //         id: args.server,
+        //     }));
 
-        if (!this._bot.isServerBlacklisted(server.id))
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerNotBlacklisted, {
-                author: message.author.id,
-                server_name: server.server.name,
-            }));
+        // if (!this._bot.isServerBlacklisted(server.id))
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerNotBlacklisted, {
+        //         author: message.author.id,
+        //         server_name: server.server.name,
+        //     }));
 
-        this._bot.whitelistServer(server.id);
-        this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerWhitelisted, {
-            author: message.author.id,
-            server_name: server.server.name,
-        }));
+        // this._bot.whitelistServer(server.id);
+        // this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerWhitelisted, {
+        //     author: message.author.id,
+        //     server_name: server.server.name,
+        // }));
     }
 
     @Command("blacklist user {userid!user}", CommandOptions.Global)
     @CommandSample("blacklist user __*@user*__")
     @CommandDescription("Blacklists an user.")
     @CommandPermission("SUPERADMIN")
-    private handleUserBlacklist(message: IMessage, args: { [key: string]: any }) {
-        const user: User = UserManager.instance.getUser(args.user, message.server);
-        if (user === null)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
-                author: message.author.id,
-                user: args.user,
-            }));
+    private handleUserBlacklist(message: IMessage, args: { [key: string]: any })
+    {
+        // const user: User = UserManager.instance.getUser(args.user, message.server);
+        // if (user === null)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
+        //         author: message.author.id,
+        //         user: args.user,
+        //     }));
 
-        this._bot.blacklistUser(user);
-        return this._bot.respond(message, PersonalityManager.instance.get(MessageID.UserBlacklisted, {
-            author: message.author.id,
-            user: user.getUserID(),
-        }));
+        // this._bot.blacklistUser(user);
+        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.UserBlacklisted, {
+        //     author: message.author.id,
+        //     user: user.getUserID(),
+        // }));
     }
 
     @Command("whitelist user {userid!user}", CommandOptions.Global)
     @CommandSample("whitelist user __*@user*__")
     @CommandDescription("Whitelists an user.")
     @CommandPermission("SUPERADMIN")
-    private handleUserWhitelist(message: IMessage, args: { [key: string]: any }) {
-        const user: User = UserManager.instance.getUser(args.user, message.server);
-        if (user === null)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
-                author: message.author.id,
-                user: args.user,
-            }));
+    private handleUserWhitelist(message: IMessage, args: { [key: string]: any })
+    {
+        // const user: User = UserManager.instance.getUser(args.user, message.server);
+        // if (user === null)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
+        //         author: message.author.id,
+        //         user: args.user,
+        //     }));
 
-        this._bot.whitelistUser(user);
-        return this._bot.respond(message, PersonalityManager.instance.get(MessageID.UserWhitelisted, {
-            author: message.author.id,
-            user: user.getUserID(),
-        }));
+        // this._bot.whitelistUser(user);
+        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.UserWhitelisted, {
+        //     author: message.author.id,
+        //     user: user.getUserID(),
+        // }));
     }
 
     @Command("show user blacklist", CommandOptions.Global)
     @CommandSample("show user blacklist")
     @CommandDescription("Displays the user blacklist")
     @CommandPermission("SUPERADMIN")
-    private handleShowUserBlacklist(message: IMessage, args: { [key: string]: any }) {
-        let id = "ID";
-        let name = "Name";
+    private handleShowUserBlacklist(message: IMessage, args: { [key: string]: any })
+    {
+        // let id = "ID";
+        // let name = "Name";
 
-        while (id.length < 25)
-            id += " ";
+        // while (id.length < 25)
+        //     id += " ";
 
-        while (name.length < 30)
-            name += " ";
+        // while (name.length < 30)
+        //     name += " ";
 
-        let response = "```";
-        response += id + " " + name;
+        // let response = "```";
+        // response += id + " " + name;
 
-        let num = 0;
-        for (const key in UserManager.instance.users) {
-            const user = UserManager.instance.users[key];
+        // let num = 0;
+        // for (const key in UserManager.instance.users) {
+        //     const user = UserManager.instance.users[key];
 
-            if (!this._bot.isUserBlacklisted(user))
-                continue;
+        //     if (!this._bot.isUserBlacklisted(user))
+        //         continue;
 
-            id = "" + user.getUserID();
-            name = user.getUsername();
+        //     id = "" + user.getUserID();
+        //     name = user.getUsername();
 
-            while (id.length < 25)
-                id += " ";
+        //     while (id.length < 25)
+        //         id += " ";
 
-            while (name.length < 30)
-                name += " ";
+        //     while (name.length < 30)
+        //         name += " ";
 
-            response += "\r\n";
-            response += id + " " + name;
-            num++;
-        }
+        //     response += "\r\n";
+        //     response += id + " " + name;
+        //     num++;
+        // }
 
-        if (num === 0) {
-            response += "\r\n";
-            response += "User blacklist is empty.";
-        }
+        // if (num === 0) {
+        //     response += "\r\n";
+        //     response += "User blacklist is empty.";
+        // }
 
-        response += "```";
+        // response += "```";
 
-        this._bot.respond(message, PersonalityManager.instance.get(MessageID.UserBlacklist, {
-            author: message.author.id,
-            response,
-        }));
+        // this._bot.respond(message, PersonalityManager.instance.get(MessageID.UserBlacklist, {
+        //     author: message.author.id,
+        //     response,
+        // }));
     }
 
     @Command("show server blacklist", CommandOptions.Global)
     @CommandSample("show server blacklist")
     @CommandDescription("Displays the server blacklist")
     @CommandPermission("SUPERADMIN")
-    private handleShowServerBlacklist(message: IMessage, args: { [key: string]: any }) {
-        let id = "ID";
-        let name = "Name";
-        let owner = "Owner";
+    private handleShowServerBlacklist(message: IMessage, args: { [key: string]: any })
+    {
+        // let id = "ID";
+        // let name = "Name";
+        // let owner = "Owner";
 
-        while (id.length < 10)
-            id += " ";
+        // while (id.length < 10)
+        //     id += " ";
 
-        while (name.length < 20)
-            name += " ";
+        // while (name.length < 20)
+        //     name += " ";
 
-        while (owner.length < 20)
-            owner += " ";
+        // while (owner.length < 20)
+        //     owner += " ";
 
-        let response = "```";
-        response += id + " " + name + " " + owner;
+        // let response = "```";
+        // response += id + " " + name + " " + owner;
 
-        let num = 0;
-        for (const key in this._bot.servers) {
-            const server = this._bot.servers[key];
-            if (!this._bot.isServerBlacklisted(server.id))
-                continue;
+        // let num = 0;
+        // for (const key in this._bot.servers) {
+        //     const server = this._bot.servers[key];
+        //     if (!this._bot.isServerBlacklisted(server.id))
+        //         continue;
 
-            id = "#" + server.id + ".";
-            name = server.server.name;
-            owner = server.server.owner.displayName;
+        //     id = "#" + server.id + ".";
+        //     name = server.server.name;
+        //     owner = server.server.owner.displayName;
 
-            while (id.length < 10)
-                id += " ";
+        //     while (id.length < 10)
+        //         id += " ";
 
-            while (name.length < 20)
-                name += " ";
+        //     while (name.length < 20)
+        //         name += " ";
 
-            while (owner.length < 20)
-                owner += " ";
+        //     while (owner.length < 20)
+        //         owner += " ";
 
-            response += "\r\n";
-            response += id + " " + name + " " + owner;
-            num++;
-        }
+        //     response += "\r\n";
+        //     response += id + " " + name + " " + owner;
+        //     num++;
+        // }
 
-        if (num === 0) {
-            response += "\r\n";
-            response += "Server blacklist is empty.";
-        }
-        response += "```";
+        // if (num === 0) {
+        //     response += "\r\n";
+        //     response += "Server blacklist is empty.";
+        // }
+        // response += "```";
 
-        this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerBlacklist, {
-            author: message.author.id,
-            response,
-        }));
+        // this._bot.respond(message, PersonalityManager.instance.get(MessageID.ServerBlacklist, {
+        //     author: message.author.id,
+        //     response,
+        // }));
     }
 
     @Command("list servers", CommandOptions.Global)
@@ -239,25 +237,35 @@ export class AdminModule extends ModuleBase {
     @CommandSample("list servers")
     @CommandDescription("Lists all the servers I'm currently running on.")
     @CommandPermission("SUPERADMIN")
-    private handleListServers(message: IMessage, args: { [key: string]: any }) {
-        const data = [];
-        for (const key in this._bot.servers) {
-            const server = this._bot.servers[key];
-            if (this._bot.isServerBlacklisted(server.id))
+    private async handleListServers(message: IMessage, args: { [key: string]: any })
+    {
+        const servers = await this._databaseManager.getServerRepository().find();
+        const discord = this._bot.get(DiscordAPI);
+        let data = [];
+
+        for (const server of servers) {
+            if (server.blacklisted) {
                 continue;
+            }
+
+            const info = discord.getGuild(server.id);
+
+            if (!info) {
+                continue;
+            }
 
             data.push({
-                id: "#" + server.id + ".",
-                limit: "50", // "" + this._bot.internalServers[i].config.value.osu_limit
-                name: server.server.name,
-                owner: server.server.owner.nickname || server.server.owner.user.username,
+                id: "#" + info.id + ".",
+                name: info.name,
+                owner: info.owner.nickname || info.owner.user.username,
             });
         }
 
-        const messages = generateTable(PersonalityManager.instance.get(MessageID.ListServers, {
+        const messages = generateTable(this._bot.get(TemplateManager).get(TemplateMessageID.ListServers, {
             author: message.author.id,
-        }), { id: "ID", name: "Name", owner: "Owner", limit: "Limit" }, data);
-        this._bot.respond(message, messages);
+        }), { id: "ID", name: "Name", owner: "Owner" }, data);
+
+        discord.respond(message, messages);
     }
 
     @Command("enable {module}")
@@ -265,24 +273,25 @@ export class AdminModule extends ModuleBase {
     @CommandSample("enable __*module name*__")
     @CommandDescription("Enables a module for this server.")
     @CommandPermission("MANAGE_MODULES")
-    private handleEnableModule(message: IMessage, args: { [key: string]: any }) {
-        if (this._bot.getModule(args.module) === null)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidModule, {
-                author: message.author.id,
-                module: args.module,
-            }));
+    private handleEnableModule(message: IMessage, args: { [key: string]: any })
+    {
+        // if (this._bot.getModule(args.module) === null)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidModule, {
+        //         author: message.author.id,
+        //         module: args.module,
+        //     }));
 
-        if (message.server.isModuleEnabled(args.module))
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleAlreadyEnabled, {
-                author: message.author.id,
-                module: args.module,
-            }));
+        // if (message.server.isModuleEnabled(args.module))
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleAlreadyEnabled, {
+        //         author: message.author.id,
+        //         module: args.module,
+        //     }));
 
-        message.server.enableModule(args.module);
-        return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleEnabled, {
-            author: message.author.id,
-            module: args.module,
-        }));
+        // message.server.enableModule(args.module);
+        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleEnabled, {
+        //     author: message.author.id,
+        //     module: args.module,
+        // }));
     }
 
     @Command("disable {module}")
@@ -290,31 +299,32 @@ export class AdminModule extends ModuleBase {
     @CommandSample("disable __*module name*__")
     @CommandDescription("Disables a module for this server.")
     @CommandPermission("MANAGE_MODULES")
-    private handleDisableModule(message: IMessage, args: { [key: string]: any }) {
-        const module = this._bot.getModule(args.module);
-        if (module === null)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidModule, {
-                author: message.author.id,
-                module: args.module,
-            }));
+    private handleDisableModule(message: IMessage, args: { [key: string]: any })
+    {
+        // const module = this._bot.getModule(args.module);
+        // if (module === null)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidModule, {
+        //         author: message.author.id,
+        //         module: args.module,
+        //     }));
 
-        if (!message.server.isModuleEnabled(args.module))
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleAlreadyDisabled, {
-                author: message.author.id,
-                module: args.module,
-            }));
+        // if (!message.server.isModuleEnabled(args.module))
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleAlreadyDisabled, {
+        //         author: message.author.id,
+        //         module: args.module,
+        //     }));
 
-        if (module.alwaysOn)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleCannotBeDisabled, {
-                author: message.author.id,
-                module: args.module,
-            }));
+        // if (module.alwaysOn)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleCannotBeDisabled, {
+        //         author: message.author.id,
+        //         module: args.module,
+        //     }));
 
-        message.server.disableModule(args.module);
-        return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleDisabled, {
-            author: message.author.id,
-            module: args.module,
-        }));
+        // message.server.disableModule(args.module);
+        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleDisabled, {
+        //     author: message.author.id,
+        //     module: args.module,
+        // }));
     }
 
     @Command("list modules")
@@ -322,34 +332,35 @@ export class AdminModule extends ModuleBase {
     @CommandSample("list modules")
     @CommandDescription("Lists all available modules.")
     @CommandPermission("MANAGE_MODULES")
-    private handleListModules(message: IMessage, args: { [key: string]: any }) {
-        const columns = { name: "Name", enabled: "Enabled", flags: "Flags" };
-        const data = [];
+    private handleListModules(message: IMessage, args: { [key: string]: any })
+    {
+        // const columns = { name: "Name", enabled: "Enabled", flags: "Flags" };
+        // const data = [];
 
-        for (const key in this._bot.modules) {
-            const enabled = message.server.isModuleEnabled(key);
-            const alwaysOn = this._bot.modules[key].alwaysOn;
-            const defaultOn = this._bot.modules[key].defaultOn;
-            const hidden = this._bot.modules[key].hidden;
+        // for (const key in this._bot.modules) {
+        //     const enabled = message.server.isModuleEnabled(key);
+        //     const alwaysOn = this._bot.modules[key].alwaysOn;
+        //     const defaultOn = this._bot.modules[key].defaultOn;
+        //     const hidden = this._bot.modules[key].hidden;
 
-            if (hidden)
-                continue;
+        //     if (hidden)
+        //         continue;
 
-            let flags = "";
-            if (alwaysOn)
-                flags += "always_on";
+        //     let flags = "";
+        //     if (alwaysOn)
+        //         flags += "always_on";
 
-            if (defaultOn)
-                flags += flags.length === 0 ? "default_on" : " default_on";
+        //     if (defaultOn)
+        //         flags += flags.length === 0 ? "default_on" : " default_on";
 
-            data.push({ name: key, enabled: (enabled) ? "yes" : "no", flags });
-        }
+        //     data.push({ name: key, enabled: (enabled) ? "yes" : "no", flags });
+        // }
 
-        const messages = generateTable(PersonalityManager.instance.get(MessageID.ListModules, {
-            author: message.author.id,
-        }), columns, data, { name: 20, enabled: 10, flags: 15 });
+        // const messages = generateTable(PersonalityManager.instance.get(MessageID.ListModules, {
+        //     author: message.author.id,
+        // }), columns, data, { name: 20, enabled: 10, flags: 15 });
 
-        this._bot.respond(message, messages);
+        // this._bot.respond(message, messages);
     }
 
     @Command("assign role {roletype!role} to user {userid!user}")
@@ -360,43 +371,44 @@ export class AdminModule extends ModuleBase {
     @CommandSample("assign __*role*__ to __*@user*__")
     @CommandDescription("Assigns the specified role to the specified user.")
     @CommandPermission("ASSIGN_ROLES")
-    private handleAssignRole(message: IMessage, args: { [key: string]: any }) {
-        if (args.role === RoleType.SuperAdmin)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
-                author: message.author.id,
-                role: args.role,
-            }));
+    private handleAssignRole(message: IMessage, args: { [key: string]: any })
+    {
+        // if (args.role === RoleType.SuperAdmin)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
+        //         author: message.author.id,
+        //         role: args.role,
+        //     }));
 
-        const myRole = message.user.getRole(message.server);
-        if (args.role < myRole)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-                author: message.author.id,
-            }));
+        // const myRole = message.user.getRole(message.server);
+        // if (args.role < myRole)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
+        //         author: message.author.id,
+        //     }));
 
-        const user = UserManager.instance.getUser(args.user, message.server);
-        if (user === null)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
-                author: message.author.id,
-                user: args.user,
-            }));
+        // const user = UserManager.instance.getUser(args.user, message.server);
+        // if (user === null)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
+        //         author: message.author.id,
+        //         user: args.user,
+        //     }));
 
-        if (user.getRole(message.server) === args.role)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.RoleAlreadyAssignedToUser, {
-                author: message.author.id,
-                role: args.role,
-                user: args.user,
-            }));
+        // if (user.getRole(message.server) === args.role)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.RoleAlreadyAssignedToUser, {
+        //         author: message.author.id,
+        //         role: args.role,
+        //         user: args.user,
+        //     }));
 
-        if (!UserManager.instance.assignRole(user.getUserID(), message.server, args.role))
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.UnknownError, {
-                author: message.author.id,
-            }));
+        // if (!UserManager.instance.assignRole(user.getUserID(), message.server, args.role))
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.UnknownError, {
+        //         author: message.author.id,
+        //     }));
 
-        return this._bot.respond(message, PersonalityManager.instance.get(MessageID.RoleAssignedToUser, {
-            author: message.author.id,
-            role: args.role,
-            user: args.user,
-        }));
+        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.RoleAssignedToUser, {
+        //     author: message.author.id,
+        //     role: args.role,
+        //     user: args.user,
+        // }));
     }
 
     @Command("add permission {permission} to role {roletype!role}")
@@ -406,31 +418,32 @@ export class AdminModule extends ModuleBase {
     @CommandSample("add __*permission*__ to __*role*__")
     @CommandDescription("Adds the specified permission to the specified role.")
     @CommandPermission("MANAGE_PERMISSIONS")
-    private handleAddPermission(message: IMessage, args: { [key: string]: any }) {
-        args.permission = args.permission.toUpperCase();
-        if (args.role === RoleType.SuperAdmin)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
-                author: message.author.id,
-                role: args.role,
-            }));
+    private handleAddPermission(message: IMessage, args: { [key: string]: any })
+    {
+        // args.permission = args.permission.toUpperCase();
+        // if (args.role === RoleType.SuperAdmin)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
+        //         author: message.author.id,
+        //         role: args.role,
+        //     }));
 
-        const myRole = message.user.getRole(message.server);
-        if (args.role < myRole)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-                author: message.author.id,
-            }));
+        // const myRole = message.user.getRole(message.server);
+        // if (args.role < myRole)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
+        //         author: message.author.id,
+        //     }));
 
-        if (!PermissionManager.instance.isAllowed(args.permission, message.user.getRole(message.server), message.server))
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-                author: message.author.id,
-            }));
+        // if (!PermissionManager.instance.isAllowed(args.permission, message.user.getRole(message.server), message.server))
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
+        //         author: message.author.id,
+        //     }));
 
-        PermissionManager.instance.add(args.permission, args.role, message.server);
-        this._bot.respond(message, PersonalityManager.instance.get(MessageID.AddedPermissionToRole, {
-            author: message.author.id,
-            permission: args.permission,
-            role: args.role,
-        }));
+        // PermissionManager.instance.add(args.permission, args.role, message.server);
+        // this._bot.respond(message, PersonalityManager.instance.get(MessageID.AddedPermissionToRole, {
+        //     author: message.author.id,
+        //     permission: args.permission,
+        //     role: args.role,
+        // }));
     }
 
     @Command("remove permission {permission} from role {roletype!role}")
@@ -440,31 +453,32 @@ export class AdminModule extends ModuleBase {
     @CommandSample("remove __*permission*__ from __*role*__")
     @CommandDescription("Removes the specified permission from the specified role.")
     @CommandPermission("MANAGE_PERMISSIONS")
-    private handleRemovePermission(message: IMessage, args: { [key: string]: any }) {
-        args.permission = args.permission.toUpperCase();
-        if (args.role === RoleType.SuperAdmin)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
-                author: message.author.id,
-                role: args.role,
-            }));
+    private handleRemovePermission(message: IMessage, args: { [key: string]: any })
+    {
+        // args.permission = args.permission.toUpperCase();
+        // if (args.role === RoleType.SuperAdmin)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
+        //         author: message.author.id,
+        //         role: args.role,
+        //     }));
 
-        const myRole = message.user.getRole(message.server);
-        if (args.role < myRole)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-                author: message.author.id,
-            }));
+        // const myRole = message.user.getRole(message.server);
+        // if (args.role < myRole)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
+        //         author: message.author.id,
+        //     }));
 
-        if (!PermissionManager.instance.isAllowed(args.permission, message.user.getRole(message.server), message.server))
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-                author: message.author.id,
-            }));
+        // if (!PermissionManager.instance.isAllowed(args.permission, message.user.getRole(message.server), message.server))
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
+        //         author: message.author.id,
+        //     }));
 
-        PermissionManager.instance.remove(args.permission, args.role, message.server);
-        this._bot.respond(message, PersonalityManager.instance.get(MessageID.RemovedPermissionFromRole, {
-            author: message.author.id,
-            permission: args.permission,
-            role: args.role,
-        }));
+        // PermissionManager.instance.remove(args.permission, args.role, message.server);
+        // this._bot.respond(message, PersonalityManager.instance.get(MessageID.RemovedPermissionFromRole, {
+        //     author: message.author.id,
+        //     permission: args.permission,
+        //     role: args.role,
+        // }));
     }
 
     @Command("ignore {userid!user}")
@@ -472,19 +486,20 @@ export class AdminModule extends ModuleBase {
     @CommandSample("ignore __*@user*__")
     @CommandDescription("Ignores the specified user.")
     @CommandPermission("IGNORE_USERS")
-    private handleIgnoreUser(message: IMessage, args: { [key: string]: any }) {
-        const user = UserManager.instance.getUserById(args.user, message.server);
-        if (user === null)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
-                author: message.author.id,
-                user: args.user,
-            }));
+    private handleIgnoreUser(message: IMessage, args: { [key: string]: any })
+    {
+        // const user = UserManager.instance.getUserById(args.user, message.server);
+        // if (user === null)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
+        //         author: message.author.id,
+        //         user: args.user,
+        //     }));
 
-        if (message.user.getRole(message.server) >= user.getRole(message.server))
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, { author: message.author.id }));
+        // if (message.user.getRole(message.server) >= user.getRole(message.server))
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, { author: message.author.id }));
 
-        message.server.ignoreUser(user);
-        return this._bot.respond(message, PersonalityManager.instance.get(MessageID.StartedIgnoringUser, { author: message.author.id, user: user.getUserID() }));
+        // message.server.ignoreUser(user);
+        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.StartedIgnoringUser, { author: message.author.id, user: user.getUserID() }));
     }
 
     @Command("unignore {userid!user}")
@@ -492,23 +507,24 @@ export class AdminModule extends ModuleBase {
     @CommandSample("unignore __*@user*__")
     @CommandDescription("Stops ignoring the specified user.")
     @CommandPermission("IGNORE_USERS")
-    private handleUnignoreUser(message: IMessage, args: { [key: string]: any }) {
-        const user = UserManager.instance.getUserById(args.user, message.server);
-        if (user === null)
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
-                author: message.author.id,
-                user: args.user,
-            }));
+    private handleUnignoreUser(message: IMessage, args: { [key: string]: any })
+    {
+        // const user = UserManager.instance.getUserById(args.user, message.server);
+        // if (user === null)
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
+        //         author: message.author.id,
+        //         user: args.user,
+        //     }));
 
-        if (message.user.getRole(message.server) >= user.getRole(message.server))
-            return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-                author: message.author.id,
-            }));
+        // if (message.user.getRole(message.server) >= user.getRole(message.server))
+        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
+        //         author: message.author.id,
+        //     }));
 
-        message.server.unignoreUser(user);
-        return this._bot.respond(message, PersonalityManager.instance.get(MessageID.StoppedIgnoringUser, {
-            author: message.author.id,
-            user: user.getUserID(),
-        }));
+        // message.server.unignoreUser(user);
+        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.StoppedIgnoringUser, {
+        //     author: message.author.id,
+        //     user: user.getUserID(),
+        // }));
     }
 }

@@ -2,12 +2,14 @@
     "compilerOptions": {
         "target": "es2017",
         "module": "commonjs",
+        "types": ["discord.js", "reflect-metadata", "node"],
         "sourceMap": true,
         "inlineSources": true,
         "outDir": "build",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-	"moduleResolution": "node"
+        "strict": true,
+        "moduleResolution": "node"
     },
     "include": ["src/**/*"]
 }

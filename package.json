@@ -9,35 +9,18 @@
     "url": "https://github.com/thememesquad/sempaibot.git"
   },
   "dependencies": {
-    "@types/node": "^10.12.12",
+    "@types/node": "^10.12.15",
     "discord.js": ">=11.4.2",
-    "libsodium-wrappers": "^0.7.3",
-    "lodash": ">=4.17.11",
-    "moment": ">=2.22.2",
-    "moment-timezone": ">=0.5.23",
-    "proxy-observe": ">=0.0.21",
-    "request": ">=2.88.0",
-    "restify": ">=7.3.0",
+    "inversify": "^5.0.1",
+    "moment": "^2.23.0",
+    "reflect-metadata": "^0.1.12",
     "sqlite3": ">=4.0.4",
-    "typeorm": ">=0.2.9"
+    "ts-node": ">=7.0.1",
+    "typeorm": ">=0.2.9",
+    "typescript": "^3.2.2",
+    "uws": "9.14.0"
   },
   "scripts": {
-    "start": "ts-node src/main.ts",
-    "test": "nyc mocha tests/**/*.ts",
-    "lint": "./node_modules/.bin/tslint src/**/*.ts"
-  },
-  "devDependencies": {
-    "@types/chai": "^4.1.7",
-    "@types/mocha": ">=5.2.5",
-    "chai": ">=4.1.7",
-    "chai-as-promised": ">=7.1.1",
-    "husky": "^1.2.0",
-    "istanbul": ">=0.4.5",
-    "mocha": ">=5.2.0",
-    "mockery": ">=2.1.0",
-    "nyc": ">=13.1.0",
-    "ts-node": ">=7.0.1",
-    "tslint": ">=5.11.0",
-    "typescript": ">=3.2.2"
+    "start": "ts-node src/main.ts"
   }
 }

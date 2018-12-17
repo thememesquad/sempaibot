@@ -10,19 +10,22 @@ export function CreateRegex(format: string): IRegex {
     const whitespaceRegex = /\S+/g;
     let regex = "^";
     let num = 0;
-    const vars = {};
+    const vars: { [key: string]: any } = {};
 
     while (format.length > 0) {
-        let tmp;
+        let tmp: RegExpMatchArray | null;
         const split = format.match(splitter);
+
         if (split === null) {
             tmp = format.match(whitespaceRegex);
 
-            for (let i = 0; i < tmp.length; i++) {
-                if (i === tmp.length - 1)
-                    regex += `${tmp[i]}\\s*`;
-                else
-                    regex += `${tmp[i]}\\s*`;
+            if (tmp) {
+                for (let i = 0; i < tmp.length; i++) {
+                    if (i === tmp.length - 1)
+                        regex += `${tmp[i]}\\s*`;
+                    else
+                        regex += `${tmp[i]}\\s*`;
+                }
             }
 
             break;
@@ -31,15 +34,18 @@ export function CreateRegex(format: string): IRegex {
         tmp = split[1].match(whitespaceRegex);
         const variable = split[2];
 
-        if (tmp !== null)
-            for (const t of tmp)
+        if (tmp !== null) {
+            for (const t of tmp) {
                 regex += `${t}\\s*`;
+            }
+        }
 
         regex += "(.*?)\\s*";
         format = format.substr(split[0].length).trim();
 
         vars[variable] = ++num;
     }
+
     regex += "$";
 
     return {

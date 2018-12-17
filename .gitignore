@@ -1,15 +1,4 @@
 /config.js
-/nbproject/private/
 /node_modules
-/ffmpeg.exe
-/ffplay.exe
-/ffprobe.exe
-/saved
-/data
-/data
-/coverage
-/coverage
 /build
 /data.sqlite
-/.nyc_output
-npm-debug.log

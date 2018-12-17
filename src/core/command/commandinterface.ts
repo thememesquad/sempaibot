@@ -1,11 +1,11 @@
-import { IMessage } from "../module/messageinterface";
 import { CommandProcessor } from "./commandprocessor";
+import { IMessage } from "../imessage";
 
 export interface ICommand {
     key?: string;
 
     formats: CommandProcessor;
-    execute: (message: IMessage, args: { [key: string]: any }) => void;
+    execute: ((message: IMessage, args: { [key: string]: any }) => void) | null;
 
     permission?: string | string[];
     sample?: string | string[];
