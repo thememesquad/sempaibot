@@ -6,6 +6,7 @@ export interface ICommand {
 
     formats: CommandProcessor;
     execute: ((message: IMessage, args: { [key: string]: any }) => void) | null;
+    mapping: { [key: string]: any };
 
     permission?: string | string[];
     sample?: string | string[];

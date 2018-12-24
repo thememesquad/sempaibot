@@ -30,4 +30,19 @@ export class DBServer
         Bot.instance.get(LogManager).log("todo: add isModuleEnabled check for", moduleName);
         return true;
     }
+
+    public setChannel(channelId: string, category: string = null): void
+    {
+        if (category === null) {
+            // todo
+            return;
+        }
+
+        // todo
+    }
+
+    public getChannel(category: string = null): string
+    {
+        return null;
+    }
 }

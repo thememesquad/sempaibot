@@ -2,9 +2,6 @@ import { IManager } from "./imanager";
 import { injectable } from "inversify";
 import { createConnection, Connection, Repository } from "typeorm";
 import { LogManager } from "./logmanager";
-import { DBUser } from "../models/dbuser";
-import { DBServer } from "../models/dbserver";
-import { DBRole } from "../models/dbrole";
 
 @injectable()
 export class DatabaseManager implements IManager
@@ -15,21 +12,6 @@ export class DatabaseManager implements IManager
     public constructor(logManager: LogManager)
     {
         this._logManager = logManager;
-    }
-
-    public getUserRepository(): Repository<DBUser>
-    {
-        return this.getRepository(DBUser);
-    }
-
-    public getServerRepository(): Repository<DBServer>
-    {
-        return this.getRepository(DBServer);
-    }
-
-    public getRoleRepository(): Repository<DBRole>
-    {
-        return this.getRepository(DBRole);
     }
 
     public getRepository<T>(type: new() => T): Repository<T>

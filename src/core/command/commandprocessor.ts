@@ -25,18 +25,24 @@ export class CommandProcessor {
             CommandProcessor.addCustomType("id", (msg) => parseId(msg));
             CommandProcessor.addCustomType("channelid", (msg) => {
                 const id = parseId(msg);
-                if (id.type !== IdType.Channel)
+
+                if (id.type !== IdType.Channel) {
                     return null;
+                }
 
                 return id.id;
             });
+
             CommandProcessor.addCustomType("userid", (msg) => {
                 const id = parseId(msg);
-                if (id.type !== IdType.User)
+
+                if (id.type !== IdType.User) {
                     return null;
+                }
 
                 return id.id;
             });
+
             CommandProcessor.addCustomType("roletype", (msg) => {
                 return parseRoleType(msg);
             });

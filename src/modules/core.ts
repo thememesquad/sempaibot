@@ -10,6 +10,7 @@ import { injectable } from "inversify";
 import { TemplateMessageID } from "../core/itemplatemessageid";
 import { DiscordAPI } from "../api/discord";
 import { identifiers } from "../../config";
+import { generateTable } from "../utils";
 
 @Module("Core", "This is the core module!", ModuleOptions.AlwaysOn | ModuleOptions.Hidden)
 @injectable()
@@ -18,7 +19,7 @@ export class CoreModule extends IModule
     @Command("list roles")
     @CommandSample("list roles")
     @CommandDescription("Lists every user's role.")
-    private handleListRoles(message: IMessage, args: { [key: string]: any })
+    private handleListRoles(message: IMessage)
     {
         const server = message.server as DBServer;
         const tmp = [];
@@ -31,21 +32,25 @@ export class CoreModule extends IModule
             tmp.push(user);
         }
 
-        // tmp.sort((a, b) => {
-        //     return a.get_role_id(server) - b.get_role_id(server);
-        // });
+        tmp.sort((a, b) => {
+            return a.getRole(server) - b.getRole(server);
+        });
 
-        // const columns = { name: "Name", role: "Role" };
-        // const data = [];
+        const columns = { name: "Name", role: "Role" };
+        const data = [];
 
-        // for (const dat of tmp)
-        //     data.push({ name: dat.get_name_detailed(server), role: dat.get_role(server) });
+        for (const user of tmp) {
+            data.push({
+                name: user.getName(server),
+                role: RoleType[user.getRole(server)]
+            });
+        }
 
-        // const messages = generateTable(PersonalityManager.instance.get(MessageID.ListRoles, {
-        //     author: message.author.id,
-        // }), columns, data, { name: 30, role: 15 });
+        const messages = generateTable(this._bot.get(TemplateManager).get(TemplateMessageID.ListRoles, {
+            author: message.author.id,
+        }), columns, data, { name: 30, role: 15 });
 
-        // this._bot.respond(message, messages);
+        this._bot.get(DiscordAPI).respond(message, messages);
     }
 
     @Command("list permissions")
@@ -149,11 +154,11 @@ export class CoreModule extends IModule
     @Command("show help")
     @Command(["助けて", { japanese: true }])
     @Command(["助けてください", { japanese: true, please: true }])
-    private handleHelp(message: IMessage, args: { [key: string]: any })
+    private handleHelp(message: IMessage, japanese = false, german = false, please = false)
     {
         let response = "";
 
-        if (args.please) {
+        if (please) {
             response = this._bot.get(TemplateManager).get(TemplateMessageID.PleaseHelpTop, { author: message.author.id }) as string;
         } else {
             response = this._bot.get(TemplateManager).get(TemplateMessageID.HelpTop, { author: message.author.id }) as string;
@@ -161,18 +166,14 @@ export class CoreModule extends IModule
 
         const messageQueue = [];
         const role = message.user.getRole(message.server);
-        let modules = "";
+        let modules = [];
 
         for (const key of this._bot.modules) {
             const module: IModule = this._bot.get(key);
             const enabled = (message.server === null) ? false : message.server.isModuleEnabled(module.name);
 
             if (enabled) {
-                if (modules.length !== 0) {
-                    modules += ", ";
-                }
-
-                modules += module.name;
+                modules.push(module.name);
             }
 
             let hasNonHidden = false;
@@ -217,10 +218,10 @@ export class CoreModule extends IModule
 
         let add = "";
         if (message.server !== null) {
-            add += "**Enabled modules**: " + modules + "\r\n\r\n";
+            add += "**Enabled modules**: " + modules.join(", ") + "\r\n\r\n";
         }
 
-        if (args.please) {
+        if (please) {
             add += this._bot.get(TemplateManager).get(TemplateMessageID.PleaseHelpBottom, { author: message.author.id }) as string;
         } else {
             add += this._bot.get(TemplateManager).get(TemplateMessageID.HelpBottom, { author: message.author.id }) as string;
@@ -238,35 +239,36 @@ export class CoreModule extends IModule
         });
     }
 
-    /*@Command("set response mode to {responsetype!type}")
+    @Command("set response mode to {responsetype!type}")
     @Command("use {responsetype!type}")
     @Command("use {responsetype!type} mode")
     @CommandDescription("Change my personality to Normal or Tsundere")
     @CommandSample("set response mode to __*tsundere*__")
     @CommandPermission("CHANGE_PERSONALITY")
-    private handleResponseMode(message: MessageInterface, args: { [key: string]: any }) {
-        if (args.type === null) {
+    private handleResponseMode(message: IMessage, type: string)
+    {
+        if (type === null) {
             //unknown response mode
         }
 
-        if (Responses.currentMode === args.type)
-            return this._bot.respond(message, StringFormat(Responses.get("ALREADY_IN_MODE"), { author: message.author.id }));
+        // if (Responses.currentMode === args.type)
+        //     return this._bot.respond(message, StringFormat(Responses.get("ALREADY_IN_MODE"), { author: message.author.id }));
 
-        Responses.setMode(args.type);
-        this._bot.respond(message, StringFormat(Responses.get("SWITCHED"), { author: message.author.id }));
-    }*/
+        // Responses.setMode(args.type);
+        // this._bot.respond(message, StringFormat(Responses.get("SWITCHED"), { author: message.author.id }));
+    }
 
     @Command("what is my role")
     @CommandSample("what is my role?")
     @CommandDescription("Displays your role.")
-    private handleMyRole(message: IMessage, args: { [key: string]: any })
+    private handleMyRole(message: IMessage)
     {
-        // const role: string = RoleType[message.user.getRole(message.server)];
+        const role: string = RoleType[message.user.getRole(message.server)];
 
-        // this._bot.respond(message, PersonalityManager.instance.get(MessageID.CurrentUserRole, {
-        //     author: message.author.id,
-        //     role,
-        // }));
+        this._bot.get(DiscordAPI).respond(message, this._bot.get(TemplateManager).get(TemplateMessageID.CurrentUserRole, {
+            author: message.author.id,
+            role,
+        }));
     }
 
     @Command("what are my permissions")
@@ -309,19 +311,20 @@ export class CoreModule extends IModule
     @CommandDescription("Tells me to output to the specified channel.")
     @CommandSample("go to __*#channel*__")
     @CommandPermission("GO_TO_CHANNEL")
-    private handleGotoChannel(message: IMessage, args: { [key: string]: any })
+    private handleGotoChannel(message: IMessage, channel: string, category: string = null)
     {
-        // const id = args.channel;
-        // if (message.server.server.channels.get(id) === null)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidChannel, {
-        //         author: message.author.id,
-        //         channel: args.channel,
-        //     }));
+        if (message.guild.channels.get(channel) === null) {
+            return this._bot.get(DiscordAPI).respond(message, this._bot.get(TemplateManager).get(TemplateMessageID.InvalidChannel, {
+                author: message.author.id,
+                channel: channel
+            }));
+        }
 
-        // message.server.channel = id;
-        // this._bot.message(PersonalityManager.instance.get(MessageID.SempaiHomeChannelChanged, {
-        //     author: message.author.id,
-        //     channel: id,
-        // }), message.server);
+        message.server.setChannel(channel, category);
+
+        this._bot.get(DiscordAPI).message(this._bot.get(TemplateManager).get(TemplateMessageID.SempaiHomeChannelChanged, {
+            author: message.author.id,
+            channel: channel,
+        }), message.server);
     }
 }

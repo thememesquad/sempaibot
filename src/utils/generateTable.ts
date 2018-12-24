@@ -38,11 +38,14 @@ export function generateTable(baseMessage: string | null, columns: { [key: strin
     }
 
     let message = "";
+
     const writeHeaders = () => {
         for (const key in columns) {
             let val = columns[key];
-            while (val.length !== lengths[key])
+
+            while (val.length !== lengths[key]) {
                 val += " ";
+            }
 
             message += val;
         }

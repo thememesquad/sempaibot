@@ -3,9 +3,10 @@ import { Bot } from "./bot";
 import { DBServer } from "./models/dbserver";
 import { IMessage } from "./imessage";
 import { AccessManager, TemplateManager, DatabaseManager } from "./managers";
-import { injectable, unmanaged, inject } from "inversify";
+import { inject } from "inversify";
 import { DiscordAPI } from "../api/discord";
 import { TemplateMessageID } from "./itemplatemessageid";
+import { RoleType } from "./roletype";
 
 export abstract class IModule {
     public _bot!: Bot;
@@ -27,6 +28,12 @@ export abstract class IModule {
 
     constructor()
     {
+        const rights: { name: string, defaultRole: RoleType }[] = (this.constructor as any).rights || [];
+
+        for (const right of rights) {
+            Bot.instance.get(AccessManager).register(right.name, right.defaultRole);
+        }
+
         this._name = "";
 
         if (this._commands == null) {
@@ -109,7 +116,22 @@ export abstract class IModule {
                 return true;
             }
 
-            await command.execute.apply(this, data as any);
+            if (Object.keys(command.mapping).length > 2 || command.mapping["args"] === undefined) {
+                let newData = [];
+
+                for (let key in command.mapping) {
+                    if (command.mapping[key][0] === 0) {
+                        newData[0] = message;
+                    } else if (args[key] !== undefined) {
+                        newData[command.mapping[key][0]] = args[key];
+                    }
+                }
+
+                await command.execute.apply(this, newData as any);
+            } else {
+                await command.execute.apply(this, data as any);
+            }
+
             return true;
         }
 

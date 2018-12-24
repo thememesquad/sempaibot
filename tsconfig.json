@@ -9,6 +9,7 @@
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "strict": true,
+        "strictNullChecks": false,
         "moduleResolution": "node"
     },
     "include": ["src/**/*"]

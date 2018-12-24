@@ -1,6 +1,6 @@
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
 import { LogManager, DatabaseManager } from "../core/managers";
-import { Client, Message, MessageOptions, MessageReaction, RichEmbed, RichEmbedOptions, TextChannel, User as DiscordUser, Guild, GuildMember } from "discord.js";
+import { Client, MessageOptions, MessageReaction, RichEmbed, RichEmbedOptions, TextChannel, User as DiscordUser, Guild, GuildMember, GuildChannel } from "discord.js";
 import * as Config from "../../config";
 import { DBServer } from "../core/models/dbserver";
 import { DBUser } from "../core/models/dbuser";
@@ -13,13 +13,15 @@ export type MessageContent = string | RichEmbed | RichEmbedOptions;
 export class DiscordAPI
 {
     private _discord!: Client;
-    private _logManager: LogManager;
-    private _databaseManager: DatabaseManager;
 
-    public constructor(logManager: LogManager, databaseManager: DatabaseManager)
+    @inject(LogManager)
+    protected _logManager!: LogManager;
+
+    @inject(DatabaseManager)
+    protected _databaseManager!: DatabaseManager;
+
+    constructor()
     {
-        this._logManager = logManager;
-        this._databaseManager = databaseManager;
     }
 
     /**
@@ -71,18 +73,29 @@ export class DiscordAPI
             return ids as IMessage[];
         }
 
-        let guild = this._discord.guilds.find("id", databaseServer.id);
+        let guild = this._discord.guilds.find((guild: Guild) => guild.id == databaseServer.id);
 
         if (!guild) {
             return null;
         }
 
-        let channel: string = "";//server.channel;
-        if (channel.length === 0) {
-            channel = guild.channels.first().id;
+        let actualChannel: TextChannel = null;
+        let channel: string = databaseServer.getChannel();
+
+        if (channel) {
+            actualChannel = guild.channels.get(channel) as TextChannel;
         }
 
-        const actualChannel: TextChannel = guild.channels.get(channel) as TextChannel;
+        if (!actualChannel) {
+            actualChannel = guild.channels.filter((guild: GuildChannel) => {
+                return guild instanceof TextChannel;
+            }).first() as TextChannel;
+        }
+
+        if (!actualChannel) {
+            return null;
+        }
+
         const options: MessageOptions = {};
 
         if (message instanceof RichEmbed) {
@@ -148,6 +161,17 @@ export class DiscordAPI
         return this._discord.guilds.get(guildId) || null;
     }
 
+    public getUserName(userId: string): string
+    {
+        const user = this._discord.users.get(userId) || null;
+
+        if (user === null) {
+            return null;
+        }
+
+        return user.username;
+    }
+
     /**
      * Self explainatory: Called when we have disconnected from Discord
      */
@@ -170,7 +194,7 @@ export class DiscordAPI
      */
     public async onGuildAdded(guild: Guild)
     {
-        const repository = this._databaseManager.getServerRepository();
+        const repository = this._databaseManager.getRepository(DBServer);
         let server = await repository.findOne({
             id: guild.id
         });
@@ -178,7 +202,7 @@ export class DiscordAPI
         const members = [];
 
         for (const member of guild.members.array()) {
-            let databaseMember = await this._databaseManager.getUserRepository().findOne({
+            let databaseMember = await this._databaseManager.getRepository(DBUser).findOne({
                 id: member.id
             });
 
@@ -186,7 +210,7 @@ export class DiscordAPI
                 databaseMember = new DBUser();
                 databaseMember.id = member.id;
 
-                await this._databaseManager.getUserRepository().save(databaseMember);
+                await this._databaseManager.getRepository(DBUser).save(databaseMember);
             }
 
             members.push(databaseMember);
@@ -212,7 +236,7 @@ export class DiscordAPI
      */
     public async onGuildDeleted(guild: Guild)
     {
-        const repository = this._databaseManager.getServerRepository();
+        const repository = this._databaseManager.getRepository(DBServer);
 
         await repository.delete({
             id: guild.id
@@ -227,8 +251,8 @@ export class DiscordAPI
      */
     public async onGuildMemberAdded(member: GuildMember)
     {
-        const serverRepository = this._databaseManager.getServerRepository();
-        const userRepository = this._databaseManager.getUserRepository();
+        const serverRepository = this._databaseManager.getRepository(DBServer);
+        const userRepository = this._databaseManager.getRepository(DBUser);
 
         let server = await serverRepository.findOne({
             id: member.guild.id
@@ -284,8 +308,8 @@ export class DiscordAPI
             return;
         }
 
-        const serverRepository = this._databaseManager.getServerRepository();
-        const userRepository = this._databaseManager.getUserRepository();
+        const serverRepository = this._databaseManager.getRepository(DBServer);
+        const userRepository = this._databaseManager.getRepository(DBUser);
 
         let server: DBServer | null = message.guild ? await serverRepository.findOne({
             id: message.guild.id

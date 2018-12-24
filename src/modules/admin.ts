@@ -11,6 +11,7 @@ import { Guild } from "discord.js";
 import { TemplateManager } from "../core/managers";
 import { TemplateMessageID } from "../core/itemplatemessageid";
 import { generateTable } from "../utils";
+import { DBServer } from "../core/models/dbserver";
 
 @RegisterRight("SUPERADMIN", RoleType.SuperAdmin)
 @RegisterRight("IGNORE_USERS", RoleType.Moderator)
@@ -239,7 +240,7 @@ export class AdminModule extends IModule
     @CommandPermission("SUPERADMIN")
     private async handleListServers(message: IMessage, args: { [key: string]: any })
     {
-        const servers = await this._databaseManager.getServerRepository().find();
+        const servers = await this._databaseManager.getRepository(DBServer).find();
         const discord = this._bot.get(DiscordAPI);
         let data = [];
 
