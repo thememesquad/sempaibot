@@ -1,12 +1,14 @@
 import { ICommand } from "./command";
 import { Bot } from "./bot";
-import { DBServer } from "./models/dbserver";
+import { DBServer } from "../models/dbserver";
 import { IMessage } from "./imessage";
 import { AccessManager, TemplateManager, DatabaseManager } from "./managers";
 import { inject } from "inversify";
 import { DiscordAPI } from "../api/discord";
 import { TemplateMessageID } from "./itemplatemessageid";
 import { RoleType } from "./roletype";
+import { DBUser } from "../models/dbuser";
+import { ReactionType } from "./reactiontype";
 
 export abstract class IModule {
     public _bot!: Bot;
@@ -18,7 +20,6 @@ export abstract class IModule {
     protected _alwaysOn: boolean = false;
     protected _defaultOn: boolean = false;
     protected _disabled: boolean = false;
-    protected _hidden: boolean = false;
 
     @inject(AccessManager)
     protected _accessManager!: AccessManager;
@@ -41,7 +42,7 @@ export abstract class IModule {
         }
     }
 
-    public getCommandInternal(key: string): ICommand | null
+    public getCommandInternal(key: string): ICommand
     {
         if (this._commands == null) {
             this._commands = [];
@@ -77,7 +78,7 @@ export abstract class IModule {
             const isPrivate = command.private !== undefined && command.private === true;
 
             if (message.server !== null && !command.global) {
-                if (!this._alwaysOn && !message.server.isModuleEnabled(this._name)) {
+                if (!this._alwaysOn && !(await message.server.isModuleEnabled(this._name))) {
                     // module is not enabled for this server and this is a local command
                     continue;
                 }
@@ -103,7 +104,7 @@ export abstract class IModule {
 
             data = [message, args];
 
-            if (command.permission !== null && !this._accessManager.isAllowed(command.permission as string, message.user.getRole(message.server), message.server)) {
+            if (command.permission !== null && !this._accessManager.isAllowed(command.permission as string, await message.user.getRole(message.server), message.server)) {
                 Bot.instance.get(DiscordAPI).respond(message, Bot.instance.get(TemplateManager).get(TemplateMessageID.PermissionDenied, {
                     author: message.author.id,
                     permission: command.permission
@@ -158,11 +159,7 @@ export abstract class IModule {
         return this._defaultOn;
     }
 
-    public get hidden(): boolean {
-        return this._hidden;
-    }
-
-    public onSetup(): void {
+    public onStartup(): void {
         // empty
     }
 
@@ -175,6 +172,14 @@ export abstract class IModule {
     }
 
     public onShutdown(): void {
+        // empty
+    }
+
+    public onReactionAdded(message: IMessage, user: DBUser, reaction: ReactionType, namespace: string, data: string): void {
+        // empty
+    }
+
+    public onReactionRemoved(message: IMessage, user: DBUser, reaction: ReactionType, namespace: string, data: string): void {
         // empty
     }
 }

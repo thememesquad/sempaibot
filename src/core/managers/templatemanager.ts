@@ -27,7 +27,7 @@ export class TemplateManager implements IManager
         return true;
     }
 
-    public get(id: TemplateMessageID | number, args: { [key: string]: any } | null = null): string | null
+    public get(id: TemplateMessageID | number, args: { [key: string]: any } = null): string
     {
         const result = this._mode.get(id, args);
 
@@ -38,7 +38,7 @@ export class TemplateManager implements IManager
         return result;
     }
 
-    public getExtended(namespace: string, id: TemplateMessageID | number, args: { [key: string]: any } | null = null): string | null
+    public getExtended(namespace: string, id: TemplateMessageID | number, args: { [key: string]: any } = null): string
     {
         const result = this._mode.getExtended(namespace, id, args);
 

@@ -5,3 +5,4 @@ interface IDiscordConfig {
 export let identifiers: string[];
 export let discord: IDiscordConfig;
 export let superadmins: string[];
+export let processingMessage: string;

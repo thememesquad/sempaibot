@@ -32,7 +32,7 @@ template[TemplateMessageID.CurrentUserRole] = [
 ];
 
 template[TemplateMessageID.CurrentUserPermissions] = [
-    "Your permissions are: {permissions}",
+    "Your permissions are:",
 ];
 
 template[TemplateMessageID.ModuleEnabled] = [

@@ -7,11 +7,11 @@ import { RoleType } from "../core/roletype";
 import { RegisterRight } from "../core/attributes/registerright";
 import { injectable } from "inversify";
 import { DiscordAPI } from "../api/discord";
-import { Guild } from "discord.js";
 import { TemplateManager } from "../core/managers";
 import { TemplateMessageID } from "../core/itemplatemessageid";
 import { generateTable } from "../utils";
-import { DBServer } from "../core/models/dbserver";
+import { DBServer } from "../models/dbserver";
+import * as Modules from "../modules";
 
 @RegisterRight("SUPERADMIN", RoleType.SuperAdmin)
 @RegisterRight("IGNORE_USERS", RoleType.Moderator)
@@ -19,7 +19,7 @@ import { DBServer } from "../core/models/dbserver";
 @RegisterRight("MANAGE_MODULES", RoleType.Admin)
 @RegisterRight("MANAGE_PERMISSIONS", RoleType.Admin)
 @RegisterRight("ASSIGN_ROLES", RoleType.Admin)
-@Module("Admin", "This is the admin module.", ModuleOptions.AlwaysOn | ModuleOptions.Hidden)
+@Module("Admin", "This is the admin module.", ModuleOptions.AlwaysOn)
 @injectable()
 export class AdminModule extends IModule
 {
@@ -238,9 +238,9 @@ export class AdminModule extends IModule
     @CommandSample("list servers")
     @CommandDescription("Lists all the servers I'm currently running on.")
     @CommandPermission("SUPERADMIN")
-    private async handleListServers(message: IMessage, args: { [key: string]: any })
+    private async handleListServers(message: IMessage)
     {
-        const servers = await this._databaseManager.getRepository(DBServer).find();
+        const servers = await DBServer.find();
         const discord = this._bot.get(DiscordAPI);
         let data = [];
 
@@ -269,63 +269,78 @@ export class AdminModule extends IModule
         discord.respond(message, messages);
     }
 
-    @Command("enable {module}")
-    @Command("enable module {module}")
+    @Command("enable {moduleName}")
+    @Command("enable module {moduleName}")
     @CommandSample("enable __*module name*__")
     @CommandDescription("Enables a module for this server.")
     @CommandPermission("MANAGE_MODULES")
-    private handleEnableModule(message: IMessage, args: { [key: string]: any })
+    private async handleEnableModule(message: IMessage, moduleName: string)
     {
-        // if (this._bot.getModule(args.module) === null)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidModule, {
-        //         author: message.author.id,
-        //         module: args.module,
-        //     }));
+        const moduleInternalName = moduleName.toLowerCase().trim();
+        const module = Object.values(Modules).filter(x => (x as any)._moduleName.toLowerCase().trim() === moduleInternalName);
 
-        // if (message.server.isModuleEnabled(args.module))
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleAlreadyEnabled, {
-        //         author: message.author.id,
-        //         module: args.module,
-        //     }));
+        if (module.length === 0) {
+            return this._bot.get(DiscordAPI).respond(message, this._bot.get(TemplateManager).get(TemplateMessageID.InvalidModule, {
+                author: message.author.id,
+                module,
+            }));
+        }
 
-        // message.server.enableModule(args.module);
-        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleEnabled, {
-        //     author: message.author.id,
-        //     module: args.module,
-        // }));
+        if (await message.server.isModuleEnabled(moduleInternalName)) {
+            return this._bot.get(DiscordAPI).respond(message, this._bot.get(TemplateManager).get(TemplateMessageID.ModuleAlreadyEnabled, {
+                author: message.author.id,
+                module,
+            }));
+        }
+
+        await message.server.enableModule(moduleInternalName);
+
+        const moduleInstance: any = this._bot.get(moduleInternalName);
+        return this._bot.get(DiscordAPI).respond(message, this._bot.get(TemplateManager).get(TemplateMessageID.ModuleEnabled, {
+            author: message.author.id,
+            module: moduleInstance.name,
+        }));
     }
 
-    @Command("disable {module}")
-    @Command("disable module {module}")
+    @Command("disable {moduleName}")
+    @Command("disable module {moduleName}")
     @CommandSample("disable __*module name*__")
     @CommandDescription("Disables a module for this server.")
     @CommandPermission("MANAGE_MODULES")
-    private handleDisableModule(message: IMessage, args: { [key: string]: any })
+    private async handleDisableModule(message: IMessage, moduleName: string)
     {
-        // const module = this._bot.getModule(args.module);
-        // if (module === null)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidModule, {
-        //         author: message.author.id,
-        //         module: args.module,
-        //     }));
+        const moduleInternalName = moduleName.toLowerCase().trim();
+        const module = Object.values(Modules).filter(x => (x as any)._moduleName.toLowerCase().trim() === moduleInternalName);
 
-        // if (!message.server.isModuleEnabled(args.module))
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleAlreadyDisabled, {
-        //         author: message.author.id,
-        //         module: args.module,
-        //     }));
+        if (module.length === 0) {
+            return this._bot.get(DiscordAPI).respond(message, this._bot.get(TemplateManager).get(TemplateMessageID.InvalidModule, {
+                author: message.author.id,
+                module,
+            }));
+        }
 
-        // if (module.alwaysOn)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleCannotBeDisabled, {
-        //         author: message.author.id,
-        //         module: args.module,
-        //     }));
+        const moduleInstance: any = this._bot.get(moduleInternalName);
 
-        // message.server.disableModule(args.module);
-        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.ModuleDisabled, {
-        //     author: message.author.id,
-        //     module: args.module,
-        // }));
+        if (!await message.server.isModuleEnabled(moduleInternalName)) {
+            return this._bot.get(DiscordAPI).respond(message, this._bot.get(TemplateManager).get(TemplateMessageID.ModuleAlreadyDisabled, {
+                author: message.author.id,
+                module,
+            }));
+        }
+
+        if (moduleInstance.alwaysOn) {
+            return this._bot.get(DiscordAPI).respond(message, this._bot.get(TemplateManager).get(TemplateMessageID.ModuleCannotBeDisabled, {
+                author: message.author.id,
+                module,
+            }));
+        }
+
+        await message.server.disableModule(moduleInternalName);
+
+        return this._bot.get(DiscordAPI).respond(message, this._bot.get(TemplateManager).get(TemplateMessageID.ModuleDisabled, {
+            author: message.author.id,
+            module: moduleInstance.name,
+        }));
     }
 
     @Command("list modules")
@@ -333,35 +348,35 @@ export class AdminModule extends IModule
     @CommandSample("list modules")
     @CommandDescription("Lists all available modules.")
     @CommandPermission("MANAGE_MODULES")
-    private handleListModules(message: IMessage, args: { [key: string]: any })
+    private async handleListModules(message: IMessage)
     {
-        // const columns = { name: "Name", enabled: "Enabled", flags: "Flags" };
-        // const data = [];
+        const modules = Modules as { [key: string]: any };
+        const columns = { name: "Name", enabled: "Enabled", flags: "Flags" };
+        const data = [];
 
-        // for (const key in this._bot.modules) {
-        //     const enabled = message.server.isModuleEnabled(key);
-        //     const alwaysOn = this._bot.modules[key].alwaysOn;
-        //     const defaultOn = this._bot.modules[key].defaultOn;
-        //     const hidden = this._bot.modules[key].hidden;
+        for (const key in modules) {
+            const moduleInstance: IModule = this._bot.get<IModule>(modules[key]._moduleName.toLowerCase().trim());
+            const enabled = await message.server.isModuleEnabled(modules[key]._moduleName);
+            const alwaysOn = moduleInstance.alwaysOn;
+            const defaultOn = moduleInstance.defaultOn;
 
-        //     if (hidden)
-        //         continue;
+            let flags = "";
+            if (alwaysOn) {
+                flags += "always_on";
+            }
 
-        //     let flags = "";
-        //     if (alwaysOn)
-        //         flags += "always_on";
+            if (defaultOn) {
+                flags += flags.length === 0 ? "default_on" : " default_on";
+            }
 
-        //     if (defaultOn)
-        //         flags += flags.length === 0 ? "default_on" : " default_on";
+            data.push({ name: modules[key]._moduleName, enabled: (enabled) ? "yes" : "no", flags });
+        }
 
-        //     data.push({ name: key, enabled: (enabled) ? "yes" : "no", flags });
-        // }
+        const messages = generateTable(this._bot.get(TemplateManager).get(TemplateMessageID.ListModules, {
+            author: message.author.id,
+        }), columns, data, { name: 20, enabled: 10, flags: 15 });
 
-        // const messages = generateTable(PersonalityManager.instance.get(MessageID.ListModules, {
-        //     author: message.author.id,
-        // }), columns, data, { name: 20, enabled: 10, flags: 15 });
-
-        // this._bot.respond(message, messages);
+        this._bot.get(DiscordAPI).respond(message, messages);
     }
 
     @Command("assign role {roletype!role} to user {userid!user}")
@@ -528,4 +543,8 @@ export class AdminModule extends IModule
         //     user: user.getUserID(),
         // }));
     }
+
+    // @Command("clean up< all> my messages< from {timeframe}>")
+    // @CommandSample("clean up all my messages")
+    // @CommandDescription("Clean's up the ")
 }

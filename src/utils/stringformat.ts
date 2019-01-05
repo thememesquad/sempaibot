@@ -1,4 +1,4 @@
-export function stringFormat(str: string, args: { [key: string]: any } | null = null): string {
+export function stringFormat(str: string, args: { [key: string]: any } = null): string {
     if (args == null) {
         return str;
     }

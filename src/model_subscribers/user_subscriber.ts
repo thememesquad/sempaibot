@@ -1,8 +1,8 @@
 import { EventSubscriber, InsertEvent } from "typeorm";
 import { DBUser } from "../models/dbuser";
 import { DBServer } from "../models/dbserver";
-import { LogManager } from "../managers";
-import { Bot } from "../bot";
+import { LogManager } from "../core/managers";
+import { Bot } from "../core/bot";
 
 @EventSubscriber()
 export class UserSubscriber

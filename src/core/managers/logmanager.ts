@@ -32,4 +32,12 @@ export class LogManager implements IManager
 
         console.log(logMessage);
     }
+
+    public todo(where: string, todoMessage: string): void
+    {
+        const dateTime = new Date().toISOString();
+        const message = `[${dateTime}][todo] ${where}: ${todoMessage}`;
+
+        console.log(message);
+    }
 }

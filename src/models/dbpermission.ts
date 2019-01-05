@@ -1,9 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne, ManyToMany, JoinTable } from "typeorm";
-import { RoleType } from "../roletype";
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne, ManyToMany, JoinTable, BaseEntity } from "typeorm";
+import { RoleType } from "../core/roletype";
 import { DBRole } from "./dbrole";
 
 @Entity()
-export class DBPermission
+export class DBPermission extends BaseEntity
 {
     @PrimaryGeneratedColumn()
     id!: number;
@@ -13,7 +13,7 @@ export class DBPermission
 
     @ManyToMany(type => DBRole, role => role.permissions)
     @JoinTable()
-    roles!: DBRole[];
+    roles!: Promise<DBRole[]>;
 
     @Column("int")
     defaultRole!: RoleType;

@@ -14,7 +14,7 @@ export abstract class ITemplate
     public abstract displayName(): string;
     public abstract messages(): { [key: number]: string | string[] };
 
-    public get(id: TemplateMessageID | number, args: { [key: string]: any; } | null): string | null
+    public get(id: TemplateMessageID | number, args: { [key: string]: any; }): string
     {
         const template = this.messages();
 
@@ -31,7 +31,7 @@ export abstract class ITemplate
         return stringFormat(str as string, args);
     }
 
-    public getExtended(namespace: string, id: TemplateMessageID | number, args: { [key: string]: any; } | null): string | null
+    public getExtended(namespace: string, id: TemplateMessageID | number, args: { [key: string]: any; }): string
     {
         if (this.id() !== namespace) {
             for (const extension of this._extensions) {

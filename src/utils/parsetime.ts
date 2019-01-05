@@ -2,7 +2,7 @@ import * as moment from "moment";
 import { ITime } from "./timeinterface";
 import { ITimeMatch } from "./timematchinterface";
 
-function parseTimeInternal(str: string): ITime | null {
+function parseTimeInternal(str: string): ITime {
     str = str.toLowerCase().trim();
 
     const currentDate = moment();

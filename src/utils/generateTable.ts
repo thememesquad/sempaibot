@@ -1,4 +1,4 @@
-export function generateTable(baseMessage: string | null, columns: { [key: string]: string }, data: { [key: string]: any }[], minimumLengths: { [key: string]: number } | null = null): string[] {
+export function generateTable(baseMessage: string, columns: { [key: string]: string }, data: { [key: string]: any }[], minimumLengths: { [key: string]: number } = null): string[] {
     if (baseMessage === null || baseMessage === undefined) {
         return [];
     }
@@ -51,7 +51,7 @@ export function generateTable(baseMessage: string | null, columns: { [key: strin
         }
 
         message = message.trim();
-        message += "\r\n";
+        message += "\r\n\r\n";
     };
 
     const writeItem = (index: number) => {

@@ -1,14 +1,15 @@
-import { Entity, Column, PrimaryColumn, ManyToMany, OneToMany } from "typeorm";
+import { Entity, Column, PrimaryColumn, ManyToMany, OneToMany, BaseEntity } from "typeorm";
 import { DBServer } from "./dbserver";
-import { DBRole } from "./dbrole";
-import { RoleType } from "../roletype";
-import { superadmins } from "../../../config";
+import { RoleType } from "../core/roletype";
+import { superadmins } from "../../config";
 import { Guild, User, GuildMember } from "discord.js";
-import { Bot } from "../bot";
-import { DiscordAPI } from "../../api/discord";
+import { Bot } from "../core/bot";
+import { DiscordAPI } from "../api/discord";
+import { DBRoleLink } from "./dbrolelink";
+import { DBTrackedReaction } from "./dbtrackedreaction";
 
 @Entity()
-export class DBUser
+export class DBUser extends BaseEntity
 {
     @PrimaryColumn("varchar", { length: 255 })
     id!: string;
@@ -18,15 +19,16 @@ export class DBUser
     })
     servers!: DBServer[];
 
-    @OneToMany(type => DBRole, role => role.user, {
-        eager: true
-    })
-    roles!: DBRole[];
+    @OneToMany(type => DBRoleLink, link => link.user)
+    roles!: Promise<DBRoleLink[]>
+
+    @OneToMany(type => DBTrackedReaction, reaction => reaction.user)
+    reactions!: Promise<DBTrackedReaction[]>;
 
     @Column()
     blacklisted: boolean = false;
 
-    public getName(server: DBServer | null): string
+    public getName(server: DBServer): string
     {
         const guild: Guild = Bot.instance.get(DiscordAPI).getGuild(server.id);
 
@@ -43,7 +45,7 @@ export class DBUser
         return user.displayName;
     }
 
-    public getRole(server: DBServer | null): RoleType {
+    public async getRole(server: DBServer): Promise<RoleType> {
         if (superadmins.indexOf(this.id) !== -1) {
             return RoleType.SuperAdmin;
         }
@@ -52,11 +54,10 @@ export class DBUser
             return RoleType.Normal;
         }
 
-        const role = this.roles.find((item) => {
-            return item.server == server;
-        }) || null;
+        const roles = await this.roles;
+        const role = roles.reduce((x, y) => x.server.id === server.id ? x : y);
 
-        if (!role) {
+        if (role.server.id !== server.id) {
             return RoleType.Normal;
         }
 

@@ -14,11 +14,6 @@ export class DatabaseManager implements IManager
         this._logManager = logManager;
     }
 
-    public getRepository<T>(type: new() => T): Repository<T>
-    {
-        return this._connection.getRepository(type);
-    }
-
     public save<Entity>(data: Entity): Promise<Entity>;
     public save<Entity>(data: Entity[]): Promise<Entity[]>
     public save<Entity>(data: Entity | Entity[]): Promise<Entity | Entity[]>

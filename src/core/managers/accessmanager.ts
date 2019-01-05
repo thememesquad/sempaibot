@@ -1,10 +1,10 @@
 import { IManager } from "./imanager";
 import { injectable } from "inversify";
-import { DBServer } from "../models/dbserver";
+import { DBServer } from "../../models/dbserver";
 import { LogManager } from "./logmanager";
 import { RoleType } from "../roletype";
 import { DatabaseManager } from "./databasemanager";
-import { DBPermission } from "../models/dbpermission";
+import { DBPermission } from "../../models/dbpermission";
 
 @injectable()
 export class AccessManager implements IManager
@@ -23,45 +23,39 @@ export class AccessManager implements IManager
         return true;
     }
 
-    async register(slug: string, role: RoleType)
+    async register(slug: string, roleType: RoleType)
     {
-        const permissionRepository = this._databaseManager.getRepository(DBPermission);
-        let permission = await permissionRepository.findOne({
+        let permission = await DBPermission.findOne({
             slug
         }) || null;
 
-        if (!permission) {
-            permission = new DBPermission();
+        if (permission) {
+            return;
         }
 
+        this._logManager.warning(`New permission slug registered '${slug}' for role '${roleType}'`);
+
+        permission = new DBPermission();
         permission.slug = slug;
-        permission.defaultRole = role;
-        await permissionRepository.save(permission);
+        permission.defaultRole = roleType;
+        await permission.save();
+
+        // Register the slug with the existing servers
+        const servers = await DBServer.find({
+            relations: ["roles", "roles.permissions"]
+        });
+
+        for (const server of servers) {
+            for (let i = 0; i < roleType + 1; i++) {
+                await server.allow(permission, i as RoleType);
+            }
+        }
     }
 
-    async isAllowed(slug: string, roleType: RoleType, server: DBServer | null)
+    async isAllowed(slug: string, roleType: RoleType, server: DBServer)
     {
-        const permissionRepository = this._databaseManager.getRepository(DBPermission);
-        const permission = await permissionRepository.findOne({
-            slug
-        }, { relations: ["roles"] }) || null;
+        const permissions = await server.getRolePermissions(roleType);
 
-        if (!permission) {
-            this._logManager.warning("Unknown permission:", slug);
-            return true;
-        }
-
-        if (!server) {
-            return permission.defaultRole === roleType;
-        }
-
-        // let roles = permission.roles.filter(x => x.server.id === server.id);
-        // let role: DBRole = null;
-
-        // if (roles.length !== 0) {
-        //     role = roles[0];
-        // }
-
-        return true;
+        return permissions.map(x => x.toUpperCase()).indexOf(slug.toUpperCase()) !== -1;
     }
 }

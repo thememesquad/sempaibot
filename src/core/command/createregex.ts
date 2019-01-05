@@ -13,7 +13,7 @@ export function CreateRegex(format: string): IRegex {
     const vars: { [key: string]: any } = {};
 
     while (format.length > 0) {
-        let tmp: RegExpMatchArray | null;
+        let tmp: RegExpMatchArray;
         const split = format.match(splitter);
 
         if (split === null) {

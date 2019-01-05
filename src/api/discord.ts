@@ -1,13 +1,43 @@
 import { injectable, inject } from "inversify";
 import { LogManager, DatabaseManager } from "../core/managers";
-import { Client, MessageOptions, MessageReaction, RichEmbed, RichEmbedOptions, TextChannel, User as DiscordUser, Guild, GuildMember, GuildChannel } from "discord.js";
+import { Client, MessageOptions, MessageReaction, RichEmbed, RichEmbedOptions, TextChannel, User as DiscordUser, Guild, GuildMember, GuildChannel, Emoji, DMChannel, Message } from "discord.js";
 import * as Config from "../../config";
-import { DBServer } from "../core/models/dbserver";
-import { DBUser } from "../core/models/dbuser";
+import { DBServer } from "../models/dbserver";
+import { DBUser } from "../models/dbuser";
 import { IMessage } from "../core/imessage";
 import { Bot } from "../core/bot";
+import { DBPermission } from "../models/dbpermission";
+import { DBRole } from "../models/dbrole";
+import { RoleType } from "../core/roletype";
+import { ReactionType } from "../core/reactiontype";
+import { IModule } from "../core/imodule";
+import { DBTrackedMessage } from "../models/dbtrackedmessage";
+import { DBModule } from "../models/dbmodule";
+import { DBTrackedReaction } from "../models/dbtrackedreaction";
 
 export type MessageContent = string | RichEmbed | RichEmbedOptions;
+export const REACTION_TO_DISCORD = {
+    [ReactionType.ThumbsUp]: "👍",
+    [ReactionType.ThumbsDown]: "👎",
+    [ReactionType.Left]: "⬅️",
+    [ReactionType.Right]: "➡️",
+    [ReactionType.Up]: "⬆️",
+    [ReactionType.Down]: "️️️️⬇️",
+};
+
+const events: { [key: string]: string } = {
+    MESSAGE_REACTION_ADD: 'messageReactionAdd',
+    MESSAGE_REACTION_REMOVE: 'messageReactionRemove',
+};
+
+export const DISCORD_TO_REACTION: { [key: string]: ReactionType } = {
+    "👍": ReactionType.ThumbsUp,
+    "👎": ReactionType.ThumbsDown,
+    "⬅️": ReactionType.Left,
+    "➡️": ReactionType.Right,
+    "⬆️": ReactionType.Up,
+    "️️️️⬇️": ReactionType.Down,
+};
 
 @injectable()
 export class DiscordAPI
@@ -42,7 +72,7 @@ export class DiscordAPI
         this._discord.on("message", this.onMessage.bind(this));
         this._discord.on("messageReactionAdd", this.onMessageReactionAdd.bind(this));
         this._discord.on("messageReactionRemove", this.onMessageReactionRemove.bind(this));
-        this._discord.on("messageReactionRemoveAll", this.onMessageReactionRemoveAll.bind(this));
+        this._discord.on("raw", this.onRawEvent.bind(this));
         this._discord.on("ready", this.onReady.bind(this));
 
         try {
@@ -56,7 +86,7 @@ export class DiscordAPI
         return true;
     }
 
-    public async message(message: MessageContent | MessageContent[] | null, databaseServer: DBServer): Promise<IMessage | IMessage[] | null>
+    public async message(message: MessageContent | MessageContent[], databaseServer: DBServer): Promise<IMessage | IMessage[]>
     {
         if (message === null) {
             return null;
@@ -103,10 +133,14 @@ export class DiscordAPI
             message = "";
         }
 
-        return await actualChannel.send(message, options) as IMessage;
+        const newMessage = await actualChannel.send(message, options) as IMessage;
+
+        newMessage.track = this.onTrackMessage.bind(this, newMessage);
+
+        return newMessage;
     }
 
-    public async respond(m: IMessage, message: MessageContent | MessageContent[] | null): Promise<IMessage | IMessage[] | null>
+    public async respond(m: IMessage, message: MessageContent | MessageContent[]): Promise<IMessage | IMessage[]>
     {
         if (message === null) {
             return null;
@@ -131,7 +165,11 @@ export class DiscordAPI
             message = "";
         }
 
-        return await actualChannel.send(message, options) as IMessage;
+        const newMessage = await actualChannel.send(message, options) as IMessage;
+
+        newMessage.track = this.onTrackMessage.bind(this, newMessage);
+
+        return newMessage;
     }
 
     public async edit(original: IMessage, message: MessageContent): Promise<IMessage>
@@ -153,10 +191,10 @@ export class DiscordAPI
 
     public async stopTyping(message: IMessage): Promise<void>
     {
-        message.channel.stopTyping();
+        message.channel.stopTyping(true);
     }
 
-    public getGuild(guildId: string): Guild | null
+    public getGuild(guildId: string): Guild
     {
         return this._discord.guilds.get(guildId) || null;
     }
@@ -170,6 +208,61 @@ export class DiscordAPI
         }
 
         return user.username;
+    }
+
+    public async syncReactions(message: DBTrackedMessage)
+    {
+        const guild = this._discord.guilds.get((await message.server).id);
+        const channel: TextChannel = guild.channels.get(message.channel) as TextChannel;
+        const discordMessage = await channel.fetchMessage(message.id);
+        const existingReactions = await message.reactions;
+
+        for (const reaction in existingReactions) {
+            (existingReactions[reaction] as any).__user = await existingReactions[reaction].user;
+        }
+
+        let deletedReactions = existingReactions;
+
+        for (const key of discordMessage.reactions.keyArray()) {
+            const reaction = discordMessage.reactions.get(key);
+
+            if (DISCORD_TO_REACTION[reaction.emoji.name] === undefined) {
+                continue;
+            }
+
+            let users = await reaction.fetchUsers();
+            users = users.filter((value, key, collection) => {
+                return value.id !== this._discord.user.id;
+            });
+
+            for (const user of users.values()) {
+                const trackedReaction = existingReactions.filter(x =>
+                    x.type === DISCORD_TO_REACTION[reaction.emoji.name] &&
+                    (x as any).__user.id === user.id
+                );
+
+                deletedReactions = deletedReactions.concat(trackedReaction).filter(function (e, i, array) {
+                    // Check if the element is appearing only once
+                    return array.indexOf(e) === array.lastIndexOf(e);
+                });
+
+                if (trackedReaction.length > 0) {
+                    continue;
+                }
+
+                this._discord.emit("messageReactionAdd", reaction, user);
+            }
+        }
+
+        for (const reaction of deletedReactions) {
+            const emoji = new Emoji(guild, { name: REACTION_TO_DISCORD[reaction.type] });
+            const messageReaction = new MessageReaction(discordMessage, emoji, 1, (reaction as any).__user.id === this._discord.user.id);
+            const user = this._discord.users.get((reaction as any).__user.id);
+
+            this._discord.emit("messageReactionRemove", messageReaction, user);
+
+            await reaction.remove();
+        }
     }
 
     /**
@@ -194,15 +287,14 @@ export class DiscordAPI
      */
     public async onGuildAdded(guild: Guild)
     {
-        const repository = this._databaseManager.getRepository(DBServer);
-        let server = await repository.findOne({
+        let server = await DBServer.findOne({
             id: guild.id
         });
 
         const members = [];
 
         for (const member of guild.members.array()) {
-            let databaseMember = await this._databaseManager.getRepository(DBUser).findOne({
+            let databaseMember = await DBUser.findOne({
                 id: member.id
             });
 
@@ -210,23 +302,47 @@ export class DiscordAPI
                 databaseMember = new DBUser();
                 databaseMember.id = member.id;
 
-                await this._databaseManager.getRepository(DBUser).save(databaseMember);
+                await DBUser.save(databaseMember);
             }
 
             members.push(databaseMember);
         }
 
         if (server) {
-            server.users = members;
-            await repository.save(server);
+            server.users = Promise.resolve(members);
+            await DBServer.save(server);
 
             return;
         }
 
+        const roles = [];
+
         server = new DBServer();
         server.id = guild.id;
-        server.users = members;
-        await repository.save(server);
+        server.users = Promise.resolve(members);
+        server.roles = Promise.resolve([]);
+        server.roleLinks = Promise.resolve([]);
+        await server.save();
+
+        for (const roleType of [RoleType.SuperAdmin, RoleType.Admin, RoleType.Moderator, RoleType.Normal])
+        {
+            const role = new DBRole();
+            role.role = roleType;
+            role.server = server;
+            role.save();
+
+            roles.push(role);
+        }
+
+        server.roles = Promise.resolve(roles);
+
+        const permissions = await DBPermission.find();
+
+        for (const permission of permissions) {
+            for (let i = 0; i < permission.defaultRole + 1; i++) {
+                await server.allow(permission, i as RoleType);
+            }
+        }
     }
 
     /**
@@ -236,9 +352,7 @@ export class DiscordAPI
      */
     public async onGuildDeleted(guild: Guild)
     {
-        const repository = this._databaseManager.getRepository(DBServer);
-
-        await repository.delete({
+        await DBServer.delete({
             id: guild.id
         });
     }
@@ -251,22 +365,19 @@ export class DiscordAPI
      */
     public async onGuildMemberAdded(member: GuildMember)
     {
-        const serverRepository = this._databaseManager.getRepository(DBServer);
-        const userRepository = this._databaseManager.getRepository(DBUser);
-
-        let server = await serverRepository.findOne({
+        let server = await DBServer.findOne({
             id: member.guild.id
         });
 
         if (!server) {
             await this.onGuildAdded(member.guild);
 
-            server = await serverRepository.findOne({
+            server = await DBServer.findOne({
                 id: member.guild.id
             });
         }
 
-        let user = await userRepository.findOne({
+        let user = await DBUser.findOne({
             id: member.user.id
         });
 
@@ -274,11 +385,14 @@ export class DiscordAPI
             user = new DBUser();
             user.id = member.user.id;
 
-            await userRepository.save(user);
+            await DBUser.save(user);
         }
 
-        server!.users.push(user);
-        await serverRepository.save(server);
+        const users = await server!.users;
+        users.push(user);
+
+        server.users = Promise.resolve(users);
+        await server.save();
     }
 
     /**
@@ -290,6 +404,12 @@ export class DiscordAPI
     public async onMessage(message: IMessage)
     {
         if (message.author.id == this._discord.user.id) {
+            return;
+        }
+
+        message = await this.wrapMessage(message);
+
+        if ((message.server !== null && message.server.blacklisted) || message.user.blacklisted) {
             return;
         }
 
@@ -305,58 +425,149 @@ export class DiscordAPI
         }
 
         if (!found) {
+            await Bot.instance.handleMiscMessage(message);
             return;
-        }
-
-        const serverRepository = this._databaseManager.getRepository(DBServer);
-        const userRepository = this._databaseManager.getRepository(DBUser);
-
-        let server: DBServer | null = message.guild ? await serverRepository.findOne({
-            id: message.guild.id
-        }) || null : null;
-
-        if (!server && message.guild) {
-            await this.onGuildAdded(message.guild);
-
-            server = await serverRepository.findOne({
-                id: message.guild.id
-            }) as DBServer;
-        }
-
-        let user: DBUser | null = await userRepository.findOne({
-            id: message.author.id
-        }) || null;
-
-        if (!user) {
-            user = new DBUser();
-            user.id = message.author.id;
-
-            await userRepository.save(user);
         }
 
         message.content = message.content.trim().substr(usedIdentifier!.length).replace(/\s+/g, " ").trim();
-        message.user = user;
-        message.server = server || null;
 
-        if ((server !== null && server.blacklisted) || user.blacklisted) {
-            return;
-        }
-
-        await this.startTyping(message);
+        const replyPromise = this.respond(message, Config.processingMessage);
         await Bot.instance.handleMessage(message);
-        await this.stopTyping(message);
+
+        const reply = await replyPromise as IMessage;
+        await reply.delete();
     }
 
     public async onMessageReactionAdd(reaction: MessageReaction, user: DiscordUser)
     {
+        if (user.id === this._discord.user.id) {
+            return;
+        }
+
+        const tracked = await DBTrackedMessage.findOne({
+            id: reaction.message.id
+        });
+
+        if (tracked === null) {
+            return;
+        }
+
+        if (DISCORD_TO_REACTION[reaction.emoji.name] === undefined) {
+            return;
+        }
+
+        const type = DISCORD_TO_REACTION[reaction.emoji.name];
+
+        if ((tracked.trackedReactions & type) === 0) {
+            return;
+        }
+
+        const databaseUser = await DBUser.findOne({ id: user.id });
+        let databaseReaction = await DBTrackedReaction.findOne({
+            type: DISCORD_TO_REACTION[reaction.emoji.name],
+            user: Promise.resolve(databaseUser),
+            message: Promise.resolve(tracked)
+        });
+
+        if (databaseReaction) {
+            return;
+        }
+
+        if (!tracked.reset) {
+            databaseReaction = new DBTrackedReaction();
+            databaseReaction.user = Promise.resolve(databaseUser);
+            databaseReaction.type = DISCORD_TO_REACTION[reaction.emoji.name];
+            databaseReaction.message = Promise.resolve(tracked);
+            await databaseReaction.save();
+        } else {
+            await reaction.remove(user);
+        }
+
+        await (Bot.instance.get((await tracked.module).name) as IModule).onReactionAdded(
+            await this.wrapMessage(reaction.message),
+            databaseUser,
+            DISCORD_TO_REACTION[reaction.emoji.name],
+            tracked.namespace,
+            tracked.data
+        );
     }
 
     public async onMessageReactionRemove(reaction: MessageReaction, user: DiscordUser)
     {
+        if (user.id === this._discord.user.id) {
+            return;
+        }
+
+        const tracked = await DBTrackedMessage.findOne({
+            id: reaction.message.id
+        });
+
+        if (tracked === null) {
+            return;
+        }
+
+        if (tracked.reset) {
+            return;
+        }
+
+        if (DISCORD_TO_REACTION[reaction.emoji.name] === undefined) {
+            return;
+        }
+
+        const type = DISCORD_TO_REACTION[reaction.emoji.name];
+
+        if ((tracked.trackedReactions & type) === 0) {
+            return;
+        }
+
+        const databaseUser = await DBUser.findOne({ id: user.id });
+        let databaseReaction = await DBTrackedReaction.createQueryBuilder("reaction")
+            .where("reaction.messageId=:messageId", { messageId: tracked.id })
+            .where("reaction.userId=:userId", { userId: databaseUser.id })
+            .where("reaction.type=:type", { type: DISCORD_TO_REACTION[reaction.emoji.name] })
+            .getMany();
+
+        if (databaseReaction.length === 0) {
+            return;
+        }
+
+        for (const reaction of databaseReaction) {
+            await reaction.remove();
+        }
+
+        await (Bot.instance.get((await tracked.module).name) as IModule).onReactionRemoved(
+            await this.wrapMessage(reaction.message),
+            databaseUser,
+            DISCORD_TO_REACTION[reaction.emoji.name],
+            tracked.namespace,
+            tracked.data
+        );
     }
 
-    public async onMessageReactionRemoveAll(message: IMessage)
+    public async onRawEvent(event: { t: string, d: { user_id: string, guild_id: string, channel_id: string, message_id: string, emoji: { id: string, name: string } } })
     {
+        if (!events.hasOwnProperty(event.t)) {
+            return;
+        }
+
+        const { d: data } = event;
+        const user = this._discord.users.get(data.user_id);
+        const channel: TextChannel | DMChannel = this._discord.channels.get(data.channel_id) as TextChannel || await user.createDM();
+
+        if (channel.messages.has(data.message_id)) {
+            return;
+        }
+
+        const message = await channel.fetchMessage(data.message_id);
+        const emojiKey = (data.emoji.id) ? `${data.emoji.name}:${data.emoji.id}` : data.emoji.name;
+        let reaction = message.reactions.get(emojiKey);
+
+        if (!reaction) {
+            const emoji = new Emoji(this._discord.guilds.get(data.guild_id), data.emoji);
+            reaction = new MessageReaction(message, emoji, 1, data.user_id === this._discord.user.id);
+        }
+
+        this._discord.emit(events[event.t], reaction, user);
     }
 
     public async onReady()
@@ -366,5 +577,68 @@ export class DiscordAPI
         for (const guild of guilds) {
             this.onGuildAdded(guild);
         }
+
+        const trackedMessages = await DBTrackedMessage.find();
+
+        for (const message of trackedMessages) {
+            this.syncReactions(message);
+        }
+    }
+
+    private async onTrackMessage(message: IMessage, reactions: ReactionType[], module: IModule, namespace: string, data: string, reset: boolean = false)
+    {
+        let reactionData: number = 0;
+
+        for (const type of reactions) {
+            await message.react(REACTION_TO_DISCORD[type]);
+            reactionData |= type;
+        }
+
+        const trackedMessage = new DBTrackedMessage();
+        trackedMessage.id = message.id;
+        trackedMessage.channel = message.channel.id;
+        trackedMessage.server = Promise.resolve(await DBServer.findOne({ id: message.guild.id }));
+        trackedMessage.module = Promise.resolve(await DBModule.findOne({ name: module.name.toLowerCase().trim() }));
+        trackedMessage.trackedReactions = reactionData;
+        trackedMessage.namespace = namespace;
+        trackedMessage.data = data;
+        trackedMessage.reset = reset;
+        await trackedMessage.save();
+
+        console.log("Started tracking message", message.id);
+    }
+
+    private async wrapMessage(message: Message): Promise<IMessage>
+    {
+        const wrapped: IMessage = message as IMessage;
+
+        let server: DBServer = message.guild ? await DBServer.findOne({
+            id: message.guild.id
+        }) || null : null;
+
+        if (!server && message.guild) {
+            await this.onGuildAdded(message.guild);
+
+            server = await DBServer.findOne({
+                id: message.guild.id
+            }) as DBServer;
+        }
+
+        let user: DBUser = await DBUser.findOne({
+            id: message.author.id
+        }) || null;
+
+        if (!user) {
+            user = new DBUser();
+            user.id = message.author.id;
+
+            await DBUser.save(user);
+        }
+
+        wrapped.user = user;
+        wrapped.server = server || null;
+        wrapped.track = this.onTrackMessage.bind(this, wrapped);
+
+        return wrapped;
     }
 }

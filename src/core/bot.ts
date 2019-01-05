@@ -1,23 +1,35 @@
 import { Container, interfaces } from "inversify";
 import "reflect-metadata";
 
-import { CommandManager, CronManager, ModuleManager, AccessManager, TemplateManager, LogManager, DatabaseManager } from "./managers";
+import { CronManager, AccessManager, TemplateManager, LogManager, DatabaseManager } from "./managers";
 import { DiscordAPI } from "../api/discord";
 import * as Modules from "../modules";
 import { IModule } from "./imodule";
 import { IMessage } from "./imessage";
 import { TemplateMessageID } from "./itemplatemessageid";
-import { DBModule } from "./models/dbmodule";
+import { DBModule } from "../models/dbmodule";
+import { Channel } from "discord.js";
+import { DBUser } from "../models/dbuser";
+
+interface IReply
+{
+    channelId: string,
+    userId: string,
+    resolve: (message: IMessage) => void;
+    reject: (err: any) => void;
+}
 
 export class Bot extends Container
 {
     public static instance: Bot;
+    private replies: IReply[];
 
     public constructor(containerOptions?: interfaces.ContainerOptions)
     {
         super(containerOptions);
 
         Bot.instance = this;
+        this.replies = [];
     }
 
     public async startup()
@@ -30,11 +42,9 @@ export class Bot extends Container
         // Start up all the core services required for the modules
         for (const type of [
             DatabaseManager,
-            CommandManager,
             AccessManager,
             CronManager,
             TemplateManager,
-            ModuleManager,
             DiscordAPI
         ]) {
             logManager.log("Starting up", type.name);
@@ -46,30 +56,30 @@ export class Bot extends Container
         }
 
         const modules = Modules as { [key: string]: any };
-        const moduleRepository = this.get(DatabaseManager).getRepository(DBModule);
 
         // Start up all the modules
         for (const moduleName in modules) {
-            logManager.log("Starting up module", moduleName);
+            const name = modules[moduleName]._moduleName.toLowerCase().trim();
+            logManager.log("Starting up module", modules[moduleName]._moduleName);
 
-            this.bind(moduleName.toLowerCase().trim()).to(modules[moduleName] as new() => IModule).inSingletonScope();
+            this.bind(name).to(modules[moduleName] as new() => IModule).inSingletonScope();
 
-            const mod: IModule = this.get(moduleName.toLowerCase().trim());
+            const mod: IModule = this.get(name);
 
             if (mod.disabled) {
                 continue;
             }
 
             mod._bot = this;
-            await mod.onSetup();
+            await mod.onStartup();
 
-            let databaseModule = await moduleRepository.findOne({
-                name: moduleName.toLowerCase().trim()
+            let databaseModule = await DBModule.findOne({
+                name
             }) || null;
 
             if (!databaseModule) {
                 databaseModule = new DBModule();
-                databaseModule.name = moduleName.toLowerCase().trim();
+                databaseModule.name = name;
                 await this.get(DatabaseManager).save(databaseModule);
             }
         }
@@ -77,6 +87,24 @@ export class Bot extends Container
         logManager.log("Sempaibot successfully started");
 
         return true;
+    }
+
+    public async handleMiscMessage(message: IMessage)
+    {
+        for (const reply of this.replies)
+        {
+            if (reply.userId !== message.user.id) {
+                continue;
+            }
+
+            if (reply.channelId !== message.channel.id) {
+                continue;
+            }
+
+            reply.resolve(message);
+            this.replies = this.replies.filter(x => x !== reply);
+            break;
+        }
     }
 
     public async handleMessage(message: IMessage)
@@ -87,7 +115,7 @@ export class Bot extends Container
         let handled = false;
 
         for (const key in modules) {
-            const module = this.get<IModule>(key.toLowerCase().trim());
+            const module = this.get<IModule>(modules[key]._moduleName.toLowerCase().trim());
 
             if (module.disabled) {
                 continue;
@@ -126,20 +154,30 @@ export class Bot extends Container
         let ret = [];
 
         for (const moduleName in modules) {
-            ret.push(moduleName.toLowerCase().trim());
+            ret.push(modules[moduleName]._moduleName.toLowerCase().trim());
         }
 
         return ret;
+    }
+
+    public onReplyFrom(channel: Channel, user: DBUser): Promise<IMessage>
+    {
+        return new Promise((resolve, reject) => {
+            this.replies.push({
+                channelId: channel.id,
+                userId: user.id,
+                resolve,
+                reject
+            });
+        });
     }
 
     private startupManagers()
     {
         this.bind(LogManager).toSelf().inSingletonScope();
         this.bind(DatabaseManager).toSelf().inSingletonScope();
-        this.bind(CommandManager).toSelf().inSingletonScope();
         this.bind(AccessManager).toSelf().inSingletonScope();
         this.bind(CronManager).toSelf().inSingletonScope();
         this.bind(TemplateManager).toSelf().inSingletonScope();
-        this.bind(ModuleManager).toSelf().inSingletonScope();
     }
 }
