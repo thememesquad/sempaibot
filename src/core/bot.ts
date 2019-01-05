@@ -109,7 +109,7 @@ export class Bot extends Container
 
     public async handleMessage(message: IMessage)
     {
-        const split = message.content.split(" ");
+        let split = message.content.split(" ");
         const modules = Modules as { [key: string]: any };
         let tmp = [];
         let handled = false;
@@ -135,6 +135,7 @@ export class Bot extends Container
             return;
         }
 
+        split = split.filter(x => x.trim().length > 0);
         if (split.length === 0) {
             await this.get(DiscordAPI).respond(message, this.get(TemplateManager).get(TemplateMessageID.SempaiCalled, {
                 author: message.author.id,

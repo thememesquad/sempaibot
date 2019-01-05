@@ -1,6 +1,6 @@
 //----- Config
 module.exports = {
-    identifiers: ["~"],
+    identifiers: ["s!"],
 
     discord: {
         token: "bot_account_login_token",

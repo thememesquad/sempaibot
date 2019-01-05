@@ -4,24 +4,11 @@ export enum TemplateMessageID {
     SempaiHomeChannelChanged,
     SempaiHomeChannelDeleted,
 
-    CurrentUserRole,
-    CurrentUserPermissions,
-
-    ModuleEnabled,
-    ModuleDisabled,
-
-    ListModules,
-    ListRoles,
-    ListPermissions,
     ListIgnores,
     ListServers,
 
-    RoleAssignedToUser,
     StartedIgnoringUser,
     StoppedIgnoringUser,
-
-    AddedPermissionToRole,
-    RemovedPermissionFromRole,
 
     ServerBlacklisted,
     ServerWhitelisted,
@@ -38,23 +25,16 @@ export enum TemplateMessageID {
     UnknownCommand,
     PermissionDenied,
 
-    ModuleAlreadyEnabled,
-    ModuleAlreadyDisabled,
-    ModuleCannotBeDisabled,
-
     ServerAlreadyBlacklisted,
     ServerNotBlacklisted,
 
     InvalidModule,
     InvalidUser,
-    InvalidRole,
     InvalidChannel,
     InvalidServer,
 
     IgnoreListEmpty,
 
-    RoleAlreadyAssignedToUser,
-
-    PleaseHelp,
-    Help
+    Help,
+    HelpDescription
 }

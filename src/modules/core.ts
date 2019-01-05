@@ -9,6 +9,7 @@ import { TemplateMessageID } from "../core/itemplatemessageid";
 import { DiscordAPI } from "../api/discord";
 import { identifiers } from "../../config";
 import { RichEmbed } from "discord.js";
+import { constants } from "../core/constants";
 
 @Module("Core", "This is the core module", ModuleOptions.AlwaysOn)
 @injectable()
@@ -17,21 +18,36 @@ export class CoreModule extends IModule
     @Command("help", CommandOptions.HideInHelp | CommandOptions.Global)
     private async handleHelp(message: IMessage)
     {
+        const moduleMapping: { [key: string]: string } = {
+            "core": "Core",
+            "admin": "Administration",
+            "event": "Planning"
+        };
+
+        const categories: { [key: string]: string } = {
+            "Core": "🤖",
+            "Planning": "📅",
+            "Administration": "🗃"
+        };
+
         let response: RichEmbed = new RichEmbed();
-        response.setDescription(this._bot.get(TemplateManager).get(TemplateMessageID.Help, {
+        response.setThumbnail(constants.IMAGE);
+        response.setTitle(this._bot.get(TemplateManager).get(TemplateMessageID.Help, {
+            name: constants.NAME,
             author: message.author.id
         }));
 
+        response.setDescription(this._bot.get(TemplateManager).get(TemplateMessageID.HelpDescription, {
+            name: constants.NAME,
+            identifier: identifiers[0],
+            author: message.author.id
+        }))
+
         const role = await message.user.getRole(message.server);
-        let modules = [];
 
         for (const key of this._bot.modules) {
             const module: IModule = this._bot.get(key);
             const enabled = module.alwaysOn ? true : (message.server === null) ? false : await message.server.isModuleEnabled(module.name);
-
-            if (enabled) {
-                modules.push(module.name);
-            }
 
             let hasNonHidden = false;
             let tmp = "";
@@ -62,12 +78,10 @@ export class CoreModule extends IModule
                 continue;
             }
 
-            response.addField(module.name, tmp);
-            // response.addBlankField();
-        }
+            const moduleName = moduleMapping[module.name.trim().toLowerCase()];
+            const icon = categories[moduleName];
 
-        if (message.server !== null) {
-            response.addField("Enabled Modules", modules.join(", "));
+            response.addField(`${icon} > __${moduleName}__`, tmp);
         }
 
         this._bot.get(DiscordAPI).respond(message, response).catch((err) => {
@@ -75,43 +89,24 @@ export class CoreModule extends IModule
         });
     }
 
-    // @Command("set response mode to {responsetype!type}")
-    // @Command("use {responsetype!type}")
-    // @Command("use {responsetype!type} mode")
-    // @CommandDescription("Change my personality to Normal or Tsundere")
-    // @CommandSample("set response mode to __*tsundere*__")
-    // @CommandPermission("CHANGE_PERSONALITY")
-    // private handleResponseMode(message: IMessage, type: string)
+    // @Command("use {channelid!channel} <for {category}>")
+    // @CommandDescription("Tells me to output to the specified channel.")
+    // @CommandSample("use {#channel}")
+    // @CommandPermission("SERVERADMIN")
+    // private handleGotoChannel(message: IMessage, channel: string, category: string = null)
     // {
-    //     if (type === null) {
-    //         //unknown response mode
+    //     if (message.guild.channels.get(channel) === null) {
+    //         return this._bot.get(DiscordAPI).respond(message, this._bot.get(TemplateManager).get(TemplateMessageID.InvalidChannel, {
+    //             author: message.author.id,
+    //             channel: channel
+    //         }));
     //     }
 
-    //     // if (Responses.currentMode === args.type)
-    //     //     return this._bot.respond(message, StringFormat(Responses.get("ALREADY_IN_MODE"), { author: message.author.id }));
+    //     message.server.setChannel(channel, category);
 
-    //     // Responses.setMode(args.type);
-    //     // this._bot.respond(message, StringFormat(Responses.get("SWITCHED"), { author: message.author.id }));
+    //     this._bot.get(DiscordAPI).message(this._bot.get(TemplateManager).get(TemplateMessageID.SempaiHomeChannelChanged, {
+    //         author: message.author.id,
+    //         channel: channel,
+    //     }), message.server);
     // }
-
-    @Command("use {channelid!channel} <for {category}>")
-    @CommandDescription("Tells me to output to the specified channel.")
-    @CommandSample("use __#channel__")
-    @CommandPermission("SERVERADMIN")
-    private handleGotoChannel(message: IMessage, channel: string, category: string = null)
-    {
-        if (message.guild.channels.get(channel) === null) {
-            return this._bot.get(DiscordAPI).respond(message, this._bot.get(TemplateManager).get(TemplateMessageID.InvalidChannel, {
-                author: message.author.id,
-                channel: channel
-            }));
-        }
-
-        message.server.setChannel(channel, category);
-
-        this._bot.get(DiscordAPI).message(this._bot.get(TemplateManager).get(TemplateMessageID.SempaiHomeChannelChanged, {
-            author: message.author.id,
-            channel: channel,
-        }), message.server);
-    }
 }

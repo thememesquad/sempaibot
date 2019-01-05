@@ -51,10 +51,6 @@ export class DiscordAPI
     @inject(DatabaseManager)
     protected _databaseManager!: DatabaseManager;
 
-    constructor()
-    {
-    }
-
     /**
      * Initializes the Discord connection and sets up some callbacks
      */
@@ -87,21 +83,10 @@ export class DiscordAPI
         return true;
     }
 
-    public async message(message: MessageContent | MessageContent[], databaseServer: DBServer): Promise<IMessage | IMessage[]>
+    public async message(message: MessageContent, databaseServer: DBServer): Promise<IMessage>
     {
         if (message === null) {
             return null;
-        }
-
-        if (Array.isArray(message)) {
-            let ids = [];
-
-            for (const msg of message) {
-                ids.push(this.message(msg, databaseServer));
-            }
-
-            ids = await Promise.all(ids);
-            return ids as IMessage[];
         }
 
         if (typeof message === "string") {
@@ -161,21 +146,10 @@ export class DiscordAPI
         return newMessage;
     }
 
-    public async respond(m: IMessage, message: MessageContent | MessageContent[]): Promise<IMessage | IMessage[]>
+    public async respond(m: IMessage, message: MessageContent): Promise<IMessage>
     {
         if (message === null) {
             return null;
-        }
-
-        if (Array.isArray(message)) {
-            let ids = [];
-
-            for (const msg of message) {
-                ids.push(this.respond(m, msg));
-            }
-
-            ids = await Promise.all(ids);
-            return ids as IMessage[];
         }
 
         if (typeof message === "string") {
@@ -208,8 +182,7 @@ export class DiscordAPI
             message = "";
         }
 
-        const newMessage = await actualChannel.send(message, options) as IMessage;
-
+        let newMessage: IMessage = await actualChannel.send(message, options) as IMessage;
         newMessage.track = this.onTrackMessage.bind(this, newMessage);
 
         return newMessage;
@@ -474,11 +447,7 @@ export class DiscordAPI
 
         message.content = message.content.trim().substr(usedIdentifier!.length).replace(/\s+/g, " ").trim();
 
-        const replyPromise = this.respond(message, Config.processingMessage);
         await Bot.instance.handleMessage(message);
-
-        const reply = await replyPromise as IMessage;
-        await reply.delete();
     }
 
     public async onMessageReactionAdd(reaction: MessageReaction, user: DiscordUser)

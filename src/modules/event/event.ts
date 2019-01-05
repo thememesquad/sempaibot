@@ -17,7 +17,7 @@ import { EventMessageID } from "./eventmessageid";
 export class EventModule extends IModule
 {
     @Command("start event {eventName}")
-    @CommandSample("start event __event name__")
+    @CommandSample("start event {event name}")
     @CommandDescription("Starts a new event")
     public async onNewEventStart(message: IMessage, eventName: string)
     {
@@ -100,7 +100,7 @@ export class EventModule extends IModule
     }
 
     @Command("show event {int!id}")
-    @CommandSample("show event __event id__")
+    @CommandSample("show event {event id}")
     @CommandDescription("Displays the info for that event again")
     public async onShowEvent(message: IMessage, id: number)
     {

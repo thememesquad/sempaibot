@@ -24,7 +24,7 @@ export function CreateRegex(format: string): IRegex {
                     if (i === tmp.length - 1)
                         regex += `${tmp[i]}\\s*`;
                     else
-                        regex += `${tmp[i]}\\s*`;
+                        regex += `${tmp[i]}\\s+`;
                 }
             }
 
@@ -36,12 +36,18 @@ export function CreateRegex(format: string): IRegex {
 
         if (tmp !== null) {
             for (const t of tmp) {
-                regex += `${t}\\s*`;
+                regex += `${t}\\s+`;
             }
         }
 
-        regex += "(.*?)\\s*";
+        regex += "(.*?)\\s";
         format = format.substr(split[0].length).trim();
+
+        if (format.trim().length === 0) {
+            regex += "*";
+        } else {
+            regex += "+";
+        }
 
         vars[variable] = ++num;
     }

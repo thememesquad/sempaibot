@@ -27,34 +27,6 @@ template[TemplateMessageID.SempaiHomeChannelDeleted] = [
     "You... deleted? My home channel? My home? Why...? So am I-... am I homeless now? A homeless bot? Or are you going to give me a new home? (use the command \"~use #channel\")",
 ];
 
-template[TemplateMessageID.CurrentUserRole] = [
-    "Your role is {role}.",
-];
-
-template[TemplateMessageID.CurrentUserPermissions] = [
-    "Your permissions are:",
-];
-
-template[TemplateMessageID.ModuleEnabled] = [
-    "{module} module is now enabled!",
-];
-
-template[TemplateMessageID.ModuleDisabled] = [
-    "{module} module is now disabled.",
-];
-
-template[TemplateMessageID.ListModules] = [
-    "List of modules:",
-];
-
-template[TemplateMessageID.ListRoles] = [
-    "List of roles:",
-];
-
-template[TemplateMessageID.ListPermissions] = [
-    "List of permissions:",
-];
-
 template[TemplateMessageID.ListIgnores] = [
     "Ignore list:{list}",
 ];
@@ -63,24 +35,12 @@ template[TemplateMessageID.ListServers] = [
     "Sempai is currently running on:",
 ];
 
-template[TemplateMessageID.RoleAssignedToUser] = [
-    "Assigned {role} to <@{user}>.",
-];
-
 template[TemplateMessageID.StartedIgnoringUser] = [
     "Got it! I'll ignore <@{user}> from now on!",
 ];
 
 template[TemplateMessageID.StoppedIgnoringUser] = [
     "Alright, I'll stop ignoring <@{user}>.",
-];
-
-template[TemplateMessageID.AddedPermissionToRole] = [
-    "Added permission {permission} to {role}.",
-];
-
-template[TemplateMessageID.RemovedPermissionFromRole] = [
-    "Removed permission {permission} from {role}.",
 ];
 
 template[TemplateMessageID.ServerBlacklisted] = [
@@ -96,11 +56,11 @@ template[TemplateMessageID.ServerBlacklist] = [
 ];
 
 template[TemplateMessageID.InformServerBlacklisted] = [
-    "I hate to be the bearer of bad news, but it turns out that I have to start ignoring this server. This server has just been blacklisted. :frowning:",
+    "I hate to be the bearer of bad news, but it turns out that I have to start ignoring this server. This server has just been blacklisted. 😦",
 ];
 
 template[TemplateMessageID.InformServerWhitelisted] = [
-    "Good news everybody! This server has just been removed from my blacklist which means I'm open to any conversation you guys want to have with me on this server! :smiley:",
+    "Good news everybody! This server has just been removed from my blacklist which means I'm open to any conversation you guys want to have with me on this server! 😃",
 ];
 
 template[TemplateMessageID.UserBlacklisted] = [
@@ -128,18 +88,6 @@ template[TemplateMessageID.PermissionDenied] = [
     "You don't have permission to do that.",
 ];
 
-template[TemplateMessageID.ModuleAlreadyEnabled] = [
-    "That module is already enabled!",
-];
-
-template[TemplateMessageID.ModuleAlreadyDisabled] = [
-    "That module is already disabled!",
-];
-
-template[TemplateMessageID.ModuleCannotBeDisabled] = [
-    "The {module} module can't be disabled.",
-];
-
 template[TemplateMessageID.ServerAlreadyBlacklisted] = [
     "{server_name} is already blacklisted!",
 ];
@@ -148,16 +96,8 @@ template[TemplateMessageID.ServerNotBlacklisted] = [
     "{server_name} is not blacklisted!",
 ];
 
-template[TemplateMessageID.InvalidModule] = [
-    "That's not a valid module name.",
-];
-
 template[TemplateMessageID.InvalidUser] = [
     "That user doesn't exist!",
-];
-
-template[TemplateMessageID.InvalidRole] = [
-    "That's not a valid role!",
 ];
 
 template[TemplateMessageID.InvalidChannel] = [
@@ -172,16 +112,12 @@ template[TemplateMessageID.IgnoreListEmpty] = [
     "I'm not ignoring anyone right now!",
 ];
 
-template[TemplateMessageID.RoleAlreadyAssignedToUser] = [
-    "Already assigned {role} to <@{user}>.",
-];
-
-template[TemplateMessageID.PleaseHelp] = [
-    "This is the current list of commands"
-];
-
 template[TemplateMessageID.Help] = [
-    "This is the current list of commands"
+    "{name}'s commands list"
+];
+
+template[TemplateMessageID.HelpDescription] = [
+    "{name} responds to the identifier ``{identifier}``\r\nFor example: ``{identifier}help``"
 ];
 
 export class DefaultTemplate extends ITemplate {

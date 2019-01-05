@@ -8,7 +8,7 @@ export function Module(name: string, description: string, options: ModuleOptions
         return class extends constructor {
             public _name = name;
             public _description = description;
-            public _alwaysOn = alwaysOn;
+            public _alwaysOn = alwaysOn || true;
             public _defaultOn = defaultOn;
 
             public static _moduleName = name;
