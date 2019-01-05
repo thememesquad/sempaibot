@@ -14,6 +14,7 @@ import { IModule } from "../core/imodule";
 import { DBTrackedMessage } from "../models/dbtrackedmessage";
 import { DBModule } from "../models/dbmodule";
 import { DBTrackedReaction } from "../models/dbtrackedreaction";
+import { constants } from "../core/constants";
 
 export type MessageContent = string | RichEmbed | RichEmbedOptions;
 export const REACTION_TO_DISCORD = {
@@ -103,6 +104,26 @@ export class DiscordAPI
             return ids as IMessage[];
         }
 
+        if (typeof message === "string") {
+            const embed = new RichEmbed();
+            embed.setDescription(message);
+
+            message = embed;
+        }
+
+        if (message.footer) {
+            message.footer.icon_url = constants.IMAGE;
+            message.footer.text = constants.NAME + " - " + constants.VERSION + " - " + message.footer.text;
+        } else {
+            message.footer = {};
+            message.footer.icon_url = constants.IMAGE;
+            message.footer.text = constants.NAME + " " + constants.VERSION;
+        }
+
+        if (!message.color) {
+            message.color = constants.COLOR;
+        }
+
         let guild = this._discord.guilds.find((guild: Guild) => guild.id == databaseServer.id);
 
         if (!guild) {
@@ -156,6 +177,28 @@ export class DiscordAPI
             ids = await Promise.all(ids);
             return ids as IMessage[];
         }
+
+        if (typeof message === "string") {
+            const embed = new RichEmbed();
+            embed.setDescription(message);
+
+            message = embed;
+        }
+
+        if (message.footer) {
+            message.footer.icon_url = constants.IMAGE;
+            message.footer.text = constants.NAME + " " + constants.VERSION + " - " + message.footer.text;
+        } else {
+            message.footer = {};
+            message.footer.icon_url = constants.IMAGE;
+            message.footer.text = constants.NAME + " " + constants.VERSION;
+        }
+
+        if (!message.color) {
+            message.color = constants.COLOR;
+        }
+
+        message.footer.text += ` - Responding to ${m.user.getName(m.server)}`;
 
         const actualChannel: TextChannel = m.channel as TextChannel;
         const options: MessageOptions = {};

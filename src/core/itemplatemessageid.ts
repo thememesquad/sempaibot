@@ -55,9 +55,6 @@ export enum TemplateMessageID {
 
     RoleAlreadyAssignedToUser,
 
-    PleaseHelpTop,
-    HelpTop,
-
-    PleaseHelpBottom,
-    HelpBottom
+    PleaseHelp,
+    Help
 }

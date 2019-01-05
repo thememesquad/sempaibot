@@ -176,20 +176,12 @@ template[TemplateMessageID.RoleAlreadyAssignedToUser] = [
     "Already assigned {role} to <@{user}>.",
 ];
 
-template[TemplateMessageID.PleaseHelpTop] = [
-    "This is the current list of commands:\r\n"
+template[TemplateMessageID.PleaseHelp] = [
+    "This is the current list of commands"
 ];
 
-template[TemplateMessageID.HelpTop] = [
-    "This is the current list of commands:\r\n"
-];
-
-template[TemplateMessageID.PleaseHelpBottom] = [
-    "You could also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work."
-];
-
-template[TemplateMessageID.HelpBottom] = [
-    "You could also prefix the commands with - instead of sempai:\r\n**\"-remind me to ....\"** and **\"sempai remind me to ....\"** both work."
+template[TemplateMessageID.Help] = [
+    "This is the current list of commands"
 ];
 
 export class DefaultTemplate extends ITemplate {

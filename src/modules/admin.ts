@@ -9,22 +9,18 @@ import { injectable } from "inversify";
 import { DiscordAPI } from "../api/discord";
 import { TemplateManager } from "../core/managers";
 import { TemplateMessageID } from "../core/itemplatemessageid";
-import { generateTable } from "../utils";
 import { DBServer } from "../models/dbserver";
 import * as Modules from "../modules";
+import { RichEmbed } from "discord.js";
 
 @RegisterRight("SUPERADMIN", RoleType.SuperAdmin)
-@RegisterRight("IGNORE_USERS", RoleType.Moderator)
-@RegisterRight("GO_TO_CHANNEL", RoleType.Moderator)
-@RegisterRight("MANAGE_MODULES", RoleType.Admin)
-@RegisterRight("MANAGE_PERMISSIONS", RoleType.Admin)
-@RegisterRight("ASSIGN_ROLES", RoleType.Admin)
+@RegisterRight("SERVERADMIN", RoleType.Admin)
 @Module("Admin", "This is the admin module.", ModuleOptions.AlwaysOn)
 @injectable()
 export class AdminModule extends IModule
 {
     @Command("blacklist server {server}", CommandOptions.Global)
-    @CommandSample("blacklist server __*server*__")
+    @CommandSample("blacklist server __server__")
     @CommandDescription("Blacklists a server.")
     @CommandPermission("SUPERADMIN")
     private handleServerBlacklist(message: IMessage, args: { [key: string]: any }): void
@@ -57,7 +53,7 @@ export class AdminModule extends IModule
     }
 
     @Command("whitelist server {server}", CommandOptions.Global)
-    @CommandSample("whitelist server __*server*__")
+    @CommandSample("whitelist server __server__")
     @CommandDescription("Whitelists a server.")
     @CommandPermission("SUPERADMIN")
     private handleServerWhitelist(message: IMessage, args: { [key: string]: any })
@@ -84,7 +80,7 @@ export class AdminModule extends IModule
     }
 
     @Command("blacklist user {userid!user}", CommandOptions.Global)
-    @CommandSample("blacklist user __*@user*__")
+    @CommandSample("blacklist user __@user__")
     @CommandDescription("Blacklists an user.")
     @CommandPermission("SUPERADMIN")
     private handleUserBlacklist(message: IMessage, args: { [key: string]: any })
@@ -104,7 +100,7 @@ export class AdminModule extends IModule
     }
 
     @Command("whitelist user {userid!user}", CommandOptions.Global)
-    @CommandSample("whitelist user __*@user*__")
+    @CommandSample("whitelist user __@user__")
     @CommandDescription("Whitelists an user.")
     @CommandPermission("SUPERADMIN")
     private handleUserWhitelist(message: IMessage, args: { [key: string]: any })
@@ -123,8 +119,8 @@ export class AdminModule extends IModule
         // }));
     }
 
-    @Command("show user blacklist", CommandOptions.Global)
-    @CommandSample("show user blacklist")
+    @Command("user blacklist", CommandOptions.Global)
+    @CommandSample("user blacklist")
     @CommandDescription("Displays the user blacklist")
     @CommandPermission("SUPERADMIN")
     private handleShowUserBlacklist(message: IMessage, args: { [key: string]: any })
@@ -175,8 +171,8 @@ export class AdminModule extends IModule
         // }));
     }
 
-    @Command("show server blacklist", CommandOptions.Global)
-    @CommandSample("show server blacklist")
+    @Command("server blacklist", CommandOptions.Global)
+    @CommandSample("server blacklist")
     @CommandDescription("Displays the server blacklist")
     @CommandPermission("SUPERADMIN")
     private handleShowServerBlacklist(message: IMessage, args: { [key: string]: any })
@@ -233,9 +229,8 @@ export class AdminModule extends IModule
         // }));
     }
 
-    @Command("list servers", CommandOptions.Global)
-    @Command("show servers")
-    @CommandSample("list servers")
+    @Command("servers", CommandOptions.Global)
+    @CommandSample("servers")
     @CommandDescription("Lists all the servers I'm currently running on.")
     @CommandPermission("SUPERADMIN")
     private async handleListServers(message: IMessage)
@@ -256,24 +251,27 @@ export class AdminModule extends IModule
             }
 
             data.push({
-                id: "#" + info.id + ".",
+                id: info.id,
                 name: info.name,
                 owner: info.owner.nickname || info.owner.user.username,
             });
         }
 
-        const messages = generateTable(this._bot.get(TemplateManager).get(TemplateMessageID.ListServers, {
+        const embed = new RichEmbed();
+        embed.setDescription(this._bot.get(TemplateManager).get(TemplateMessageID.ListServers, {
             author: message.author.id,
-        }), { id: "ID", name: "Name", owner: "Owner" }, data);
+        }));
+        embed.addField("ID", data.map(x => x.id).join("\r\n"), true);
+        embed.addField("Name", data.map(x => x.name).join("\r\n"), true);
+        embed.addField("Owner", data.map(x => x.owner).join("\r\n"), true);
 
-        discord.respond(message, messages);
+        discord.respond(message, embed);
     }
 
     @Command("enable {moduleName}")
-    @Command("enable module {moduleName}")
-    @CommandSample("enable __*module name*__")
+    @CommandSample("enable __module name__")
     @CommandDescription("Enables a module for this server.")
-    @CommandPermission("MANAGE_MODULES")
+    @CommandPermission("SERVERADMIN")
     private async handleEnableModule(message: IMessage, moduleName: string)
     {
         const moduleInternalName = moduleName.toLowerCase().trim();
@@ -303,10 +301,9 @@ export class AdminModule extends IModule
     }
 
     @Command("disable {moduleName}")
-    @Command("disable module {moduleName}")
-    @CommandSample("disable __*module name*__")
+    @CommandSample("disable __module name__")
     @CommandDescription("Disables a module for this server.")
-    @CommandPermission("MANAGE_MODULES")
+    @CommandPermission("SERVERADMIN")
     private async handleDisableModule(message: IMessage, moduleName: string)
     {
         const moduleInternalName = moduleName.toLowerCase().trim();
@@ -343,11 +340,10 @@ export class AdminModule extends IModule
         }));
     }
 
-    @Command("list modules")
-    @Command("show modules")
-    @CommandSample("list modules")
+    @Command("modules")
+    @CommandSample("modules")
     @CommandDescription("Lists all available modules.")
-    @CommandPermission("MANAGE_MODULES")
+    @CommandPermission("SERVERADMIN")
     private async handleListModules(message: IMessage)
     {
         const modules = Modules as { [key: string]: any };
@@ -372,179 +368,14 @@ export class AdminModule extends IModule
             data.push({ name: modules[key]._moduleName, enabled: (enabled) ? "yes" : "no", flags });
         }
 
-        const messages = generateTable(this._bot.get(TemplateManager).get(TemplateMessageID.ListModules, {
+        const embed = new RichEmbed();
+        embed.setDescription(this._bot.get(TemplateManager).get(TemplateMessageID.ListModules, {
             author: message.author.id,
-        }), columns, data, { name: 20, enabled: 10, flags: 15 });
+        }));
+        embed.addField("Name", data.map(x => x.name).join("\r\n"), true);
+        embed.addField("Enabled", data.map(x => x.enabled).join("\r\n"), true);
+        embed.addField("Flags", data.map(x => x.flags).join("\r\n"), true);
 
-        this._bot.get(DiscordAPI).respond(message, messages);
+        this._bot.get(DiscordAPI).respond(message, embed);
     }
-
-    @Command("assign role {roletype!role} to user {userid!user}")
-    @Command("assign {roletype!role} to user {userid!user}")
-    @Command("assign role {roletype!role} to {userid!user}")
-    @Command("assign {roletype!role} to {userid!user}")
-    @Command("assign {roletype!role} {userid!user}")
-    @CommandSample("assign __*role*__ to __*@user*__")
-    @CommandDescription("Assigns the specified role to the specified user.")
-    @CommandPermission("ASSIGN_ROLES")
-    private handleAssignRole(message: IMessage, args: { [key: string]: any })
-    {
-        // if (args.role === RoleType.SuperAdmin)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
-        //         author: message.author.id,
-        //         role: args.role,
-        //     }));
-
-        // const myRole = message.user.getRole(message.server);
-        // if (args.role < myRole)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-        //         author: message.author.id,
-        //     }));
-
-        // const user = UserManager.instance.getUser(args.user, message.server);
-        // if (user === null)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
-        //         author: message.author.id,
-        //         user: args.user,
-        //     }));
-
-        // if (user.getRole(message.server) === args.role)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.RoleAlreadyAssignedToUser, {
-        //         author: message.author.id,
-        //         role: args.role,
-        //         user: args.user,
-        //     }));
-
-        // if (!UserManager.instance.assignRole(user.getUserID(), message.server, args.role))
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.UnknownError, {
-        //         author: message.author.id,
-        //     }));
-
-        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.RoleAssignedToUser, {
-        //     author: message.author.id,
-        //     role: args.role,
-        //     user: args.user,
-        // }));
-    }
-
-    @Command("add permission {permission} to role {roletype!role}")
-    @Command("add {permission} to role {roletype!role}")
-    @Command("add permission {permission} to {roletype!role}")
-    @Command("add {permission} {roletype!role}")
-    @CommandSample("add __*permission*__ to __*role*__")
-    @CommandDescription("Adds the specified permission to the specified role.")
-    @CommandPermission("MANAGE_PERMISSIONS")
-    private handleAddPermission(message: IMessage, args: { [key: string]: any })
-    {
-        // args.permission = args.permission.toUpperCase();
-        // if (args.role === RoleType.SuperAdmin)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
-        //         author: message.author.id,
-        //         role: args.role,
-        //     }));
-
-        // const myRole = message.user.getRole(message.server);
-        // if (args.role < myRole)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-        //         author: message.author.id,
-        //     }));
-
-        // if (!PermissionManager.instance.isAllowed(args.permission, message.user.getRole(message.server), message.server))
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-        //         author: message.author.id,
-        //     }));
-
-        // PermissionManager.instance.add(args.permission, args.role, message.server);
-        // this._bot.respond(message, PersonalityManager.instance.get(MessageID.AddedPermissionToRole, {
-        //     author: message.author.id,
-        //     permission: args.permission,
-        //     role: args.role,
-        // }));
-    }
-
-    @Command("remove permission {permission} from role {roletype!role}")
-    @Command("remove {permission} from role {roletype!role}")
-    @Command("remove permission {permission} from {roletype!role}")
-    @Command("remove {permission} {roletype!role}")
-    @CommandSample("remove __*permission*__ from __*role*__")
-    @CommandDescription("Removes the specified permission from the specified role.")
-    @CommandPermission("MANAGE_PERMISSIONS")
-    private handleRemovePermission(message: IMessage, args: { [key: string]: any })
-    {
-        // args.permission = args.permission.toUpperCase();
-        // if (args.role === RoleType.SuperAdmin)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidRole, {
-        //         author: message.author.id,
-        //         role: args.role,
-        //     }));
-
-        // const myRole = message.user.getRole(message.server);
-        // if (args.role < myRole)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-        //         author: message.author.id,
-        //     }));
-
-        // if (!PermissionManager.instance.isAllowed(args.permission, message.user.getRole(message.server), message.server))
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-        //         author: message.author.id,
-        //     }));
-
-        // PermissionManager.instance.remove(args.permission, args.role, message.server);
-        // this._bot.respond(message, PersonalityManager.instance.get(MessageID.RemovedPermissionFromRole, {
-        //     author: message.author.id,
-        //     permission: args.permission,
-        //     role: args.role,
-        // }));
-    }
-
-    @Command("ignore {userid!user}")
-    @Command("start ignoring {userid!user}")
-    @CommandSample("ignore __*@user*__")
-    @CommandDescription("Ignores the specified user.")
-    @CommandPermission("IGNORE_USERS")
-    private handleIgnoreUser(message: IMessage, args: { [key: string]: any })
-    {
-        // const user = UserManager.instance.getUserById(args.user, message.server);
-        // if (user === null)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
-        //         author: message.author.id,
-        //         user: args.user,
-        //     }));
-
-        // if (message.user.getRole(message.server) >= user.getRole(message.server))
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, { author: message.author.id }));
-
-        // message.server.ignoreUser(user);
-        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.StartedIgnoringUser, { author: message.author.id, user: user.getUserID() }));
-    }
-
-    @Command("unignore {userid!user}")
-    @Command("stop ignoring {userid!user}")
-    @CommandSample("unignore __*@user*__")
-    @CommandDescription("Stops ignoring the specified user.")
-    @CommandPermission("IGNORE_USERS")
-    private handleUnignoreUser(message: IMessage, args: { [key: string]: any })
-    {
-        // const user = UserManager.instance.getUserById(args.user, message.server);
-        // if (user === null)
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.InvalidUser, {
-        //         author: message.author.id,
-        //         user: args.user,
-        //     }));
-
-        // if (message.user.getRole(message.server) >= user.getRole(message.server))
-        //     return this._bot.respond(message, PersonalityManager.instance.get(MessageID.PermissionDenied, {
-        //         author: message.author.id,
-        //     }));
-
-        // message.server.unignoreUser(user);
-        // return this._bot.respond(message, PersonalityManager.instance.get(MessageID.StoppedIgnoringUser, {
-        //     author: message.author.id,
-        //     user: user.getUserID(),
-        // }));
-    }
-
-    // @Command("clean up< all> my messages< from {timeframe}>")
-    // @CommandSample("clean up all my messages")
-    // @CommandDescription("Clean's up the ")
 }

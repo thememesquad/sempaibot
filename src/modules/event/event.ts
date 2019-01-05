@@ -11,14 +11,13 @@ import { DBUser } from "../../models/dbuser";
 import { DBEvent } from "./models/dbevent";
 import { EventDefaultTemplate } from "./templates/eventdefault";
 import { EventMessageID } from "./eventmessageid";
-import { generateTable } from "../../utils";
 
 @Module("Event", "This is the event module.")
 @injectable()
 export class EventModule extends IModule
 {
-    @Command("start< new> event {eventName}")
-    @CommandSample("start event __*EventName*__")
+    @Command("start event {eventName}")
+    @CommandSample("start event __event name__")
     public async onNewEventStart(message: IMessage, eventName: string)
     {
         const newMessage: IMessage = await this._bot.get(DiscordAPI).respond(
@@ -68,12 +67,32 @@ export class EventModule extends IModule
             });
         }
 
-        const response = generateTable(this._bot.get(TemplateManager).getExtended("event", EventMessageID.ListEvents), {
-            "id": "ID",
-            "name": "Name",
-            "location": "Location",
-            "date": "When"
-        }, data);
+        const response = new RichEmbed();
+
+        if (data.length === 0) {
+            response.setDescription("No events found!");
+        } else {
+            const id = data.map(x => x.id).join("\r\n");
+            const name = data.map(x => x.name).join("\r\n");
+            const location = data.map(x => x.location).join("\r\n");
+            const when = data.map(x => x.date).join("\r\n");
+
+            if (id.trim().length > 0) {
+                response.addField("ID", id, true);
+            }
+
+            if (name.trim().length > 0) {
+                response.addField("Name", name, true);
+            }
+
+            if (location.trim().length > 0) {
+                response.addField("Location", location, true);
+            }
+
+            if (when.trim().length > 0) {
+                response.addField("When", when, true);
+            }
+        }
 
         this._bot.get(DiscordAPI).respond(message, response);
     }
