@@ -2,7 +2,7 @@ import { Module } from "../../core/attributes/module";
 import { injectable } from "inversify";
 import { IModule } from "../../core/imodule";
 import { IMessage } from "../../core/imessage";
-import { Command, CommandSample } from "../../core/command";
+import { Command, CommandSample, CommandDescription } from "../../core/command";
 import { RichEmbed } from "discord.js";
 import { DiscordAPI } from "../../api/discord";
 import { TemplateManager } from "../../core/managers";
@@ -18,6 +18,7 @@ export class EventModule extends IModule
 {
     @Command("start event {eventName}")
     @CommandSample("start event __event name__")
+    @CommandDescription("Starts a new event")
     public async onNewEventStart(message: IMessage, eventName: string)
     {
         const newMessage: IMessage = await this._bot.get(DiscordAPI).respond(
@@ -53,6 +54,7 @@ export class EventModule extends IModule
 
     @Command("list events")
     @CommandSample("list events")
+    @CommandDescription("List all currently active events")
     public async onListEvents(message: IMessage)
     {
         const data: { [key: string]: string }[] = [];
@@ -98,7 +100,8 @@ export class EventModule extends IModule
     }
 
     @Command("show event {int!id}")
-    @CommandSample("show event __**EventID**__")
+    @CommandSample("show event __event id__")
+    @CommandDescription("Displays the info for that event again")
     public async onShowEvent(message: IMessage, id: number)
     {
         const event = await DBEvent.findOne({ id });

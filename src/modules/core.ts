@@ -54,7 +54,7 @@ export class CoreModule extends IModule
 
                     hasNonHidden = true;
 
-                    tmp += `${identifiers[0]}${command.sample}: ${command.description}\r\n`;
+                    tmp += `**${identifiers[0]}${command.sample}**: ${command.description}\r\n`;
                 }
             }
 
@@ -63,6 +63,7 @@ export class CoreModule extends IModule
             }
 
             response.addField(module.name, tmp);
+            // response.addBlankField();
         }
 
         if (message.server !== null) {
@@ -95,7 +96,7 @@ export class CoreModule extends IModule
 
     @Command("use {channelid!channel} <for {category}>")
     @CommandDescription("Tells me to output to the specified channel.")
-    @CommandSample("use __*#channel*__")
+    @CommandSample("use __#channel__")
     @CommandPermission("SERVERADMIN")
     private handleGotoChannel(message: IMessage, channel: string, category: string = null)
     {

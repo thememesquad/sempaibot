@@ -12,19 +12,19 @@ template[TemplateMessageID.SempaiCalled] = [
 ];
 
 template[TemplateMessageID.SempaiSettingUp] = [
-    "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"sempai go to #channel\")",
+    "Nice to meet you! Sempai is currently setting up on this server! Where do you want me to go?\r\n(use the command \"~use #channel\")",
 ];
 
 template[TemplateMessageID.SempaiHomeChannelChanged] = [
-    "Okay then, <#{channel}> will be my new home channel! Hurray~! If you want to know more about what I can do, type \"sempai help me\".",
-    "All right! This is my new home channel, huh? I like it. If you want to know more about what I can do, type \"sempai help me\".",
+    "Okay then, <#{channel}> will be my new home channel! Hurray~! If you want to know more about what I can do, type \"~help\".",
+    "All right! This is my new home channel, huh? I like it. If you want to know more about what I can do, type \"~help\".",
 ];
 
 template[TemplateMessageID.SempaiHomeChannelDeleted] = [
-    "You... you destroyed my home. :( All those good chat memories we had there. Gone! Where do I go now? (use the command \"sempai go to #channel\")",
-    "Did...did you just delete my home? My home channel? Who would do such a thing? Wait, am I getting an upgrade? A better channel? (use the command \"sempai go to #channel\")",
-    "Did...did you just destroy my home channel? You can't just do these things! Bots have rights too, you know! Where do I go now? (use the command \"sempai go to #channel\")",
-    "You... deleted? My home channel? My home? Why...? So am I-... am I homeless now? A homeless bot? Or are you going to give me a new home? (use the command \"sempai go to #channel\")",
+    "You... you destroyed my home. :( All those good chat memories we had there. Gone! Where do I go now? (use the command \"~use #channel\")",
+    "Did...did you just delete my home? My home channel? Who would do such a thing? Wait, am I getting an upgrade? A better channel? (use the command \"~use #channel\")",
+    "Did...did you just destroy my home channel? You can't just do these things! Bots have rights too, you know! Where do I go now? (use the command \"~use #channel\")",
+    "You... deleted? My home channel? My home? Why...? So am I-... am I homeless now? A homeless bot? Or are you going to give me a new home? (use the command \"~use #channel\")",
 ];
 
 template[TemplateMessageID.CurrentUserRole] = [
